@@ -1,0 +1,65 @@
+{
+  "compilerOptions": {
+    /* Layout de Archivos - IMPORTANTE para producción */
+    "rootDir": "./src", // Donde escribes tu código
+    "outDir": "./dist", // Donde TS guardará el JS compilado
+    /* Configuración de Entorno */
+    "module": "NodeNext", // Correcto para ESM moderno
+    "moduleResolution": "NodeNext",
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "types": [
+      "node"
+    ], // Asegúrate de haber instalado @types/node
+    "baseUrl": "./src",
+    "paths": {
+      "@app/*": [
+        "app/*"
+      ],
+      "@domain/*": [
+        "domain/*"
+      ],
+      "@application/*": [
+        "application/*"
+      ],
+      "@infrastructure/*": [
+        "infrastructure/*"
+      ],
+      "@presentation/*": [
+        "presentation/*"
+      ],
+      "@shared/*": [
+        "shared/*"
+      ]
+    },
+    /* Salidas y Mapas */
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    /* Estricto y Seguridad */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+    /* Interoperabilidad - CRUCIAL para librerías como Express */
+    "esModuleInterop": true, // Permite importar Express como 'import express from "express"'
+    "forceConsistentCasingInFileNames": true,
+    /* Opciones Recomendadas que ya tenías */
+    "verbatimModuleSyntax": true, // Mantiene tus imports limpios
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    // Si no vas a usar React, puedes borrar la línea de "jsx"
+  },
+  "ts-node": {
+    "esm": true
+  },
+  "include": [
+    "src/**/*"
+  ], // Solo compila lo que esté en src
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

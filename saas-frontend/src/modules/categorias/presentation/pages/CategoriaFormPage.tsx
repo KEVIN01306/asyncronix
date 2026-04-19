@@ -1,0 +1,97 @@
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress } from '@mui/material';
+import { ArrowBack, Save } from '@mui/icons-material';
+import { toast } from 'sonner';
+
+import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
+import { categoriaSchema, type CategoriaFormValues } from '../../domain/schemas/categoria.schema';
+import { CategoriaRepository } from '../../infrastructure/repositories/categoria.repository';
+
+const CategoriaFormPage = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const isEdit = Boolean(id);
+    const [loading, setLoading] = useState(isEdit);
+
+    const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<CategoriaFormValues>({
+        resolver: zodResolver(categoriaSchema)
+    });
+
+    useEffect(() => {
+        if (isEdit && id) {
+            CategoriaRepository.Obtener(id)
+                .then(data => {
+                    setValue('nombre', data.nombre);
+                    setValue('descripcion', data.descripcion);
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [id, isEdit, setValue]);
+
+    const onSubmit = async (data: CategoriaFormValues) => {
+        try {
+            if (isEdit && id) {
+                await CategoriaRepository.actualizar(id, data);
+                toast.success('Categoria actualizada correctamente');
+            } else {
+                await CategoriaRepository.registrar(data);
+                toast.success('Categoria creada correctamente');
+            }
+            navigate('/categorias');
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+
+    return (
+        <Box p={4} maxWidth="600px" mx="auto">
+            <Button 
+                startIcon={<ArrowBack />} 
+                onClick={() => navigate(-1)} 
+                sx={{ mb: 2, textTransform: 'none' }}
+            >
+                Volver
+            </Button>
+
+            <Paper sx={{ p: 4, border: (theme) => `1px solid ${theme.palette.divider}` }}>
+                <Typography variant="h5" fontWeight={700} mb={3}>
+                    {isEdit ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+                </Typography>
+
+                <Box component={'form'} onSubmit={handleSubmit(onSubmit)}>
+                    <Stack spacing={3}>
+                        <TextField
+                            label="Nombre del Proveedor"
+                            fullWidth
+                            {...register('nombre')}
+                            error={!!errors.nombre}
+                            helperText={errors.nombre?.message}
+                        />
+
+                        <TextField
+                            label="Descripción"
+                            fullWidth
+                            {...register('descripcion')}
+                            error={!!errors.descripcion}
+                            helperText={errors.descripcion?.message}
+                        />
+
+                        <SubmitButton 
+                            isSubmitting={isSubmitting}
+                            text={isEdit ? 'Guardar Cambios' : 'Registrar Categoria'}
+                            loadingText="Guardando..."
+                            icon={<Save />}
+                        />
+                    </Stack>
+                </Box>
+            </Paper>
+        </Box>
+    );
+};
+
+export default CategoriaFormPage;

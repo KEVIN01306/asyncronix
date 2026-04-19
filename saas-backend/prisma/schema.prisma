@@ -1,0 +1,555 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==============================================================
+// 1. NÚCLEO SAAS, MÓDULOS Y AUTENTICACIÓN
+// ==============================================================
+
+model Modulo {
+  id          String   @id @default(uuid()) @db.Char(36)
+  nombre      String   @unique
+  descripcion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permisos Permiso[]
+  negocios Negocio[]
+}
+
+model Permiso {
+  id          String   @id @default(uuid()) @db.Char(36)
+  moduloId    String   @db.Char(36)
+  codigo      String   @unique
+  descripcion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  modulo Modulo @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  roles  Rol[]
+}
+
+model Negocio {
+  id        String   @id @default(uuid()) @db.Char(36)
+  nombre    String
+  slug      String   @unique
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nombre_comercial       String                 @db.VarChar(100)
+  wa_id                  String                 @unique(map: "wa_id") @db.VarChar(20)
+  nit_rut                String?                @db.VarChar(20)
+  logo_url               String?                @db.Text
+  slogan                 String?                @db.VarChar(255)
+  datos_facturacion_json Json?
+  fecha_registro         DateTime?              @default(now()) @db.Timestamp(0)
+  instagram_id           String?                @db.VarChar(100)
+  facebook_id            String?                @db.VarChar(100)
+
+  modulos      Modulo[]
+  sucursales   Sucursal[]
+  usuarios     User[]
+  roles        Rol[]
+  motos        Moto[]
+  categorias   CategoriaProducto[]
+  productos    Producto[]
+  lotes        Lote[]
+  ventas       Venta[]
+  servicios    Servicio[]
+  citas        Cita[]
+  tiposServ    TipoServicio[]
+  opcionesServ OpcionServicio[]
+  checklist    ChecklistItem[]
+  contabilidad IngresosEgresos[]
+}
+
+model Sucursal {
+  id        String   @id @default(uuid()) @db.Char(36)
+  negocioId String   @db.Char(36)
+  nombre    String
+  direccion String?
+  telefono  String?
+  email     String?
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  negocio         Negocio           @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  usuarios        User[]            @relation("UserSucursales")
+  ventas          Venta[]
+  servicios       Servicio[]
+  citas           Cita[]
+  ingresosEgresos IngresosEgresos[]
+
+  @@index([negocioId])
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Char(36)
+  sessionToken String   @unique
+  userId       String   @db.Char(36)
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ==============================================================
+// 2. IDENTIDAD Y ACCESO (IAM)
+// ==============================================================
+
+model User {
+  id              String   @id @default(uuid()) @db.Char(36)
+  negocioId       String   @db.Char(36)
+  email           String?
+  password_hash        String?
+  nombre          String
+  apellido        String?
+  dpi          String?
+  nit          String?
+  telefono       String
+  verificado      Boolean
+  activo          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  negocio    Negocio    @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  sucursales Sucursal[] @relation("UserSucursales")
+  roles      Rol[]      @relation("UserRoles")
+  sessions   Session[]
+
+  motos        Moto[]     @relation("UserMotos")
+  citas        Cita[]     @relation("CitaCliente")
+  serviciosMec Servicio[] @relation("ServicioMecanico")
+  serviciosCli Servicio[] @relation("ServicioCliente")
+  ventasVen    Venta[]    @relation("VentaVendedor")
+  ventasCli    Venta[]    @relation("VentaCliente")
+
+  @@unique([negocioId, email])
+  @@index([negocioId])
+}
+
+model Rol {
+  id          String   @id @default(uuid()) @db.Char(36)
+  negocioId   String   @db.Char(36)
+  nombre      String
+  descripcion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  negocio  Negocio   @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  permisos Permiso[] @relation("RolPermisos")
+  usuarios User[]    @relation("UserRoles")
+
+  @@unique([negocioId, nombre])
+}
+
+// ==============================================================
+// 3. CATÁLOGOS MAESTROS (GLOBALES)
+// ==============================================================
+
+model Marca {
+  id        String   @id @default(uuid()) @db.Char(36)
+  marca     String   @unique
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  modelos   Modelo[]
+}
+
+model Linea {
+  id        String   @id @default(uuid()) @db.Char(36)
+  linea     String   @unique
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  modelos   Modelo[]
+}
+
+model Cilindrada {
+  id         String   @id @default(uuid()) @db.Char(36)
+  cilindrada Int      @unique
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  modelos    Modelo[]
+}
+
+model Modelo {
+  id        String   @id @default(uuid()) @db.Char(36)
+  modelo    String   @unique
+  año      Int
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  marcaId      String @db.Char(36)
+  lineaId      String @db.Char(36)
+  cilindradaId String @db.Char(36)
+
+  marca      Marca      @relation(fields: [marcaId], references: [id])
+  linea      Linea      @relation(fields: [lineaId], references: [id])
+  cilindrada Cilindrada @relation(fields: [cilindradaId], references: [id])
+  motos      Moto[]
+}
+
+// ==============================================================
+// 4. OPERATIVA DE TALLER
+// ==============================================================
+
+model Moto {
+  id         String   @id @default(uuid()) @db.Char(36)
+  negocioId  String   @db.Char(36)
+  placa      String
+  modeloId   String   @db.Char(36)
+  avatar     String?
+  calcomania String?
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  negocio   Negocio    @relation(fields: [negocioId], references: [id])
+  modelo    Modelo     @relation(fields: [modeloId], references: [id])
+  users     User[]     @relation("UserMotos")
+  servicios Servicio[]
+  citas     Cita[]
+
+  @@unique([negocioId, placa])
+}
+
+model Cita {
+  id             String  @id @default(uuid()) @db.Char(36)
+  negocioId      String  @db.Char(36)
+  sucursalId     String  @db.Char(36)
+  clienteId      String? @db.Char(36)
+  motoId         String? @db.Char(36)
+  tipoServicioId String  @db.Char(36)
+
+  nombreContacto   String
+  telefonoContacto String
+  placa            String?
+  descripcion      String?    @db.Text
+  fechaCita        DateTime
+  horaCita         String
+  estado           EstadoCita @default(PENDIENTE)
+  activo           Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  negocio      Negocio      @relation(fields: [negocioId], references: [id])
+  sucursal     Sucursal     @relation(fields: [sucursalId], references: [id])
+  cliente      User?        @relation("CitaCliente", fields: [clienteId], references: [id])
+  moto         Moto?        @relation(fields: [motoId], references: [id])
+  tipoServicio TipoServicio @relation(fields: [tipoServicioId], references: [id])
+
+  @@index([negocioId])
+}
+
+model Servicio {
+  id             String  @id @default(uuid()) @db.Char(36)
+  negocioId      String  @db.Char(36)
+  sucursalId     String  @db.Char(36)
+  motoId         String  @db.Char(36)
+  mecanicoId     String  @db.Char(36)
+  clienteId      String? @db.Char(36)
+  tipoServicioId String  @db.Char(36)
+
+  descripcion  String         @db.Text
+  diagnostico  String?        @db.Text
+  kilometraje  Int?
+  fechaEntrada DateTime       @default(now())
+  fechaSalida  DateTime?
+  total        Float          @default(0)
+  estado       EstadoServicio @default(RECEPCION)
+  activo       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  negocio      Negocio      @relation(fields: [negocioId], references: [id])
+  sucursal     Sucursal     @relation(fields: [sucursalId], references: [id])
+  moto         Moto         @relation(fields: [motoId], references: [id])
+  mecanico     User         @relation("ServicioMecanico", fields: [mecanicoId], references: [id])
+  cliente      User?        @relation("ServicioCliente", fields: [clienteId], references: [id])
+  tipoServicio TipoServicio @relation(fields: [tipoServicioId], references: [id])
+
+  imagenes  Imagen[]
+  checklist ChecklistRespuesta[]
+  tareas    ServicioTarea[]
+  repuestos ServicioRepuesto[]
+  venta     Venta?
+}
+
+model TipoServicio {
+  id         String   @id @default(uuid()) @db.Char(36)
+  negocioId  String   @db.Char(36)
+  nombre     String
+  precioBase Float    @default(0)
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  negocio   Negocio              @relation(fields: [negocioId], references: [id])
+  opciones  TipoServicioOpcion[]
+  servicios Servicio[]
+  citas     Cita[]
+}
+
+model OpcionServicio {
+  id          String   @id @default(uuid()) @db.Char(36)
+  negocioId   String   @db.Char(36)
+  nombre      String
+  descripcion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  negocio Negocio              @relation(fields: [negocioId], references: [id])
+  tipos   TipoServicioOpcion[]
+}
+
+model TipoServicioOpcion {
+  tipoServicioId   String   @db.Char(36)
+  opcionServicioId String   @db.Char(36)
+  orden            Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tipoServicio   TipoServicio   @relation(fields: [tipoServicioId], references: [id], onDelete: Cascade)
+  opcionServicio OpcionServicio @relation(fields: [opcionServicioId], references: [id], onDelete: Cascade)
+
+  @@id([tipoServicioId, opcionServicioId])
+}
+
+// ==============================================================
+// 5. COMPONENTES DE SERVICIO
+// ==============================================
+
+model ChecklistItem {
+  id        String   @id @default(uuid()) @db.Char(36)
+  negocioId String   @db.Char(36)
+  nombre    String
+  categoria String?
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  negocio    Negocio              @relation(fields: [negocioId], references: [id])
+  respuestas ChecklistRespuesta[]
+}
+
+model ChecklistRespuesta {
+  id              String          @id @default(uuid()) @db.Char(36)
+  checklistItemId String          @db.Char(36)
+  servicioId      String          @db.Char(36)
+  estado          EstadoChecklist @default(OPTIMO)
+  observaciones   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  checklistItem ChecklistItem @relation(fields: [checklistItemId], references: [id])
+  servicio      Servicio      @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+
+  @@unique([servicioId, checklistItemId])
+}
+
+model ServicioTarea {
+  id          String   @id @default(uuid()) @db.Char(36)
+  servicioId  String   @db.Char(36)
+  nombre      String
+  completado  Boolean  @default(false)
+  observacion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  servicio Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+}
+
+// ==============================================================
+// 6. INVENTARIO (LOTES)
+// ==============================================================
+
+model CategoriaProducto {
+  id        String   @id @default(uuid()) @db.Char(36)
+  negocioId String   @db.Char(36)
+  categoria String
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  negocio   Negocio    @relation(fields: [negocioId], references: [id])
+  productos Producto[]
+
+  @@unique([negocioId, categoria])
+}
+
+model Producto {
+  id             String   @id @default(uuid()) @db.Char(36)
+  negocioId      String   @db.Char(36)
+  categoriaId    String   @db.Char(36)
+  nombre         String
+  codigo         String?
+  precioSugerido Float
+  stockTotal     Int      @default(0)
+  activo         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  negocio   Negocio           @relation(fields: [negocioId], references: [id])
+  categoria CategoriaProducto @relation(fields: [categoriaId], references: [id])
+  lotes     Lote[]
+
+  @@unique([negocioId, codigo])
+}
+
+model Lote {
+  id             String   @id @default(uuid()) @db.Char(36)
+  productoId     String   @db.Char(36)
+  negocioId      String   @db.Char(36)
+  cantidadActual Int
+  costoCompra    Float
+  precioVenta    Float
+  fechaIngreso   DateTime @default(now())
+  activo         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  producto  Producto           @relation(fields: [productoId], references: [id])
+  negocio   Negocio            @relation(fields: [negocioId], references: [id])
+  repuestos ServicioRepuesto[]
+  detalles  VentaDetalle[]
+}
+
+model ServicioRepuesto {
+  id          String   @id @default(uuid()) @db.Char(36)
+  servicioId  String   @db.Char(36)
+  loteId      String   @db.Char(36)
+  cantidad    Int
+  precioVenta Float
+  costo       Float
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  servicio Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+  lote     Lote     @relation(fields: [loteId], references: [id])
+}
+
+// ==============================================================
+// 7. FINANZAS Y VENTAS
+// ==============================================================
+
+model Venta {
+  id         String      @id @default(uuid()) @db.Char(36)
+  negocioId  String      @db.Char(36)
+  sucursalId String      @db.Char(36)
+  usuarioId  String      @db.Char(36)
+  clienteId  String?     @db.Char(36)
+  servicioId String?     @unique @db.Char(36)
+  total      Float
+  totalCosto Float
+  estado     EstadoVenta @default(PENDIENTE)
+  activo     Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  negocio  Negocio        @relation(fields: [negocioId], references: [id])
+  sucursal Sucursal       @relation(fields: [sucursalId], references: [id])
+  usuario  User           @relation("VentaVendedor", fields: [usuarioId], references: [id])
+  cliente  User?          @relation("VentaCliente", fields: [clienteId], references: [id])
+  servicio Servicio?      @relation(fields: [servicioId], references: [id])
+  detalles VentaDetalle[]
+}
+
+model VentaDetalle {
+  id             String   @id @default(uuid()) @db.Char(36)
+  ventaId        String   @db.Char(36)
+  loteId         String?  @db.Char(36)
+  descripcion    String
+  cantidad       Int
+  precioUnitario Float
+  costoUnitario  Float
+  activo         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  venta Venta @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  lote  Lote? @relation(fields: [loteId], references: [id])
+}
+
+model Imagen {
+  id          String   @id @default(uuid()) @db.Char(36)
+  servicioId  String   @db.Char(36)
+  imagen      String
+  descripcion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  servicio    Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+}
+
+model TipoContabilidad {
+  id              String            @id @default(uuid()) @db.Char(36)
+  tipo            String
+  activo          Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  ingresosEgresos IngresosEgresos[]
+}
+
+model IngresosEgresos {
+  id          String   @id @default(uuid()) @db.Char(36)
+  negocioId   String   @db.Char(36)
+  sucursalId  String   @db.Char(36)
+  tipoId      String   @db.Char(36)
+  descripcion String?
+  monto       Float
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  negocio  Negocio          @relation(fields: [negocioId], references: [id])
+  sucursal Sucursal         @relation(fields: [sucursalId], references: [id])
+  tipo     TipoContabilidad @relation(fields: [tipoId], references: [id])
+}
+
+// ==============================================================
+// 8. ENUMERACIONES
+// ==============================================================
+
+enum EstadoCita { 
+  PENDIENTE 
+  CONFIRMADA
+  EN_TALLER
+  CANCELADA
+  NO_ASISTIO 
+  }
+enum EstadoServicio { 
+  RECEPCION
+  EN_DIAGNOSTICO
+  ESPERA_REPUESTOS
+  EN_REPARACION
+  LISTO_ENTREGA
+  FINALIZADO
+  CANCELADO 
+  }
+enum EstadoVenta { 
+  PENDIENTE
+  COMPLETADA
+  ANULADA 
+  }
+enum EstadoChecklist { 
+  OPTIMO
+  REGULAR
+  REQUIERE_CAMBIO
+  NO_APLICA 
+  }

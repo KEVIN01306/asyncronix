@@ -1,0 +1,17 @@
+import { ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
+import getItemStyle from "./getItemsStyles";
+import type { MenuItem } from "../Sidebar";
+
+export const SidebarItem: React.FC<{ item: MenuItem }> = ({ item }) => {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const isActive = pathname === item.link;
+
+  return (
+    <ListItemButton onClick={() => item.link && navigate(item.link)} sx={getItemStyle(isActive)}>
+      <ListItemIcon><item.icon fontSize="small" /></ListItemIcon>
+      <ListItemText primary={item.name} primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 700 }} />
+    </ListItemButton>
+  );
+};
