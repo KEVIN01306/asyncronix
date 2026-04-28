@@ -60,7 +60,7 @@ model Negocio {
 
   modulos        Modulo[]
   sucursales     Sucursal[]
-  usuarios       User[]
+  usuarios       Usuario[]
   roles          Rol[]
   motos          Moto[]
   categorias     CategoriaProducto[]
@@ -89,7 +89,7 @@ model Sucursal {
   updated_at DateTime @updatedAt 
 
   negocio          Negocio           @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  usuarios         User[]            @relation("UserSucursales")
+  usuarios         Usuario[]            @relation("UsuarioSucursales")
   ventas           Venta[]
   servicios        Servicio[]
   citas            Cita[]
@@ -102,11 +102,11 @@ model Sucursal {
 model Session {
   id            String   @id @default(uuid()) @db.Char(36)
   session_token String   @unique 
-  user_id       String   @db.Char(36)
+  Usuario_id       String   @db.Char(36)
   expires       DateTime
-  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Usuario          Usuario     @relation(fields: [Usuario_id], references: [id], onDelete: Cascade)
 
-  @@index([user_id])
+  @@index([Usuario_id])
   @@map("sessions")
 }
 
@@ -114,7 +114,7 @@ model Session {
 // 2. IDENTIDAD Y ACCESO (IAM)
 // ==============================================================
 
-model User {
+model Usuario {
   id            String   @id @default(uuid()) @db.Char(36)
   negocio_id    String   @db.Char(36)
   email         String?
@@ -125,17 +125,17 @@ model User {
   nit           String?
   telefono      String
   verificado    Boolean  @default(false)
-  tipo          TipoUser @default(CLIENTE)
+  tipo          TipoUsuario @default(CLIENTE)
   activo        Boolean  @default(true)
   created_at    DateTime @default(now()) 
   updated_at    DateTime @updatedAt 
 
   negocio    Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  sucursales Sucursal[] @relation("UserSucursales")
-  roles      Rol[]      @relation("UserRoles")
+  sucursales Sucursal[] @relation("UsuarioSucursales")
+  roles      Rol[]      @relation("UsuarioRoles")
   sessions   Session[]
 
-  motos         Moto[]     @relation("UserMotos")
+  motos         Moto[]     @relation("UsuarioMotos")
   citas         Cita[]     @relation("CitaCliente")
   servicios_mec Servicio[] @relation("ServicioMecanico")
   servicios_cli Servicio[] @relation("ServicioCliente")
@@ -143,7 +143,7 @@ model User {
   ventas_cli    Venta[]    @relation("VentaCliente")
 
   @@unique([negocio_id, email])
-  @@unique([])
+  @@unique([negocio_id, telefono])
   @@index([negocio_id])
   @@map("usuarios")
 }
@@ -159,7 +159,7 @@ model Rol {
 
   negocio  Negocio   @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   permisos Permiso[] @relation("RolPermisos")
-  usuarios User[]    @relation("UserRoles")
+  usuarios Usuario[]    @relation("UsuarioRoles")
 
   @@unique([negocio_id, nombre])
   @@map("roles")
@@ -238,7 +238,7 @@ model Moto {
 
   negocio   Negocio    @relation(fields: [negocio_id], references: [id])
   modelo    Modelo     @relation(fields: [modelo_id], references: [id])
-  users     User[]     @relation("UserMotos")
+  Usuarios     Usuario[]     @relation("UsuarioMotos")
   servicios Servicio[]
   citas     Cita[]
 
@@ -267,7 +267,7 @@ model Cita {
 
   negocio       Negocio      @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal     @relation(fields: [sucursal_id], references: [id])
-  cliente       User?        @relation("CitaCliente", fields: [cliente_id], references: [id])
+  cliente       Usuario?        @relation("CitaCliente", fields: [cliente_id], references: [id])
   moto          Moto?        @relation(fields: [moto_id], references: [id])
   tipo_servicio TipoServicio @relation(fields: [tipo_servicio_id], references: [id])
 
@@ -298,8 +298,8 @@ model Servicio {
   negocio       Negocio      @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal     @relation(fields: [sucursal_id], references: [id])
   moto          Moto         @relation(fields: [moto_id], references: [id])
-  mecanico      User         @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
-  cliente       User?        @relation("ServicioCliente", fields: [cliente_id], references: [id])
+  mecanico      Usuario         @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
+  cliente       Usuario?        @relation("ServicioCliente", fields: [cliente_id], references: [id])
   tipo_servicio TipoServicio @relation(fields: [tipo_servicio_id], references: [id])
 
   imagenes  Imagen[]
@@ -503,8 +503,8 @@ model Venta {
 
   negocio  Negocio        @relation(fields: [negocio_id], references: [id])
   sucursal Sucursal       @relation(fields: [sucursal_id], references: [id])
-  usuario  User           @relation("VentaVendedor", fields: [usuario_id], references: [id])
-  cliente  User?          @relation("VentaCliente", fields: [cliente_id], references: [id])
+  usuario  Usuario           @relation("VentaVendedor", fields: [usuario_id], references: [id])
+  cliente  Usuario?          @relation("VentaCliente", fields: [cliente_id], references: [id])
   servicio Servicio?      @relation(fields: [servicio_id], references: [id])
   detalles VentaDetalle[]
 
@@ -576,7 +576,7 @@ model IngresosEgresos {
 // 8. ENUMERACIONES
 // ==============================================================
 
-enum TipoUser {
+enum TipoUsuario {
   EMPLEADO
   CLIENTE
 }

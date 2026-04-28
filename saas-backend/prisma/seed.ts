@@ -29,9 +29,7 @@ async function main() {
         ]
     })
 
-    const 
-
-    const usuarioAdmin = await prisma.user.upsert({
+    const usuarioAdmin = await prisma.usuario.upsert({
         where: { telefono: "30108703" },
         update: {},
         create: {
