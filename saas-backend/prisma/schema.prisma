@@ -34,8 +34,9 @@ model Permiso {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  modulo Modulo @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
-  roles  Rol[]  @relation("RolPermisos")
+  modulo   Modulo    @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
+  roles    Rol[]     @relation("RolPermisos")
+  negocios Negocio[] @relation("NegocioPermisos")
 
   @@map("permisos")
 }
@@ -49,30 +50,31 @@ model Negocio {
   nit_rut                String?   @db.VarChar(20)
   logo_url               String?   @db.Text
   slogan                 String?   @db.VarChar(255)
-  datos_facturacion_json Json?     
+  datos_facturacion_json Json?
   instagram_id           String?   @db.VarChar(100)
   facebook_id            String?   @db.VarChar(100)
-  
   activo                 Boolean   @default(true)
   fecha_registro         DateTime? @default(now()) @db.Timestamp(0)
-  created_at             DateTime  @default(now()) 
-  updated_at             DateTime  @updatedAt 
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
 
-  modulos        Modulo[]
-  sucursales     Sucursal[]
-  usuarios       Usuario[]
-  roles          Rol[]
-  motos          Moto[]
-  categorias     CategoriaProducto[]
-  productos      Producto[]
-  lotes          Lote[]
-  ventas         Venta[]
-  servicios      Servicio[]
-  citas          Cita[]
-  tipos_serv     TipoServicio[]
-  opciones_serv  OpcionServicio[]
-  checklist      ChecklistItem[]
-  contabilidad   IngresosEgresos[]
+  modulos      Modulo[]
+  permisos     Permiso[]           @relation("NegocioPermisos")
+  sucursales   Sucursal[]
+  usuarios     Usuario[]
+  clientes     Cliente[]
+  roles        Rol[]
+  motos        Moto[]
+  categorias   CategoriaProducto[]
+  productos    Producto[]
+  lotes        Lote[]
+  ventas       Venta[]
+  servicios    Servicio[]
+  citas        Cita[]
+  tipos_serv   TipoServicio[]
+  opciones_serv OpcionServicio[]
+  checklist    ChecklistItem[]
+  contabilidad IngresosEgresos[]
 
   @@map("negocios")
 }
@@ -85,11 +87,11 @@ model Sucursal {
   telefono   String?
   email      String?
   activo     Boolean  @default(true)
-  created_at DateTime @default(now()) 
-  updated_at DateTime @updatedAt 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   negocio          Negocio           @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  usuarios         Usuario[]            @relation("UsuarioSucursales")
+  usuarios         Usuario[]         @relation("UsuarioSucursales")
   ventas           Venta[]
   servicios        Servicio[]
   citas            Cita[]
@@ -101,10 +103,10 @@ model Sucursal {
 
 model Session {
   id            String   @id @default(uuid()) @db.Char(36)
-  session_token String   @unique 
-  Usuario_id       String   @db.Char(36)
+  session_token String   @unique
+  Usuario_id    String   @db.Char(36)
   expires       DateTime
-  Usuario          Usuario     @relation(fields: [Usuario_id], references: [id], onDelete: Cascade)
+  Usuario       Usuario  @relation(fields: [Usuario_id], references: [id], onDelete: Cascade)
 
   @@index([Usuario_id])
   @@map("sessions")
@@ -118,34 +120,54 @@ model Usuario {
   id            String   @id @default(uuid()) @db.Char(36)
   negocio_id    String   @db.Char(36)
   email         String?
-  password_hash String?  
+  password_hash String?
   nombre        String
   apellido      String?
   dpi           String?
   nit           String?
   telefono      String
   verificado    Boolean  @default(false)
-  tipo          TipoUsuario @default(CLIENTE)
   activo        Boolean  @default(true)
-  created_at    DateTime @default(now()) 
-  updated_at    DateTime @updatedAt 
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   negocio    Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   sucursales Sucursal[] @relation("UsuarioSucursales")
   roles      Rol[]      @relation("UsuarioRoles")
   sessions   Session[]
 
-  motos         Moto[]     @relation("UsuarioMotos")
-  citas         Cita[]     @relation("CitaCliente")
-  servicios_mec Servicio[] @relation("ServicioMecanico")
-  servicios_cli Servicio[] @relation("ServicioCliente")
-  ventas_ven    Venta[]    @relation("VentaVendedor")
-  ventas_cli    Venta[]    @relation("VentaCliente")
+  // Relaciones inversas corregidas
+  servicios_mecanico Servicio[] @relation("ServicioMecanico")
+  ventas_vendedor    Venta[]    @relation("VentaVendedor")
 
   @@unique([negocio_id, email])
-  @@unique([negocio_id, telefono])
+  @@unique([negocio_id, dpi])
   @@index([negocio_id])
   @@map("usuarios")
+}
+
+model Cliente {
+  id         String   @id @default(uuid()) @db.Char(36)
+  negocio_id String   @db.Char(36)
+  nombre     String
+  apellido   String?
+  telefono   String
+  email      String?
+  nit        String?
+  dpi        String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  negocio   Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  motos     Moto[]
+  citas     Cita[]     @relation("CitaCliente")
+  servicios Servicio[] @relation("ServicioCliente")
+  ventas    Venta[]    @relation("VentaCliente")
+
+  @@unique([negocio_id, telefono])
+  @@unique([negocio_id, dpi])
+  @@index([negocio_id])
+  @@map("clientes")
 }
 
 model Rol {
@@ -154,12 +176,12 @@ model Rol {
   nombre      String
   descripcion String?
   activo      Boolean  @default(true)
-  created_at  DateTime @default(now()) 
-  updated_at  DateTime @updatedAt 
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   negocio  Negocio   @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   permisos Permiso[] @relation("RolPermisos")
-  usuarios Usuario[]    @relation("UsuarioRoles")
+  usuarios Usuario[] @relation("UsuarioRoles")
 
   @@unique([negocio_id, nombre])
   @@map("roles")
@@ -173,8 +195,8 @@ model Marca {
   id         String   @id @default(uuid()) @db.Char(36)
   marca      String   @unique
   activo     Boolean  @default(true)
-  created_at DateTime @default(now()) 
-  updated_at DateTime @updatedAt 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   modelos    Modelo[]
 
   @@map("marcas")
@@ -184,8 +206,8 @@ model Linea {
   id         String   @id @default(uuid()) @db.Char(36)
   linea      String   @unique
   activo     Boolean  @default(true)
-  created_at DateTime @default(now()) 
-  updated_at DateTime @updatedAt 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   modelos    Modelo[]
 
   @@map("lineas")
@@ -195,8 +217,8 @@ model Cilindrada {
   id         String   @id @default(uuid()) @db.Char(36)
   cilindrada Int      @unique
   activo     Boolean  @default(true)
-  created_at DateTime @default(now()) 
-  updated_at DateTime @updatedAt 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   modelos    Modelo[]
 
   @@map("cilindradas")
@@ -205,13 +227,13 @@ model Cilindrada {
 model Modelo {
   id            String   @id @default(uuid()) @db.Char(36)
   modelo        String   @unique
-  anio          Int      
+  anio          Int
   marca_id      String   @db.Char(36)
   linea_id      String   @db.Char(36)
   cilindrada_id String   @db.Char(36)
   activo        Boolean  @default(true)
-  created_at    DateTime @default(now()) 
-  updated_at    DateTime @updatedAt 
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   marca      Marca      @relation(fields: [marca_id], references: [id])
   linea      Linea      @relation(fields: [linea_id], references: [id])
@@ -232,13 +254,14 @@ model Moto {
   modelo_id  String   @db.Char(36)
   avatar     String?
   calcomania String?
+  cliente_id String?  @db.Char(36)
   activo     Boolean  @default(true)
-  created_at DateTime @default(now()) 
-  updated_at DateTime @updatedAt 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   negocio   Negocio    @relation(fields: [negocio_id], references: [id])
   modelo    Modelo     @relation(fields: [modelo_id], references: [id])
-  Usuarios     Usuario[]     @relation("UsuarioMotos")
+  cliente   Cliente?   @relation(fields: [cliente_id], references: [id])
   servicios Servicio[]
   citas     Cita[]
 
@@ -253,21 +276,20 @@ model Cita {
   cliente_id        String?    @db.Char(36)
   moto_id           String?    @db.Char(36)
   tipo_servicio_id  String     @db.Char(36)
-
-  nombre_contacto   String     
-  telefono_contacto String     
+  nombre_contacto   String
+  telefono_contacto String
   placa             String?
   descripcion       String?    @db.Text
-  fecha_cita        DateTime   
-  hora_cita         String     
+  fecha_cita        DateTime
+  hora_cita         String
   estado            EstadoCita @default(PENDIENTE)
   activo            Boolean    @default(true)
-  created_at        DateTime   @default(now()) 
-  updated_at        DateTime   @updatedAt 
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
 
   negocio       Negocio      @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal     @relation(fields: [sucursal_id], references: [id])
-  cliente       Usuario?        @relation("CitaCliente", fields: [cliente_id], references: [id])
+  cliente       Cliente?     @relation("CitaCliente", fields: [cliente_id], references: [id])
   moto          Moto?        @relation(fields: [moto_id], references: [id])
   tipo_servicio TipoServicio @relation(fields: [tipo_servicio_id], references: [id])
 
@@ -283,25 +305,25 @@ model Servicio {
   mecanico_id      String         @db.Char(36)
   cliente_id       String?        @db.Char(36)
   tipo_servicio_id String         @db.Char(36)
-
   descripcion      String         @db.Text
   diagnostico      String?        @db.Text
   kilometraje      Int?
-  fecha_entrada    DateTime       @default(now()) 
-  fecha_salida     DateTime?      
+  fecha_entrada    DateTime       @default(now())
+  fecha_salida     DateTime?
   total            Float          @default(0)
   estado           EstadoServicio @default(RECEPCION)
   activo           Boolean        @default(true)
-  created_at       DateTime       @default(now()) 
-  updated_at       DateTime       @updatedAt 
+  MetodoPago       MetodoPago     @default(EFECTIVO)
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
 
   negocio       Negocio      @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal     @relation(fields: [sucursal_id], references: [id])
   moto          Moto         @relation(fields: [moto_id], references: [id])
-  mecanico      Usuario         @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
-  cliente       Usuario?        @relation("ServicioCliente", fields: [cliente_id], references: [id])
+  mecanico      Usuario      @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
+  cliente       Cliente?     @relation("ServicioCliente", fields: [cliente_id], references: [id])
   tipo_servicio TipoServicio @relation(fields: [tipo_servicio_id], references: [id])
-
+  
   imagenes  Imagen[]
   checklist ChecklistRespuesta[]
   tareas    ServicioTarea[]
@@ -315,10 +337,10 @@ model TipoServicio {
   id          String   @id @default(uuid()) @db.Char(36)
   negocio_id  String   @db.Char(36)
   nombre      String
-  precio_base Float    @default(0) 
+  precio_base Float    @default(0)
   activo      Boolean  @default(true)
-  created_at  DateTime @default(now()) 
-  updated_at  DateTime @updatedAt 
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   negocio   Negocio              @relation(fields: [negocio_id], references: [id])
   opciones  TipoServicioOpcion[]
@@ -334,8 +356,8 @@ model OpcionServicio {
   nombre      String
   descripcion String?
   activo      Boolean  @default(true)
-  created_at  DateTime @default(now()) 
-  updated_at  DateTime @updatedAt 
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   negocio Negocio              @relation(fields: [negocio_id], references: [id])
   tipos   TipoServicioOpcion[]
@@ -347,8 +369,8 @@ model TipoServicioOpcion {
   tipo_servicio_id   String   @db.Char(36)
   opcion_servicio_id String   @db.Char(36)
   orden              Int      @default(0)
-  created_at         DateTime @default(now()) 
-  updated_at         DateTime @updatedAt 
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
   tipo_servicio   TipoServicio   @relation(fields: [tipo_servicio_id], references: [id], onDelete: Cascade)
   opcion_servicio OpcionServicio @relation(fields: [opcion_servicio_id], references: [id], onDelete: Cascade)
@@ -367,8 +389,8 @@ model ChecklistItem {
   nombre     String
   categoria  String?
   activo     Boolean  @default(true)
-  created_at DateTime @default(now()) 
-  updated_at DateTime @updatedAt 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   negocio    Negocio              @relation(fields: [negocio_id], references: [id])
   respuestas ChecklistRespuesta[]
@@ -382,8 +404,8 @@ model ChecklistRespuesta {
   servicio_id       String          @db.Char(36)
   estado            EstadoChecklist @default(OPTIMO)
   observaciones     String?
-  created_at        DateTime        @default(now()) 
-  updated_at        DateTime        @updatedAt 
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
 
   checklist_item ChecklistItem @relation(fields: [checklist_item_id], references: [id])
   servicio       Servicio      @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
@@ -399,8 +421,8 @@ model ServicioTarea {
   completado  Boolean  @default(false)
   observacion String?
   activo      Boolean  @default(true)
-  created_at  DateTime @default(now()) 
-  updated_at  DateTime @updatedAt 
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   servicio Servicio @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
 
@@ -416,8 +438,8 @@ model CategoriaProducto {
   negocio_id String   @db.Char(36)
   categoria  String
   activo     Boolean  @default(true)
-  created_at DateTime @default(now()) 
-  updated_at DateTime @updatedAt 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   negocio   Negocio    @relation(fields: [negocio_id], references: [id])
   productos Producto[]
@@ -432,11 +454,11 @@ model Producto {
   categoria_id    String   @db.Char(36)
   nombre          String
   codigo          String?
-  precio_sugerido Float    
-  stock_total     Int      @default(0) 
+  precio_sugerido Float
+  stock_total     Int      @default(0)
   activo          Boolean  @default(true)
-  created_at      DateTime @default(now()) 
-  updated_at      DateTime @updatedAt 
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
   negocio   Negocio           @relation(fields: [negocio_id], references: [id])
   categoria CategoriaProducto @relation(fields: [categoria_id], references: [id])
@@ -450,13 +472,13 @@ model Lote {
   id              String   @id @default(uuid()) @db.Char(36)
   producto_id     String   @db.Char(36)
   negocio_id      String   @db.Char(36)
-  cantidad_actual Int      
-  costo_compra    Float    
-  precio_venta    Float    
-  fecha_ingreso   DateTime @default(now()) 
+  cantidad_actual Int
+  costo_compra    Float
+  precio_venta    Float
+  fecha_ingreso   DateTime @default(now())
   activo          Boolean  @default(true)
-  created_at      DateTime @default(now()) 
-  updated_at      DateTime @updatedAt 
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
   producto  Producto           @relation(fields: [producto_id], references: [id])
   negocio   Negocio            @relation(fields: [negocio_id], references: [id])
@@ -471,11 +493,11 @@ model ServicioRepuesto {
   servicio_id  String   @db.Char(36)
   lote_id      String   @db.Char(36)
   cantidad     Int
-  precio_venta Float    
+  precio_venta Float
   costo        Float
   activo       Boolean  @default(true)
-  created_at   DateTime @default(now()) 
-  updated_at   DateTime @updatedAt 
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   servicio Servicio @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
   lote     Lote     @relation(fields: [lote_id], references: [id])
@@ -495,16 +517,17 @@ model Venta {
   cliente_id  String?     @db.Char(36)
   servicio_id String?     @unique @db.Char(36)
   total       Float
-  total_costo Float       
+  total_costo Float
   estado      EstadoVenta @default(PENDIENTE)
   activo      Boolean     @default(true)
-  created_at  DateTime    @default(now()) 
-  updated_at  DateTime    @updatedAt 
+  metodo_pago MetodoPago  @default(EFECTIVO)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
 
   negocio  Negocio        @relation(fields: [negocio_id], references: [id])
   sucursal Sucursal       @relation(fields: [sucursal_id], references: [id])
-  usuario  Usuario           @relation("VentaVendedor", fields: [usuario_id], references: [id])
-  cliente  Usuario?          @relation("VentaCliente", fields: [cliente_id], references: [id])
+  usuario  Usuario        @relation("VentaVendedor", fields: [usuario_id], references: [id])
+  cliente  Cliente?       @relation("VentaCliente", fields: [cliente_id], references: [id])
   servicio Servicio?      @relation(fields: [servicio_id], references: [id])
   detalles VentaDetalle[]
 
@@ -517,11 +540,11 @@ model VentaDetalle {
   lote_id         String?  @db.Char(36)
   descripcion     String
   cantidad        Int
-  precio_unitario Float    
-  costo_unitario  Float    
+  precio_unitario Float
+  costo_unitario  Float    @default(0)
   activo          Boolean  @default(true)
-  created_at      DateTime @default(now()) 
-  updated_at      DateTime @updatedAt 
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
   venta Venta @relation(fields: [venta_id], references: [id], onDelete: Cascade)
   lote  Lote? @relation(fields: [lote_id], references: [id])
@@ -535,10 +558,10 @@ model Imagen {
   imagen      String
   descripcion String?
   activo      Boolean  @default(true)
-  created_at  DateTime @default(now()) 
-  updated_at  DateTime @updatedAt 
-  
-  servicio    Servicio @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  servicio Servicio @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
 
   @@map("imagenes")
 }
@@ -547,8 +570,8 @@ model TipoContabilidad {
   id               String            @id @default(uuid()) @db.Char(36)
   tipo             String
   activo           Boolean           @default(true)
-  created_at       DateTime          @default(now()) 
-  updated_at       DateTime          @updatedAt 
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
   ingresos_egresos IngresosEgresos[]
 
   @@map("tipos_contabilidad")
@@ -562,8 +585,8 @@ model IngresosEgresos {
   descripcion String?
   monto       Float
   activo      Boolean  @default(true)
-  created_at  DateTime @default(now()) 
-  updated_at  DateTime @updatedAt 
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   negocio  Negocio          @relation(fields: [negocio_id], references: [id])
   sucursal Sucursal         @relation(fields: [sucursal_id], references: [id])
@@ -576,9 +599,11 @@ model IngresosEgresos {
 // 8. ENUMERACIONES
 // ==============================================================
 
-enum TipoUsuario {
-  EMPLEADO
-  CLIENTE
+enum MetodoPago {
+  EFECTIVO
+  TARJETA
+  TRANSFERENCIA
+  OTRO
 }
 
 enum EstadoCita {

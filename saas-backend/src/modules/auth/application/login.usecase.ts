@@ -16,8 +16,9 @@ interface LoginRespuesta {
     usuario: {
         id: string,
         nombre: string,
-        rol: string,
         negocio_id: string,
+        permisos: string[]
+        roles: string[]
     }
 }
 
@@ -73,8 +74,9 @@ export class LoginUseCase {
             usuario: {
                 id: usuario.id,
                 nombre: usuario.nombre,
-                rol: usuario.rol,
                 negocio_id: usuario.negocio_id,
+                permisos: usuario.permisos,
+                roles: usuario.roles
             }
         }
     }
