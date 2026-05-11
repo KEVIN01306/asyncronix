@@ -25,8 +25,10 @@ export class ObtenerUsuarioUseCase {
         return {
             id: usuario.id,
             nombre: usuario.nombre,
+            apellido: usuario.apellido,
+            email: usuario.email,
             telefono: usuario.telefono,
-            rol: usuario.rol,
+            roles: usuario.roles,
             verificado: usuario.verificado,
             sucursal: usuario.sucursal ? {
                 id: usuario.sucursal.id,

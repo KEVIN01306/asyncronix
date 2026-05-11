@@ -14,8 +14,37 @@ export class PrismaAuthRespository implements AuthRepository {
         telefono: UsuarioAutentificacion["telefono"]
     ): Promise<UsuarioAutentificacion | null> {
 
-        const usuario = await this.db.usuarios.findUnique({
-            where: { telefono, activo: true }
+        const usuario = await this.db.usuario.findFirst({
+            where: { telefono, activo: true },
+            include: {
+                roles: { 
+                    select: { 
+                        nombre: true,
+                        permisos: { select: { codigo: true } }
+                    }
+                }
+            }
+        })
+
+        if (!usuario) return null
+
+        return AuthMapper.mapUsuarioAutentificacion(usuario)
+    }
+
+    async buscarPorEmail(
+        email: UsuarioAutentificacion["email"]
+    ): Promise<UsuarioAutentificacion | null> {
+
+        const usuario = await this.db.usuario.findFirst({
+            where: { email, activo: true },
+            include: {
+                roles: { 
+                    select: { 
+                        nombre: true,
+                        permisos: { select: { codigo: true } }
+                    }
+                }
+            }
         })
 
         if (!usuario) return null
@@ -27,8 +56,16 @@ export class PrismaAuthRespository implements AuthRepository {
         id: UsuarioAutentificacion["id"]
     ): Promise<UsuarioAutentificacion | null> {
 
-        const usuario = await this.db.usuarios.findUnique({
-            where: { id, activo: true }
+        const usuario = await this.db.usuario.findUnique({
+            where: { id, activo: true },
+            include: {
+                roles: { 
+                    select: { 
+                        nombre: true,
+                        permisos: { select: { codigo: true } }
+                    }
+                }
+            }
         })
 
         if (!usuario) return null

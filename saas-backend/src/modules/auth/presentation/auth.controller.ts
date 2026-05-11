@@ -25,9 +25,9 @@ export class AuthController {
 
     login = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { telefono, password } = req.body
+            const { email, password } = req.body
 
-            const { accessToken, refreshToken, usuario } = await this.loginUseCase.execute({ telefono, password })
+            const { accessToken, refreshToken, usuario } = await this.loginUseCase.execute({ email, password })
 
             res.cookie(NOMBRECOOKIEREFRESHTOKEN, refreshToken, COOKIE_OPTIONS)
 

@@ -3,7 +3,7 @@ import type { UsuarioAutentificacion } from "modules/auth/domain/auth-user.entit
 
 
 export class AuthMapper {
-    static mapUsuarioAutentificacion(usuario: UsuarioAutentificacion): UsuarioAutentificacion {
+    static mapUsuarioAutentificacion(usuario: any): UsuarioAutentificacion {
 
         return {
             id: usuario.id,
@@ -13,8 +13,8 @@ export class AuthMapper {
             activo: usuario.activo,
             negocio_id: usuario.negocio_id,
             sucursal_id: usuario.sucursal_id,
-            roles: usuario.roles,
-            permisos: usuario.permisos,
+            roles: usuario.roles?.map((rol: any) => rol.nombre) || [],
+            permisos: usuario.roles?.flatMap((rol: any) => rol.permisos?.map((permiso: any) => permiso.codigo) || []) || [],
             email: usuario.email,
             apellido: usuario.apellido
         };

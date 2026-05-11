@@ -4,6 +4,7 @@ import type { Session } from "./auth-session.entity.js";
 
 export interface AuthRepository {
     buscarPorTelefono(telefono: UsuarioAutentificacion['telefono']): Promise<UsuarioAutentificacion | null>
+    buscarPorEmail(email: UsuarioAutentificacion['email']): Promise<UsuarioAutentificacion | null>
     buscarPorId(id: UsuarioAutentificacion['id']): Promise<UsuarioAutentificacion | null>
     buscarSesionPorToken(token: Session['token']): Promise<Session | null>
     actualizarCrearSesion( usuario_id: Usuario['id'], token: Session['token'], fecha_expiracion: Date ): Promise<void>

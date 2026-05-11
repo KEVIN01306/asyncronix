@@ -91,7 +91,7 @@ model Sucursal {
   updated_at DateTime @updatedAt
 
   negocio          Negocio           @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  usuarios         Usuario[]         @relation("UsuarioSucursales")
+  usuarios         Usuario[]
   ventas           Venta[]
   servicios        Servicio[]
   citas            Cita[]
@@ -103,15 +103,16 @@ model Sucursal {
 
 model Session {
   id            String   @id @default(uuid()) @db.Char(36)
-  session_token String   @unique
-  Usuario_id    String   @db.Char(36)
-  expires       DateTime
-  Usuario       Usuario  @relation(fields: [Usuario_id], references: [id], onDelete: Cascade)
+  token         String   @unique(map: "token") @db.VarChar(255)
+  usuario_id    String   @db.Char(36) 
+  fecha_expiracion       DateTime
+  fecha_creacion DateTime @default(now())
+  usuario       Usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
 
-  @@index([Usuario_id])
+  @@index([usuario_id])
+  @@unique([usuario_id])
   @@map("sessions")
 }
-
 // ==============================================================
 // 2. IDENTIDAD Y ACCESO (IAM)
 // ==============================================================
@@ -119,6 +120,7 @@ model Session {
 model Usuario {
   id            String   @id @default(uuid()) @db.Char(36)
   negocio_id    String   @db.Char(36)
+  sucursal_id   String?  @db.Char(36)
   email         String?
   password_hash String?
   nombre        String
@@ -132,9 +134,9 @@ model Usuario {
   updated_at    DateTime @updatedAt
 
   negocio    Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  sucursales Sucursal[] @relation("UsuarioSucursales")
+  sucursal Sucursal? @relation(fields: [sucursal_id], references: [id], onDelete: SetNull)
   roles      Rol[]      @relation("UsuarioRoles")
-  sessions   Session[]
+  sessions   Session? 
 
   // Relaciones inversas corregidas
   servicios_mecanico Servicio[] @relation("ServicioMecanico")

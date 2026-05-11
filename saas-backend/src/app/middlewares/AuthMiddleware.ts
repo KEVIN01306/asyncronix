@@ -26,7 +26,8 @@ export class AuthMiddleware {
 
             res.locals.usuario = {
                 id: payload.sub,
-                rol: payload.rol,
+                roles: payload.roles,
+                permisos: payload.permisos,
                 negocio_id: payload.negocio_id,
             };
 
@@ -54,7 +55,22 @@ export class AuthMiddleware {
         return (req: Request, res: Response, next: NextFunction) => {
             const usuario = (req as any).usuario;
 
-            if (!usuario || !rolesPermitidos.includes(usuario.rol)) {
+            if (!usuario || !usuario.roles.some((role: string) => rolesPermitidos.includes(role))) {
+                return next(new AppError("No tienes permisos para realizar esta acción", "FORBIDDEN", 403));
+            }
+
+            next();
+        };
+    };
+
+    public verificarPermiso = (permisos: string[]) => {
+        return (req: Request, res: Response, next: NextFunction) => {
+            const usuario = (req as any).usuario;
+
+            console.log("Permisos requeridos:", permisos);
+            console.log("Permisos del usuario:", usuario);
+
+            if (!usuario || !usuario.permisos.some((permiso: string) => permisos.includes(permiso))) {
                 return next(new AppError("No tienes permisos para realizar esta acción", "FORBIDDEN", 403));
             }
 

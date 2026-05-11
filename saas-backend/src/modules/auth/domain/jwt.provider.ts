@@ -16,8 +16,8 @@ class JwtProvider {
         this.issuer = process.env.JWT_ISS;
         this.audience = process.env.JWT_AUD;
     }
-    async generateTokens(userId: string, rol: string, negocio_id: string) {
-        const accessToken = await new SignJWT({ rol, negocio_id })
+    async generateTokens(userId: string, roles: string[], permisos: string[], negocio_id: string) {
+        const accessToken = await new SignJWT({ roles, permisos, negocio_id })
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
             .setIssuer(this.issuer!)

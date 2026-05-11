@@ -8,7 +8,7 @@ import type JwtProvider from "../domain/jwt.provider.js";
 interface RefreshRespuesta {
     accessToken: string,
     refreshToken: string,
-}
+}   
 
 
 export class RefreshTokenUseCase {
@@ -40,7 +40,8 @@ export class RefreshTokenUseCase {
 
         const { accessToken, refreshToken  } = await this.jWTProvider.generateTokens(
             payload.sub,
-            usuario.rol,
+            usuario.roles,
+            usuario.permisos,
             usuario.negocio_id
         )
 

@@ -1,16 +1,18 @@
-import type { RolUsuario } from "./rol.enum.js"
+import type Rol from "./rol.entity.js";
 
 
 export interface Usuario {
     id: string,
     nombre: string,
+    apellido: string | null,
+    email: string | null,
     password_hash: string | null,
     telefono: string,
-    rol: RolUsuario,
+    verificado: boolean,
     activo: boolean | null,
-    verificado: boolean | null,
     negocio_id: string,
     sucursal_id: string | null,
+    roles: string[]
 }
 
 export interface UsuarioObtenidoDetalle extends Omit<Usuario, "password_hash" | "negocio_id" | "activo" | "sucursal_id"> { 
@@ -27,6 +29,10 @@ export interface UsuarioSimple extends Omit<Usuario, "password_hash" | "negocio_
     } | null;
 }
 
-export interface UsuarioCrear extends Omit<Usuario, "id"> { }
+export interface UsuarioCrear extends Omit<Usuario, "id" | "roles"> {
+    rolIds: string[];
+}
 
-export interface UsuarioActualizar extends Omit<Usuario, "id" | "activo" | "password_hash" | "verificado"> { }
+export interface UsuarioActualizar extends Omit<Usuario, "id" | "activo" | "password_hash" | "verificado" | "roles"> {
+    rolIds: string[];
+}

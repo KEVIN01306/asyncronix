@@ -6,7 +6,7 @@ import type JwtProvider from "../domain/jwt.provider.js";
 
 
 interface LoginDTO {
-    telefono: string,
+    email: string,
     password: string,
 }
 
@@ -17,7 +17,7 @@ interface LoginRespuesta {
         id: string,
         nombre: string,
         negocio_id: string,
-        permisos: string[]
+        permisos: string[],
         roles: string[]
     }
 }
@@ -30,9 +30,9 @@ export class LoginUseCase {
     ) { }
 
     async execute(data: LoginDTO): Promise<LoginRespuesta> {
-        const { telefono, password } = data
+        const { email, password } = data
 
-        const usuario = await this.authRepository.buscarPorTelefono(telefono)
+        const usuario = await this.authRepository.buscarPorEmail(email)
 
         if (!usuario) {
             throw new AppError("Credenciales invalidas", "INVALID_CREDENTIALS", 401)
@@ -57,7 +57,7 @@ export class LoginUseCase {
             throw new AppError("Credenciales invalidas", "INVALID_CREDENTIALS", 401)
         }
 
-        const { accessToken, refreshToken } = await this.jwtProvider.generateTokens(usuario.id, usuario.rol, usuario.negocio_id)
+        const { accessToken, refreshToken } = await this.jwtProvider.generateTokens(usuario.id, usuario.roles, usuario.permisos, usuario.negocio_id)
 
         const fechaExpiracion = new Date();
         fechaExpiracion.setDate(fechaExpiracion.getDate() + 7);

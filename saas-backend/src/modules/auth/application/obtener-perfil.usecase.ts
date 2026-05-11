@@ -3,7 +3,7 @@ import type { AuthRepository } from "../domain/auth.repository.js";
 import type { UsuarioAutentificacion } from "../domain/auth-user.entity.js";
 
 
-interface ObtenerPerfilRespuesta extends Pick<UsuarioAutentificacion, "id" | "nombre"  | "rol"  | "negocio_id"> { }
+interface ObtenerPerfilRespuesta extends Pick<UsuarioAutentificacion, "id" | "nombre"  | "roles"  | "negocio_id"> { }
 
 export class ObtenerPerfilUseCase {
     constructor(
@@ -18,7 +18,7 @@ export class ObtenerPerfilUseCase {
         return {
             id: usuario.id,
             nombre: usuario.nombre,
-            rol: usuario.rol,
+            roles: usuario.roles,
             negocio_id: usuario.negocio_id,
         }
     }

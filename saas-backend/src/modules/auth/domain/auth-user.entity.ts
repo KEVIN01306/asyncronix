@@ -8,6 +8,6 @@ export interface UsuarioAutentificacion {
     activo: boolean | null,
     negocio_id: string,
     sucursal_id: string | null,
-    permisos: string[]
+    permisos: string[],
     roles: string[]
-}
+}   

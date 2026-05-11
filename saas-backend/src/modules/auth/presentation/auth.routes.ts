@@ -11,7 +11,8 @@ const router = Router();
 
 router.post('/login',
     validarMiddleware.validarBody(loginSchema),
-    authController.login)
+    authController.login
+)
 
 router.post('/refresh',
     authController.refresh

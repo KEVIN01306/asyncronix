@@ -12,29 +12,33 @@ const validarMiddleware = new ValidarMiddleware()
 const authMiddleware = new AuthMiddleware()
 
 router.use(authMiddleware.protegerRuta)
-router.use(authMiddleware.verificarRol(['ADMIN']))
 
 router.get('/',
+    authMiddleware.verificarPermiso(['VER_USUARIOS']),
     validarMiddleware.validarQuery(paginacionQuerySchema),
     usuarioController.listar
 )
 
 
 router.get('/:id',
+    authMiddleware.verificarPermiso(['VER_USUARIOS_DETALLE']),
     usuarioController.obtener
 )
 
 router.post('/',
+    authMiddleware.verificarPermiso(['CREAR_USUARIOS']),
     validarMiddleware.validarBody(usuariosCrearSchema),
     usuarioController.registrar
 )
 
 router.put('/:id',
+    authMiddleware.verificarPermiso(['EDITAR_USUARIOS']),
     validarMiddleware.validarBody(usuarioActualizarSchema),
     usuarioController.actualizar
 )
 
 router.delete('/:id',
+    authMiddleware.verificarPermiso(['ELIMINAR_USUARIOS']),
     usuarioController.eliminar
 )
 

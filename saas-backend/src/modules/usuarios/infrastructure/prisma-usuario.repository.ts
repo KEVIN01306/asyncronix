@@ -15,10 +15,17 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         negocio_id: Usuario["negocio_id"]
     ): Promise<UsuarioObtenidoDetalle | null> {
 
-        const usuario = await this.db.usuarios.findFirst({
+        const usuario = await this.db.usuario.findFirst({
             where: { id, negocio_id, activo: true },
-            include: { negocios: { select: { id: true, nombre_comercial: true } }
-            , sucursales: { select: { id: true, nombre: true } } 
+            include: { 
+                negocio: { select: { id: true, nombre_comercial: true } },
+                sucursal: { select: { id: true, nombre: true } },
+                roles: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                    }
+                }
             }
         })
 
@@ -32,12 +39,18 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         telefono: Usuario["telefono"],
     ): Promise<UsuarioObtenidoDetalle | null> {
 
-        const usuario = await this.db.usuarios.findFirst({
+        const usuario = await this.db.usuario.findFirst({
             where: { telefono, activo: true },
             include: { 
-                negocios: { select: { id: true, nombre_comercial: true } },
-                sucursales: { select: { id: true, nombre: true } }
-        }
+                negocio: { select: { id: true, nombre_comercial: true } },
+                sucursal: { select: { id: true, nombre: true } },
+                roles: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                    }
+                }
+            }
         })
 
         if (!usuario) return null
@@ -58,11 +71,19 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         const where = { negocio_id, activo: true };
 
         const [total, usuarios] = await Promise.all([
-            this.db.usuarios.count({ where }),
-            this.db.usuarios.findMany({
+            this.db.usuario.count({ where }),
+            this.db.usuario.findMany({
                 where,
-                include: { negocios: { select: { id: true, nombre_comercial: true } },
-                            sucursales: { select: { id: true, nombre: true } } },
+                include: { 
+                    negocio: { select: { id: true, nombre_comercial: true } },
+                    sucursal: { select: { id: true, nombre: true } },
+                    roles: {
+                        select: {
+                            id: true,
+                            nombre: true,
+                        }
+                    }
+                },
                 take: perPage,
                 skip: offset,
                 orderBy: { nombre: 'asc' }
@@ -82,11 +103,33 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
 
     async registrar(data: UsuarioCrear, negocio_id: Usuario["negocio_id"]): Promise<UsuarioSimple> {
         try {
-            const usuario = await this.db.usuarios.create({
+
+            const { rolIds, ...usuarioData } = data
+            const usuario = await this.db.usuario.create({
                 data: {
-                    ...data,
+                    ...usuarioData,
                     negocio_id,
-                    rol: UsuarioMapper.mapRolBaseDatos(data.rol)
+                    activo: true,
+                    roles: {
+                        connect: rolIds.map(id => ({ id })),
+                    }
+                },
+                include: {
+                    negocio: { select: { id: true, nombre_comercial: true } },
+                    sucursal: { select: { id: true, nombre: true } },
+                    roles: {
+                        select: {
+                            id: true,
+                            nombre: true,
+                            negocio_id: true,
+                            permisos: {
+                                select: {
+                                    id: true,
+                                    codigo: true
+                                }
+                            }
+                        }
+                    }
                 }
             })
 
@@ -98,11 +141,31 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
 
     async actualizar(id: Usuario["id"], negocio_id: Usuario["negocio_id"], data: UsuarioActualizar): Promise<UsuarioSimple> {
         try {
-            const usuario = await this.db.usuarios.update({
+            const { rolIds, ...usuarioData } = data
+            const usuario = await this.db.usuario.update({
                 where: { id, negocio_id, activo: true },
                 data: {
-                    ...data,
-                    rol: UsuarioMapper.mapRolBaseDatos(data.rol)
+                    ...usuarioData,
+                    roles: {
+                        connect: rolIds.map(id => ({ id })),
+                    }
+                },
+                include: {
+                    negocio: { select: { id: true, nombre_comercial: true } },
+                    sucursal: { select: { id: true, nombre: true } },
+                    roles: {
+                        select: {
+                            id: true,
+                            nombre: true,
+                            negocio_id: true,
+                            permisos: {
+                                select: {
+                                    id: true,
+                                    codigo: true
+                                }
+                            }
+                        }
+                    }
                 }
             })
 
@@ -115,7 +178,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
 
     async eliminar(id: Usuario["id"], negocio_id: Usuario["negocio_id"]): Promise<void> {
         try {
-            await this.db.usuarios.update({
+            await this.db.usuario.update({
                 where: { id, negocio_id, activo: true },
                 data: {
                     activo: false

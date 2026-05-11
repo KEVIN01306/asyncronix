@@ -24,8 +24,10 @@ export class ObtenerUsuariosUseCase {
             total, usuarios: data.map(usuario => ({
                 id: usuario.id,
                 nombre: usuario.nombre,
+                apellido: usuario.apellido,
+                email: usuario.email,
                 telefono: usuario.telefono,
-                rol: usuario.rol,
+                roles: usuario.roles,
                 sucursal: usuario.sucursal ? {
                     id: usuario.sucursal.id,
                     nombre: usuario.sucursal.nombre,

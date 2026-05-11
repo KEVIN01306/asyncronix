@@ -1,166 +1,156 @@
-import { PrismaClient } from '@prisma/client'
-import { Argon2HashProvider } from '../src/shared/infrastructure/argon2-hash.provider'
+import { PrismaClient } from '@prisma/client';
+import { Argon2HashProvider } from '../src/shared/infrastructure/argon2-hash.provider';
 
 const prisma = new PrismaClient();
-
-const hashProvider = new Argon2HashProvider()
+const hashProvider = new Argon2HashProvider();
 
 const permisosData = [
-    { codigo: "VER_USUARIOS"},
-    { codigo: "CREAR_USUARIOS"},
-    { codigo: "EDITAR_USUARIOS"},
-    { codigo: "ELIMINAR_USUARIOS"},
-    { codigo: "VER_ROLES"},
-    { codigo: "CREAR_ROLES"},
-    { codigo: "EDITAR_ROLES"},
-    { codigo: "ELIMINAR_ROLES"},
-    { codigo: "VER_SUCURSALES"},
-    { codigo: "CREAR_SUCURSALES"},
-    { codigo: "EDITAR_SUCURSALES"},
-    { codigo: "ELIMINAR_SUCURSALES"},
-    { codigo: "VER_NEGOCIOS"},
-    { codigo: "CREAR_NEGOCIOS"},
-    { codigo: "EDITAR_NEGOCIOS"},
-    { codigo: "VER_PERMISOS"},
-    { codigo: "EDITAR_PERMISOS"},
-]
+    { codigo: "VER_USUARIOS" },
+    { codigo: "VER_USUARIOS_DETALLE" },
+    { codigo: "CREAR_USUARIOS" },
+    { codigo: "EDITAR_USUARIOS" },
+    { codigo: "ELIMINAR_USUARIOS" },
+    { codigo: "VER_ROLES" },
+    { codigo: "VER_ROLES_DETALLE" },
+    { codigo: "CREAR_ROLES" },
+    { codigo: "EDITAR_ROLES" },
+    { codigo: "ELIMINAR_ROLES" },
+    { codigo: "VER_SUCURSALES" },
+    { codigo: "VER_SUCURSALES_DETALLE" },
+    { codigo: "CREAR_SUCURSALES" },
+    { codigo: "EDITAR_SUCURSALES" },
+    { codigo: "ELIMINAR_SUCURSALES" },
+    { codigo: "VER_NEGOCIOS" },
+    { codigo: "VER_NEGOCIOS_DETALLE" },
+    { codigo: "CREAR_NEGOCIOS" },
+    { codigo: "EDITAR_NEGOCIOS" },
+    { codigo: "VER_PERMISOS" },
+    { codigo: "EDITAR_PERMISOS" },
+];
 
-const modulosData = [
-    { nombre: "USUARIOS" },
-    { nombre: "ROLES" },
-    { nombre: "SUCURSALES" },
-    { nombre: "NEGOCIOS" },
-    { nombre: "PERMISOS" }
-]
+const modulosConPermisos = [
+    {
+        nombre: "USUARIOS",
+        permisos: ["VER_USUARIOS", "VER_USUARIOS_DETALLE", "CREAR_USUARIOS", "EDITAR_USUARIOS", "ELIMINAR_USUARIOS"]
+    },
+    {
+        nombre: "ROLES",
+        permisos: ["VER_ROLES", "VER_ROLES_DETALLE", "CREAR_ROLES", "EDITAR_ROLES", "ELIMINAR_ROLES"]
+    },
+    {
+        nombre: "SUCURSALES",
+        permisos: ["VER_SUCURSALES", "VER_SUCURSALES_DETALLE", "CREAR_SUCURSALES", "EDITAR_SUCURSALES", "ELIMINAR_SUCURSALES"]
+    },
+    {
+        nombre: "NEGOCIOS",
+        permisos: ["VER_NEGOCIOS", "VER_NEGOCIOS_DETALLE", "CREAR_NEGOCIOS", "EDITAR_NEGOCIOS"]
+    },
+    {
+        nombre: "PERMISOS",
+        permisos: ["VER_PERMISOS", "EDITAR_PERMISOS"]
+    }
+];
 
 async function main() {
 
-    await prisma.$transaction([
-        prisma.modulo.create({
-            data: {
-                nombre: "USUARIOS",
+    for (const m of modulosConPermisos) {
+        await prisma.modulo.upsert({
+            where: { nombre: m.nombre },
+            update: {
                 permisos: {
-                    create: [
-                        { codigo: "VER_USUARIOS"},
-                        { codigo: "CREAR_USUARIOS"},
-                        { codigo: "EDITAR_USUARIOS"},
-                        { codigo: "ELIMINAR_USUARIOS"}
-                    ]
+                    connectOrCreate: m.permisos.map(codigo => ({
+                        where: { codigo },
+                        create: { codigo }
+                    }))
+                }
+            },
+            create: {
+                nombre: m.nombre,
+                permisos: {
+                    create: m.permisos.map(codigo => ({ codigo }))
                 }
             }
-        }),
-        prisma.modulo.create({
-            data: {
-                nombre: "ROLES",
-                permisos: {
-                    create: [
-                        { codigo: "VER_ROLES"},
-                        { codigo: "CREAR_ROLES"},
-                        { codigo: "EDITAR_ROLES"},
-                        { codigo: "ELIMINAR_ROLES"}
-                    ]
-                }
-            }
-        }),
-        prisma.modulo.create({
-            data: {
-                nombre: "SUCURSALES",
-                permisos: {
-                    create: [
-                        { codigo: "VER_SUCURSALES"},
-                        { codigo: "CREAR_SUCURSALES"},
-                        { codigo: "EDITAR_SUCURSALES"},
-                        { codigo: "ELIMINAR_SUCURSALES"}
-                    ]
-                }
-            }
-        }),
-        prisma.modulo.create({
-            data: {
-                nombre: "NEGOCIOS",
-                permisos: {
-                    create: [
-                        { codigo: "VER_NEGOCIOS"},
-                        { codigo: "CREAR_NEGOCIOS"},
-                        { codigo: "EDITAR_NEGOCIOS"},
-                    ]
-                }
-            }
-        }),
-        prisma.modulo.create({
-            data: {
-                nombre: "PERMISOS",
-                permisos: {
-                    create: [
-                        { codigo: "VER_PERMISOS"},
-                        { codigo: "EDITAR_PERMISOS"},
-                    ]
-                }
-            }
-        })
-    ])
-
+        });
+    }
 
     const negocio = await prisma.negocio.upsert({
         where: { wa_id: "50230108703" },
-        update: {},
+        update: {
+            permisos: {
+                connect: permisosData.map(p => ({ codigo: p.codigo }))
+            },
+            modulos: {
+                connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
+            }
+        },
         create: {
             nombre: "ASYNCRONIX",
             nombre_comercial: "ASYNCRONIX",
-            slug:  "asyncronix",
+            slug: "asyncronix",
             wa_id: "50230108703",
             nit_rut: "388577959",
             slogan: "Todos juntos podemos",
             permisos: {
-                connect: permisosData
+                connect: permisosData.map(p => ({ codigo: p.codigo }))
             },
             modulos: {
-                connect: modulosData
+                connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
             }
         }
     });
 
     const rolAdmin = await prisma.rol.upsert({
-        where: { negocio_id_nombre: { negocio_id: negocio.id, nombre: "ADMIN" } },
-        update: {},
+        where: { 
+            negocio_id_nombre: { 
+                negocio_id: negocio.id, 
+                nombre: "ADMIN" 
+            } 
+        },
+        update: {
+            permisos: {
+                set: [],
+                connect: permisosData.map(p => ({ codigo: p.codigo }))
+            }
+        },
         create: {
             nombre: "ADMIN",
             negocio_id: negocio.id,
             permisos: {
-                connect: permisosData
+                connect: permisosData.map(p => ({ codigo: p.codigo }))
             }
         }
-    })
+    });
 
-
+    const passwordHash = await hashProvider.hash("12345678");
     const usuarioAdmin = await prisma.usuario.upsert({
-        where: { negocio_id_email: { negocio_id: negocio.id, email: "kevin@gmail.com" } },
+        where: { 
+            negocio_id_email: { 
+                negocio_id: negocio.id, 
+                email: "kevin@gmail.com" 
+            } 
+        },
         update: {},
         create: {
             nombre: "Kevin Eduardo",
             email: "kevin@gmail.com",
             telefono: "30108703",
             dpi: "3885779590101",
-            password_hash: await hashProvider.hash("12345678"),
+            password_hash: passwordHash,
             activo: true,
             verificado: false,
             negocio_id: negocio.id,
-            
             roles: {
-                connect: [
-                    { id: rolAdmin.id }
-                ]
+                connect: [{ id: rolAdmin.id }]
             }
         },
-    })
-}
+    });
 
+}
 
 main()
     .then(async () => {
         await prisma.$disconnect();
     })
     .catch(async (e) => {
-        console.error(e);
         await prisma.$disconnect();
-    })
+    });
