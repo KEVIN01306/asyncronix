@@ -10,4 +10,9 @@ export interface UsuarioAutentificacion {
     sucursal_id: string | null,
     permisos: string[],
     roles: string[]
+    negocio?: {
+        id: string;
+        nombre_comercial: string;
+        logo_url: string | null;
+    } | null;
 }   

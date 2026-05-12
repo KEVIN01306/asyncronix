@@ -43,7 +43,14 @@ export class PrismaAuthRespository implements AuthRepository {
                         nombre: true,
                         permisos: { select: { codigo: true } }
                     }
-                }
+                },
+                negocio: {
+                    select: {
+                        id: true,
+                        nombre_comercial: true,
+                        logo_url: true,
+                    }
+                },
             }
         })
 

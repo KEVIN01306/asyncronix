@@ -13,30 +13,30 @@ const validarMiddleware = new ValidarMiddleware()
 router.use(authMiddleware.protegerRuta)
 
 router.get('/',
-    authMiddleware.verificarRol(['ADMIN', 'VENDEDOR']),
+    authMiddleware.verificarPermiso(['VER_SUCURSALES']),
     validarMiddleware.validarQuery(paginacionQuerySchema),
     sucursalController.listar
 );
 
 router.get('/:id',
-    authMiddleware.verificarRol(['ADMIN', 'VENDEDOR']),
+    authMiddleware.verificarPermiso(['VER_SUCURSALES_DETALLE']),
     sucursalController.obtener
 );
 
 router.post('/',
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarPermiso(['CREAR_SUCURSALES']),
     validarMiddleware.validarBody(sucursalCrearSchema),
     sucursalController.registrar
 );
 
 router.put('/:id',
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarPermiso(['EDITAR_SUCURSALES']),
     validarMiddleware.validarBody(sucursalActualizarSchema),
     sucursalController.actualizar
 );
 
 router.delete('/:id',
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarPermiso(['ELIMINAR_SUCURSALES']),
     sucursalController.eliminar
 );
 

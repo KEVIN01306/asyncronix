@@ -11,7 +11,7 @@ export class PrismaSucursalRepository implements SucursalRepository {
 
     async contar(negocio_id: string): Promise<number> {
         try {
-            return await this.prisma.sucursales.count({ where: { negocio_id } });
+            return await this.prisma.sucursal.count({ where: { negocio_id } });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
@@ -19,12 +19,12 @@ export class PrismaSucursalRepository implements SucursalRepository {
 
     async registrar(data: SucursalCrearPersistencia, negocio_id: string): Promise<SucursalObtenidoDetalle> {
         try {
-            const sucursal = await this.prisma.sucursales.create({
+            const sucursal = await this.prisma.sucursal.create({
                 data: {
                     ...data,
                     negocio_id,
                 },
-                include: { negocios: true },
+                include: { negocio: true },
             });
 
             return SucursalMapper.mapDetalle(sucursal);
@@ -35,10 +35,10 @@ export class PrismaSucursalRepository implements SucursalRepository {
 
     async actualizar(id: string, negocio_id: string, data: SucursalActualizar): Promise<SucursalObtenidoDetalle> {
         try {
-            const sucursal = await this.prisma.sucursales.update({
+            const sucursal = await this.prisma.sucursal.update({
                 where: { id, negocio_id },
                 data,
-                include: { negocios: true },
+                include: { negocio: true },
             });
 
             return SucursalMapper.mapDetalle(sucursal);
@@ -49,7 +49,7 @@ export class PrismaSucursalRepository implements SucursalRepository {
 
     async eliminar(id: string, negocio_id: string): Promise<void> {
         try {
-            await this.prisma.sucursales.delete({
+            await this.prisma.sucursal.delete({
                 where: { id, negocio_id },
             });
         } catch (error) {
@@ -59,9 +59,9 @@ export class PrismaSucursalRepository implements SucursalRepository {
 
     async obtener(id: string, negocio_id: string): Promise<SucursalObtenidoDetalle | null> {
         try {
-            const sucursal = await this.prisma.sucursales.findUnique({
+            const sucursal = await this.prisma.sucursal.findUnique({
                 where: { id, negocio_id },
-                include: { negocios: true },
+                include: { negocio: true },
             });
 
             if (!sucursal) {
@@ -80,10 +80,10 @@ export class PrismaSucursalRepository implements SucursalRepository {
             const skip = (page - 1) * perPage;
 
             const [total, sucursales] = await Promise.all([
-                this.prisma.sucursales.count({ where: { negocio_id } }),
-                this.prisma.sucursales.findMany({
+                this.prisma.sucursal.count({ where: { negocio_id } }),
+                this.prisma.sucursal.findMany({
                     where: { negocio_id },
-                    include: { negocios: true },
+                    include: { negocio: true },
                     skip,
                     take: perPage,
                     orderBy: { nombre: 'asc' },

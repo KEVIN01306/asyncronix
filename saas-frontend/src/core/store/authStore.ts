@@ -4,9 +4,14 @@ import { persist } from 'zustand/middleware';
 interface User {
     id: string;
     nombre: string;
-    rol: 'ADMIN' | 'VENDEDOR';
+    roles: string[];
+    permisos: string[];
     negocio_id: string;
-
+    negocio?: {
+        id: string;
+        nombre_comercial: string;
+        logo_url: string | null;
+    } | null;
 }
 
 interface AuthState {

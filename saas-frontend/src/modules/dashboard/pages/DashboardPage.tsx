@@ -35,7 +35,7 @@ const DashboardPage = () => {
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 6 }}>
         <Box>
           <Typography variant="h3" sx={{ fontWeight: 900, color: "primary.main", letterSpacing: "-1.5px", position: 'relative' }}>
-            ASYNCRONIX
+            {user?.negocio?.nombre_comercial || "Asyncronix"}
           </Typography>
           <Typography variant="body1" sx={{ color: "text.secondary", mt: 1, fontWeight: 500, fontSize: '1.1rem' }}>
             Bienvenido al núcleo operativo de tu red de servicios.

@@ -23,11 +23,11 @@ const UsuariosListPage = () => {
     const columns = [
         { id: 'nombre', name: 'Nombre', format: (value: any) => value.toUpperCase() },
         { id: 'telefono', name: 'Teléfono' },
-        { id: 'rol', name: 'Rol', format: (value: any) => <Chip color={value === 'ADMIN' ? 'primary' : 'default'} label={value} /> },
+        { id: 'roles', name: 'Roles', format: (value: any) => <Chip color={value?.[0] === 'ADMIN' ? 'primary' : 'default'} label={value?.[0]} /> },
         { id: 'sucursal', name: 'Sucursal', format: (value: any) => <Chip color={value ? "primary" : "default"} label={value ? value.nombre : 'Sin sucursal'} /> },
     ];
 
-    const actions = [
+    const actions = [   
         {
             name: 'Ver',
             icon: <Visibility fontSize="small" />,

@@ -19,6 +19,11 @@ interface LoginRespuesta {
         negocio_id: string,
         permisos: string[],
         roles: string[]
+        negocio: {
+            id: string;
+            nombre_comercial: string;
+            logo_url: string | null;
+        } | null;
     }
 }
 
@@ -76,7 +81,12 @@ export class LoginUseCase {
                 nombre: usuario.nombre,
                 negocio_id: usuario.negocio_id,
                 permisos: usuario.permisos,
-                roles: usuario.roles
+                roles: usuario.roles,
+                negocio: usuario.negocio ? {
+                    id: usuario.negocio.id,
+                    nombre_comercial: usuario.negocio.nombre_comercial,
+                    logo_url: usuario.negocio.logo_url
+                } : null
             }
         }
     }

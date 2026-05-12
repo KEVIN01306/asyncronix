@@ -14,6 +14,7 @@ export class RegistrarNegocioUseCase {
         try {
             const negocioExistente = await this.negocioRepository.obtenerPorWaId(data.wa_id);
 
+            const slug = data.nombre_comercial.toLowerCase().replace(/\s+/g, '-');
             if (negocioExistente) {
                 if (logo_url) await ManejadorArchivosUtils.eliminarArchivo(logo_url);
                 throw new AppError('El negocio ya existe', 'DATA_ALREADY_EXISTS', 409);
@@ -21,6 +22,7 @@ export class RegistrarNegocioUseCase {
 
             return await this.negocioRepository.registrar({
                 ...data,
+                slug,
                 logo_url
             });
         } catch (error) {

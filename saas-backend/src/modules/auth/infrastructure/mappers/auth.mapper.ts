@@ -16,7 +16,12 @@ export class AuthMapper {
             roles: usuario.roles?.map((rol: any) => rol.nombre) || [],
             permisos: usuario.roles?.flatMap((rol: any) => rol.permisos?.map((permiso: any) => permiso.codigo) || []) || [],
             email: usuario.email,
-            apellido: usuario.apellido
+            apellido: usuario.apellido,
+            negocio: usuario.negocio ? {
+                id: usuario.negocio.id,
+                nombre_comercial: usuario.negocio.nombre_comercial,
+                logo_url: usuario.negocio.logo_url
+            } : null
         };
     }
 }

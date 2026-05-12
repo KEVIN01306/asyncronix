@@ -1,4 +1,4 @@
-import z, { email } from "zod";
+import z from "zod";
 
 export const usuariosSchema = z.object({
     id: z.string().max(36),

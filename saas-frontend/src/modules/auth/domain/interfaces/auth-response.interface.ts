@@ -3,7 +3,13 @@ export interface LoginResponse {
     usuario: {
         id: string;
         nombre: string;
-        rol: string;
+        roles: string[];
+        permisos: string[];
         negocio_id: string;
+        negocio?: {
+            id: string;
+            nombre_comercial: string;
+            logo_url: string | null;
+        } | null;
     };
 }

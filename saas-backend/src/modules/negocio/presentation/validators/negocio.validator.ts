@@ -5,6 +5,7 @@ const transformNullish = (v: any) => v === '' ? null : v
 export const negociosSchema = z.object({
     id: z.string().min(36).max(36),
     nombre_comercial: z.string(),
+    nombre: z.string(),
     wa_id: z.string().max(15),
     nit_rut: z.string().max(20).optional().nullish().transform(transformNullish),
     logo_url: z.string().optional().nullish().transform(transformNullish),

@@ -27,7 +27,7 @@ const LoginPage = () => {
 
     const onSubmit = async (data: LoginFormValues) => {
         try {
-            const cleanData = { ...data, telefono: data.telefono.replace(/\D/g, '') };
+            const cleanData = { ...data, telefono: data.email };
 
             const response = await authRepository.signIn(cleanData);
             setAuth(response.usuario, response.accessToken);

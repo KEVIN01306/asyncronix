@@ -21,11 +21,11 @@ const LoginForm = ({register,errors,onSubmit,isSubmitting}: LoginFormProps) => {
             <Box component="form" onSubmit={onSubmit} noValidate>
                 <TextField
                     fullWidth
-                    label="Teléfono"
-                    placeholder="1234 5678"
-                    {...register('telefono')}
-                    error={!!errors.telefono}
-                    helperText={errors.telefono?.message}
+                    label="Correo Electrónico"
+                    placeholder="example@domain.com"
+                    {...register('email')}
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">

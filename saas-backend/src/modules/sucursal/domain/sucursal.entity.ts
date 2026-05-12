@@ -12,8 +12,6 @@ export interface SucursalSimple extends Omit<Sucursal, "negocio_id"> { }
 
 export interface SucursalCrear extends Omit<Sucursal, "id" | "negocio_id" | "es_principal"> { }
 
-export interface SucursalCrearPersistencia extends SucursalCrear {
-    es_principal: boolean;
-}
+export interface SucursalCrearPersistencia extends SucursalCrear {}
 
 export interface SucursalActualizar extends Partial<SucursalCrear> { }

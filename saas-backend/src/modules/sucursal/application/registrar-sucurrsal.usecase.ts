@@ -11,12 +11,7 @@ export class RegistrarSucursalUseCase {
 
     async execute(data: SucursalCrear, negocio_id: string): Promise<SucursalObtenidoDetalle> {
         try {
-            const totalSucursales = await this.sucursalRepository.contar(negocio_id);
-
-            return await this.sucursalRepository.registrar({
-                ...data,
-                es_principal: totalSucursales === 0
-            }, negocio_id);
+            return await this.sucursalRepository.registrar(data, negocio_id);
         } catch (error) {
             if (error instanceof UniqueConstraintError) {
                 throw new AppError('La sucursal ya existe en este negocio', 'DATA_ALREADY_EXISTS', 409)

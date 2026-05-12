@@ -9,7 +9,7 @@ export class PrismaNegocioRepository implements NegocioRepository {
 
     async registrar(data: NegocioCrear & { logo_url: string | null }): Promise<NegocioObtenidoDetalle> {
         try {
-            const negocio = await this.prisma.negocios.create({
+            const negocio = await this.prisma.negocio.create({
                 data: {
                     ...data,
                     fecha_registro: new Date()
@@ -24,7 +24,7 @@ export class PrismaNegocioRepository implements NegocioRepository {
 
     async actualizar(id: string, data: NegocioActualizar): Promise<NegocioObtenidoDetalle> {
         try {
-            const negocio = await this.prisma.negocios.update({
+            const negocio = await this.prisma.negocio.update({
                 where: { id },
                 data
             });
@@ -37,7 +37,7 @@ export class PrismaNegocioRepository implements NegocioRepository {
 
     async obtener(id: string): Promise<NegocioObtenidoDetalle | null> {
         try {
-            const negocio = await this.prisma.negocios.findUnique({
+            const negocio = await this.prisma.negocio.findUnique({
                 where: { id }
             });
 
@@ -51,7 +51,7 @@ export class PrismaNegocioRepository implements NegocioRepository {
 
     async obtenerPorWaId(wa_id: string): Promise<NegocioObtenidoDetalle | null> {
         try {
-            const negocio = await this.prisma.negocios.findUnique({
+            const negocio = await this.prisma.negocio.findUnique({
                 where: { wa_id }
             });
 
@@ -65,7 +65,7 @@ export class PrismaNegocioRepository implements NegocioRepository {
 
     async listar(wa_id: string): Promise<NegocioObtenidoDetalle | null> {
         try {
-            const negocio = await this.prisma.negocios.findUnique({
+            const negocio = await this.prisma.negocio.findUnique({
                 where: { wa_id }
             });
 

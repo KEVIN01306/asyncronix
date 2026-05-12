@@ -19,7 +19,7 @@ export class ActualizarNegocioUseCase {
         }
 
         try {
-            const negocioActual = await this.negocioRepository.buscarPorId(id);
+            const negocioActual = await this.negocioRepository.obtener(id);
 
             if (!negocioActual) {
                 if (nuevoLogoUrl) await ManejadorArchivosUtils.eliminarArchivo(nuevoLogoUrl);

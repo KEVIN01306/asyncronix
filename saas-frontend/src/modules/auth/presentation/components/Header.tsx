@@ -1,9 +1,7 @@
 import { Box, Typography } from "@mui/material"
 
-
-
 const Header = () => {
-
+    
     return (
         <>
             <Box display="flex" justifyContent="center" mb={2}>
