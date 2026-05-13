@@ -4,6 +4,7 @@ import Sidebar from "./siderbar/Sidebar";
 import Navbar from "./navbar/Navbar";
 import { Outlet } from "react-router-dom";
 import MenuItems from "./siderbar/menuItems";
+import { useAuthStore } from "../../../core/store/authStore";
 
 const DRAWER_WIDTH = 280;
 
@@ -14,7 +15,23 @@ const FullLayout = () => {
     
     const [open, setOpen] = useState(!isMobile);
 
+    const user = useAuthStore((state) => state.user);
+
     const toggleSidebar = () => setOpen(!open);
+
+    const menuItems = MenuItems.map( item => {
+        if (item.permiso && !user?.permisos.includes(item.permiso)) {
+            return null;
+        }
+        if (item.children) {
+            const filteredChildren = item.children.filter(child => !child.permiso || user?.permisos.includes(child.permiso));
+            if (filteredChildren.length === 0) {
+                return null;
+            }
+            return { ...item, children: filteredChildren };
+        }
+        return item;
+    });
     
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -24,7 +41,7 @@ const FullLayout = () => {
                 onClose={toggleSidebar}
                 isMobile={isMobile}
                 drawerWidth={DRAWER_WIDTH} 
-                menuItems={MenuItems} 
+                menuItems={menuItems} 
             />
 
             <Box 

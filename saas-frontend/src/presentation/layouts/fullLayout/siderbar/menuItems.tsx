@@ -1,7 +1,6 @@
 import {
   AdminPanelSettingsOutlined,
   Inventory2,
-  PrecisionManufacturing,
   SettingsSuggest,
   StoreMallDirectory,
 } from '@mui/icons-material';
@@ -12,20 +11,21 @@ export interface MenuItem {
   module?: string;
   link?: string;
   icon: ElementType;
+  permiso?: string;
   children?: MenuItem[];
 }
 
 const MenuItems: MenuItem[] = [
-  { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/"},
-  { name: "Prveedores", icon: PrecisionManufacturing, link: "/proveedores"},
+  { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/" },
   { module: "inventario", name: "Inventario", icon: Inventory2, children: [
-    { name: "Productos", link: "/inventario/productos", icon: AdminPanelSettingsOutlined },
-    { name: "Categorías", link: "/categorias", icon: AdminPanelSettingsOutlined },
-  ]},
-  { name: "Sucursales", icon: StoreMallDirectory, link: "/sucursales"},
+      { name: "Categorías", link: "/categorias", icon: AdminPanelSettingsOutlined, permiso: "VER_CATEGORIAS" },
+    ]
+  },
+  { name: "Sucursales", icon: StoreMallDirectory, link: "/sucursales", permiso: "VER_SUCURSALES" },
   { module: "configuracion", name: "Configuración", icon: SettingsSuggest, children: [
-    { name: "Usuarios", link: "/usuarios", icon: AdminPanelSettingsOutlined },
-  ]},
+      { name: "Usuarios", link: "/usuarios", icon: AdminPanelSettingsOutlined, permiso: "VER_USUARIOS" },
+    ]
+  },
 ];
 
 export default MenuItems;

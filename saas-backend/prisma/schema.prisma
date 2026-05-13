@@ -437,13 +437,14 @@ model ServicioTarea {
 
 model CategoriaProducto {
   id         String   @id @default(uuid()) @db.Char(36)
-  negocio_id String   @db.Char(36)
+  negocio_id String?   @db.Char(36)
   categoria  String
+  default_categoria   Boolean  @default(false)
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  negocio   Negocio    @relation(fields: [negocio_id], references: [id])
+  negocio   Negocio?    @relation(fields: [negocio_id], references: [id])
   productos Producto[]
 
   @@unique([negocio_id, categoria])

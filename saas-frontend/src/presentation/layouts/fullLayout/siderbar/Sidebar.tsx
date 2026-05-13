@@ -19,7 +19,7 @@ interface SidebarProps {
   onClose: () => void;
   isMobile: boolean;
   drawerWidth: number;
-  menuItems: MenuItem[];
+  menuItems: (MenuItem | null)[];
 }
 
 const Sidebar = ({ open, onClose, isMobile, drawerWidth, menuItems }: SidebarProps) => {
@@ -49,9 +49,11 @@ const Sidebar = ({ open, onClose, isMobile, drawerWidth, menuItems }: SidebarPro
       <Box sx={{ overflow: 'auto', px: 1, pb: 4 }}>
       <List disablePadding>
           {menuItems.map((item) => (
-            item.children 
-              ? <SidebarGroup key={item.module} item={item} />
-              : <SidebarItem key={item.name} item={item} />
+            item ? (
+              item.children 
+                ? <SidebarGroup key={item.module} item={item} />
+                : <SidebarItem key={item.name} item={item} />
+            ) : null
           ))}
         </List>
       </Box>

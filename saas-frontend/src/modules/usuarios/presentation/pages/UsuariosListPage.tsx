@@ -27,7 +27,7 @@ const UsuariosListPage = () => {
         { id: 'sucursal', name: 'Sucursal', format: (value: any) => <Chip color={value ? "primary" : "default"} label={value ? value.nombre : 'Sin sucursal'} /> },
     ];
 
-    const actions = [   
+    const actions = [       
         {
             name: 'Ver',
             icon: <Visibility fontSize="small" />,
