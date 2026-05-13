@@ -147,7 +147,7 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
                 data: {
                     ...usuarioData,
                     roles: {
-                        connect: rolIds.map(id => ({ id })),
+                        set: rolIds.map(id => ({ id })),
                     }
                 },
                 include: {

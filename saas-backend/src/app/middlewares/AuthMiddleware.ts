@@ -70,7 +70,16 @@ export class AuthMiddleware {
             console.log("Permisos requeridos:", permisos);
             console.log("Permisos del usuario:", usuario);
 
-            if (!usuario || !usuario.permisos.some((permiso: string) => permisos.includes(permiso))) {
+            if (!usuario || !usuario.permisos) {
+                return next(new AppError("Usuario no autenticado o sin permisos definidos", "FORBIDDEN", 403));
+            }
+
+
+            const tieneTodo = permisos.every((permiso) => 
+                usuario.permisos.includes(permiso)
+            );
+
+            if (!tieneTodo) {
                 return next(new AppError("No tienes permisos para realizar esta acción", "FORBIDDEN", 403));
             }
 

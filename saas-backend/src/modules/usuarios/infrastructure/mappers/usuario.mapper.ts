@@ -10,7 +10,7 @@ export class UsuarioMapper {
             apellido: usuario.apellido,
             email: usuario.email,
             telefono: usuario.telefono,
-            roles: usuario.roles?.map((rol: any) => rol.nombre) || [],
+            roles: usuario.roles?.map((rol: any) => {return { id: rol.id, nombre: rol.nombre }}) || [],
             verificado: usuario.verificado,
             sucursal: usuario.sucursal ? {
                 id: usuario.sucursal.id,
@@ -26,8 +26,7 @@ export class UsuarioMapper {
             apellido: usuario.apellido,
             email: usuario.email,
             telefono: usuario.telefono,
-            roles: usuario.roles?.map((rol: any) => rol.nombre) || [],
-
+            roles: usuario.roles?.map((rol: any) => { return { id: rol.id, nombre: rol.nombre } }) || [],
             sucursal: usuario.sucursal ? {
                 id: usuario.sucursal.id,
                 nombre: usuario.sucursal.nombre,

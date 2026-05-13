@@ -6,6 +6,8 @@ import type { Sucursal } from "../../../sucursales/domain/interfaces/sucursal.in
 export interface Usuario {
     id: string,
     nombre: string,
+    apellido: string,
+    email: string,
     telefono: string,
     roles: string[],
     verificado: boolean | null,

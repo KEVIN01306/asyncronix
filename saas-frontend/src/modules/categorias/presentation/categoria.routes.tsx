@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router-dom';
 import { CategoriaDetailPage, CategoriaFormPage, CategoriaListPage } from './categoria-lazy';
+import { RouteProtector } from '../../../shared/components/RouteProtector';
 
 
 export const categoriaRoutes: RouteObject[] = [
@@ -9,25 +10,33 @@ export const categoriaRoutes: RouteObject[] = [
             {
                 index: true,
                 element: (
-                    <CategoriaListPage/>
+                    <RouteProtector requiredPermission="VER_CATEGORIAS">
+                        <CategoriaListPage/>
+                    </RouteProtector>
                 )
             },
             {
                 path: ":id",
                 element: (
-                    <CategoriaDetailPage/>
+                    <RouteProtector requiredPermission="VER_CATEGORIAS_DETALLE">
+                        <CategoriaDetailPage/>
+                    </RouteProtector>
                 )
             },
             {
                 path: "nuevo",
                 element: (
-                    <CategoriaFormPage/>
+                    <RouteProtector requiredPermission="CREAR_CATEGORIAS">
+                        <CategoriaFormPage/>
+                    </RouteProtector>
                 )
             },
             {
                 path: ":id/editar",
                 element: (
-                    <CategoriaFormPage/>
+                    <RouteProtector requiredPermission="EDITAR_CATEGORIAS">
+                        <CategoriaFormPage/>
+                    </RouteProtector>
                 )
             }
         ]

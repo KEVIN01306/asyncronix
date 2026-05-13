@@ -26,6 +26,7 @@ const permisosData = [
     { codigo: "EDITAR_NEGOCIOS" },
     { codigo: "VER_PERMISOS" },
     { codigo: "EDITAR_PERMISOS" },
+    { codigo: "ASIGNAR_PERMISOS_ROL" },
 ];
 
 const modulosConPermisos = [
@@ -47,7 +48,7 @@ const modulosConPermisos = [
     },
     {
         nombre: "PERMISOS",
-        permisos: ["VER_PERMISOS", "EDITAR_PERMISOS"]
+        permisos: ["VER_PERMISOS", "EDITAR_PERMISOS", "ASIGNAR_PERMISOS_ROL"]
     }
 ];
 

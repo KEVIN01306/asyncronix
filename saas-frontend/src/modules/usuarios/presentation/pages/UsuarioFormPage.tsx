@@ -1,36 +1,58 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
 import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
 import { usuarioSchema, type UsuarioFormValues } from '../../domain/schemas/usuario.schema';
 import { usuarioRepository } from '../../infrastructure/repositories/usuario.repository';
-import type { RolUsuario } from '../../domain/enums/rol.enum';
+import { sucursalRepository } from '../../../sucursales/infrastructure/repositories/sucursal.repository';
+import type { Sucursal } from '../../../sucursales/domain/interfaces/sucursal.interface';
 
 const UsuarioFormPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEdit = Boolean(id);
     const [loading, setLoading] = useState(isEdit);
+    const [sucursales, setSucursales] = useState<Sucursal[]>([]);
 
-    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<UsuarioFormValues>({
+    const { register, control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<UsuarioFormValues>({
         resolver: zodResolver(usuarioSchema)
     });
 
+
+    const fetchSucursales = async () => {
+            setLoading(true);
+            try {
+                const response = await sucursalRepository.listar(100, 0);
+                setSucursales(response.data);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+    useEffect(() => {
+        fetchSucursales();
+    }, []);
+
     useEffect(() => {
         if (isEdit && id) {
-            const fetchSucursal = async () => {
+            const fetchUsuario = async () => {
                 setLoading(true);
                 try {
                     const data = await usuarioRepository.obtener(id);
+                    console.log(data);
                     reset({
                         nombre: data.nombre,
                         telefono: data.telefono,
-                        rol: data.rol as RolUsuario,
+                        roles: data.roles,
+                        apellido: data.apellido,
+                        email: data.email,
                         sucursal_id: data.sucursal ? data.sucursal.id : undefined,
                     });
                 } catch (error) {
@@ -40,7 +62,7 @@ const UsuarioFormPage = () => {
                 }
             };
 
-            fetchSucursal();
+            fetchUsuario();
         }
     }, [id, isEdit, reset]);
 
@@ -62,7 +84,7 @@ const UsuarioFormPage = () => {
     if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
 
     return (
-        <Box p={4} maxWidth="600px" mx="auto">
+        <Box p={2} maxWidth="1200px" mx="auto">
             <Button 
                 startIcon={<ArrowBack />} 
                 onClick={() => navigate(-1)} 
@@ -73,7 +95,7 @@ const UsuarioFormPage = () => {
 
             <Paper sx={{ p: 4, border: (theme) => `1px solid ${theme.palette.divider}` }}>
                 <Typography variant="h5" fontWeight={700} mb={3}>
-                    {isEdit ? 'Editar Sucursal' : 'Nueva Sucursal'}
+                    {isEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
                 </Typography>
 
                 <Box component={'form'} onSubmit={handleSubmit(onSubmit)}>
@@ -87,11 +109,27 @@ const UsuarioFormPage = () => {
                         />
 
                         <TextField
+                            label="Apellido del Usuario"
+                            fullWidth
+                            {...register('apellido')}
+                            error={!!errors.apellido}
+                            helperText={errors.apellido?.message}
+                        />
+
+                        <TextField
                             label="Telefono"
                             fullWidth
                             {...register('telefono')}
                             error={!!errors.telefono}
                             helperText={errors.telefono?.message}
+                        />
+
+                        <TextField
+                            label="Email"
+                            fullWidth
+                            {...register('email')}
+                            error={!!errors.email}
+                            helperText={errors.email?.message}
                         />
 
                         <TextField
@@ -103,26 +141,43 @@ const UsuarioFormPage = () => {
                         />
 
                         <TextField
-                            label="Rol"
+                            label="Roles"
                             fullWidth
-                            {...register('rol')}
-                            error={!!errors.rol}
-                            helperText={errors.rol?.message}
+                            {...register('roles')}
+                            error={!!errors.roles}
+                            helperText={errors.roles?.message}
                         />
 
-                        <TextField
-                            label="Sucursal"
-                            fullWidth
-                            {...register('sucursal_id')}
-                            error={!!errors.sucursal_id}
-                            helperText={errors.sucursal_id?.message || 'Dejar vacío si el usuario no pertenece a una sucursal'}
-                        />
-
-
+                        <FormControl fullWidth error={!!errors.sucursal_id}>
+                            <InputLabel id="sucursal-label">Sucursal</InputLabel>
+                            <Controller
+                                name="sucursal_id"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        labelId="sucursal-label"
+                                        label="Sucursal"
+                                        {...field}
+                                        value={field.value ?? ''}
+                                        onChange={(event) => field.onChange(event.target.value === '' ? null : event.target.value)}
+                                    >
+                                        <MenuItem value="">
+                                            <em>Sin sucursal</em>
+                                        </MenuItem>
+                                        {sucursales.map((sucursal) => (
+                                            <MenuItem key={sucursal.id} value={sucursal.id}>
+                                                {sucursal.nombre}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                            />
+                            <FormHelperText>{errors.sucursal_id?.message || 'Dejar vacío si el usuario no pertenece a una sucursal'}</FormHelperText>
+                        </FormControl>
 
                         <SubmitButton 
                             isSubmitting={isSubmitting}
-                            text={isEdit ? 'Guardar Cambios' : 'Registrar Sucursal'}
+                            text={isEdit ? 'Guardar Cambios' : 'Registrar Usuario'}
                             loadingText="Guardando..."
                             icon={<Save />}
                         />

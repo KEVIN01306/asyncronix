@@ -3,13 +3,14 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { authRoutes } from "../../modules/auth/presentation/auth.routes";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { dahsboardRoutes } from "../../modules/dashboard/dashboard.routes";
-import { proveedorRoutes } from "../../modules/proveedores/presentation/proveedor.routes";
 import { FullPageLoader } from "../../shared/components/ui/Loaders/FullPageLoader";
 import { categoriaRoutes } from "../../modules/categorias/presentation/categoria.routes";
 import BlankLayout from "../layouts/blankLayout";
 import FullLayout from "../layouts/fullLayout";
 import { sucursalRoutes } from "../../modules/sucursales/presentation/sucursal.routes";
 import { usuarioRoutes } from "../../modules/usuarios/presentation/usuario.routes";
+import { rolesRoutes } from "../../modules/roles/presentation/roles.routes";
+import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
 
 const appRouter = createBrowserRouter([
     {
@@ -33,10 +34,14 @@ const appRouter = createBrowserRouter([
                         </Suspense>,
                 children: [
                     ...dahsboardRoutes,
-                    ...proveedorRoutes,
                     ...categoriaRoutes,
                     ...sucursalRoutes,
                     ...usuarioRoutes,
+                    ...rolesRoutes,
+                    {
+                        path: "acceso-denegado",
+                        element: <AccesoDenegadoPage />
+                    }
                 ]
                 
             }

@@ -59,7 +59,7 @@ const SucursalFormPage = () => {
     if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
 
     return (
-        <Box p={4} maxWidth="600px" mx="auto">
+        <Box p={2} maxWidth="1200px" mx="auto">
             <Button 
                 startIcon={<ArrowBack />} 
                 onClick={() => navigate(-1)} 
