@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
+import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip, Avatar } from '@mui/material';
 import { Add, Edit, Visibility,Search } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Usuario } from '../../domain/interfaces/usuario.interface';
@@ -21,7 +21,7 @@ const UsuariosListPage = () => {
     const [loading, setLoading] = useState(true);
 
     const columns = [
-        { id: 'nombre', name: 'Nombre', format: (value: any) => value.toUpperCase() },
+        { id: 'nombre', name: 'Nombre', format: (value: any) => ( <Box display={'flex'} alignItems={'center'} gap={2}> <Avatar src="/static/images/avatar/1.jpg" sx={{ width: 38,  height: 38, borderColor: 'primary.main', background: "#876543cc", }} > {value[0]}</Avatar> { value.toUpperCase()}</Box>) },
         { id: 'telefono', name: 'Teléfono' },
         { id: 'roles', name: 'Roles', format: (value: any) => <Chip color={value?.[0]?.nombre === 'ADMIN' ? 'primary' : 'default'} label={value?.[0]?.nombre} /> },
         { id: 'sucursal', name: 'Sucursal', format: (value: any) => <Chip color={value ? "primary" : "default"} label={value ? value.nombre : 'Sin sucursal'} /> },

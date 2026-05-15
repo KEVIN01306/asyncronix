@@ -16,7 +16,11 @@ const RolesEditPage = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<RolFormValues>({
-        resolver: zodResolver(rolSchema)
+        resolver: zodResolver(rolSchema),
+        defaultValues: {
+            nombre: '',
+            descripcion: null,
+        }
     });
 
     useEffect(() => {
@@ -25,7 +29,7 @@ const RolesEditPage = () => {
         RolesRepository.obtener(id)
             .then((data: Rol) => {
                 setValue('nombre', data.nombre);
-                setValue('descripcion', data.descripcion || '');
+                setValue('descripcion', data.descripcion);
             })
             .catch((error) => {
                 console.error(error);

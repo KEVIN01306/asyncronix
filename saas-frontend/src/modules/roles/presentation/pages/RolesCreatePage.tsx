@@ -12,7 +12,11 @@ import { RolesRepository } from '../../infrastructure/repositories/rol.repositor
 const RolesCreatePage = () => {
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RolFormValues>({
-        resolver: zodResolver(rolSchema)
+        resolver: zodResolver(rolSchema),
+        defaultValues: {
+            nombre: '',
+            descripcion: null,
+        }
     });
 
     const onSubmit = async (data: RolFormValues) => {

@@ -16,7 +16,7 @@ export interface Modulo {
 export interface Rol {
     id: string;
     nombre: string;
-    descripcion: string | null;
+    descripcion?: string | null;
     permisos?: Permiso[];
 }
 

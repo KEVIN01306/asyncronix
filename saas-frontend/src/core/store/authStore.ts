@@ -20,6 +20,8 @@ interface AuthState {
     isAuthenticated: boolean;
     login: (user: User, token: string) => void;
     logout: () => void;
+    getMe: (user: User) => void;
+    refreshToken: (token: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -44,6 +46,16 @@ export const useAuthStore = create<AuthState>()(
                     isAuthenticated: false
                 });
             },
+            getMe: (user) => {
+                set({
+                    user,
+                    status: 'authenticated',
+                    isAuthenticated: true
+                })
+            },
+            refreshToken: (token) => {
+                localStorage.setItem('accessToken', token)
+            }
         }),
         { name: 'auth-storage' }
     )

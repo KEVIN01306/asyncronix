@@ -33,11 +33,15 @@ const CategoriaFormPage = () => {
 
     const onSubmit = async (data: CategoriaFormValues) => {
         try {
+            const transformedData = {
+                ...data,
+                descripcion: data.descripcion || null,
+            };
             if (isEdit && id) {
-                await CategoriaRepository.actualizar(id, data);
+                await CategoriaRepository.actualizar(id, transformedData);
                 toast.success('Categoria actualizada correctamente');
             } else {
-                await CategoriaRepository.registrar(data);
+                await CategoriaRepository.registrar(transformedData);
                 toast.success('Categoria creada correctamente');
             }
             navigate('/categorias');

@@ -4,15 +4,21 @@ import prisma from "@infrastructure/config/prisma.js";
 import { ObtenerNegocioUseCase } from "./application/obtener-negocio.usecase.js";
 import { ActualizarNegocioUseCase } from "./application/actualizar-negocio.usecase.js";
 import { RegistrarNegocioUseCase } from "./application/registrar-negocio.usecase.js";
+import { ObtenerMiNegocioUseCase } from "./application/obtener-mi-negocio.usecase.js";
+import { ActualizarMiNegocioUseCase } from "./application/actualizar-mi-negocio.usecase.js";
 
 const negocioRepository = new PrismaNegocioRepository(prisma);
 
 const registrarNegocioUseCase = new RegistrarNegocioUseCase(negocioRepository);
 const actualizarNegocioUseCase = new ActualizarNegocioUseCase(negocioRepository);
 const obtenerNegocioUseCase = new ObtenerNegocioUseCase(negocioRepository);
+const obtenerMiNegocioUseCase = new ObtenerMiNegocioUseCase(negocioRepository);
+const actualizarMiNegocioUseCase = new ActualizarMiNegocioUseCase(negocioRepository);
 
 export const negocioController = new NegocioController(
     registrarNegocioUseCase,
     actualizarNegocioUseCase,
-    obtenerNegocioUseCase
+    obtenerNegocioUseCase,
+    obtenerMiNegocioUseCase,
+    actualizarMiNegocioUseCase
 );

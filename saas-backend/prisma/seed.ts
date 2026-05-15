@@ -20,9 +20,9 @@ const permisosData = [
     { codigo: "CREAR_SUCURSALES" },
     { codigo: "EDITAR_SUCURSALES" },
     { codigo: "ELIMINAR_SUCURSALES" },
-    { codigo: "VER_NEGOCIOS" },
+    //{ codigo: "VER_NEGOCIOS" },
     { codigo: "VER_NEGOCIOS_DETALLE" },
-    { codigo: "CREAR_NEGOCIOS" },
+    //{ codigo: "CREAR_NEGOCIOS" },
     { codigo: "EDITAR_NEGOCIOS" },
     { codigo: "VER_PERMISOS" },
     { codigo: "EDITAR_PERMISOS" },
@@ -75,7 +75,7 @@ async function main() {
     }
 
     const negocio = await prisma.negocio.upsert({
-        where: { wa_id: "50230108703" },
+        where: { wa_id: "50243850410" },
         update: {
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))
@@ -85,11 +85,11 @@ async function main() {
             }
         },
         create: {
-            nombre: "ASYNCRONIX",
-            nombre_comercial: "ASYNCRONIX",
-            slug: "asyncronix",
-            wa_id: "50230108703",
-            nit_rut: "388577959",
+            nombre: "MOTOSERVICIO VM",
+            nombre_comercial: "MOTOSERVICIO VELASQUEZ MONZON",
+            slug: "motoservicio-vm",
+            wa_id: "50243850410",
+            nit_rut: "388577951",
             slogan: "Todos juntos podemos",
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))
@@ -127,15 +127,15 @@ async function main() {
         where: { 
             negocio_id_email: { 
                 negocio_id: negocio.id, 
-                email: "kevin@gmail.com" 
+                email: "kimberly@gmail.com" 
             } 
         },
         update: {},
         create: {
-            nombre: "Kevin Eduardo",
-            email: "kevin@gmail.com",
-            telefono: "30108703",
-            dpi: "3885779590101",
+            nombre: "Kimberly",
+            email: "kimberly@gmail.com",
+            telefono: "30108704",
+            dpi: "3885779590104",
             password_hash: passwordHash,
             activo: true,
             verificado: false,

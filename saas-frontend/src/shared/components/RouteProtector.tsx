@@ -1,10 +1,10 @@
-import { ReactNode } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../core/store/authStore';
 import { toast } from 'sonner';
 
 interface RouteProtectorProps {
-    children: ReactNode;
+    children: React.ReactElement;
     requiredPermission: string;
 }
 

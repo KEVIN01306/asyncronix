@@ -10,6 +10,7 @@ import FullLayout from "../layouts/fullLayout";
 import { sucursalRoutes } from "../../modules/sucursales/presentation/sucursal.routes";
 import { usuarioRoutes } from "../../modules/usuarios/presentation/usuario.routes";
 import { rolesRoutes } from "../../modules/roles/presentation/roles.routes";
+import { negocioRoutes } from "../../modules/negocio/presentation/negocio.routes";
 import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
 
 const appRouter = createBrowserRouter([
@@ -38,6 +39,7 @@ const appRouter = createBrowserRouter([
                     ...sucursalRoutes,
                     ...usuarioRoutes,
                     ...rolesRoutes,
+                    ...negocioRoutes,
                     {
                         path: "acceso-denegado",
                         element: <AccesoDenegadoPage />

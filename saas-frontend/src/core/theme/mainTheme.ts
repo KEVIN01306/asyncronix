@@ -3,11 +3,19 @@ import { createTheme } from '@mui/material/styles';
 export const mainTheme = createTheme({
     palette: {
         mode: 'light',
+        /*
         primary: {
             main: '#673de6',
         },
         secondary: {
             main: '#8863F8',
+        },
+        */
+        primary: {
+            main: '#1E293B',
+        },
+        secondary: {
+            main: '#06B6D4',
         },
         warning: {
             main: '#f59e0b',

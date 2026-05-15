@@ -4,7 +4,7 @@ import type { ApiResponse, PaginatedResponse } from "../../../../core/api/interf
 export interface Categoria {
     id: string;
     nombre: string;
-    descripcion: string;
+    descripcion: string | null;
 }
 
 export type CategoriaDetailResponse = ApiResponse<Categoria>;

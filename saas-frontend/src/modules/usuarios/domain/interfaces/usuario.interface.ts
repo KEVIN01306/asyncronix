@@ -1,15 +1,18 @@
 import type { ApiResponse, PaginatedResponse } from "../../../../core/api/interfaces/api-response.interface";
 import type { Sucursal } from "../../../sucursales/domain/interfaces/sucursal.interface";
 
-
+export interface Rol {
+    id: string;
+    nombre: string;
+}
 
 export interface Usuario {
     id: string,
     nombre: string,
-    apellido: string,
+    apellido: string | null,
     email: string,
     telefono: string,
-    roles: string[],
+    roles: Rol[],
     verificado: boolean | null,
     sucursal?: Pick<Sucursal, 'id' | 'nombre'> | null;
 }

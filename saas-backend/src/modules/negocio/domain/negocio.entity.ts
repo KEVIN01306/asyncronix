@@ -8,19 +8,19 @@ export interface Negocio {
     slogan: string | null;
     slug: string;
     datos_facturacion_json: any | null;
-    fecha_registro: Date;
+    activo: boolean
+    fecha_registro: Date | null;
 }
 
 export interface NegocioSimple {
     id: string;
     nombre_comercial: string;
     logo_url: string | null;
-    slug: string;
 }
 
 export interface NegocioObtenidoDetalle extends Negocio { }
 
-export interface NegocioCrear extends Omit<Negocio, "id" | "fecha_registro" | "logo_url"> { }
+export interface NegocioCrear extends Omit<Negocio, "id" | "fecha_registro" | "logo_url" | "activo"> { }
 
 export interface NegocioActualizar extends Partial<NegocioCrear> {
     logo_url?: string | null;

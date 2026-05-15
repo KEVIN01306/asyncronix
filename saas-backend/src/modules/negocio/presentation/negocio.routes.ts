@@ -12,6 +12,18 @@ const validarMiddleware = new ValidarMiddleware()
 
 router.use(authMiddleware.protegerRuta)
 
+router.get("/me",
+    authMiddleware.verificarPermiso(['VER_NEGOCIOS_DETALLE_ME']),
+    negocioController.me
+);
+
+router.put("/me",
+    authMiddleware.verificarPermiso(['EDITAR_NEGOCIOS']),
+    FileUploadMiddleware.single('logo', 'negocios'),
+    validarMiddleware.validarBody(negocioActualizarSchema),
+    negocioController.editMe
+);
+
 router.get("/:id",
     negocioController.obtener
 );
