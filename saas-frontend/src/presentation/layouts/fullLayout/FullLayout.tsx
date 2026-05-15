@@ -8,7 +8,7 @@ import { useAuthStore } from "../../../core/store/authStore";
 import { authRepository } from "../../../modules/auth/infrastructure/repositories/auth.repository";
 import { toast } from "sonner";
 
-const DRAWER_WIDTH = 280;
+const DRAWER_WIDTH = 220;
 
 const FullLayout = () => {
     const theme = useTheme();

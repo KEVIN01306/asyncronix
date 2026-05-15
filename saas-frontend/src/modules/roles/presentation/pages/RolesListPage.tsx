@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
+import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
 import { Add, Edit, Visibility, Search, Security } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Rol } from '../../domain/interfaces/rol.interface';
 import { RolesRepository } from '../../infrastructure/repositories/rol.repository';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const RolesListPage = () => {
     const navigate = useNavigate();
@@ -99,8 +100,8 @@ const RolesListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
-                ) : (
+                    <Loading />
+                        ) : (
                     <ListTable
                         data={roles}
                         columns={columns}

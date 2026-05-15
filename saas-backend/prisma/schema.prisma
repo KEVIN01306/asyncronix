@@ -121,6 +121,7 @@ model Usuario {
   id            String   @id @default(uuid()) @db.Char(36)
   negocio_id    String   @db.Char(36)
   sucursal_id   String?  @db.Char(36)
+  avatar_url    String?  @db.Text
   email         String?
   password_hash String?
   nombre        String

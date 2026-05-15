@@ -17,7 +17,7 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
     <React.Fragment>
       <ListItemButton onClick={() => setOpen(!open)} sx={getItemStyle(isActiveModule || open)}>
         <ListItemIcon><item.icon fontSize="small" /></ListItemIcon>
-        <ListItemText primary={item.module} primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.01em' }} />
+        <ListItemText primary={item.module} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.01em' }} />
         {isExpanded ? <ExpandLess fontSize="small" sx={{ opacity: 0.5 }} /> : <ExpandMore fontSize="small" sx={{ opacity: 0.5 }} />}
       </ListItemButton>
       
@@ -31,7 +31,7 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
                 <ListItemText 
                   primary={child.name} 
                   primaryTypographyProps={{ 
-                    fontSize: '0.8rem', 
+                    fontSize: '0.7rem', 
                     fontWeight: isChildActive ? 700 : 500,
                     color: isChildActive ? 'primary.main' : 'text.secondary' 
                   }} 

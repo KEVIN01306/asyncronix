@@ -30,5 +30,10 @@ export const  CategoriaRepository = {
     actualizar: async (id: string, data: any) => {
         const response = await api.put(`${URL_MODULE}${id}`, data);
         return response.data;
+    },
+
+    eliminar: async (id: string) => {
+        const response = await api.delete(`${URL_MODULE}${id}`);
+        return response.data;
     }
 }

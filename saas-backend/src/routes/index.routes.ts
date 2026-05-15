@@ -12,6 +12,7 @@ router.use('/roles', (await import('../modules/rol/presentation/rol.routes.js'))
 router.use('/permisos', (await import('../modules/permisos/presentation/permisos.routes.js')).default)
 router.use('/sucursales', (await import('../modules/sucursal/presentation/sucursal.routes.js')).default)
 router.use('/negocios', (await import('../modules/negocio/presentation/negocio.routes.js')).default)
+router.use('/categorias', (await import('../modules/categoria/presentation/categoria.routes.js')).default)
 
 
 

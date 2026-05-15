@@ -11,24 +11,24 @@ const authMiddleware = new AuthMiddleware();
 router.use(authMiddleware.protegerRuta);
 
 router.post("/", 
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarPermiso(['CREAR_CATEGORIAS_PRODUCTOS']),
     validarMiddleware.validarBody(categoriaCrearSchema), 
     categoriaController.registrar
 );
 
 router.get("/", 
-    authMiddleware.verificarRol(['ADMIN', 'VENDEDOR']),
+    authMiddleware.verificarPermiso(['VER_CATEGORIAS_PRODUCTOS']),
     validarMiddleware.validarQuery(categoriaListarQuerySchema), 
     categoriaController.listar
 );
 
 router.get("/:id", 
-    authMiddleware.verificarRol(['ADMIN', 'VENDEDOR']),
+    authMiddleware.verificarPermiso(['VER_CATEGORIAS_PRODUCTOS_DETALLE']),
     categoriaController.obtener
 );
 
 router.put("/:id", 
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarPermiso(['EDITAR_CATEGORIAS_PRODUCTOS']),
     validarMiddleware.validarBody(categoriaActualizarSchema), 
     categoriaController.actualizar
 );

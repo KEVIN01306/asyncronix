@@ -1,12 +1,13 @@
-import type { categorias } from "@prisma/client";
+import type { CategoriaProducto } from "@prisma/client";
 import type { CategoriaSimple } from "../../domain/categoria.entity.js";
 
 export class CategoriaMapper {
-    static mapSimple(categoria: categorias): CategoriaSimple {
+    static mapSimple(categoria: CategoriaProducto): CategoriaSimple {
         return {
             id: categoria.id,
-            nombre: categoria.nombre,
-            descripcion: categoria.descripcion
+            categoria: categoria.categoria,
+            default_categoria: categoria.default_categoria,
+            activo: categoria.activo
         }
     }
 }

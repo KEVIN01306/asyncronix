@@ -11,7 +11,7 @@ export const SidebarItem: React.FC<{ item: MenuItem }> = ({ item }) => {
   return (
     <ListItemButton onClick={() => item.link && navigate(item.link)} sx={getItemStyle(isActive)}>
       <ListItemIcon><item.icon fontSize="small" /></ListItemIcon>
-      <ListItemText primary={item.name} primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 700 }} />
+      <ListItemText primary={item.name} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 700 }} />
     </ListItemButton>
   );
 };

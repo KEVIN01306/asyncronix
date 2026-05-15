@@ -24,8 +24,9 @@ const CategoriaListPage = () => {
     const [loading, setLoading] = useState(true);
 
     const columns = [
-        { id: 'nombre', name: 'Nombre', format: (value: any) => value.toUpperCase() },
-        { id: 'descripcion', name: 'Descripción' },
+        { id: 'categoria', name: 'Categoría', format: (value: any) => value.toString().toUpperCase() },
+        { id: 'default_categoria', name: 'Predeterminada', format: (value: boolean) => value ? 'Sí' : 'No' },
+        { id: 'activo', name: 'Activo', format: (value: boolean) => value ? 'Sí' : 'No' }
     ];
 
     const actions = [
@@ -43,7 +44,7 @@ const CategoriaListPage = () => {
         },
     ];
 
-    const fetchProveedores = useCallback(async () => {
+    const fetchCategorias = useCallback(async () => {
         setLoading(true);
         try {
             const response = await CategoriaRepository.listar(limit, offset);
@@ -57,8 +58,8 @@ const CategoriaListPage = () => {
     }, [limit, offset]);
 
     useEffect(() => {
-        fetchProveedores();
-    }, [fetchProveedores]);
+        fetchCategorias();
+    }, [fetchCategorias]);
 
     return (
         <Box p={isMobile ? 2 : 4}>

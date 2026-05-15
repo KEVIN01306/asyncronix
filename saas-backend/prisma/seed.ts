@@ -21,12 +21,18 @@ const permisosData = [
     { codigo: "EDITAR_SUCURSALES" },
     { codigo: "ELIMINAR_SUCURSALES" },
     //{ codigo: "VER_NEGOCIOS" },
-    { codigo: "VER_NEGOCIOS_DETALLE" },
+    //{ codigo: "VER_NEGOCIOS_DETALLE" },
     //{ codigo: "CREAR_NEGOCIOS" },
+    { codigo: "VER_NEGOCIOS_DETALLE_ME" },
     { codigo: "EDITAR_NEGOCIOS" },
     { codigo: "VER_PERMISOS" },
     { codigo: "EDITAR_PERMISOS" },
     { codigo: "ASIGNAR_PERMISOS_ROL" },
+
+    { codigo: "VER_CATEGORIAS_PRODUCTOS"},
+    { codigo: "VER_CATEGORIAS_PRODUCTOS_DETALLE"},
+    { codigo: "CREAR_CATEGORIAS_PRODUCTOS"},
+    { codigo: "EDITAR_CATEGORIAS_PRODUCTOS"}
 ];
 
 const modulosConPermisos = [
@@ -49,6 +55,10 @@ const modulosConPermisos = [
     {
         nombre: "PERMISOS",
         permisos: ["VER_PERMISOS", "EDITAR_PERMISOS", "ASIGNAR_PERMISOS_ROL"]
+    },
+    {
+        nombre: "CATEGORIAS PRODUCTOS", 
+        permisos: ["VER_CATEGORIAS_PRODUCTOS", "VER_CATEGORIAS_PRODUCTOS_DETALLE","CREAR_CATEGORIAS_PRODUCTOS", "EDITAR_CATEGORIAS_PRODUCTOS"]
     }
 ];
 
@@ -73,9 +83,9 @@ async function main() {
             }
         });
     }
-
+    
     const negocio = await prisma.negocio.upsert({
-        where: { wa_id: "50243850410" },
+        where: { wa_id: "50230108703" },
         update: {
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))
@@ -121,7 +131,7 @@ async function main() {
             }
         }
     });
-
+    /*
     const passwordHash = await hashProvider.hash("12345678");
     const usuarioAdmin = await prisma.usuario.upsert({
         where: { 
@@ -145,6 +155,8 @@ async function main() {
             }
         },
     });
+
+    */
 
 }
 

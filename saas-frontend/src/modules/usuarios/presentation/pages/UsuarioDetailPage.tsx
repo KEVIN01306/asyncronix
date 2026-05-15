@@ -15,7 +15,7 @@ import {
     Card,
     CardContent,
 } from '@mui/material';
-import { ArrowBack, Edit, Person, Phone, Email } from '@mui/icons-material';
+import { ArrowBack, Edit, Phone, Email } from '@mui/icons-material';
 import { toast } from 'sonner';
 
 import { usuarioRepository } from '../../infrastructure/repositories/usuario.repository';
@@ -87,9 +87,9 @@ const UsuarioDetailPage = () => {
                 <Grid size={{xs: 12, md: 8}}>
                     <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                         <Box display="flex" alignItems="center" gap={3} mb={4}>
-                            <Avatar sx={{ bgcolor: 'primary.main', width: 64, height: 64, borderRadius: 2 }}>
-                                <Person sx={{ fontSize: 35 }} />
-                            </Avatar>
+                            <Avatar src="/static/images/avatar/1.jpg" sx={{ fontSize: 50, width: 100,  height: 100, borderColor: 'primary.main', background: "#876543cc", }} > 
+                                {usuario.nombre[0]}
+                            </Avatar> 
                             <Box>
                                 <Typography variant="overline" color="primary" fontWeight={700}>Módulo de Usuarios</Typography>
                                 <Typography variant="h5" fontWeight={700}>{usuario.nombre}</Typography>

@@ -1,10 +1,10 @@
 import type { ApiResponse, PaginatedResponse } from "../../../../core/api/interfaces/api-response.interface";
 
-
 export interface Categoria {
     id: string;
-    nombre: string;
-    descripcion: string | null;
+    categoria: string;
+    default_categoria: boolean;
+    activo: boolean;
 }
 
 export type CategoriaDetailResponse = ApiResponse<Categoria>;

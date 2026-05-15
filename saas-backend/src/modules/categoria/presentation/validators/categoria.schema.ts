@@ -3,8 +3,9 @@ import z from "zod";
 export const categoriaSchema = z.object({
     id: z.string().uuid(),
     negocio_id: z.string().uuid(),
-    nombre: z.string().max(50),
-    descripcion: z.string().max(255).nullable(),
+    categoria: z.string().max(100),
+    default_categoria: z.boolean().optional(),
+    activo: z.boolean().optional()
 });
 
 export const categoriaCrearSchema = categoriaSchema.omit({ id: true, negocio_id: true });

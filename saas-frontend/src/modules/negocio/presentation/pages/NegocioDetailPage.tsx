@@ -47,7 +47,7 @@ const NegocioDetailPage = () => {
     }, [fetchNegocio]);
 
     if (loading) {
-        return <Loading/>;
+        return <Loading />;
     }
 
     if (!negocio) {
@@ -84,110 +84,127 @@ const NegocioDetailPage = () => {
             </Stack>
 
             <Grid container spacing={3}>
-                <Grid size={{xs: 12, md: 8}}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                         <Box display="flex" alignItems="center" gap={3} mb={4}>
                             <Avatar
-                            src={logoSource}
-                            alt={negocio.nombre}
-                            sx={{
-                                bgcolor: logoSource ? 'transparent' : 'primary.main',
-                                width: 64,
-                                height: 64,
-                                borderRadius: 2,
-                                border: logoSource ? '1px solid' : 'none',
-                                borderColor: 'divider',
-                            }}
-                        >
-                            {!logoSource && <Business sx={{ fontSize: 35 }} />}
-                        </Avatar>
-                        <Box>
-                            <Typography variant="overline" color="primary" fontWeight={700}>Módulo de Negocio</Typography>
-                            <Typography variant="h5" fontWeight={700}>{negocio.nombre}</Typography>
-                            <Chip variant='outlined' label={negocio.activo ? 'Activo' : 'Inactivo'} color={negocio.activo ? 'success' : 'error'}  size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
+                                src={logoSource}
+                                alt={negocio.nombre}
+                                sx={{
+                                    bgcolor: logoSource ? 'transparent' : 'primary.main',
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: 2,
+                                    border: logoSource ? '1px solid' : 'none',
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                {!logoSource && <Business sx={{ fontSize: 35 }} />}
+                            </Avatar>
+                            <Box>
+                                <Typography variant="overline" color="primary" fontWeight={700}>Módulo de Negocio</Typography>
+                                <Typography variant="h5" fontWeight={700}>{negocio.nombre}</Typography>
+                                <Chip variant='outlined' label={negocio.activo ? 'Activo' : 'Inactivo'} color={negocio.activo ? 'success' : 'error'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
+                            </Box>
                         </Box>
-                    </Box>
 
-                    <Divider sx={{ my: 3 }} />
+                        <Divider sx={{ my: 3 }} />
 
-                        <Stack spacing={3}>
-                            <Box>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>NOMBRE COMERCIAL</Typography>
-                                <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                    {negocio.nombre_comercial || 'No especificado'}
-                                </Typography>
-                            </Box>
-
-                            <Box>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>SLUG</Typography>
-                                <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                    {negocio.slug}
-                                </Typography>
-                            </Box>
-
-                            <Box>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>WA ID</Typography>
-                                <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                    {negocio.wa_id}
-                                </Typography>
-                            </Box>
-
-                            <Box>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>NIT/RUT</Typography>
-                                <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                    {negocio.nit_rut || 'No especificado'}
-                                </Typography>
-                            </Box>
-
-                            <Box>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>SLOGAN</Typography>
-                                <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                    {negocio.slogan || 'No especificado'}
-                                </Typography>
-                            </Box>
-
-                            <Box>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>Logo</Typography>
-                                {logoSource ? (
-                                    <Box
-                                        component="img"
-                                        src={logoSource}
-                                        alt="Logo del negocio"
-                                        sx={{ width: 130, height: 130, objectFit: 'contain', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}
-                                    />
-                                ) : (
-                                    <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                        No especificado
-                                    </Typography>
-                                )}
-                            </Box>
-
-                            {negocio.instagram_id && (
+                        {/* Cambiamos el Stack por un Grid interno para distribuir mejor en 2 columnas */}
+                        <Grid container spacing={3}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Box>
-                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom display="flex" alignItems="center" gap={1}>
-                                        <Instagram sx={{ fontSize: 16 }} /> INSTAGRAM
-                                    </Typography>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>NOMBRE COMERCIAL</Typography>
                                     <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                        {negocio.instagram_id}
+                                        {negocio.nombre_comercial || 'No especificado'}
                                     </Typography>
                                 </Box>
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>SLUG</Typography>
+                                    <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                                        {negocio.slug}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>WA ID</Typography>
+                                    <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                                        {negocio.wa_id}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>NIT/RUT</Typography>
+                                    <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                                        {negocio.nit_rut || 'No especificado'}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            <Grid size={{ xs: 12 }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>SLOGAN</Typography>
+                                    <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                                        {negocio.slogan || 'No especificado'}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            {negocio.instagram_id && (
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <Box>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom display="flex" alignItems="center" gap={1}>
+                                            <Instagram sx={{ fontSize: 16 }} /> INSTAGRAM
+                                        </Typography>
+                                        <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                                            {negocio.instagram_id}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
                             )}
 
                             {negocio.facebook_id && (
-                                <Box>
-                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom display="flex" alignItems="center" gap={1}>
-                                        <Facebook sx={{ fontSize: 16 }} /> FACEBOOK
-                                    </Typography>
-                                    <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                        {negocio.facebook_id}
-                                    </Typography>
-                                </Box>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <Box>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom display="flex" alignItems="center" gap={1}>
+                                            <Facebook sx={{ fontSize: 16 }} /> FACEBOOK
+                                        </Typography>
+                                        <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                                            {negocio.facebook_id}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
                             )}
-                        </Stack>
+
+                            <Grid size={{ xs: 12 }}>
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>Logo</Typography>
+                                    {logoSource ? (
+                                        <Box
+                                            component="img"
+                                            src={logoSource}
+                                            alt="Logo del negocio"
+                                            sx={{ width: 130, height: 130, objectFit: 'contain', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}
+                                        />
+                                    ) : (
+                                        <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                                            No especificado
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Grid>
+                        </Grid>
                     </Paper>
                 </Grid>
 
-                <Grid size={{xs: 12, md: 4}} >
+                <Grid size={{ xs: 12, md: 4 }}>
                     <Card variant="outlined" sx={{ borderRadius: 2 }}>
                         <CardContent>
                             <Typography variant="subtitle2" gutterBottom fontWeight={700}>Resumen del Negocio</Typography>
@@ -195,7 +212,7 @@ const NegocioDetailPage = () => {
                             <Stack spacing={2}>
                                 <Box display="flex" justifyContent="space-between">
                                     <Typography variant="body2" color="text.secondary">Estado</Typography>
-                                        <Chip variant='outlined' label={negocio.activo ? 'Activo' : 'Inactivo'} color={negocio.activo ? 'success' : 'error'}  size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
+                                    <Chip variant='outlined' label={negocio.activo ? 'Activo' : 'Inactivo'} color={negocio.activo ? 'success' : 'error'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
                                 </Box>
                                 <Box display="flex" justifyContent="space-between">
                                     <Typography variant="body2" color="text.secondary">Fecha de Registro</Typography>

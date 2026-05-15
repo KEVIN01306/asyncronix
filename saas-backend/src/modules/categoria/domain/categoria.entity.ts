@@ -1,11 +1,15 @@
 export interface Categoria {
     id: string;
     negocio_id: string;
-    nombre: string;
-    descripcion: string | null;
+    categoria: string;
+    default_categoria: boolean;
+    activo: boolean;
 }
 
-export interface CategoriaCrear extends Omit<Categoria, "id" | "negocio_id"> { }
+export interface CategoriaCrear extends Omit<Categoria, "id" | "negocio_id" | "activo" | "default_categoria"> {
+    default_categoria?: boolean;
+    activo?: boolean;
+}
 
 export interface CategoriaActualizar extends Partial<Omit<Categoria, "id" | "negocio_id">> { }
 

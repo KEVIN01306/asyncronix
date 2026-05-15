@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { RolesRepository } from '../../infrastructure/repositories/rol.repository';
 import type { Rol } from '../../domain/interfaces/rol.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const RolesDetailPage = () => {
     const { id } = useParams();
@@ -31,7 +32,7 @@ const RolesDetailPage = () => {
     }, [fetchRole, id]);
 
     if (loading) {
-        return <Box display="flex" justifyContent="center" mt={10}><Typography>Cargando rol...</Typography></Box>;
+        return <Loading />;
     }
 
     if (!role) {

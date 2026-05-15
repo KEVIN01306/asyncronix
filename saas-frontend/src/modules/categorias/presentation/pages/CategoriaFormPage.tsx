@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
@@ -24,8 +24,9 @@ const CategoriaFormPage = () => {
         if (isEdit && id) {
             CategoriaRepository.Obtener(id)
                 .then(data => {
-                    setValue('nombre', data.nombre);
-                    setValue('descripcion', data.descripcion);
+                    setValue('categoria', data.categoria);
+                    setValue('default_categoria', data.default_categoria ?? false);
+                    setValue('activo', data.activo ?? true);
                 })
                 .finally(() => setLoading(false));
         }
@@ -35,14 +36,15 @@ const CategoriaFormPage = () => {
         try {
             const transformedData = {
                 ...data,
-                descripcion: data.descripcion || null,
+                default_categoria: data.default_categoria ?? false,
+                activo: data.activo ?? true
             };
             if (isEdit && id) {
                 await CategoriaRepository.actualizar(id, transformedData);
-                toast.success('Categoria actualizada correctamente');
+                toast.success('Categoría actualizada correctamente');
             } else {
                 await CategoriaRepository.registrar(transformedData);
-                toast.success('Categoria creada correctamente');
+                toast.success('Categoría creada correctamente');
             }
             navigate('/categorias');
         } catch (error) {
@@ -64,30 +66,33 @@ const CategoriaFormPage = () => {
 
             <Paper sx={{ p: 4, border: (theme) => `1px solid ${theme.palette.divider}` }}>
                 <Typography variant="h5" fontWeight={700} mb={3}>
-                    {isEdit ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+                    {isEdit ? 'Editar Categoría' : 'Nueva Categoría'}
                 </Typography>
 
                 <Box component={'form'} onSubmit={handleSubmit(onSubmit)}>
                     <Stack spacing={3}>
                         <TextField
-                            label="Nombre del Proveedor"
+                            label="Nombre de la categoría"
                             fullWidth
-                            {...register('nombre')}
-                            error={!!errors.nombre}
-                            helperText={errors.nombre?.message}
+                            {...register('categoria')}
+                            error={!!errors.categoria}
+                            helperText={errors.categoria?.message}
                         />
 
-                        <TextField
-                            label="Descripción"
-                            fullWidth
-                            {...register('descripcion')}
-                            error={!!errors.descripcion}
-                            helperText={errors.descripcion?.message}
-                        />
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                            <FormControlLabel
+                                label="Predeterminada"
+                                control={<Checkbox {...register('default_categoria')} />}
+                            />
+                            <FormControlLabel
+                                label="Activa"
+                                control={<Checkbox {...register('activo')} />}
+                            />
+                        </Stack>
 
                         <SubmitButton 
                             isSubmitting={isSubmitting}
-                            text={isEdit ? 'Guardar Cambios' : 'Registrar Categoria'}
+                            text={isEdit ? 'Guardar Cambios' : 'Registrar Categoría'}
                             loadingText="Guardando..."
                             icon={<Save />}
                         />

@@ -15,6 +15,7 @@ import {
     ListItemText,
     Switch,
     FormControlLabel,
+    ListItemButton,
 } from '@mui/material';
 import { ArrowBack, Save, Security, ViewModule } from '@mui/icons-material';
 import { toast } from 'sonner';
@@ -142,6 +143,7 @@ const RolePermissionsPage = () => {
             </Stack>
 
             <Grid container spacing={3}>
+                {/* LADO IZQUIERDO: Menú de Módulos Mejorado */}
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                         <Stack direction="row" alignItems="center" spacing={1} mb={2}>
@@ -149,24 +151,42 @@ const RolePermissionsPage = () => {
                             <Typography variant="h6" fontWeight={700}>Módulos del negocio</Typography>
                         </Stack>
 
-                        <Divider sx={{ mb: 2 }} />
+                        <Divider sx={{ mb: 1 }} />
 
                         {modulos.length === 0 ? (
-                            <Alert severity="info">No hay módulos disponibles para este negocio.</Alert>
+                            <Alert severity="info" sx={{ mt: 1 }}>No hay módulos disponibles para este negocio.</Alert>
                         ) : (
-                            <Stack spacing={1}>
-                                {modulos.map((modulo) => (
-                                    <Button
-                                        key={modulo.id}
-                                        variant={selectedModulo?.id === modulo.id ? 'contained' : 'outlined'}
-                                        fullWidth
-                                        onClick={() => setSelectedModulo(modulo)}
-                                        sx={{ justifyContent: 'flex-start', textTransform: 'none' }}
-                                    >
-                                        {modulo.nombre}
-                                    </Button>
-                                ))}
-                            </Stack>
+                            <List disablePadding>
+                                {modulos.map((modulo) => {
+                                    const isSelected = selectedModulo?.id === modulo.id;
+                                    return (
+                                        <ListItem key={modulo.id} disablePadding sx={{ mb: 0.5 }}>
+                                            <ListItemButton
+                                                selected={isSelected}
+                                                onClick={() => setSelectedModulo(modulo)}
+                                                sx={{
+                                                    borderRadius: 1.5,
+                                                    '&.Mui-selected': {
+                                                        bgcolor: 'primary.main',
+                                                        color: 'primary.contrastText',
+                                                        '&:hover': {
+                                                            bgcolor: 'primary.dark',
+                                                        },
+                                                    },
+                                                }}
+                                            >
+                                                <ListItemText
+                                                    primary={modulo.nombre}
+                                                    primaryTypographyProps={{
+                                                        fontWeight: isSelected ? 600 : 500,
+                                                        variant: 'body2'
+                                                    }}
+                                                />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    );
+                                })}
+                            </List>
                         )}
                     </Paper>
                 </Grid>
@@ -183,30 +203,49 @@ const RolePermissionsPage = () => {
                         {!selectedModulo ? (
                             <Alert severity="info">Selecciona un módulo para ver los permisos asociados.</Alert>
                         ) : permissionsLoading ? (
-                            <Box display="flex" justifyContent="center" mt={4}><CircularProgress /></Box>
+                            <Box display="flex" justifyContent="center" py={4}><CircularProgress /></Box>
                         ) : modulePermissions.length === 0 ? (
                             <Alert severity="info">No hay permisos disponibles para este módulo.</Alert>
                         ) : (
-                            <List>
-                                {modulePermissions.map((permiso) => (
-                                    <ListItem key={permiso.id} disableGutters secondaryAction={
-                                        <FormControlLabel
-                                            control={
-                                                <Switch
-                                                    disabled={!user?.permisos.includes('EDITAR_PERMISOS')}
-                                                    checked={assignedPermissionIds.includes(permiso.id)}
-                                                    onChange={() => handleTogglePermission(permiso.id)}
-                                                    color="primary"
+                            <List disablePadding>
+                                {modulePermissions.map((permiso, index) => (
+                                    <Box key={permiso.id}>
+                                        <ListItem
+                                            disableGutters
+                                            sx={{ py: 2 }}
+                                            secondaryAction={
+                                                <FormControlLabel
+                                                    control={
+                                                        <Switch
+                                                            disabled={!user?.permisos.includes('EDITAR_PERMISOS')}
+                                                            checked={assignedPermissionIds.includes(permiso.id)}
+                                                            onChange={() => handleTogglePermission(permiso.id)}
+                                                            color="primary"
+                                                        />
+                                                    }
+                                                    label={assignedPermissionIds.includes(permiso.id) ? 'Asignado' : 'No asignado'}
+                                                    labelPlacement="start"
+                                                    sx={{
+                                                        mr: 0,
+                                                        // Aquí controlamos la distribución del texto según el tamaño de pantalla
+                                                        '& .MuiFormControlLabel-label': {
+                                                            display: { xs: 'none', sm: 'inline-block' },
+                                                            fontWeight: 500,
+                                                            fontSize: '0.875rem'
+                                                        }
+                                                    }}
                                                 />
                                             }
-                                            label={assignedPermissionIds.includes(permiso.id) ? 'Asignado' : 'No asignado'}
-                                        />
-                                    }>
-                                        <ListItemText
-                                            primary={permiso.codigo}
-                                            secondary={permiso.descripcion || 'Sin descripción'}
-                                        />
-                                    </ListItem>
+                                        >
+                                            <ListItemText
+                                                primary={permiso.codigo}
+                                                secondary={permiso.descripcion || 'Sin descripción'}
+                                                primaryTypographyProps={{ fontWeight: 600, color: 'text.primary', mb: 0.5 }}
+                                                secondaryTypographyProps={{ variant: 'body2' }}
+                                            />
+                                        </ListItem>
+                                        {index < modulePermissions.length - 1 && <Divider />}
+                                    </Box>
                                 ))}
                             </List>
                         )}
@@ -214,8 +253,8 @@ const RolePermissionsPage = () => {
                         <Divider sx={{ my: 3 }} />
 
                         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" spacing={2}>
-                            <Typography color="text.secondary">
-                                {assignedPermissionIds.length} permisos seleccionados para este rol.
+                            <Typography variant="body2" color="text.secondary">
+                                {assignedPermissionIds.length} permisos seleccionados en total para este rol.
                             </Typography>
                             {
                                 user?.permisos.includes('EDITAR_PERMISOS') && (
@@ -224,6 +263,7 @@ const RolePermissionsPage = () => {
                                         startIcon={<Save />}
                                         onClick={handleSavePermissions}
                                         disabled={saving || !selectedModulo}
+                                        sx={{ minWidth: 160 }}
                                     >
                                         {saving ? 'Guardando...' : 'Guardar cambios'}
                                     </Button>

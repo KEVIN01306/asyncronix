@@ -8,7 +8,6 @@ import {
     Paper,
     TextField,
     Button,
-    CircularProgress,
     Grid,
 } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
@@ -17,6 +16,7 @@ import { toast } from 'sonner';
 import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
 import { negocioEditSchema, type NegocioEditFormValues } from '../../domain/negocio.schema';
 import { negocioRepository } from '../../infrastructure/repositories/negocio.repository';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const NegocioEditPage = () => {
     const navigate = useNavigate();
@@ -98,7 +98,9 @@ const NegocioEditPage = () => {
         }
     };
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) {
+        return <Loading />;
+    }
 
     return (
         <Box p={2} maxWidth="900px" mx="auto">

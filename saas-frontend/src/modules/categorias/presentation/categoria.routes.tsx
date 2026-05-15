@@ -10,7 +10,7 @@ export const categoriaRoutes: RouteObject[] = [
             {
                 index: true,
                 element: (
-                    <RouteProtector requiredPermission="VER_CATEGORIAS">
+                    <RouteProtector requiredPermission="VER_CATEGORIAS_PRODUCTOS">
                         <CategoriaListPage/>
                     </RouteProtector>
                 )
@@ -18,7 +18,7 @@ export const categoriaRoutes: RouteObject[] = [
             {
                 path: ":id",
                 element: (
-                    <RouteProtector requiredPermission="VER_CATEGORIAS_DETALLE">
+                    <RouteProtector requiredPermission="VER_CATEGORIAS_PRODUCTOS_DETALLE">
                         <CategoriaDetailPage/>
                     </RouteProtector>
                 )
@@ -26,7 +26,7 @@ export const categoriaRoutes: RouteObject[] = [
             {
                 path: "nuevo",
                 element: (
-                    <RouteProtector requiredPermission="CREAR_CATEGORIAS">
+                    <RouteProtector requiredPermission="CREAR_CATEGORIAS_PRODUCTOS">
                         <CategoriaFormPage/>
                     </RouteProtector>
                 )
@@ -34,7 +34,7 @@ export const categoriaRoutes: RouteObject[] = [
             {
                 path: ":id/editar",
                 element: (
-                    <RouteProtector requiredPermission="EDITAR_CATEGORIAS">
+                    <RouteProtector requiredPermission="EDITAR_CATEGORIAS_PRODUCTOS">
                         <CategoriaFormPage/>
                     </RouteProtector>
                 )

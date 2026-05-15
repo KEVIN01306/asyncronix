@@ -42,6 +42,7 @@ const CategoriaDetailPage = () => {
         if (!id) return;
         setIsDeleting(true);
         try {
+            await CategoriaRepository.eliminar(id);
             toast.success('Categoría eliminada correctamente');
             navigate('/categorias');
         } catch (error) {
@@ -72,7 +73,7 @@ const CategoriaDetailPage = () => {
                         <Typography color="text.primary">Detalle de Categoría</Typography>
                     </Breadcrumbs>
                     <Typography variant="h4" fontWeight={800} color="text.primary">
-                        {categoria.nombre}
+                        {categoria.categoria}
                     </Typography>
                 </Box>
 
@@ -106,8 +107,8 @@ const CategoriaDetailPage = () => {
                             </Avatar>
                             <Box>
                                 <Typography variant="overline" color="primary" fontWeight={700}>Módulo de Inventario</Typography>
-                                <Typography variant="h5" fontWeight={700}>{categoria.nombre}</Typography>
-                                <Chip label="Activo para Ventas" color="success" size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
+                                <Typography variant="h5" fontWeight={700}>{categoria.categoria}</Typography>
+                                <Chip label={categoria.activo ? 'Activo' : 'Inactivo'} color={categoria.activo ? 'success' : 'default'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
                             </Box>
                         </Box>
                         <Divider sx={{ my: 3 }} />
@@ -115,10 +116,10 @@ const CategoriaDetailPage = () => {
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Stack spacing={1}>
                                     <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, letterSpacing: 1 }}>
-                                        <Description sx={{ fontSize: 16 }} /> DESCRIPCIÓN DE LA CATEGORÍA
+                                        <Description sx={{ fontSize: 16 }} /> ESTADO DE LA CATEGORÍA
                                     </Typography>
                                     <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
-                                        {categoria.descripcion || 'Sin descripción disponible para esta categoría.'}
+                                        {categoria.default_categoria ? 'Esta categoría es la categoría predeterminada de productos.' : 'Esta categoría es una categoría secundaria.'}
                                     </Typography>
                                 </Stack>
                             </Grid>
@@ -154,7 +155,7 @@ const CategoriaDetailPage = () => {
                 title="¿Eliminar categoría?"
                 description={
                     <Typography variant="body2">
-                        Estás a punto de eliminar <strong>{categoria.nombre}</strong>. 
+                        Estás a punto de eliminar <strong>{categoria.categoria}</strong>. 
                         Esta acción es irreversible y los productos bajo esta categoría quedarán sin clasificación.
                     </Typography>
                 }

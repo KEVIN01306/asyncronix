@@ -18,7 +18,7 @@ export interface MenuItem {
 const MenuItems: MenuItem[] = [
   { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/" },
   { module: "inventario", name: "Inventario", icon: Inventory2, children: [
-      { name: "Categorías", link: "/categorias", icon: AdminPanelSettingsOutlined, permiso: "VER_CATEGORIAS" },
+      { name: "Categorías", link: "/categorias", icon: AdminPanelSettingsOutlined, permiso: "VER_CATEGORIAS_PRODUCTOS" },
     ]
   },
   { name: "Sucursales", icon: StoreMallDirectory, link: "/sucursales", permiso: "VER_SUCURSALES" },

@@ -10,7 +10,7 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
     constructor(private readonly prisma: PrismaClient) { }
 
     async obtener(id: string, negocio_id: string): Promise<CategoriaSimple | null> {
-        const categoria = await this.prisma.categorias.findFirst({
+        const categoria = await this.prisma.categoriaProducto.findFirst({
             where: { id, negocio_id }
         });
 
@@ -26,12 +26,12 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
         const where = { negocio_id };
 
         const [total, categorias] = await Promise.all([
-            this.prisma.categorias.count({ where }),
-            this.prisma.categorias.findMany({
+            this.prisma.categoriaProducto.count({ where }),
+            this.prisma.categoriaProducto.findMany({
                 where,
                 take: perPage,
                 skip: offset,
-                orderBy: { nombre: 'asc' }
+                orderBy: { categoria: 'asc' }
             })
         ]);
 
@@ -45,10 +45,12 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
 
     async registrar(categoria: CategoriaCrear, negocio_id: string): Promise<CategoriaSimple> {
         try {
-            const nuevaCategoria = await this.prisma.categorias.create({
+            const nuevaCategoria = await this.prisma.categoriaProducto.create({
                 data: {
                     ...categoria,
-                    negocio_id
+                    negocio_id,
+                    activo: categoria.activo ?? true,
+                    default_categoria: categoria.default_categoria ?? false
                 }
             });
 
@@ -60,8 +62,8 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
 
     async actualizar(id: string, categoria: CategoriaActualizar, negocio_id: string): Promise<CategoriaSimple> {
         try {
-            const categoriaActualizada = await this.prisma.categorias.update({
-                where: { id, negocio_id },
+            const categoriaActualizada = await this.prisma.categoriaProducto.update({
+                where: { id },
                 data: categoria
             });
 
@@ -73,8 +75,8 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
 
     async eliminar(id: string, negocio_id: string): Promise<void> {
         try {
-            await this.prisma.categorias.delete({
-                where: { id, negocio_id }
+            await this.prisma.categoriaProducto.delete({
+                where: { id }
             });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
