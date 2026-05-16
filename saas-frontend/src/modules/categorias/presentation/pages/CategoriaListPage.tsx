@@ -25,8 +25,6 @@ const CategoriaListPage = () => {
 
     const columns = [
         { id: 'categoria', name: 'Categoría', format: (value: any) => value.toString().toUpperCase() },
-        { id: 'default_categoria', name: 'Predeterminada', format: (value: boolean) => value ? 'Sí' : 'No' },
-        { id: 'activo', name: 'Activo', format: (value: boolean) => value ? 'Sí' : 'No' }
     ];
 
     const actions = [
@@ -41,6 +39,7 @@ const CategoriaListPage = () => {
             icon: <Edit fontSize="small" />,
             color: 'blue',
             onClick: (row: any) => navigate(`/categorias/${row.id}/editar`),
+            visible: (row: any) => !row.default_categoria
         },
     ];
 

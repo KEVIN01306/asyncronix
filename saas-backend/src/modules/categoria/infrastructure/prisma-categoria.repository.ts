@@ -5,13 +5,21 @@ import { CategoriaMapper } from "./mappers/categoria.mapper.js";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
 import type { Pagination } from "@shared/domain/pagination.js";
 import type { Paginated } from "@shared/domain/paginated.js";
+import AppError from '@shared/errors/AppError.js';
 
 export class PrismaCategoriaRepository implements CategoriaRepository {
     constructor(private readonly prisma: PrismaClient) { }
 
     async obtener(id: string, negocio_id: string): Promise<CategoriaSimple | null> {
         const categoria = await this.prisma.categoriaProducto.findFirst({
-            where: { id, negocio_id }
+            where: {
+                activo: true,
+                id,
+                OR: [
+                    { negocio_id },
+                    { default_categoria: true }
+                ]
+            }
         });
 
         if (!categoria) return null;
@@ -23,7 +31,13 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
         const { page, perPage } = pagination;
         const offset = (page - 1) * perPage;
 
-        const where = { negocio_id };
+        const where = {
+            activo: true,
+            OR: [
+                { negocio_id },
+                { default_categoria: true }
+            ]
+        };
 
         const [total, categorias] = await Promise.all([
             this.prisma.categoriaProducto.count({ where }),
@@ -49,8 +63,8 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
                 data: {
                     ...categoria,
                     negocio_id,
-                    activo: categoria.activo ?? true,
-                    default_categoria: categoria.default_categoria ?? false
+                    activo: true,
+                    default_categoria: false
                 }
             });
 
@@ -61,9 +75,15 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
     }
 
     async actualizar(id: string, categoria: CategoriaActualizar, negocio_id: string): Promise<CategoriaSimple> {
+        const existing = await this.prisma.categoriaProducto.findUnique({ where: { id } });
+        if (!existing) throw new AppError('Categoria no encontrada', 'CATEGORIA_NOT_FOUND', 404);
+        if (existing.default_categoria) throw new AppError('Categoria predeterminada no modificable', 'CATEGORIA_DEFAULT', 400);
+        if (existing.negocio_id !== negocio_id) throw new AppError('Categoria no encontrada', 'CATEGORIA_NOT_FOUND', 404);
+
         try {
             const categoriaActualizada = await this.prisma.categoriaProducto.update({
-                where: { id },
+                
+                where: { id, activo: true, default_categoria: false, negocio_id},
                 data: categoria
             });
 
@@ -74,10 +94,19 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
     }
 
     async eliminar(id: string, negocio_id: string): Promise<void> {
+        const existing = await this.prisma.categoriaProducto.findUnique({ where: { id, activo: true, } });
+        if (!existing) throw new AppError('Categoria no encontrada', 'CATEGORIA_NOT_FOUND', 404);
+        if (existing.negocio_id !== negocio_id) throw new AppError('Categoria no encontrada', 'CATEGORIA_NOT_FOUND', 404);
+
         try {
-            await this.prisma.categoriaProducto.delete({
-                where: { id }
-            });
+            await this.prisma.categoriaProducto.update(
+                { 
+                    where: { id, negocio_id, activo: true },
+                    data: {
+                        activo: false
+                    }
+                }
+            );
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

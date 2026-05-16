@@ -14,6 +14,7 @@ import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 import { CategoriaRepository } from '../../infrastructure/repositories/categoria.repository';
 import type { Categoria } from '../../domain/interfaces/categoria.interface';
+import { useAuthStore } from '../../../../core/store/authStore';
 
 const CategoriaDetailPage = () => {
     const { id } = useParams();
@@ -23,6 +24,7 @@ const CategoriaDetailPage = () => {
     const [openDelete, setOpenDelete] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    const user = useAuthStore((state) => state.user);
     const fetchCategoria = useCallback(async () => {
         try {
             const data = await CategoriaRepository.Obtener(String(id));
@@ -78,14 +80,16 @@ const CategoriaDetailPage = () => {
                 </Box>
 
                 <Stack direction="row" spacing={1} width={{ xs: '100%', sm: 'auto' }}>
-                    <Button 
-                        variant="outlined" 
-                        sx={{ width: { xs: '100%', sm: 'auto' } }}
-                        startIcon={<Edit />} 
-                        onClick={() => navigate(`/categorias/${id}/editar`)}
-                    >
-                        Editar
-                    </Button>
+                    {!categoria.default_categoria && (
+                        <Button 
+                            variant="outlined" 
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
+                            startIcon={<Edit />} 
+                            onClick={() => navigate(`/categorias/${id}/editar`)}
+                        >
+                            Editar
+                        </Button>
+                    )}
                     <Button 
                         variant="contained" 
                         color="error" 
@@ -119,7 +123,7 @@ const CategoriaDetailPage = () => {
                                         <Description sx={{ fontSize: 16 }} /> ESTADO DE LA CATEGORÍA
                                     </Typography>
                                     <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
-                                        {categoria.default_categoria ? 'Esta categoría es la categoría predeterminada de productos.' : 'Esta categoría es una categoría secundaria.'}
+                                        {categoria.default_categoria ? 'Esta categoría no es editable ni elimineable ya que esta integrada por default.' : 'Esta categoría ha sido creada por el negocio.'}
                                     </Typography>
                                 </Stack>
                             </Grid>
@@ -149,7 +153,9 @@ const CategoriaDetailPage = () => {
                     </Stack>
                 </Grid>
             </Grid>
-
+            {
+                
+            }
             <ConfirmDialog
                 open={openDelete}
                 title="¿Eliminar categoría?"

@@ -27,6 +27,7 @@ interface Action {
     icon: React.ReactNode;
     color?: string;
     onClick: (row: any) => void;
+    visible?: (row: any) => boolean;
 }
 
 interface PaginationProps {
@@ -173,19 +174,23 @@ const ListTable: React.FC<ListTableProps> = ({
                     }
                 }}
             >
-                {actions?.map((action, index) => (
-                    <MenuItem
-                        key={index}
-                        onClick={() => {
-                            action.onClick(menuRow);
-                            handleMenuClose();
-                        }}
-                        sx={{ fontSize: '0.85rem', gap: 1.5, py: 1, color: action.color || 'inherit' }}
-                    >
-                        {action.icon}
-                        {action.name}
-                    </MenuItem>
-                ))}
+                {actions?.map((action, index) => {
+                    const isVisible = !action.visible || (menuRow ? action.visible(menuRow) : true);
+                    if (!isVisible) return null;
+                    return (
+                        <MenuItem
+                            key={index}
+                            onClick={() => {
+                                action.onClick(menuRow);
+                                handleMenuClose();
+                            }}
+                            sx={{ fontSize: '0.85rem', gap: 1.5, py: 1, color: action.color || 'inherit' }}
+                        >
+                            {action.icon}
+                            {action.name}
+                        </MenuItem>
+                    );
+                })}
             </Menu>
         </Box>
     );

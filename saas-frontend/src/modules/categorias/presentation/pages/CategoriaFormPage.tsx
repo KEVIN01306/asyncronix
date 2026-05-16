@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress, Checkbox, FormControlLabel } from '@mui/material';
+import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
@@ -24,9 +24,12 @@ const CategoriaFormPage = () => {
         if (isEdit && id) {
             CategoriaRepository.Obtener(id)
                 .then(data => {
+                    if (data.default_categoria) {
+                        toast.error('Esta categoría predeterminada no es modificable');
+                        navigate('/categorias');
+                        return;
+                    }
                     setValue('categoria', data.categoria);
-                    setValue('default_categoria', data.default_categoria ?? false);
-                    setValue('activo', data.activo ?? true);
                 })
                 .finally(() => setLoading(false));
         }
@@ -36,8 +39,6 @@ const CategoriaFormPage = () => {
         try {
             const transformedData = {
                 ...data,
-                default_categoria: data.default_categoria ?? false,
-                activo: data.activo ?? true
             };
             if (isEdit && id) {
                 await CategoriaRepository.actualizar(id, transformedData);
@@ -78,18 +79,6 @@ const CategoriaFormPage = () => {
                             error={!!errors.categoria}
                             helperText={errors.categoria?.message}
                         />
-
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-                            <FormControlLabel
-                                label="Predeterminada"
-                                control={<Checkbox {...register('default_categoria')} />}
-                            />
-                            <FormControlLabel
-                                label="Activa"
-                                control={<Checkbox {...register('activo')} />}
-                            />
-                        </Stack>
-
                         <SubmitButton 
                             isSubmitting={isSubmitting}
                             text={isEdit ? 'Guardar Cambios' : 'Registrar Categoría'}

@@ -2,7 +2,9 @@ import { Router } from "express";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { categoriaController } from "../categoria.module.js";
-import { categoriaCrearSchema, categoriaActualizarSchema, categoriaListarQuerySchema } from "./validators/categoria.schema.js";
+import { categoriaCrearSchema, categoriaActualizarSchema } from "./validators/categoria.schema.js";
+import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
+
 
 const router = Router();
 const validarMiddleware = new ValidarMiddleware();
@@ -18,7 +20,7 @@ router.post("/",
 
 router.get("/", 
     authMiddleware.verificarPermiso(['VER_CATEGORIAS_PRODUCTOS']),
-    validarMiddleware.validarQuery(categoriaListarQuerySchema), 
+    validarMiddleware.validarQuery(paginacionQuerySchema), 
     categoriaController.listar
 );
 
@@ -34,7 +36,7 @@ router.put("/:id",
 );
 
 router.delete("/:id", 
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarRol(['ELIMINAR_CATEGORIAS_PRODUCTOS']),
     categoriaController.eliminar
 );
 
