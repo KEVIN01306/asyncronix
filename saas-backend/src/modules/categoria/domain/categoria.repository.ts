@@ -7,5 +7,6 @@ export interface CategoriaRepository {
     actualizar(id: string, categoria: CategoriaActualizar, negocio_id: string): Promise<CategoriaSimple>;
     eliminar(id: string, negocio_id: string): Promise<void>;
     obtener(id: string, negocio_id: string): Promise<CategoriaSimple | null>;
+    obtenerDefaultPorNombre(categoria: Categoria['categoria']): Promise<CategoriaSimple | null>;
     listar(negocio_id: string, pagination: Pagination): Promise<Paginated<CategoriaSimple>>;
 }

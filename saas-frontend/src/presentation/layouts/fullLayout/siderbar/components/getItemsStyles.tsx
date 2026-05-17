@@ -6,7 +6,7 @@ import { alpha, type SxProps } from "@mui/material";
 const getItemStyle = (isActive: boolean, isChild: boolean = false): SxProps<Theme> => ({
   mx: 1.5,
   my: 0.4,
-  borderRadius: '12px',
+  //borderRadius: '2px',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   position: 'relative',
   color: isActive ? 'primary.main' : 'secondary.main',
@@ -23,7 +23,7 @@ const getItemStyle = (isActive: boolean, isChild: boolean = false): SxProps<Them
     height: isActive ? '60%' : '0%',
     width: '4px',
     bgcolor: 'primary.main',
-    borderRadius: '0 4px 4px 0',
+    //borderRadius: '0 2px 2px 0',
     transition: 'all 0.3s ease',
   },
   '& .MuiListItemIcon-root': {

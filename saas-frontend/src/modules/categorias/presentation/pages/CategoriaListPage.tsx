@@ -37,7 +37,7 @@ const CategoriaListPage = () => {
         {
             name: 'Editar',
             icon: <Edit fontSize="small" />,
-            color: 'blue',
+            color: 'primary',
             onClick: (row: any) => navigate(`/categorias/${row.id}/editar`),
             visible: (row: any) => !row.default_categoria
         },

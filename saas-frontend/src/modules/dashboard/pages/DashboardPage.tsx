@@ -12,7 +12,7 @@ const fadeIn = keyframes`
 
 const premiumCardStyle = {
   p: 3,
-  borderRadius: "24px", 
+  borderRadius: "2px", 
   background: `linear-gradient(135deg, ${alpha("#fff", 0.9)} 0%, ${alpha("#edf2f7", 0.4)} 100%)`, // Gradiente sutil de fondo
   border: "1px solid",
   borderColor: alpha("#6889b8", 0.1),

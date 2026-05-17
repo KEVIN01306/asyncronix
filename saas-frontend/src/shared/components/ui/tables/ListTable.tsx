@@ -166,11 +166,10 @@ const ListTable: React.FC<ListTableProps> = ({
                 onClose={handleMenuClose}
                 PaperProps={{
                     sx: {
-                        mt: 1,
-                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                        borderRadius: '12px',
+                        boxShadow: '0 5px 5px -3px rgba(0,0,0,0.1)',
+                        borderRadius: '2px',
                         minWidth: 160,
-                        border: '1px solid #f1f5f9'
+                        border: '1px solid #dadada'
                     }
                 }}
             >
@@ -178,17 +177,20 @@ const ListTable: React.FC<ListTableProps> = ({
                     const isVisible = !action.visible || (menuRow ? action.visible(menuRow) : true);
                     if (!isVisible) return null;
                     return (
-                        <MenuItem
-                            key={index}
-                            onClick={() => {
-                                action.onClick(menuRow);
-                                handleMenuClose();
-                            }}
-                            sx={{ fontSize: '0.85rem', gap: 1.5, py: 1, color: action.color || 'inherit' }}
-                        >
-                            {action.icon}
-                            {action.name}
-                        </MenuItem>
+                        <>
+                            <MenuItem
+                                key={index}
+                                onClick={() => {
+                                    action.onClick(menuRow);
+                                    handleMenuClose();
+                                }}
+                                sx={{ fontSize: '0.85rem', gap: 1.5, color: action.color || 'inherit' }}
+                            >
+                                {action.icon}
+                                {action.name}
+                            </MenuItem>
+                            
+                        </>
                     );
                 })}
             </Menu>

@@ -26,6 +26,19 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
 
         return CategoriaMapper.mapSimple(categoria);
     }
+    async obtenerDefaultPorCategoria(categoriaShared: Categoria['categoria']): Promise<CategoriaSimple | null> {
+        const categoria = await this.prisma.categoriaProducto.findFirst({
+            where: {
+                activo: true,
+                categoria: categoriaShared,
+                default_categoria: true
+            }
+        });
+
+        if (!categoria) return null;
+
+        return CategoriaMapper.mapSimple(categoria);
+    }
 
     async listar(negocio_id: string, pagination: Pagination): Promise<Paginated<CategoriaSimple>> {
         const { page, perPage } = pagination;
@@ -75,11 +88,6 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
     }
 
     async actualizar(id: string, categoria: CategoriaActualizar, negocio_id: string): Promise<CategoriaSimple> {
-        const existing = await this.prisma.categoriaProducto.findUnique({ where: { id } });
-        if (!existing) throw new AppError('Categoria no encontrada', 'CATEGORIA_NOT_FOUND', 404);
-        if (existing.default_categoria) throw new AppError('Categoria predeterminada no modificable', 'CATEGORIA_DEFAULT', 400);
-        if (existing.negocio_id !== negocio_id) throw new AppError('Categoria no encontrada', 'CATEGORIA_NOT_FOUND', 404);
-
         try {
             const categoriaActualizada = await this.prisma.categoriaProducto.update({
                 

@@ -37,7 +37,7 @@ export const mainTheme = createTheme({
         divider: '#e3e8ee'
     },
     shape: {
-        borderRadius: 12
+        borderRadius: 2
     },
     typography: {
         fontFamily: '"Inter","Roboto", "Helvetica", Arial, sans-serif',

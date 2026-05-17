@@ -29,7 +29,7 @@ const ConfirmDialog = ({
         <Dialog 
             open={open} 
             onClose={() => !isLoading && onClose()}
-            PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+            PaperProps={{ sx: { borderRadius: 2, p: 1 } }}
         >
             <DialogTitle fontWeight={700}>{title}</DialogTitle>
             <DialogContent>
