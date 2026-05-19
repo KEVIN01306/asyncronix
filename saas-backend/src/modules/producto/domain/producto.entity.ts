@@ -1,38 +1,28 @@
 export interface Producto {
     id: string;
     negocio_id: string;
-    categoria_id: string | null;
+    categoria_id: string;
     nombre: string;
-    descripcion: string | null;
+    codigo: string | null;
+    precio_sugerido: number;
+    stock_total: number;
+    url_imagen: string;
+    activo: boolean;
 }
 
-export interface ProductoImagen {
+export interface ProductoCategoria {
     id: string;
-    producto_id: string;
-    sku_id: string | null;
-    url_imagen: string;
-    es_principal: boolean;
+    categoria: string;
 }
 
 export interface ProductoCrear extends Omit<Producto, "id" | "negocio_id"> { }
 
 export interface ProductoActualizar extends Partial<Omit<Producto, "id" | "negocio_id">> { }
 
-export interface ProductoSimple extends Omit<Producto, "negocio_id" | "descripcion"> {
-    categoria: {
-        id: string;
-        nombre: string;
-    } | null;
+export interface ProductoSimple extends Omit<Producto, "negocio_id"> {
+    categoria: ProductoCategoria | null;
 }
 
 export interface ProductoDetalle extends Omit<Producto, "negocio_id"> {
-    categoria: {
-        id: string;
-        nombre: string;
-    } | null;
-    imagenes: ProductoImagen[];
+    categoria: ProductoCategoria | null;
 }
-
-// DTOs para imagenes
-export interface ProductoImagenCrear extends Omit<ProductoImagen, "id"> { }
-export interface ProductoImagenActualizar extends Partial<Omit<ProductoImagen, "id" | "producto_id" | "url_imagen">> { }

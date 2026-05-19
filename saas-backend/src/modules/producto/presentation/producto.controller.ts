@@ -7,9 +7,6 @@ import type { RegistrarProductoUseCase } from "../application/registrar-producto
 import type { ActualizarProductoUseCase } from "../application/actualizar-producto.usecase.js";
 import type { EliminarProductoUseCase } from "../application/eliminar-producto.usecase.js";
 import type { SubirImagenProductoUseCase } from "../application/subir-imagen-producto.usecase.js";
-import type { ActualizarImagenProductoUseCase } from "../application/actualizar-imagen-producto.usecase.js";
-import type { EliminarImagenProductoUseCase } from "../application/eliminar-imagen-producto.usecase.js";
-import type { EliminarImagenesProductoUseCase } from "../application/eliminar-imagenes-producto.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ProductoController extends BaseController {
@@ -19,15 +16,11 @@ export class ProductoController extends BaseController {
         private readonly registrarProductoUseCase: RegistrarProductoUseCase,
         private readonly actualizarProductoUseCase: ActualizarProductoUseCase,
         private readonly eliminarProductoUseCase: EliminarProductoUseCase,
-        private readonly subirImagenProductoUseCase: SubirImagenProductoUseCase,
-        private readonly actualizarImagenProductoUseCase: ActualizarImagenProductoUseCase,
-        private readonly eliminarImagenProductoUseCase: EliminarImagenProductoUseCase,
-        private readonly eliminarImagenesProductoUseCase: EliminarImagenesProductoUseCase
+        private readonly subirImagenProductoUseCase: SubirImagenProductoUseCase
     ) {
         super();
     }
 
-    // Product Methods
     obtener = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
@@ -87,53 +80,21 @@ export class ProductoController extends BaseController {
         }
     }
 
-    // Image Methods
     subirImagen = async (req: Request<{ producto_id: string }>, res: Response, next: NextFunction) => {
         try {
             const { producto_id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
-            
+
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
 
             const url_imagen = req.file.path.replace(/\\/g, '/');
-            const imagen = await this.subirImagenProductoUseCase.execute({
+            const producto = await this.subirImagenProductoUseCase.execute({
                 producto_id,
                 url_imagen,
-                negocio_id,
-                es_principal: req.body.es_principal === 'true'
+                negocio_id
             });
 
-            res.status(201).json(Respuesta.exito('Imagen subida con exito', imagen));
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    actualizarImagen = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
-        try {
-            const { id } = req.params;
-            const imagen = await this.actualizarImagenProductoUseCase.execute(id, req.body);
-            res.status(200).json(Respuesta.exito('Imagen actualizada con exito', imagen));
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    eliminarImagen = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
-        try {
-            const { id } = req.params;
-            await this.eliminarImagenProductoUseCase.execute(id);
-            res.status(200).json(Respuesta.exito('Imagen eliminada con exito', null));
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    eliminarImagenesBulk = async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const { ids } = req.body;
-            await this.eliminarImagenesProductoUseCase.execute(ids);
-            res.status(200).json(Respuesta.exito('Imagenes eliminadas con exito', null));
+            res.status(201).json(Respuesta.exito('Imagen subida con exito', producto));
         } catch (error) {
             next(error);
         }

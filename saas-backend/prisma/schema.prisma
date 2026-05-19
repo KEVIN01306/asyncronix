@@ -456,6 +456,7 @@ model Producto {
   id              String   @id @default(uuid()) @db.Char(36)
   negocio_id      String   @db.Char(36)
   categoria_id    String   @db.Char(36)
+  url_imagen      String   @db.Text
   nombre          String
   codigo          String?
   precio_sugerido Float

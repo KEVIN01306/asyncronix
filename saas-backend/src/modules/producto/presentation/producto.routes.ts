@@ -6,9 +6,7 @@ import { productoController } from "../producto.module.js";
 import {
     productoCrearSchema,
     productoActualizarSchema,
-    productoListarQuerySchema,
-    productoImagenActualizarSchema,
-    productoBulkEliminarSchema
+    productoListarQuerySchema
 } from "./validators/producto.schema.js";
 
 const routes = Router();
@@ -17,7 +15,6 @@ const validarMiddleware = new ValidarMiddleware();
 
 routes.use(authMiddleware.protegerRuta);
 
-// Productos CRUD
 routes.post("/",
     authMiddleware.verificarRol(['ADMIN']),
     validarMiddleware.validarBody(productoCrearSchema),
@@ -46,28 +43,10 @@ routes.delete("/:id",
     productoController.eliminar
 );
 
-// Imagenes
 routes.post("/imagenes/:producto_id",
     authMiddleware.verificarRol(['ADMIN']),
     FileUploadMiddleware.single('imagen', 'productos'),
     productoController.subirImagen
-);
-
-routes.put("/imagenes/:id",
-    authMiddleware.verificarRol(['ADMIN']),
-    validarMiddleware.validarBody(productoImagenActualizarSchema),
-    productoController.actualizarImagen
-);
-
-routes.delete("/imagenes/:id",
-    authMiddleware.verificarRol(['ADMIN']),
-    productoController.eliminarImagen
-);
-
-routes.delete("/imagenes",
-    authMiddleware.verificarRol(['ADMIN']),
-    validarMiddleware.validarBody(productoBulkEliminarSchema),
-    productoController.eliminarImagenesBulk
 );
 
 export default routes;

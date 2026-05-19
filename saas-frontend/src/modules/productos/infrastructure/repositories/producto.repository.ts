@@ -1,0 +1,50 @@
+import api from "../../../../core/api/api";
+import type { Producto, ProductosResponse, ProductoDetailResponse } from "../../domain/interfaces/producto.interface";
+
+const URL_MODULE = '/productos/';
+
+export const ProductoRepository = {
+    listar: async (limit: number = 10, offset: number = 0, categoria_id?: string): Promise<ProductosResponse> => {
+        const response = await api.get<ProductosResponse>(URL_MODULE, {
+            params: {
+                limit,
+                offset,
+                categoria_id,
+            }
+        });
+
+        return response;
+    },
+
+    obtener: async (id: string): Promise<Producto> => {
+        const response = await api.get<ProductoDetailResponse>(`${URL_MODULE}${id}`);
+        return response.data;
+    },
+
+    registrar: async (data: any): Promise<Producto> => {
+        const response = await api.post<ProductoDetailResponse>(URL_MODULE, data);
+        return response.data;
+    },
+
+    actualizar: async (id: string, data: any): Promise<Producto> => {
+        const response = await api.put<ProductoDetailResponse>(`${URL_MODULE}${id}`, data);
+        return response.data;
+    },
+
+    eliminar: async (id: string): Promise<void> => {
+        await api.delete(`${URL_MODULE}${id}`);
+    },
+
+    subirImagen: async (id: string, file: File): Promise<Producto> => {
+        const formData = new FormData();
+        formData.append('imagen', file);
+
+        const response = await api.post<ProductoDetailResponse>(`${URL_MODULE}imagenes/${id}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        return response.data;
+    },
+};

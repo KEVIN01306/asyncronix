@@ -33,7 +33,14 @@ const permisosData = [
     { codigo: "VER_CATEGORIAS_PRODUCTOS_DETALLE"},
     { codigo: "CREAR_CATEGORIAS_PRODUCTOS"},
     { codigo: "EDITAR_CATEGORIAS_PRODUCTOS"},
-    { codigo: "ELIMINAR_CATEGORIAS_PRODUCTOS"}
+    { codigo: "ELIMINAR_CATEGORIAS_PRODUCTOS"},
+
+    { codigo: "VER_PRODUCTOS"},
+    { codigo: "VER_PRODUCTOS_DETALLE"},
+    { codigo: "CREAR_PRODUCTOS"},
+    { codigo: "EDITAR_PRODUCTOS"},
+    { codigo: "ELIMINAR_PRODUCTOS"}
+
 ];
 
 const modulosConPermisos = [
@@ -60,6 +67,10 @@ const modulosConPermisos = [
     {
         nombre: "CATEGORIAS PRODUCTOS", 
         permisos: ["VER_CATEGORIAS_PRODUCTOS", "VER_CATEGORIAS_PRODUCTOS_DETALLE","CREAR_CATEGORIAS_PRODUCTOS", "EDITAR_CATEGORIAS_PRODUCTOS","ELIMINAR_CATEGORIAS_PRODUCTOS"]
+    },
+    {
+        nombre: "PRODUCTOS", 
+        permisos: ["VER_PRODUCTOS", "VER_PRODUCTOS_DETALLE","CREAR_PRODUCTOS", "EDITAR_PRODUCTOS","ELIMINAR_PRODUCTOS"]
     }
 ];
 

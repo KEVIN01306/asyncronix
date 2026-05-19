@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { dahsboardRoutes } from "../../modules/dashboard/dashboard.routes";
 import { FullPageLoader } from "../../shared/components/ui/Loaders/FullPageLoader";
 import { categoriaRoutes } from "../../modules/categorias/presentation/categoria.routes";
+import { productoRoutes } from "../../modules/productos/presentation/producto.routes";
 import BlankLayout from "../layouts/blankLayout";
 import FullLayout from "../layouts/fullLayout";
 import { sucursalRoutes } from "../../modules/sucursales/presentation/sucursal.routes";
@@ -36,6 +37,7 @@ const appRouter = createBrowserRouter([
                 children: [
                     ...dahsboardRoutes,
                     ...categoriaRoutes,
+                    ...productoRoutes,
                     ...sucursalRoutes,
                     ...usuarioRoutes,
                     ...rolesRoutes,
