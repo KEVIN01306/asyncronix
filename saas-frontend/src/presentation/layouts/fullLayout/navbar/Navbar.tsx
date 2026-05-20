@@ -7,16 +7,22 @@ import {
   //Badge, 
   Avatar, 
   Stack, 
-  alpha 
+  alpha,
+  Menu,
+  MenuItem,
+  ListItemIcon
 } from "@mui/material";
 import { 
   //Search as SearchIcon, 
   //NotificationsNoneOutlined as NotificationsIcon,
   //ChatBubbleOutlineOutlined as ChatIcon,
   MenuOutlined as MenuIcon, 
-  Login
+  PersonOutline,
+  Logout
 } from "@mui/icons-material";
 import { useAuthStore } from "../../../../core/store/authStore";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -28,6 +34,22 @@ interface NavbarProps {
 const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: NavbarProps) => {
   const lagaout = useAuthStore((state) => state.logout)
   const user = useAuthStore((state) => state.user);
+  
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const navigate = useNavigate();
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfileClick = () => {
+    handleMenuClose();
+    navigate('/perfil');
+  };
 
   return (
     <AppBar 
@@ -94,33 +116,17 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
         </Stack>
 
         <Stack direction="row" alignItems="center" spacing={1.5}>
-          <IconButton sx={{ color: 'secondary.main' }} onClick={lagaout}>
-              <Login fontSize="small" />
-          </IconButton>
-          {/*
-          <IconButton sx={{ color: 'secondary.main' }}>
-            <Badge badgeContent={4} color="error" variant="dot">
-              <ChatIcon fontSize="small" />
-            </Badge>
-          </IconButton>
-
-          <IconButton sx={{ color: 'secondary.main' }}>
-            <Badge badgeContent={2} color="primary">
-              <NotificationsIcon fontSize="small" />
-            </Badge>
-          </IconButton>
-           */}
-
           <Box sx={{ width: '1px', height: '24px', bgcolor: alpha('#6889b8', 0.2), mx: 1 }} />
 
-          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ cursor: 'pointer' }}>
+          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ cursor: 'pointer' }} onClick={handleMenuOpen}>
             <Avatar 
-              src="/static/images/avatar/1.jpg"
+              src={user?.avatar_url ? `${import.meta.env.VITE_API_URL}/${user.avatar_url}` : "/static/images/avatar/1.jpg"}
               sx={{
                 width: 38, 
                 height: 38, 
-                borderColor: 'primary.main',
-                background: "#876543cc",
+                border: user?.avatar_url ?  '2px solid' : "",
+                borderColor: 'secondary.main',
+                background: user?.avatar_url ? "#ffffff" : "#876543cc",
               }}
             >
               {user?.nombre[0]}
@@ -128,6 +134,41 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
           </Stack>
         </Stack>
         
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          PaperProps={{
+            elevation: 0,
+            sx: {
+              overflow: 'visible',
+              filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.12))',
+              mt: 1.5,
+              width: 200,
+              '& .MuiAvatar-root': {
+                width: 32,
+                height: 32,
+                ml: -0.5,
+                mr: 1,
+              },
+            },
+          }}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        >
+          <MenuItem onClick={handleProfileClick}>
+            <ListItemIcon>
+              <PersonOutline fontSize="small" />
+            </ListItemIcon>
+            Perfil
+          </MenuItem>
+          <MenuItem onClick={() => { handleMenuClose(); lagaout(); }}>
+            <ListItemIcon>
+              <Logout fontSize="small" />
+            </ListItemIcon>
+            Cerrar sesión
+          </MenuItem>
+        </Menu>
       </Toolbar>
     </AppBar>
   );

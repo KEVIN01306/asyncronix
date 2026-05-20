@@ -1,6 +1,6 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import type { UsuarioRepository } from "../domain/usuario.repository.js";
-import type { Usuario, UsuarioActualizar, UsuarioCrear, UsuarioObtenidoDetalle, UsuarioSimple } from "../domain/usuario.entity.js";
+import type { Usuario, UsuarioActualizar, UsuarioCrear, UsuarioObtenidoDetalle, UsuarioSimple, UsuarioActualizarPerfil } from "../domain/usuario.entity.js";
 import { UsuarioMapper } from "./mappers/usuario.mapper.js";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
 import type { Paginated } from "@shared/domain/paginated.js";
@@ -183,6 +183,47 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
                 data: {
                     activo: false
                 }
+            })
+        } catch (error) {
+            throw PrismaErrorMapper.map(error)
+        }
+    }
+
+    async actualizarPerfil(id: Usuario["id"], negocio_id: Usuario["negocio_id"], data: UsuarioActualizarPerfil): Promise<UsuarioSimple> {
+        try {
+            const usuario = await this.db.usuario.update({
+                where: { id, negocio_id, activo: true },
+                data,
+                include: {
+                    negocio: { select: { id: true, nombre_comercial: true } },
+                    sucursal: { select: { id: true, nombre: true } },
+                    roles: {
+                        select: { id: true, nombre: true, negocio_id: true, permisos: { select: { id: true, codigo: true } } }
+                    }
+                }
+            })
+            return UsuarioMapper.mapSimple(usuario)
+        } catch (error) {
+            throw PrismaErrorMapper.map(error)
+        }
+    }
+
+    async actualizarAvatar(id: Usuario["id"], negocio_id: Usuario["negocio_id"], avatar_url: string): Promise<void> {
+        try {
+            await this.db.usuario.update({
+                where: { id, negocio_id, activo: true },
+                data: { avatar_url }
+            })
+        } catch (error) {
+            throw PrismaErrorMapper.map(error)
+        }
+    }
+
+    async cambiarPassword(id: Usuario["id"], negocio_id: Usuario["negocio_id"], password_hash: string): Promise<void> {
+        try {
+            await this.db.usuario.update({
+                where: { id, negocio_id, activo: true },
+                data: { password_hash }
             })
         } catch (error) {
             throw PrismaErrorMapper.map(error)

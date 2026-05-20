@@ -2,12 +2,13 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { Add, Edit, Visibility } from '@mui/icons-material';
-import { Alert, Box, Button, CircularProgress, InputAdornment, MenuItem, Paper, TableContainer, TextField, useTheme } from '@mui/material';
+import { Alert, Box, Button, Chip, CircularProgress, MenuItem, Paper, TableContainer, TextField, useTheme } from '@mui/material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { ProductoRepository } from '../../infrastructure/repositories/producto.repository';
 import { CategoriaRepository } from '../../../categorias/infrastructure/repositories/categoria.repository';
 import type { Producto } from '../../domain/interfaces/producto.interface';
 import type { Categoria } from '../../../categorias/domain/interfaces/categoria.interface';
+import { formatMoney } from '../../../../core/utils/formatMoney';
 
 const ProductosListPage = () => {
     const navigate = useNavigate();
@@ -25,22 +26,20 @@ const ProductosListPage = () => {
 
     const columns = [
         { id: 'nombre', name: 'Nombre' },
-        { id: 'codigo', name: 'Código' },
         {
             id: 'categoria',
             name: 'Categoría',
-            format: (value: any, row: Producto) => row.categoria?.categoria || '-'
+            format: (_value: any, row: Producto) => row.categoria?.categoria || '-'
         },
         {
             id: 'precio_sugerido',
             name: 'Precio',
-            format: (value: number) => `$ ${value.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`
+            format: (value: number) => formatMoney(value)
         },
-        { id: 'stock_total', name: 'Stock' },
         {
             id: 'activo',
             name: 'Estado',
-            format: (value: boolean) => value ? 'Activo' : 'Inactivo'
+            format: (value: boolean) => <Chip color={value ? 'primary' : 'default'} label={value ? 'Activo' : 'Inactivo'} size="small" />
         }
     ];
 

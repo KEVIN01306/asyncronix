@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { loginSchema, type LoginFormValues } from '../../domain/schemas/login.schema';
 import { authRepository } from '../../infrastructure/repositories/auth.repository';
 import { useAuthStore } from '../../../../core/store/authStore';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import LoginForm from '../components/LoginForm';
@@ -16,7 +16,11 @@ import LoginForm from '../components/LoginForm';
 const LoginPage = () => {
     const setAuth = useAuthStore((state) => state.login);
     const goTo = useNavigate()
-
+    const location = useLocation()
+    const from = location.state?.from || {
+        pathname: "/"
+    };
+    
     const {
         register,
         handleSubmit,
@@ -32,7 +36,7 @@ const LoginPage = () => {
             const response = await authRepository.signIn(cleanData);
             setAuth(response.usuario, response.accessToken);
 
-            goTo('/', {replace: true})
+            goTo(from, {replace: true})
 
             toast.success('Login Exitoso', {
                 description: "Hola, Bienvenido"

@@ -14,7 +14,7 @@ import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 import { CategoriaRepository } from '../../infrastructure/repositories/categoria.repository';
 import type { Categoria } from '../../domain/interfaces/categoria.interface';
-import { useAuthStore } from '../../../../core/store/authStore';
+//import { useAuthStore } from '../../../../core/store/authStore';
 
 const CategoriaDetailPage = () => {
     const { id } = useParams();
@@ -24,7 +24,7 @@ const CategoriaDetailPage = () => {
     const [openDelete, setOpenDelete] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const user = useAuthStore((state) => state.user);
+    //const user = useAuthStore((state) => state.user);
     const fetchCategoria = useCallback(async () => {
         try {
             const data = await CategoriaRepository.Obtener(String(id));
@@ -153,9 +153,7 @@ const CategoriaDetailPage = () => {
                     </Stack>
                 </Grid>
             </Grid>
-            {
-                
-            }
+            
             <ConfirmDialog
                 open={openDelete}
                 title="¿Eliminar categoría?"

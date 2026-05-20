@@ -3,6 +3,9 @@ import { EliminarUsuarioUseCase } from "./application/eliminar-usuario.usecase.j
 import { ObtenerUsuarioUseCase } from "./application/obtener-usuario.usecase.js";
 import { ObtenerUsuariosUseCase } from "./application/obtener-usuarios.usecase.js";
 import { RegistrarUsuarioUseCase } from "./application/registrar-usuario.usecase.js";
+import { ActualizarPerfilUseCase } from "./application/actualizar-perfil.usecase.js";
+import { ActualizarAvatarUseCase } from "./application/actualizar-avatar.usecase.js";
+import { CambiarPasswordUseCase } from "./application/cambiar-password.usecase.js";
 import { PrismaUsuarioRepository } from "./infrastructure/prisma-usuario.repository.js";
 import { UsuarioController } from "./presentation/usuario.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
@@ -17,11 +20,17 @@ const obtenerUsuariosUseCase = new ObtenerUsuariosUseCase(usuarioRepository);
 const registrarUsuarioUseCase = new RegistrarUsuarioUseCase(usuarioRepository, hashProvider)
 const actualizarUsuarioUseCase = new ActualizarUsuarioUseCase(usuarioRepository)
 const eliminarUsuarioUseCase = new EliminarUsuarioUseCase(usuarioRepository)
+const actualizarPerfilUseCase = new ActualizarPerfilUseCase(usuarioRepository)
+const actualizarAvatarUseCase = new ActualizarAvatarUseCase(usuarioRepository)
+const cambiarPasswordUseCase = new CambiarPasswordUseCase(usuarioRepository, hashProvider)
 
 export const usuarioController = new UsuarioController(
     obtenerUsuarioUseCase,
     obtenerUsuariosUseCase,
     registrarUsuarioUseCase,
     actualizarUsuarioUseCase,
-    eliminarUsuarioUseCase
+    eliminarUsuarioUseCase,
+    actualizarPerfilUseCase,
+    actualizarAvatarUseCase,
+    cambiarPasswordUseCase
 );

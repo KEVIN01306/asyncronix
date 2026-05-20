@@ -29,17 +29,27 @@ const permisosData = [
     { codigo: "EDITAR_PERMISOS" },
     { codigo: "ASIGNAR_PERMISOS_ROL" },
 
-    { codigo: "VER_CATEGORIAS_PRODUCTOS"},
-    { codigo: "VER_CATEGORIAS_PRODUCTOS_DETALLE"},
-    { codigo: "CREAR_CATEGORIAS_PRODUCTOS"},
-    { codigo: "EDITAR_CATEGORIAS_PRODUCTOS"},
-    { codigo: "ELIMINAR_CATEGORIAS_PRODUCTOS"},
+    { codigo: "VER_CATEGORIAS_PRODUCTOS" },
+    { codigo: "VER_CATEGORIAS_PRODUCTOS_DETALLE" },
+    { codigo: "CREAR_CATEGORIAS_PRODUCTOS" },
+    { codigo: "EDITAR_CATEGORIAS_PRODUCTOS" },
+    { codigo: "ELIMINAR_CATEGORIAS_PRODUCTOS" },
 
-    { codigo: "VER_PRODUCTOS"},
-    { codigo: "VER_PRODUCTOS_DETALLE"},
-    { codigo: "CREAR_PRODUCTOS"},
-    { codigo: "EDITAR_PRODUCTOS"},
-    { codigo: "ELIMINAR_PRODUCTOS"}
+    { codigo: "VER_PRODUCTOS" },
+    { codigo: "VER_PRODUCTOS_DETALLE" },
+    { codigo: "CREAR_PRODUCTOS" },
+    { codigo: "EDITAR_PRODUCTOS" },
+    { codigo: "ELIMINAR_PRODUCTOS" },
+
+    { codigo: "VER_LOTES" },
+    { codigo: "VER_LOTES_DETALLE" },
+    { codigo: "CREAR_LOTES" },
+
+    { codigo: "VER_VENTAS" },
+    { codigo: "VER_VENTAS_DETALLE" },
+    { codigo: "CREAR_VENTAS" },
+    { codigo: "EDITAR_VENTAS" },
+    { codigo: "ANULAR_VENTAS" },
 
 ];
 
@@ -65,12 +75,20 @@ const modulosConPermisos = [
         permisos: ["VER_PERMISOS", "EDITAR_PERMISOS", "ASIGNAR_PERMISOS_ROL"]
     },
     {
-        nombre: "CATEGORIAS PRODUCTOS", 
-        permisos: ["VER_CATEGORIAS_PRODUCTOS", "VER_CATEGORIAS_PRODUCTOS_DETALLE","CREAR_CATEGORIAS_PRODUCTOS", "EDITAR_CATEGORIAS_PRODUCTOS","ELIMINAR_CATEGORIAS_PRODUCTOS"]
+        nombre: "CATEGORIAS PRODUCTOS",
+        permisos: ["VER_CATEGORIAS_PRODUCTOS", "VER_CATEGORIAS_PRODUCTOS_DETALLE", "CREAR_CATEGORIAS_PRODUCTOS", "EDITAR_CATEGORIAS_PRODUCTOS", "ELIMINAR_CATEGORIAS_PRODUCTOS"]
     },
     {
-        nombre: "PRODUCTOS", 
-        permisos: ["VER_PRODUCTOS", "VER_PRODUCTOS_DETALLE","CREAR_PRODUCTOS", "EDITAR_PRODUCTOS","ELIMINAR_PRODUCTOS"]
+        nombre: "PRODUCTOS",
+        permisos: ["VER_PRODUCTOS", "VER_PRODUCTOS_DETALLE", "CREAR_PRODUCTOS", "EDITAR_PRODUCTOS", "ELIMINAR_PRODUCTOS"]
+    },
+    {
+        nombre: "LOTES",
+        permisos: ["VER_LOTES", "VER_LOTES_DETALLE", "CREAR_LOTES"]
+    },
+    {
+        nombre: "VENTAS",
+        permisos: ["VER_VENTAS", "VER_VENTAS_DETALLE", "CREAR_VENTAS", "EDITAR_VENTAS", "ANULAR_VENTAS"]
     }
 ];
 
@@ -95,7 +113,7 @@ async function main() {
             }
         });
     }
-    
+
     const negocio = await prisma.negocio.upsert({
         where: { wa_id: "50230108703" },
         update: {
@@ -123,11 +141,11 @@ async function main() {
     });
 
     const rolAdmin = await prisma.rol.upsert({
-        where: { 
-            negocio_id_nombre: { 
-                negocio_id: negocio.id, 
-                nombre: "ADMIN" 
-            } 
+        where: {
+            negocio_id_nombre: {
+                negocio_id: negocio.id,
+                nombre: "ADMIN"
+            }
         },
         update: {
             permisos: {

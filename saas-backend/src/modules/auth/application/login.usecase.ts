@@ -16,6 +16,10 @@ interface LoginRespuesta {
     usuario: {
         id: string,
         nombre: string,
+        apellido: string | null,
+        email: string | null,
+        telefono: string,
+        avatar_url: string | null,
         negocio_id: string,
         permisos: string[],
         roles: string[]
@@ -79,6 +83,10 @@ export class LoginUseCase {
             usuario: {
                 id: usuario.id,
                 nombre: usuario.nombre,
+                apellido: usuario.apellido,
+                email: usuario.email,
+                telefono: usuario.telefono,
+                avatar_url: usuario.avatar_url,
                 negocio_id: usuario.negocio_id,
                 permisos: usuario.permisos,
                 roles: usuario.roles,

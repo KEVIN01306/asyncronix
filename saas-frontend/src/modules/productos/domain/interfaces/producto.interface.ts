@@ -10,9 +10,11 @@ export interface Producto {
     categoria_id: string;
     nombre: string;
     codigo?: string | null;
+    sku: string;
     precio_sugerido: number;
     stock_total: number;
     url_imagen: string;
+    qr_imagen?: string | null;
     activo: boolean;
     categoria: ProductoCategoria | null;
 }

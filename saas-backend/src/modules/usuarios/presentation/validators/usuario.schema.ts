@@ -6,7 +6,7 @@ export const usuariosSchema = z.object({
     sucursal_id: z.string().max(36),
     nombre: z.string().max(100),
     apellido: z.string().max(100).nullable(),
-    email:  z.string().max(100).email(),
+    email: z.string().max(100).email(),
     password_hash: z.string(),
     telefono: z.string().max(20),
     verificado: z.boolean(),
@@ -17,3 +17,22 @@ export const usuariosSchema = z.object({
 export const usuariosCrearSchema = usuariosSchema.omit({ id: true, negocio_id: true, verificado: true, activo: true })
 
 export const usuarioActualizarSchema = usuariosSchema.omit({ id: true, negocio_id: true, password_hash: true, verificado: true, activo: true })
+
+export const actualizarPerfilSchema = z.object({
+    nombre: z.string().max(100),
+    apellido: z.string().max(100).nullable().optional(),
+    email: z.string().max(100).email().nullable().optional(),
+    telefono: z.string().max(20),
+})
+
+export const actualizarAvatarSchema = z.object({
+    avatar_url: z.string().url()
+})
+
+export const cambiarPasswordSchema = z.object({
+    password: z.string().min(6),
+    confirm_password: z.string().min(6)
+}).refine(data => data.password === data.confirm_password, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirm_password"]
+})

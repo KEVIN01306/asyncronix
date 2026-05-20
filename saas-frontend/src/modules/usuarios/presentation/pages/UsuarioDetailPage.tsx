@@ -28,6 +28,8 @@ const UsuarioDetailPage = () => {
     const navigate = useNavigate();
     const [usuario, setUsuario] = useState<Usuario | null>(null);
     const [loading, setLoading] = useState(true);
+    const AvatarSource = usuario?.avatar_url ? `${import.meta.env.VITE_API_URL}/${usuario.avatar_url}` : undefined;
+
 
     const fetchUsuario = useCallback(async () => {
         if (!id) return;
@@ -87,7 +89,17 @@ const UsuarioDetailPage = () => {
                 <Grid size={{xs: 12, md: 8}}>
                     <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                         <Box display="flex" alignItems="center" gap={3} mb={4}>
-                            <Avatar src="/static/images/avatar/1.jpg" sx={{ fontSize: 50, width: 100,  height: 100, borderColor: 'primary.main', background: "#876543cc", }} > 
+                            <Avatar 
+                                src={AvatarSource} 
+                                sx={{ 
+                                    fontSize: 50, 
+                                    width: 100,  
+                                    height: 100, 
+                                    border: AvatarSource ?   '2px solid' : "",
+                                    borderColor: 'secondary.main', 
+                                    background: AvatarSource ? "#ffffff" : "#876543cc", 
+                                }} 
+                            > 
                                 {usuario.nombre[0]}
                             </Avatar> 
                             <Box>

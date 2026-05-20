@@ -17,6 +17,7 @@ export class AuthMapper {
             permisos: usuario.roles?.flatMap((rol: any) => rol.permisos?.map((permiso: any) => permiso.codigo) || []) || [],
             email: usuario.email,
             apellido: usuario.apellido,
+            avatar_url: usuario.avatar_url,
             negocio: usuario.negocio ? {
                 id: usuario.negocio.id,
                 nombre_comercial: usuario.negocio.nombre_comercial,

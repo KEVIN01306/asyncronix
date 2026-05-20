@@ -10,6 +10,7 @@ export interface Usuario {
     id: string,
     nombre: string,
     apellido: string | null,
+    avatar_url: string | null,
     email: string,
     telefono: string,
     roles: Rol[],

@@ -4,9 +4,11 @@ export interface Producto {
     categoria_id: string;
     nombre: string;
     codigo: string | null;
+    sku: string;
     precio_sugerido: number;
     stock_total: number;
     url_imagen: string;
+    qr_imagen: string | null;
     activo: boolean;
 }
 
@@ -15,11 +17,11 @@ export interface ProductoCategoria {
     categoria: string;
 }
 
-export interface ProductoCrear extends Omit<Producto, "id" | "negocio_id"> { }
+export interface ProductoCrear extends Omit<Producto, "id" | "negocio_id" | "qr_imagen"> { }
 
-export interface ProductoActualizar extends Partial<Omit<Producto, "id" | "negocio_id">> { }
+export interface ProductoActualizar extends Partial<Omit<Producto, "id" | "negocio_id" | "sku" | "qr_imagen">> { }
 
-export interface ProductoSimple extends Omit<Producto, "negocio_id"> {
+export interface ProductoSimple extends Omit<Producto, "negocio_id" | "sku"> {
     categoria: ProductoCategoria | null;
 }
 

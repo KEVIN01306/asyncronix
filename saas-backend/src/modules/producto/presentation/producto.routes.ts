@@ -16,37 +16,42 @@ const validarMiddleware = new ValidarMiddleware();
 routes.use(authMiddleware.protegerRuta);
 
 routes.post("/",
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarPermiso(['CREAR_PRODCUTOS']),
     validarMiddleware.validarBody(productoCrearSchema),
     productoController.registrar
 );
 
 routes.get("/",
-    authMiddleware.verificarRol(['ADMIN', 'VENDEDOR']),
+    authMiddleware.verificarPermiso(['VER_PRODUCTOS']),
     validarMiddleware.validarQuery(productoListarQuerySchema),
     productoController.listar
 );
 
 routes.get("/:id",
-    authMiddleware.verificarRol(['ADMIN', 'VENDEDOR']),
+    authMiddleware.verificarPermiso(['VER_PRODUCTOS_DETALLE']),
     productoController.obtener
 );
 
 routes.put("/:id",
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
     validarMiddleware.validarBody(productoActualizarSchema),
     productoController.actualizar
 );
 
 routes.delete("/:id",
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarPermiso(['ELIMINAR_PRODUCTOS']),
     productoController.eliminar
 );
 
 routes.post("/imagenes/:producto_id",
-    authMiddleware.verificarRol(['ADMIN']),
+    authMiddleware.verificarRol(['EDITAR_PRODUCTOS']),
     FileUploadMiddleware.single('imagen', 'productos'),
     productoController.subirImagen
+);
+
+routes.post("/qr/:producto_id",
+    authMiddleware.verificarRol(['EDITAR_PRODUCTOS']),
+    productoController.generarQr
 );
 
 export default routes;

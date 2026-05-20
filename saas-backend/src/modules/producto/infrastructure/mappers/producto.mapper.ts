@@ -11,6 +11,7 @@ export class ProductoMapper {
             precio_sugerido: producto.precio_sugerido,
             stock_total: producto.stock_total,
             url_imagen: producto.url_imagen,
+            qr_imagen: producto.qr_imagen ?? null,
             activo: producto.activo,
             categoria: producto.categoria ? {
                 id: producto.categoria.id,
@@ -25,9 +26,11 @@ export class ProductoMapper {
             categoria_id: producto.categoria_id,
             nombre: producto.nombre,
             codigo: producto.codigo,
+            sku: producto.sku,
             precio_sugerido: producto.precio_sugerido,
             stock_total: producto.stock_total,
             url_imagen: producto.url_imagen,
+            qr_imagen: producto.qr_imagen ?? null,
             activo: producto.activo,
             categoria: producto.categoria ? {
                 id: producto.categoria.id,

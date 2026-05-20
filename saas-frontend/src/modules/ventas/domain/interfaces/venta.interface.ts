@@ -1,0 +1,48 @@
+import type { PaginatedResponse } from "../../../../core/api/interfaces/paginated.interface";
+
+export type EstadoVenta = 'PENDIENTE' | 'COMPLETADA' | 'ANULADA';
+export type MetodoPago = 'EFECTIVO' | 'TARJETA_CREDITO' | 'TARJETA_DEBITO' | 'TRANSFERENCIA' | 'OTROS';
+
+export interface VentaDetalleSimple {
+    id: string;
+    lote_id: string | null;
+    descripcion: string;
+    cantidad: number;
+    precio_unitario: number;
+    costo_unitario: number;
+    subtotal: number;
+}
+
+export interface Venta {
+    id: string;
+    negocio_id: string;
+    sucursal_id: string;
+    usuario_id: string;
+    cliente_id: string | null;
+    total: number;
+    total_costo: number;
+    estado: EstadoVenta;
+    metodo_pago: MetodoPago;
+    created_at: string;
+    updated_at: string;
+    vendedor_nombre: string;
+    cliente_nombre?: string;
+    detalles: VentaDetalleSimple[];
+}
+
+export interface VentaProductoInput {
+    producto_id: string;
+    cantidad: number;
+    nombre?: string;
+    precio_sugerido?: number;
+    subtotal?: number;
+}
+
+export interface VentaForm {
+    cliente_id: string | null;
+    metodo_pago: MetodoPago;
+    estado: EstadoVenta;
+    productos: VentaProductoInput[];
+}
+
+export type VentaResponse = PaginatedResponse<Venta>;

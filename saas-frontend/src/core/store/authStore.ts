@@ -4,6 +4,10 @@ import { persist } from 'zustand/middleware';
 interface User {
     id: string;
     nombre: string;
+    apellido: string | null;
+    email: string | null;
+    telefono: string;
+    avatar_url?: string | null;
     roles: string[];
     permisos: string[];
     negocio_id: string;

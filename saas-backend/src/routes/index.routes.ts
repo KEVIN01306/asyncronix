@@ -14,6 +14,8 @@ router.use('/sucursales', (await import('../modules/sucursal/presentation/sucurs
 router.use('/negocios', (await import('../modules/negocio/presentation/negocio.routes.js')).default)
 router.use('/categorias', (await import('../modules/categoria/presentation/categoria.routes.js')).default)
 router.use('/productos', (await import('../modules/producto/presentation/producto.routes.js')).default)
+router.use('/lotes', (await import('../modules/lote/presentation/lote.routes.js')).default)
+router.use('/ventas', (await import('../modules/ventas/presentation/venta.routes.js')).default)
 
 router.use(errorMiddleware)
 

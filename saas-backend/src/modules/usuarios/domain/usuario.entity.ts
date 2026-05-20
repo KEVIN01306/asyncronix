@@ -7,6 +7,7 @@ export interface Usuario {
     apellido: string | null,
     email: string | null,
     password_hash: string | null,
+    avatar_url: string | null,
     telefono: string,
     verificado: boolean,
     activo: boolean | null,
@@ -15,14 +16,14 @@ export interface Usuario {
     roles: string[]
 }
 
-export interface UsuarioObtenidoDetalle extends Omit<Usuario, "password_hash" | "negocio_id" | "activo" | "sucursal_id"> { 
+export interface UsuarioObtenidoDetalle extends Omit<Usuario, "password_hash" | "negocio_id" | "activo" | "sucursal_id"> {
     sucursal?: {
         id: string;
         nombre: string;
     } | null;
 }
 
-export interface UsuarioSimple extends Omit<Usuario, "password_hash" | "negocio_id" | "activo" | "verificado" | "sucursal_id"> { 
+export interface UsuarioSimple extends Omit<Usuario, "password_hash" | "negocio_id" | "activo" | "verificado" | "sucursal_id"> {
     sucursal?: {
         id: string;
         nombre: string;
@@ -35,4 +36,7 @@ export interface UsuarioCrear extends Omit<Usuario, "id" | "roles"> {
 
 export interface UsuarioActualizar extends Omit<Usuario, "id" | "activo" | "password_hash" | "verificado" | "roles"> {
     rolIds: string[];
+}
+
+export interface UsuarioActualizarPerfil extends Partial<Pick<Usuario, "nombre" | "apellido" | "email" | "telefono">> {
 }

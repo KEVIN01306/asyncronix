@@ -26,6 +26,7 @@ export class ObtenerUsuarioUseCase {
             id: usuario.id,
             nombre: usuario.nombre,
             apellido: usuario.apellido,
+            avatar_url: usuario.avatar_url,
             email: usuario.email,
             telefono: usuario.telefono,
             roles: usuario.roles,

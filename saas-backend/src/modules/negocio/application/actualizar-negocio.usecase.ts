@@ -33,6 +33,10 @@ export class ActualizarNegocioUseCase {
                 data.logo_url = nuevoLogoUrl;
             }
 
+            if (data.nombre_comercial) {
+                data.slug = data?.nombre_comercial?.toLowerCase().replace(/\s+/g, '-');
+            }
+
             return await this.negocioRepository.actualizar(id, data);
         } catch (error) {
             if (nuevoLogoUrl) await ManejadorArchivosUtils.eliminarArchivo(nuevoLogoUrl);

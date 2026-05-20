@@ -96,6 +96,7 @@ model Sucursal {
   servicios        Servicio[]
   citas            Cita[]
   ingresos_egresos IngresosEgresos[]
+  lotes            Lote[]
 
   @@index([negocio_id])
   @@map("sucursales")
@@ -457,8 +458,10 @@ model Producto {
   negocio_id      String   @db.Char(36)
   categoria_id    String   @db.Char(36)
   url_imagen      String   @db.Text
+  qr_imagen       String?   @db.Text
   nombre          String
   codigo          String?
+  sku             String?  
   precio_sugerido Float
   stock_total     Int      @default(0)
   activo          Boolean  @default(true)
@@ -470,6 +473,7 @@ model Producto {
   lotes     Lote[]
 
   @@unique([negocio_id, codigo])
+  @@unique([sku])
   @@map("productos")
 }
 
@@ -477,6 +481,7 @@ model Lote {
   id              String   @id @default(uuid()) @db.Char(36)
   producto_id     String   @db.Char(36)
   negocio_id      String   @db.Char(36)
+  sucursal_id     String   @db.Char(36)
   cantidad_actual Int
   costo_compra    Float
   precio_venta    Float
@@ -487,6 +492,7 @@ model Lote {
 
   producto  Producto           @relation(fields: [producto_id], references: [id])
   negocio   Negocio            @relation(fields: [negocio_id], references: [id])
+  sucursal  Sucursal           @relation(fields: [sucursal_id], references: [id])
   repuestos ServicioRepuesto[]
   detalles  VentaDetalle[]
 

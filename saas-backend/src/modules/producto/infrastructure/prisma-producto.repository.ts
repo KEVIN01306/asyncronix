@@ -61,6 +61,7 @@ export class PrismaProductoRepository implements ProductoRepository {
                 data: {
                     ...producto,
                     negocio_id,
+                    activo: true,
                     url_imagen: producto.url_imagen ?? ''
                 },
                 include: this.include
@@ -75,8 +76,25 @@ export class PrismaProductoRepository implements ProductoRepository {
     async actualizar(id: string, producto: ProductoActualizar, negocio_id: string): Promise<ProductoDetalle> {
         try {
             const productoActualizado = await this.prisma.producto.update({
-                where: { id, activo: true, negocio_id },
+                where: { id },
                 data: producto,
+                include: this.include
+            });
+
+            return ProductoMapper.mapDetalle(productoActualizado as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+
+    async actualizarSku(id: string, negocio_id: string, newSku: string): Promise<ProductoDetalle> {
+        try {
+            const productoActualizado = await this.prisma.producto.update({
+                where: { id },
+                data: {
+                    sku: newSku
+                },
                 include: this.include
             });
 
@@ -89,7 +107,7 @@ export class PrismaProductoRepository implements ProductoRepository {
     async eliminar(id: string, negocio_id: string): Promise<void> {
         try {
             await this.prisma.producto.update({
-                where: { id, activo: true, negocio_id },
+                where: { id },
                 data: {
                     activo: false
                 }
@@ -110,6 +128,26 @@ export class PrismaProductoRepository implements ProductoRepository {
             const productoActualizado = await this.prisma.producto.update({
                 where: { id: producto_id },
                 data: { url_imagen },
+                include: this.include
+            });
+
+            return ProductoMapper.mapDetalle(productoActualizado as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async actualizarQrImagen(producto_id: string, qr_imagen: string, negocio_id: string): Promise<ProductoDetalle> {
+        try {
+            const existing = await this.prisma.producto.findFirst({
+                where: { id: producto_id, negocio_id }
+            });
+
+            if (!existing) throw new Error('Producto no encontrado');
+
+            const productoActualizado = await this.prisma.producto.update({
+                where: { id: producto_id },
+                data: { qr_imagen },
                 include: this.include
             });
 

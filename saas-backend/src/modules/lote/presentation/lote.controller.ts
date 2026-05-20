@@ -1,0 +1,63 @@
+import type { NextFunction, Request, Response } from 'express';
+import BaseController from '@shared/presentation/base.controller.js';
+import Respuesta from '@app/http/respuesta.js';
+import type { RegistrarLoteUseCase } from '../application/registrar-lote.usecase.js';
+import type { ObtenerLoteUseCase } from '../application/obtener-lote.usecase.js';
+import type { ObtenerLotesUseCase } from '../application/obtener-lotes.usecase.js';
+import type { ListarLotesUseCase } from '../application/listar-lotes.usecase.js';
+
+export class LoteController extends BaseController {
+    constructor(
+        private readonly registrarLoteUseCase: RegistrarLoteUseCase,
+        private readonly obtenerLoteUseCase: ObtenerLoteUseCase,
+        private readonly obtenerLotesUseCase: ObtenerLotesUseCase,
+        private readonly listarLotesUseCase: ListarLotesUseCase
+    ) { super(); }
+
+    registrar = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res);
+            const payload = req.body;
+            const created = await this.registrarLoteUseCase.execute(payload, negocio_id);
+            res.status(201).json(Respuesta.exito('Lote creado con exito', created));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    obtener = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const lote = await this.obtenerLoteUseCase.execute(id, negocio_id);
+            res.status(200).json(Respuesta.exito('Lote obtenido con exito', lote));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listar = async (_req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { limit, offset } = res.locals.query;
+            const page = Math.floor(offset / limit) + 1;
+            const { total, data } = await this.listarLotesUseCase.execute(negocio_id, { page, perPage: limit });
+            res.status(200).json(Respuesta.paginacion('Lotes obtenidos con exito', data, total, limit, offset));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listarPorProducto = async (req: Request<{ producto_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { producto_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { limit, offset } = res.locals.query;
+            const page = Math.floor(offset / limit) + 1;
+            const { total, data } = await this.obtenerLotesUseCase.execute(producto_id, negocio_id, { page, perPage: limit });
+            res.status(200).json(Respuesta.paginacion('Lotes obtenidos con exito', data, total, limit, offset));
+        } catch (error) {
+            next(error);
+        }
+    }
+}

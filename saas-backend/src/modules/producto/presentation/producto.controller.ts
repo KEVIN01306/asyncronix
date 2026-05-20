@@ -7,6 +7,7 @@ import type { RegistrarProductoUseCase } from "../application/registrar-producto
 import type { ActualizarProductoUseCase } from "../application/actualizar-producto.usecase.js";
 import type { EliminarProductoUseCase } from "../application/eliminar-producto.usecase.js";
 import type { SubirImagenProductoUseCase } from "../application/subir-imagen-producto.usecase.js";
+import type { GenerarQrProductoUseCase } from "../application/generar-qr-producto.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ProductoController extends BaseController {
@@ -16,7 +17,8 @@ export class ProductoController extends BaseController {
         private readonly registrarProductoUseCase: RegistrarProductoUseCase,
         private readonly actualizarProductoUseCase: ActualizarProductoUseCase,
         private readonly eliminarProductoUseCase: EliminarProductoUseCase,
-        private readonly subirImagenProductoUseCase: SubirImagenProductoUseCase
+        private readonly subirImagenProductoUseCase: SubirImagenProductoUseCase,
+        private readonly generarQrProductoUseCase: GenerarQrProductoUseCase
     ) {
         super();
     }
@@ -95,6 +97,18 @@ export class ProductoController extends BaseController {
             });
 
             res.status(201).json(Respuesta.exito('Imagen subida con exito', producto));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    generarQr = async (req: Request<{ producto_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { producto_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const producto = await this.generarQrProductoUseCase.execute(producto_id, negocio_id);
+
+            res.status(200).json(Respuesta.exito('QR generado con exito', { qr_imagen: producto.qr_imagen }));
         } catch (error) {
             next(error);
         }

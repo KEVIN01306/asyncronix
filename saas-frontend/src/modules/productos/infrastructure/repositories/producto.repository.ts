@@ -1,4 +1,5 @@
 import api from "../../../../core/api/api";
+import type { ApiResponse } from "../../../../core/api/interfaces/api-response.interface";
 import type { Producto, ProductosResponse, ProductoDetailResponse } from "../../domain/interfaces/producto.interface";
 
 const URL_MODULE = '/productos/';
@@ -46,5 +47,10 @@ export const ProductoRepository = {
         });
 
         return response.data;
+    },
+
+    generarQr: async (id: string): Promise<string | null> => {
+        const response = await api.post<ApiResponse<{ qr_imagen?: string | null }>>(`${URL_MODULE}qr/${id}`);
+        return response.data.qr_imagen ?? null;
     },
 };

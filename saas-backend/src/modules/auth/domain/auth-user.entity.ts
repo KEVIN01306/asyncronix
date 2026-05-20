@@ -3,6 +3,7 @@ export interface UsuarioAutentificacion {
     nombre: string,
     apellido: string | null,
     email: string | null,
+    avatar_url: string | null,
     password_hash: string | null,
     telefono: string,
     activo: boolean | null,

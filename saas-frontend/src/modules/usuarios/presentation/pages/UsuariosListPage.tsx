@@ -20,9 +20,31 @@ const UsuariosListPage = () => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
 
+    const URL_BASE = `${import.meta.env.VITE_API_URL}/`
+
     const columns = [
-        { id: 'nombre', name: 'Nombre', format: (value: any) => ( <Box display={'flex'} alignItems={'center'} gap={2}> <Avatar src="/static/images/avatar/1.jpg" sx={{ width: 38,  height: 38, borderColor: 'primary.main', background: "#876543cc", }} > {value[0]}</Avatar> { value.toUpperCase()}</Box>) },
-        { id: 'telefono', name: 'Teléfono' },
+        { 
+        id: 'nombre', 
+        name: 'Nombre', 
+        format: (value: any, row: any) => ( 
+            <Box display={'flex'} alignItems={'center'} gap={2}> 
+            <Avatar 
+                src={URL_BASE + row.avatar_url} 
+                sx={{ 
+                width: 38,  
+                height: 38, 
+                border: row.avatar_url ? '2px solid' : "",
+                borderColor:'secondary.main', 
+                background: row.avatar_url ? "#ffffff" : "#876543cc", 
+                }} 
+            > 
+                {value[0]}
+            </Avatar> 
+            {value.toUpperCase()}
+            </Box>
+        ) 
+        }, 
+                { id: 'telefono', name: 'Teléfono' },
         { id: 'roles', name: 'Roles', format: (value: any) => <Chip color={value?.[0]?.nombre === 'ADMIN' ? 'primary' : 'default'} label={value?.[0]?.nombre} /> },
         { id: 'sucursal', name: 'Sucursal', format: (value: any) => <Chip color={value ? "primary" : "default"} label={value ? value.nombre : 'Sin sucursal'} /> },
     ];
