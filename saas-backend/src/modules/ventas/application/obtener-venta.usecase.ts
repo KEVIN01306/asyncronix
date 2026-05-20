@@ -1,14 +1,14 @@
 import AppError from "../../../shared/errors/AppError.js";
 import { DatabaseError } from "../../../shared/database/errors/DatabaseError.js";
 import type { VentaRepository } from "../domain/venta.repository.js";
-import type { VentaSimple } from "../domain/venta.entity.js";
+import type { VentaObtenerDetalle } from "../domain/venta.entity.js";
 
 export class ObtenerVentaUseCase {
     constructor(private readonly ventaRepository: VentaRepository) {}
 
-    async execute(id: string, negocio_id: string): Promise<VentaSimple> {
+    async execute(id: string, negocio_id: string, sucursal_id: string): Promise<VentaObtenerDetalle> {
         try {
-            const venta = await this.ventaRepository.obtener(id, negocio_id);
+            const venta = await this.ventaRepository.obtener(id, negocio_id, sucursal_id);
             if (!venta) {
                 throw new AppError("La venta no fue encontrada", "NOT_FOUND", 404);
             }

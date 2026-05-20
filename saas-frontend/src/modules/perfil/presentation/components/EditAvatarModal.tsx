@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Avatar, Typography } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Avatar, Typography, CircularProgress } from '@mui/material';
 
 interface Props {
     open: boolean;
@@ -11,11 +11,13 @@ interface Props {
 export const EditAvatarModal = ({ open, onClose, onSubmit, initialUrl }: Props) => {
     const [file, setFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (open) {
             setFile(null);
             setPreview(initialUrl ? `${import.meta.env.VITE_API_URL}/${initialUrl}` : null);
+            setIsSubmitting(false);
         }
     }, [open, initialUrl]);
 
@@ -24,6 +26,16 @@ export const EditAvatarModal = ({ open, onClose, onSubmit, initialUrl }: Props) 
             const selectedFile = e.target.files[0];
             setFile(selectedFile);
             setPreview(URL.createObjectURL(selectedFile));
+        }
+    };
+
+    const handleSave = async () => {
+        if (!file) return;
+        setIsSubmitting(true);
+        try {
+            await onSubmit(file);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -41,8 +53,10 @@ export const EditAvatarModal = ({ open, onClose, onSubmit, initialUrl }: Props) 
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} color="inherit">Cancelar</Button>
-                <Button onClick={() => file && onSubmit(file)} variant="contained" color="primary" disabled={!file}>Guardar</Button>
+                <Button onClick={onClose} color="inherit" disabled={isSubmitting}>Cancelar</Button>
+                <Button onClick={handleSave} variant="contained" color="primary" disabled={!file || isSubmitting} startIcon={isSubmitting ? <CircularProgress size={18} color="inherit" /> : undefined}>
+                    {isSubmitting ? 'Guardando...' : 'Guardar'}
+                </Button>
             </DialogActions>
         </Dialog>
     );

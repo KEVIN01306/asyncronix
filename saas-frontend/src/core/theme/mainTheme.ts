@@ -18,7 +18,10 @@ export const mainTheme = createTheme({
             main: '#06B6D4',
         },
         warning: {
-            main: '#f59e0b',
+            main: '#f2ba5a',
+        },
+        error: {
+            main: '#d84e47',
         },
         success: {
             main: '#10b981',
@@ -31,7 +34,7 @@ export const mainTheme = createTheme({
             paper: '#ffffff',
         },
         text: {
-            primary: '#0f172a', 
+            primary: '#0f172a',
             secondary: '#64748b',
         },
         divider: '#e3e8ee'
@@ -51,7 +54,7 @@ export const mainTheme = createTheme({
             }
         },
         MuiCard: {
-                styleOverrides: {
+            styleOverrides: {
                 root: ({ theme }) => ({
                     border: `1px solid ${theme.palette.divider}`
                 })
@@ -62,6 +65,14 @@ export const mainTheme = createTheme({
                 root: ({ theme }) => ({
                     border: `1px solid ${theme.palette.divider}`,
                     boxShadow: 'none'
+                })
+            }
+        },
+        MuiChip: {
+            styleOverrides: {
+                root: () => ( {
+                    paddingTop: 3,
+                    paddingBottom: 3
                 })
             }
         }

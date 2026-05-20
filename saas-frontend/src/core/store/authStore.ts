@@ -11,6 +11,7 @@ interface User {
     roles: string[];
     permisos: string[];
     negocio_id: string;
+    sucursal_id?: string | null;
     negocio?: {
         id: string;
         nombre_comercial: string;

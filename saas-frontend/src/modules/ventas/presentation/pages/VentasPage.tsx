@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Visibility as VisibilityIcon, Edit as EditIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
+import { useAuthStore } from '../../../../core/store/authStore';
 import { ventaRepository } from '../../infrastructure/venta.repository';
 import type { Venta } from '../../domain/interfaces/venta.interface';
 
@@ -38,6 +39,7 @@ export default function VentasPage() {
             setVentas(data.data);
             setTotal(data.total);
         } catch (error) {
+            console.log(error)
             toast.error("Error al cargar las ventas");
         } finally {
             setLoading(false);
@@ -57,10 +59,17 @@ export default function VentasPage() {
         setPage(0);
     };
 
+    const user = useAuthStore(state => state.user);
+
     const handleAnular = async (id: string) => {
+        if (!user?.sucursal_id) {
+            toast.error('No se pudo determinar la sucursal del usuario');
+            return;
+        }
+
         if (window.confirm('¿Está seguro de que desea anular esta venta? Esta acción devolverá el stock.')) {
             try {
-                await ventaRepository.anular(id);
+                await ventaRepository.anular(id, user.sucursal_id);
                 toast.success('Venta anulada exitosamente');
                 cargarVentas();
             } catch (error: any) {

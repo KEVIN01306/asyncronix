@@ -29,6 +29,7 @@ export class AuthMiddleware {
                 roles: payload.roles,
                 permisos: payload.permisos,
                 negocio_id: payload.negocio_id,
+                sucursal_id: payload.sucursal_id
             };
 
             (req as any).usuario = res.locals.usuario;

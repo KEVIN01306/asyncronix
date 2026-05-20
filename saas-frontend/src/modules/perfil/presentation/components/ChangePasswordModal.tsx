@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, Grid } from '@mui/material';
+import { useForm } from 'react-hook-form';
+import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
+import TextField from '@mui/material/TextField';
 import type { CambiarPasswordForm } from '../../domain/interfaces/perfil.interface';
 
 interface Props {
@@ -9,28 +11,33 @@ interface Props {
 }
 
 export const ChangePasswordModal = ({ open, onClose, onSubmit }: Props) => {
-    const [formData, setFormData] = useState<CambiarPasswordForm>({ password: '', confirm_password: '' });
+    const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } = useForm<CambiarPasswordForm>({
+        defaultValues: { password: '', confirm_password: '' }
+    });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const onFormSubmit = async (data: CambiarPasswordForm) => {
+        await onSubmit({ password: data.password, confirm_password: data.confirm_password });
+        reset();
     };
-
-    const handleSave = () => {
-        onSubmit(formData);
-        setFormData({ password: '', confirm_password: '' });
-    }
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
             <DialogTitle>Cambiar Contraseña</DialogTitle>
             <DialogContent dividers>
-                <TextField fullWidth label="Nueva Contraseña" name="password" type="password" value={formData.password} onChange={handleChange} margin="normal" />
-                <TextField fullWidth label="Confirmar Contraseña" name="confirm_password" type="password" value={formData.confirm_password} onChange={handleChange} margin="normal" />
+                <form onSubmit={handleSubmit(onFormSubmit)} noValidate>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth label="Nueva Contraseña" type="password" {...register('password', { required: 'La contraseña es requerida', minLength: { value: 6, message: 'Mínimo 6 caracteres' } })} error={!!errors.password} helperText={errors.password?.message} margin="normal" />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                            <TextField fullWidth label="Confirmar Contraseña" type="password" {...register('confirm_password', { required: 'Confirma la contraseña', validate: (val) => val === watch('password') || 'Las contraseñas no coinciden' })} error={!!errors.confirm_password} helperText={errors.confirm_password?.message} margin="normal" />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                            <SubmitButton isSubmitting={isSubmitting} text="Cambiar" loadingText="Cambiando..." />
+                        </Grid>
+                    </Grid>
+                </form>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} color="inherit">Cancelar</Button>
-                <Button onClick={handleSave} variant="contained" color="primary">Cambiar</Button>
-            </DialogActions>
         </Dialog>
     );
 };

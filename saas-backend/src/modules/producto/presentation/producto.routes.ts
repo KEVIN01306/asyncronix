@@ -16,7 +16,7 @@ const validarMiddleware = new ValidarMiddleware();
 routes.use(authMiddleware.protegerRuta);
 
 routes.post("/",
-    authMiddleware.verificarPermiso(['CREAR_PRODCUTOS']),
+    authMiddleware.verificarPermiso(['CREAR_PRODUCTOS']),
     validarMiddleware.validarBody(productoCrearSchema),
     productoController.registrar
 );
@@ -44,13 +44,13 @@ routes.delete("/:id",
 );
 
 routes.post("/imagenes/:producto_id",
-    authMiddleware.verificarRol(['EDITAR_PRODUCTOS']),
+    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
     FileUploadMiddleware.single('imagen', 'productos'),
     productoController.subirImagen
 );
 
 routes.post("/qr/:producto_id",
-    authMiddleware.verificarRol(['EDITAR_PRODUCTOS']),
+    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
     productoController.generarQr
 );
 

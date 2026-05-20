@@ -20,7 +20,8 @@ export class VentaController extends BaseController {
 
     registrar = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const { id: usuario_id, negocio_id } = this.obtenerEntorno(res);
+            const { sucursal_id } = req.body;
             if (!sucursal_id) throw new Error("SUCURSAL_REQUERIDA");
             
             const venta = await this.registrarVentaUseCase.execute(req.body, negocio_id, sucursal_id, usuario_id);
@@ -33,7 +34,8 @@ export class VentaController extends BaseController {
     actualizar = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
-            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { sucursal_id } = req.body;
             if (!sucursal_id) throw new Error("SUCURSAL_REQUERIDA");
 
             const venta = await this.actualizarVentaUseCase.execute(id, req.body, negocio_id, sucursal_id);
@@ -47,8 +49,10 @@ export class VentaController extends BaseController {
         try {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
+            const { sucursal_id } = req.body;
+            if (!sucursal_id) throw new Error("SUCURSAL_REQUERIDA");
 
-            const venta = await this.anularVentaUseCase.execute(id, negocio_id);
+            const venta = await this.anularVentaUseCase.execute(id, negocio_id, sucursal_id);
             res.status(200).json(Respuesta.exito("Venta anulada con éxito", venta));
         } catch (error) {
             next(error);
@@ -58,9 +62,10 @@ export class VentaController extends BaseController {
     obtener = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
-            const { negocio_id } = this.obtenerEntorno(res);
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error("SUCURSAL_REQUERIDA");
 
-            const venta = await this.obtenerVentaUseCase.execute(id, negocio_id);
+            const venta = await this.obtenerVentaUseCase.execute(id, negocio_id, sucursal_id);
             res.status(200).json(Respuesta.exito("Venta obtenida con éxito", venta));
         } catch (error) {
             next(error);
@@ -70,6 +75,7 @@ export class VentaController extends BaseController {
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            console.log("esta es la sucursal: ", sucursal_id)
             if (!sucursal_id) throw new Error("SUCURSAL_REQUERIDA");
 
             const { limit, offset } = res.locals.query;

@@ -21,6 +21,7 @@ interface LoginRespuesta {
         telefono: string,
         avatar_url: string | null,
         negocio_id: string,
+        sucursal_id: string | null,
         permisos: string[],
         roles: string[]
         negocio: {
@@ -66,7 +67,7 @@ export class LoginUseCase {
             throw new AppError("Credenciales invalidas", "INVALID_CREDENTIALS", 401)
         }
 
-        const { accessToken, refreshToken } = await this.jwtProvider.generateTokens(usuario.id, usuario.roles, usuario.permisos, usuario.negocio_id)
+        const { accessToken, refreshToken } = await this.jwtProvider.generateTokens(usuario.id, usuario.roles, usuario.permisos, usuario.negocio_id, usuario.sucursal_id as string)
 
         const fechaExpiracion = new Date();
         fechaExpiracion.setDate(fechaExpiracion.getDate() + 7);
@@ -88,6 +89,7 @@ export class LoginUseCase {
                 telefono: usuario.telefono,
                 avatar_url: usuario.avatar_url,
                 negocio_id: usuario.negocio_id,
+                sucursal_id: usuario.sucursal_id,
                 permisos: usuario.permisos,
                 roles: usuario.roles,
                 negocio: usuario.negocio ? {

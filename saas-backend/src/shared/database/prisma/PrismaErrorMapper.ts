@@ -8,6 +8,7 @@ import { UniqueConstraintError } from "../errors/UniqueConstraintError.js"
 
 export class PrismaErrorMapper {
     static map(error: unknown): PersistenceError {
+        console.error("PrismaErrorMapper caught error:", error);
         if (
             error instanceof Prisma.PrismaClientKnownRequestError &&
             error.code === 'P2002'
@@ -22,7 +23,7 @@ export class PrismaErrorMapper {
             return new NotFoundPersistenceError()
         }
 
-        return new DatabaseError()
+        return new DatabaseError(error instanceof Error ? error.message : 'Database error')
     }
 }
 

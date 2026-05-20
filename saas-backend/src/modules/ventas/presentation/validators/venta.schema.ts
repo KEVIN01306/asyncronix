@@ -7,14 +7,16 @@ const productoInputSchema = z.object({
 });
 
 export const ventaCrearSchema = z.object({
-    cliente_id: z.string().optional().nullable(),
-    estado: z.nativeEnum(EstadoVenta, { required_error: "El estado de la venta es obligatorio" }),
+    sucursal_id: z.string().uuid("Sucursal inválida"),
+    cliente_id: z.string().uuid("ID de cliente inválido").optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v),
+    estado: z.nativeEnum(EstadoVenta).optional().default(EstadoVenta.PENDIENTE),
     metodo_pago: z.nativeEnum(MetodoPago, { required_error: "El método de pago es obligatorio" }),
     productos: z.array(productoInputSchema).min(1, "Debe incluir al menos un producto")
 });
 
 export const ventaActualizarSchema = z.object({
-    cliente_id: z.string().optional().nullable(),
+    sucursal_id: z.string().uuid("Sucursal inválida"),
+    cliente_id: z.string().uuid("ID de cliente inválido").optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v),
     estado: z.nativeEnum(EstadoVenta).optional(),
     metodo_pago: z.nativeEnum(MetodoPago).optional(),
     productos: z.array(productoInputSchema).optional()

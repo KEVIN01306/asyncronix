@@ -4,6 +4,7 @@ import {
   SettingsSuggest,
   StoreMallDirectory,
   AttachMoney,
+  BusinessCenterOutlined,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -24,11 +25,11 @@ const MenuItems: MenuItem[] = [
       { name: "Lotes", link: "/lotes", icon: AdminPanelSettingsOutlined, permiso: "VER_LOTES" },
     ]
   },
-  { name: "Ventas", icon: AttachMoney, link: "/ventas", permiso: "VER_VENTAS" },
-  { name: "Sucursales", icon: StoreMallDirectory, link: "/sucursales", permiso: "VER_SUCURSALES" },
+  { name: "Ventas", icon: BusinessCenterOutlined, link: "/ventas", permiso: "VER_VENTAS" },
   { module: "configuracion", name: "Configuración", icon: SettingsSuggest, children: [
       { name: "Usuarios", link: "/usuarios", icon: AdminPanelSettingsOutlined, permiso: "VER_USUARIOS" },
       { name: "Roles", link: "/roles", icon: AdminPanelSettingsOutlined, permiso: "VER_ROLES" },
+      { name: "Sucursales", icon: StoreMallDirectory, link: "/sucursales", permiso: "VER_SUCURSALES" },
       { name: "Negocio", link: "/negocio", icon: AdminPanelSettingsOutlined, permiso: "VER_NEGOCIOS_DETALLE_ME"},
     ]
   },

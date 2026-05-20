@@ -6,6 +6,7 @@ export interface VentaProductoInput {
 }
 
 export interface VentaCrear {
+    sucursal_id: string;
     cliente_id?: string | null;
     metodo_pago: MetodoPago;
     estado: EstadoVenta;
@@ -13,6 +14,7 @@ export interface VentaCrear {
 }
 
 export interface VentaActualizar {
+    sucursal_id: string;
     cliente_id?: string | null;
     metodo_pago?: MetodoPago;
     estado?: EstadoVenta;
@@ -21,6 +23,7 @@ export interface VentaActualizar {
 
 export interface VentaDetalleSimple {
     id: string;
+    producto_id?: string | null;
     lote_id: string | null;
     descripcion: string;
     cantidad: number;
@@ -42,6 +45,9 @@ export interface VentaSimple {
     created_at: Date;
     updated_at: Date;
     vendedor_nombre: string;
-    cliente_nombre?: string;
+    cliente_nombre: string | undefined;
+}
+
+export interface VentaObtenerDetalle extends VentaSimple {
     detalles: VentaDetalleSimple[];
 }

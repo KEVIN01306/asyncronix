@@ -42,7 +42,8 @@ export class RefreshTokenUseCase {
             payload.sub,
             usuario.roles,
             usuario.permisos,
-            usuario.negocio_id
+            usuario.negocio_id,
+            usuario.sucursal_id as string
         )
 
         const fechaExpiracion = new Date();

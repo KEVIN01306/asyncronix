@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid } from '@mui/material';
+import { useEffect } from 'react';
+import { Dialog, DialogTitle, DialogContent, Grid } from '@mui/material';
+import { useForm, Controller } from 'react-hook-form';
+import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
+import TextField from '@mui/material/TextField';
 import type { ActualizarPerfilForm } from '../../domain/interfaces/perfil.interface';
 
 interface Props {
@@ -10,39 +13,68 @@ interface Props {
 }
 
 export const EditProfileModal = ({ open, onClose, onSubmit, initialData }: Props) => {
-    const [formData, setFormData] = useState<ActualizarPerfilForm>({ nombre: '', apellido: '', email: '', telefono: '' });
+    const { control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ActualizarPerfilForm>({
+        defaultValues: { nombre: '', apellido: '', email: '', telefono: '' }
+    });
 
     useEffect(() => {
-        if (initialData && open) setFormData(initialData);
-    }, [initialData, open]);
+        if (open && initialData) {
+            reset(initialData);
+        }
+    }, [open, initialData, reset]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const onFormSubmit = async (data: ActualizarPerfilForm) => {
+        await onSubmit({ ...data, apellido: data.apellido === '' ? null : data.apellido, email: data.email === '' ? null : data.email });
     };
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>Editar Perfil</DialogTitle>
             <DialogContent dividers>
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField fullWidth label="Nombre" name="nombre" value={formData.nombre} onChange={handleChange} margin="normal" />
+                <form onSubmit={handleSubmit(onFormSubmit)} noValidate>
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Controller
+                                name="nombre"
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField fullWidth label="Nombre" {...field} error={!!errors.nombre} helperText={errors.nombre?.message} margin="normal" />
+                                )}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Controller
+                                name="apellido"
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField fullWidth label="Apellidos" {...field} error={!!errors.apellido} helperText={errors.apellido?.message} margin="normal" />
+                                )}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Controller
+                                name="email"
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField fullWidth label="Email" type="email" {...field} error={!!errors.email} helperText={errors.email?.message} margin="normal" />
+                                )}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Controller
+                                name="telefono"
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField fullWidth label="Teléfono" {...field} error={!!errors.telefono} helperText={errors.telefono?.message} margin="normal" />
+                                )}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                            <SubmitButton isSubmitting={isSubmitting} text="Guardar" loadingText="Guardando..." />
+                        </Grid>
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField fullWidth label="Apellidos" name="apellido" value={formData.apellido || ''} onChange={handleChange} margin="normal" />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField fullWidth label="Email" name="email" value={formData.email || ''} onChange={handleChange} margin="normal" type="email" />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField fullWidth label="Teléfono" name="telefono" value={formData.telefono} onChange={handleChange} margin="normal" />
-                    </Grid>
-                </Grid>
+                </form>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} color="inherit">Cancelar</Button>
-                <Button onClick={() => onSubmit(formData)} variant="contained" color="primary">Guardar</Button>
-            </DialogActions>
         </Dialog>
     );
 };

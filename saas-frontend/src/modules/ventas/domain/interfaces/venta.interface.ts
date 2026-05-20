@@ -6,6 +6,7 @@ export type MetodoPago = 'EFECTIVO' | 'TARJETA_CREDITO' | 'TARJETA_DEBITO' | 'TR
 export interface VentaDetalleSimple {
     id: string;
     lote_id: string | null;
+    producto_id?: string | null;
     descripcion: string;
     cantidad: number;
     precio_unitario: number;
@@ -38,11 +39,22 @@ export interface VentaProductoInput {
     subtotal?: number;
 }
 
-export interface VentaForm {
+export interface VentaCreateForm {
+    sucursal_id: string;
     cliente_id: string | null;
     metodo_pago: MetodoPago;
     estado: EstadoVenta;
     productos: VentaProductoInput[];
 }
+
+export interface VentaUpdateForm {
+    sucursal_id: string;
+    cliente_id?: string | null;
+    metodo_pago?: MetodoPago;
+    estado?: EstadoVenta;
+    productos?: VentaProductoInput[];
+}
+
+export type VentaForm = VentaCreateForm | VentaUpdateForm;
 
 export type VentaResponse = PaginatedResponse<Venta>;

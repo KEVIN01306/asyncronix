@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development nodemon --exec node --import tsx src/server.ts",
     "db:migrate": "npx prisma migrate dev",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "start": "node --import tsx src/server.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
