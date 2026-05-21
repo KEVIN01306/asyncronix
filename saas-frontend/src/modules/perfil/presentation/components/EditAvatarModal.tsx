@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Avatar, Typography, CircularProgress } from '@mui/material';
+import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
 
 interface Props {
     open: boolean;
@@ -33,7 +34,8 @@ export const EditAvatarModal = ({ open, onClose, onSubmit, initialUrl }: Props) 
         if (!file) return;
         setIsSubmitting(true);
         try {
-            await onSubmit(file);
+            const comprimido = await bajarCalidadImagen(file);
+            await onSubmit(comprimido);
         } finally {
             setIsSubmitting(false);
         }
