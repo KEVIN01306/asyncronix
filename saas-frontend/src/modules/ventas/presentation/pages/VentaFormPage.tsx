@@ -284,7 +284,7 @@ export default function VentaFormPage() {
     if (loading) return <Loading />;
 
     return (
-        <Box p={isMobile ? 2 : 4}>
+        <Box p={isMobile ? 2 : 4} mx="auto" sx={{ width: '100%', boxSizing: 'border-box' }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/ventas')} sx={{ mb: 2, textTransform: 'none' }}>
                 Volver
             </Button>
@@ -295,9 +295,9 @@ export default function VentaFormPage() {
                 </Typography>
             </Paper>
 
-            <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1fr 2fr' }} gap={3}>
-                <Box>
-                    <Card>
+            <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1fr 2fr' }}  gap={3}>
+                <Box >
+                    <Card >
                         <CardContent>
                             <Typography variant="h6" gutterBottom>Datos de la Venta</Typography>
                             <Divider sx={{ mb: 2 }} />
@@ -356,42 +356,60 @@ export default function VentaFormPage() {
                 </Box>
 
                 <Box>
-                    <Card>
+                    <Card >
                         <CardContent>
                             <Typography variant="h6" gutterBottom>Productos de la Venta</Typography>
-                            <Box display="flex" gap={2} mb={3} alignItems="center">
-                                <IconButton color="primary" onClick={handleOpenScanner} disabled={!isEditable || scanLoading} sx={{ border: '1px solid', borderColor: 'divider' }}>
-                                    <QrCodeScannerIcon />
-                                </IconButton>
-                                <Autocomplete
-                                    sx={{ flexGrow: 1 }}
-                                    options={productosDisponibles}
-                                    getOptionLabel={(option) => `${option.nombre} (Stock: ${option.stock_total}) - ${formatMoney(option.precio_sugerido)}`}
-                                    value={productoSeleccionado}
-                                    onChange={(_e, newValue) => setProductoSeleccionado(newValue)}
-                                    loading={searchProductoLoading}
-                                    renderInput={(params) => (
-                                        <TextField {...params} label="Buscar Producto" variant="outlined" />
-                                    )}
-                                    disabled={!isEditable}
-                                />
-                                <TextField
-                                    type="number"
-                                    label="Cant."
-                                    sx={{ width: 80 }}
-                                    value={cantidadAgregar}
-                                    onChange={(e) => setCantidadAgregar(parseInt(e.target.value) || 0)}
-                                    inputProps={{ min: 1 }}
-                                    disabled={!isEditable}
-                                />
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    onClick={handleAgregarProducto}
-                                    disabled={!productoSeleccionado || !isEditable}
-                                >
-                                    Agregar
-                                </Button>
+                            <Box
+                                display="flex"
+                                flexDirection={{ xs: 'column', sm: 'row' }} // En celular hacia abajo, en tablet en fila
+                                gap={2}
+                                mb={3}
+                                alignItems={{ xs: 'stretch', sm: 'center' }}
+                            >
+                                <Box display="flex" gap={1} alignItems="center" width="100%">
+                                    <IconButton
+                                        color="primary"
+                                        onClick={handleOpenScanner}
+                                        disabled={!isEditable || scanLoading}
+                                        sx={{ border: '1px solid', borderColor: 'divider', flexShrink: 0, height: 56, width: 56 }}
+                                    >
+                                        <QrCodeScannerIcon />
+                                    </IconButton>
+
+                                    <Autocomplete
+                                        sx={{ flexGrow: 1 }}
+                                        options={productosDisponibles}
+                                        getOptionLabel={(option) => `${option.nombre} (Stock: ${option.stock_total}) - ${formatMoney(option.precio_sugerido)}`}
+                                        value={productoSeleccionado}
+                                        onChange={(_e, newValue) => setProductoSeleccionado(newValue)}
+                                        loading={searchProductoLoading}
+                                        renderInput={(params) => (
+                                            <TextField {...params} label="Buscar Producto" variant="outlined" />
+                                        )}
+                                        disabled={!isEditable}
+                                    />
+                                </Box>
+
+                                <Box display="flex" gap={2} width="100%">
+                                    <TextField
+                                        type="number"
+                                        label="Cant."
+                                        sx={{ flex: 1 }}
+                                        value={cantidadAgregar}
+                                        onChange={(e) => setCantidadAgregar(parseInt(e.target.value) || 0)}
+                                        inputProps={{ min: 1 }}
+                                        disabled={!isEditable}
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        onClick={handleAgregarProducto}
+                                        disabled={!productoSeleccionado || !isEditable}
+                                        sx={{ flex: 2, height: 56 }} 
+                                    >
+                                        Agregar
+                                    </Button>
+                                </Box>
                             </Box>
                             <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} />
                             <SaleSummary total={totalVenta} clienteLabel={watch('cliente_id') || 'Consumidor Final'} onFinalize={() => setShowPaymentModal(true)} disabled={!ventaId} />

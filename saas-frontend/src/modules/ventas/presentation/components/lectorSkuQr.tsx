@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useEffect, useState } from 'react';
+import { Html5Qrcode, Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'sonner';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
 
 type QrProductScannerProps = {
     open: boolean;
@@ -9,25 +9,35 @@ type QrProductScannerProps = {
     onCodigoLeido: (sku: string) => void;
 };
 
-export default function QrProductScanner({ open, onClose, onCodigoLeido }: QrProductScannerProps) {
-    useEffect(() => {
-        let scanner: Html5QrcodeScanner | null = null;
-        let timeoutId: number | null = null;
+type CameraDevice = {
+    id: string;
+    label: string;
+};
 
+export default function QrProductScanner({ open, onClose, onCodigoLeido }: QrProductScannerProps) {
+    const [cameras, setCameras] = useState<CameraDevice[]>([]);
+    const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
+
+    useEffect(() => {
         if (!open) return;
 
-        const initializeScanner = () => {
+        let scanner: Html5QrcodeScanner | null = null;
+        let initTimeout: number | null = null;
+
+        const createScanner = () => {
             const readerElement = document.getElementById('qr-reader');
             if (!readerElement) {
-                timeoutId = window.setTimeout(initializeScanner, 100);
+                initTimeout = window.setTimeout(createScanner, 100);
                 return;
             }
 
-            scanner = new Html5QrcodeScanner('qr-reader', {
+            const config = {
                 fps: 10,
                 qrbox: { width: 250, height: 250 },
-            }, false);
+                videoConstraints: selectedCameraId ? { deviceId: { exact: selectedCameraId } } : { facingMode: 'environment' }
+            };
 
+            scanner = new Html5QrcodeScanner('qr-reader', config, false);
             scanner.render(
                 (decodedText) => {
                     toast.success(`Producto escaneado: ${decodedText}`);
@@ -36,21 +46,39 @@ export default function QrProductScanner({ open, onClose, onCodigoLeido }: QrPro
                     onClose();
                 },
                 () => {
+                    // Ignorar errores de lectura
                 }
             );
         };
 
-        timeoutId = window.setTimeout(initializeScanner, 50);
+        createScanner();
 
         return () => {
-            if (timeoutId !== null) {
-                window.clearTimeout(timeoutId);
+            if (initTimeout !== null) {
+                window.clearTimeout(initTimeout);
             }
             if (scanner) {
                 scanner.clear().catch(error => console.error('Error al limpiar el escáner', error));
             }
         };
-    }, [open, onClose, onCodigoLeido]);
+    }, [open, selectedCameraId, onClose, onCodigoLeido]);
+
+    useEffect(() => {
+        if (!open) return;
+
+        Html5Qrcode.getCameras()
+            .then((devices: Array<{ id: string; label: string }>) => {
+                const available = devices.map(device => ({ id: device.id, label: device.label || `Cámara ${device.id}` }));
+                setCameras(available);
+                if (!selectedCameraId && available.length > 0) {
+                    const preferred = available.find(device => /back|rear|environment/i.test(device.label));
+                    setSelectedCameraId(preferred?.id ?? available[0].id);
+                }
+            })
+            .catch((error: unknown) => {
+                console.error('No se pudo obtener la lista de cámaras', error);
+            });
+    }, [open, selectedCameraId]);
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -59,6 +87,23 @@ export default function QrProductScanner({ open, onClose, onCodigoLeido }: QrPro
                 <Typography sx={{ mb: 2 }}>
                     Acerca la cámara al código QR o de barras del producto para capturar el SKU.
                 </Typography>
+                {cameras.length > 1 && (
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel id="camera-select-label">Cámara</InputLabel>
+                        <Select
+                            labelId="camera-select-label"
+                            value={selectedCameraId || ''}
+                            label="Cámara"
+                            onChange={(event) => setSelectedCameraId(event.target.value as string)}
+                        >
+                            {cameras.map((camera) => (
+                                <MenuItem key={camera.id} value={camera.id}>
+                                    {camera.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
                 <Box id="qr-reader" sx={{ width: '100%', minHeight: 320 }} />
             </DialogContent>
             <DialogActions>
