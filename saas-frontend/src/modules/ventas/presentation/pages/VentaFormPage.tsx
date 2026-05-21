@@ -330,8 +330,7 @@ export default function VentaFormPage() {
                                             disabled={!isEditable}
                                         >
                                             <MenuItem value="EFECTIVO">EFECTIVO</MenuItem>
-                                            <MenuItem value="TARJETA_CREDITO">TARJETA CRÉDITO</MenuItem>
-                                            <MenuItem value="TARJETA_DEBITO">TARJETA DÉBITO</MenuItem>
+                                            <MenuItem value="TARJETA">TARJETA</MenuItem>
                                             <MenuItem value="TRANSFERENCIA">TRANSFERENCIA</MenuItem>
                                             <MenuItem value="OTROS">OTROS</MenuItem>
                                         </Select>

@@ -27,8 +27,7 @@ export default function SalePaymentModal({ open, onClose, onConfirm, total, clie
                         <InputLabel>Método de Pago</InputLabel>
                         <Select value={metodo} label="Método de Pago" onChange={(e) => setMetodo(e.target.value)}>
                             <MenuItem value="EFECTIVO">Efectivo</MenuItem>
-                            <MenuItem value="TARJETA_CREDITO">Tarjeta Crédito</MenuItem>
-                            <MenuItem value="TARJETA_DEBITO">Tarjeta Débito</MenuItem>
+                            <MenuItem value="TARJETA">Tarjeta</MenuItem>
                             <MenuItem value="TRANSFERENCIA">Transferencia</MenuItem>
                             <MenuItem value="OTROS">Otros</MenuItem>
                         </Select>
