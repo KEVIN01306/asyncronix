@@ -8,6 +8,7 @@ import { ventaRepository } from '../../infrastructure/venta.repository';
 import { useAuthStore } from '../../../../core/store/authStore';
 import type { Venta } from '../../domain/interfaces/venta.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 export default function VentaDetallePage() {
     const { id } = useParams();
@@ -28,7 +29,8 @@ export default function VentaDetallePage() {
         }
     }, [id, navigate]);
 
-    if (!venta) return <Typography>Cargando...</Typography>;
+    if (!venta) return <Loading />;
+;
 
     const getEstadoColor = (estado: string) => {
         switch (estado) {
@@ -126,7 +128,7 @@ export default function VentaDetallePage() {
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-                                        
+
                             <Box display="flex" justifyContent="flex-end" mt={3}>
                                 <Box textAlign="right">
                                     <Typography variant="h5" fontWeight="bold">Total: {formatMoney(venta.total)}</Typography>
