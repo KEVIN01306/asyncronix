@@ -2,7 +2,7 @@ import { Router } from "express";
 import { AuthMiddleware } from "../../../app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "../../../app/middlewares/ValidarMiddleware.js";
 import { ventaController } from "../venta.module.js";
-import { ventaCrearSchema, ventaActualizarSchema } from "./validators/venta.schema.js";
+import { ventaCrearSchema, ventaActualizarSchema, buscarSkuSchema, ventaDetalleSkuSchema } from "./validators/venta.schema.js";
 import { paginacionQuerySchema } from "../../../shared/presentation/validators/paginacion.query.schema.js";
 
 const routes = Router();
@@ -23,6 +23,12 @@ routes.get("/",
     ventaController.listar
 );
 
+routes.get("/buscar-sku",
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarQuery(buscarSkuSchema),
+    ventaController.buscarPorSku
+);
+
 routes.get("/:id",
     authMiddleware.verificarPermiso(['VER_VENTAS_DETALLE']),
     ventaController.obtener
@@ -33,6 +39,12 @@ routes.get("/:id",
 routes.post("/:ventaId/detalles",
     authMiddleware.verificarPermiso(['CREAR_VENTAS']),
     ventaController.crearDetalle
+);
+
+routes.post("/:ventaId/detalles/sku",
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarBody(ventaDetalleSkuSchema),
+    ventaController.crearDetallePorSku
 );
 
 routes.delete("/:ventaId/detalles/:detalleId",

@@ -1,4 +1,5 @@
 import api from "../../../core/api/api";
+import type { Producto } from "../../productos/domain/interfaces/producto.interface";
 import type { Venta, VentaCreateForm, VentaUpdateForm, VentaResponse } from "../domain/interfaces/venta.interface";
 
 export const ventaRepository = {
@@ -37,8 +38,16 @@ export const ventaRepository = {
     anular: async (id: string, sucursal_id?: string, comentario?: string): Promise<{ data: Venta }> => {
         const response = await api.patch<{ data: Venta }>(`/ventas/${id}/anular`, { sucursal_id, comentario });
         return response as any;
-    }
-    ,
+    },
+    buscarPorSku: async (sku: string): Promise<{ data: Producto }> => {
+        const response = await api.get<{ data: Producto }>('/ventas/buscar-sku', { params: { sku } });
+        return response as any;
+    },
+    crearDetallePorSku: async (ventaId: string, sku: string, sucursal_id: string, cantidad = 1): Promise<any> => {
+        const payload = { sku, cantidad, sucursal_id };
+        const response = await api.post(`/ventas/${ventaId}/detalles/sku`, payload);
+        return response as any;
+    },
     crearDetalle: async (ventaId: string, detalle: { producto_id: string, cantidad: number }, sucursal_id: string): Promise<any> => {
         const payload = { producto_id: detalle.producto_id, cantidad: detalle.cantidad, sucursal_id };
         const response = await api.post(`/ventas/${ventaId}/detalles`, payload);

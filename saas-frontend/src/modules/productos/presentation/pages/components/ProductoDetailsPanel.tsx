@@ -47,7 +47,7 @@ const ProductoDetailsPanel = ({ categoria, codigo, sku, precio_sugerido, stock_t
             <Typography variant="subtitle2" color="text.secondary">
                 Estado
             </Typography>
-            <Chip label={activo ? 'Activo' : 'Inactivo'} color={activo ? 'success' : 'default'} size="small" />
+            <Chip variant='outlined' label={activo ? 'Activo' : 'Inactivo'} color={activo ? 'success' : 'default'} size="small" />
         </Box>
         <Divider />
     </Stack>

@@ -51,6 +51,8 @@ model Negocio {
   logo_url               String?   @db.Text
   slogan                 String?   @db.VarChar(255)
   datos_facturacion_json Json?
+  primary_color            String?   @db.VarChar(7)
+  secondary_color          String?   @db.VarChar(7)
   instagram_id           String?   @db.VarChar(100)
   facebook_id            String?   @db.VarChar(100)
   activo                 Boolean   @default(true)

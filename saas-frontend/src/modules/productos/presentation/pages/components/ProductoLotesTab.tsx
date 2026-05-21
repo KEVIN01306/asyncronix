@@ -87,7 +87,7 @@ const ProductoLotesTab = ({ productoId }: Props) => {
                                             </Box>
                                             <Chip 
                                                 label={`${l.cantidad_actual} unds`} 
-                                                color={l.cantidad_actual > 0 ? "secondary" : "primary"} 
+                                                color={l.cantidad_actual > 0 ? "success" : "primary"} 
                                                 size="small"
                                                 variant={"outlined"}
                                                 sx={{ fontWeight: 700 }}

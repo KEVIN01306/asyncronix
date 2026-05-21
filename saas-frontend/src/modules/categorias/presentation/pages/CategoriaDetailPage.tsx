@@ -112,7 +112,7 @@ const CategoriaDetailPage = () => {
                             <Box>
                                 <Typography variant="overline" color="primary" fontWeight={700}>Módulo de Inventario</Typography>
                                 <Typography variant="h5" fontWeight={700}>{categoria.categoria}</Typography>
-                                <Chip label={categoria.activo ? 'Activo' : 'Inactivo'} color={categoria.activo ? 'success' : 'default'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
+                                <Chip variant='outlined' label={categoria.activo ? 'Activo' : 'Inactivo'} color={categoria.activo ? 'success' : 'default'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
                             </Box>
                         </Box>
                         <Divider sx={{ my: 3 }} />

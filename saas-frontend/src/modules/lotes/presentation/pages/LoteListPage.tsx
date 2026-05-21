@@ -25,7 +25,7 @@ const LoteListPage = () => {
         { id: 'sucursal', name: 'Sucursal', format: (_value: any, row: Lote) => row.sucursal?.nombre ?? row.sucursal_id },
         { id: 'cantidad_actual', name: 'Cantidad actual' },
         { id: 'precio_venta', name: 'Precio venta', format: (value: number) => `S/ ${value.toFixed(2)}` },
-        { id: 'activo', name: 'Estado', format: (value: boolean) => <Chip color={value ? 'primary' : 'default'} label={value ? 'Activo' : 'Inactivo'} size="small" /> }
+        { id: 'activo', name: 'Estado', format: (value: boolean) => <Chip variant='outlined' color={value ? 'success' : 'error'} label={value ? 'Activo' : 'Inactivo'} size="small" /> }
     ];
 
     const actions = [

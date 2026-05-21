@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Grid, useTheme, useMediaQuery, IconButton } from '@mui/material';
+import { Grid, useTheme, useMediaQuery, IconButton, Alert, AlertTitle } from '@mui/material';
 import { Box, Card, CardContent, Typography, Button, Table, TableHead, TableBody, TableRow, TableCell, Chip, Divider, Paper, TableContainer } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Print as PrintIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
@@ -54,6 +54,16 @@ export default function VentaDetallePage() {
                 </Box>
             </Paper>
 
+            {
+                venta.estado === 'ANULADA' && user?.sucursal_id && (
+                    <Alert severity="error" sx={{ mb: 3, boxShadow: 'none', border: (theme) => `1px solid ${theme.palette.divider}` }}>
+                        <AlertTitle>Información</AlertTitle>
+                        Esta venta fue anulada. Si necesitas más información, por favor contacta al administrador de tu cuenta.
+                    </Alert>
+                )
+            }
+            
+
             <Grid container spacing={5}>
                 <Grid size={{ xs: 12, md: 4}}>
                     <Card>
@@ -66,7 +76,7 @@ export default function VentaDetallePage() {
                             <Typography variant="body1" mt={1}><strong>Método de Pago:</strong> {venta.metodo_pago}</Typography>
                             <Box mt={2}>
                                 <Typography variant="body1" component="span"><strong>Estado: </strong></Typography>
-                                <Chip label={venta.estado} color={getEstadoColor(venta.estado)} size="small" />
+                                <Chip variant='outlined' label={venta.estado} color={getEstadoColor(venta.estado)} size="small" />
                             </Box>
                         </CardContent>
                     </Card>
@@ -116,7 +126,7 @@ export default function VentaDetallePage() {
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-
+                                        
                             <Box display="flex" justifyContent="flex-end" mt={3}>
                                 <Box textAlign="right">
                                     <Typography variant="h5" fontWeight="bold">Total: {formatMoney(venta.total)}</Typography>

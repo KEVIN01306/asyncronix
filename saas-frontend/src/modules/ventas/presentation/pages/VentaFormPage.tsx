@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { Box, Button, Card, CardContent, Divider, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography, Autocomplete, useTheme, useMediaQuery } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Box, Button, Card, CardContent, Divider, FormControl, InputLabel, IconButton, MenuItem, Paper, Select, TextField, Typography, Autocomplete, useTheme, useMediaQuery } from '@mui/material';
+import { ArrowBack as ArrowBackIcon, QrCodeScanner as QrCodeScannerIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { ventaRepository } from '../../infrastructure/venta.repository';
@@ -15,6 +15,7 @@ import { formatMoney } from '../../../../core/utils/formatMoney';
 import SaleProductsTable from '../components/SaleProductsTable';
 import SaleSummary from '../components/SaleSummary';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import QrProductScanner from '../components/lectorSkuQr';
 
 type FormValues = {
     cliente_id: string;
@@ -37,6 +38,8 @@ export default function VentaFormPage() {
     const [showClientModal, setShowClientModal] = useState(false);
     const [pendingProduct, setPendingProduct] = useState<VentaProductoInput | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showScannerModal, setShowScannerModal] = useState(false);
+    const [scanLoading, setScanLoading] = useState(false);
     const { control, register, handleSubmit, setValue, watch } = useForm<FormValues>({
         defaultValues: {
             cliente_id: '',
@@ -145,6 +148,47 @@ export default function VentaFormPage() {
             setProductoSeleccionado(null);
             setCantidadAgregar(1);
         }
+    };
+
+    const handleSkuLeido = async (sku: string) => {
+        setShowScannerModal(false);
+        if (!user?.sucursal_id) return;
+
+        try {
+            setScanLoading(true);
+            if (!ventaId) {
+                const productResponse = await ventaRepository.buscarPorSku(sku);
+                const product = productResponse.data;
+                if (!product) {
+                    toast.error('No se encontró un producto con ese SKU');
+                    return;
+                }
+                const prodInput: VentaProductoInput = {
+                    producto_id: product.id,
+                    cantidad: 1,
+                    nombre: product.nombre,
+                    precio_sugerido: product.precio_sugerido,
+                    subtotal: product.precio_sugerido
+                };
+                setProductoSeleccionado(product);
+                setPendingProduct(prodInput);
+                setShowClientModal(true);
+                return;
+            }
+
+            await ventaRepository.crearDetallePorSku(ventaId, sku, user.sucursal_id, 1);
+            const res = await ventaRepository.obtener(ventaId);
+            setProductosSeleccionados(agruparDetalles(res.data.detalles));
+            toast.success('Detalle agregado por SKU');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al procesar el SKU');
+        } finally {
+            setScanLoading(false);
+        }
+    };
+
+    const handleOpenScanner = () => {
+        setShowScannerModal(true);
     };
 
     const handlePaymentConfirm = async (metodo: string) => {
@@ -316,6 +360,9 @@ export default function VentaFormPage() {
                         <CardContent>
                             <Typography variant="h6" gutterBottom>Productos de la Venta</Typography>
                             <Box display="flex" gap={2} mb={3} alignItems="center">
+                                <IconButton color="primary" onClick={handleOpenScanner} disabled={!isEditable || scanLoading} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                                    <QrCodeScannerIcon />
+                                </IconButton>
                                 <Autocomplete
                                     sx={{ flexGrow: 1 }}
                                     options={productosDisponibles}
@@ -354,6 +401,7 @@ export default function VentaFormPage() {
             </Box>
             <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
             <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={watch('cliente_id') || 'Consumidor Final'} />
+            <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleSkuLeido} />
         </Box>
     );
 }

@@ -105,7 +105,7 @@ const UsuarioDetailPage = () => {
                             <Box>
                                 <Typography variant="overline" color="primary" fontWeight={700}>Módulo de Usuarios</Typography>
                                 <Typography variant="h5" fontWeight={700}>{usuario.nombre}</Typography>
-                                <Chip label={usuario.verificado ? 'Verificado' : 'No verificado'} color={usuario.verificado ? 'success' : 'warning'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
+                                <Chip variant="outlined" label={usuario.verificado ? 'Verificado' : 'No verificado'} color={usuario.verificado ? 'success' : 'warning'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
                             </Box>
                         </Box>
 
@@ -133,7 +133,7 @@ const UsuarioDetailPage = () => {
                             {usuario.sucursal && (
                                 <Box>
                                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>SUCURSAL</Typography>
-                                    <Chip label={usuario.sucursal.nombre} />
+                                    <Chip  label={usuario.sucursal.nombre} />
                                 </Box>
                             )}
 
@@ -173,7 +173,7 @@ const UsuarioDetailPage = () => {
                                 </Box>
                                 <Box display="flex" justifyContent="space-between">
                                     <Typography variant="body2">Verificado</Typography>
-                                    <Chip label={usuario.verificado ? 'Sí' : 'No'} size="small" color={usuario.verificado ? 'success' : 'error'} />
+                                    <Chip variant='outlined' label={usuario.verificado ? 'Sí' : 'No'} size="small" color={usuario.verificado ? 'success' : 'error'} />
                                 </Box>
                             </Stack>
                         </CardContent>

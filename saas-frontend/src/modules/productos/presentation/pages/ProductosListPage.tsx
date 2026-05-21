@@ -39,7 +39,7 @@ const ProductosListPage = () => {
         {
             id: 'activo',
             name: 'Estado',
-            format: (value: boolean) => <Chip color={value ? 'primary' : 'default'} label={value ? 'Activo' : 'Inactivo'} size="small" />
+            format: (value: boolean) => <Chip variant='outlined' color={value ? 'success' : 'error'} label={value ? 'Activo' : 'Inactivo'} size="small" />
         }
     ];
 

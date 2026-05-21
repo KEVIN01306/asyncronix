@@ -33,7 +33,7 @@ const VentasListPage = () => {
         { id: 'cliente_nombre', name: 'Cliente', format: (value: any) => value ? value : 'C/F' },
         { id: 'total', name: 'Total', format: (value: any) => formatMoney(value) },
         { id: 'metodo_pago', name: 'Método' },
-        { id: 'estado', name: 'Estado', format: (value: any) => <Chip label={value} color={value === 'COMPLETADA' ? 'secondary' : value === 'PENDIENTE' ? 'warning' : 'error'} size="small" /> },
+        { id: 'estado', name: 'Estado', format: (value: any) => <Chip variant='outlined' label={value} color={value === 'COMPLETADA' ? 'success' : value === 'PENDIENTE' ? 'warning' : 'error'} size="small" /> },
     ];
 
     const fetchVentas = useCallback(async () => {

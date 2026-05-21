@@ -45,7 +45,7 @@ const UsuariosListPage = () => {
         ) 
         }, 
                 { id: 'telefono', name: 'Teléfono' },
-        { id: 'roles', name: 'Roles', format: (value: any) => <Chip color={value?.[0]?.nombre === 'ADMIN' ? 'primary' : 'default'} label={value?.[0]?.nombre} /> },
+        { id: 'roles', name: 'Roles', format: (value: any) => <Chip  color={value?.[0]?.nombre === 'ADMIN' ? 'primary' : 'default'} label={value?.[0]?.nombre} /> },
         { id: 'sucursal', name: 'Sucursal', format: (value: any) => <Chip color={value ? "primary" : "default"} label={value ? value.nombre : 'Sin sucursal'} /> },
     ];
 

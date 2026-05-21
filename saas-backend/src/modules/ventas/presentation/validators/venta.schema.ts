@@ -21,3 +21,13 @@ export const ventaActualizarSchema = z.object({
     metodo_pago: z.nativeEnum(MetodoPago).optional(),
     productos: z.array(productoInputSchema).optional()
 });
+
+export const buscarSkuSchema = z.object({
+    sku: z.string().min(1, "El SKU es obligatorio")
+});
+
+export const ventaDetalleSkuSchema = z.object({
+    sucursal_id: z.string().uuid("Sucursal inválida"),
+    sku: z.string().min(1, "El SKU es obligatorio"),
+    cantidad: z.number().int().positive("La cantidad debe ser mayor a 0").optional().default(1)
+});

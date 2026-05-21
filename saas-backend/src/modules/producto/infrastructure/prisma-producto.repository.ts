@@ -117,6 +117,16 @@ export class PrismaProductoRepository implements ProductoRepository {
         }
     }
 
+    async obtenerPorSku(sku: string, negocio_id: string): Promise<ProductoDetalle | null> {
+        const producto = await this.prisma.producto.findFirst({
+            where: { sku, negocio_id, activo: true },
+            include: this.include
+        });
+
+        if (!producto) return null;
+        return ProductoMapper.mapDetalle(producto as any);
+    }
+
     async registrarImagen(producto_id: string, url_imagen: string, negocio_id: string): Promise<ProductoDetalle> {
         try {
             const existing = await this.prisma.producto.findFirst({
