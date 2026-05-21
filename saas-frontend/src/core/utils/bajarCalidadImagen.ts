@@ -6,7 +6,7 @@
  */
 export const bajarCalidadImagen = (
     archivoOriginal: File,
-    calidad: number = 0.6
+    calidad: number = 0.4
 ): Promise<File> => {
     return new Promise((resolve, reject) => {
         if (!archivoOriginal || !archivoOriginal.type.startsWith('image/')) {
@@ -37,31 +37,38 @@ export const bajarCalidadImagen = (
                     return;
                 }
 
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0, img.width, img.height);
+                const maxDimension = 1024;
+                let targetWidth = img.width;
+                let targetHeight = img.height;
+
+                if (img.width > maxDimension || img.height > maxDimension) {
+                    const scale = Math.min(maxDimension / img.width, maxDimension / img.height);
+                    targetWidth = Math.round(img.width * scale);
+                    targetHeight = Math.round(img.height * scale);
+                }
+
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
                 canvas.toBlob(
                     (blobComprimido) => {
                         if (blobComprimido) {
-
-                            const nombreArchivo = archivoOriginal.name.replace(/\.[^/.]+$/, "") + ".png";
-
+                            const nombreArchivo = archivoOriginal.name.replace(/\.[^/.]+$/, "") + ".jpg";
                             const archivoOptimizado = new File(
                                 [blobComprimido],
                                 nombreArchivo,
                                 {
-                                    type: 'image/png',
+                                    type: 'image/jpeg',
                                     lastModified: Date.now()
                                 }
                             );
-
                             resolve(archivoOptimizado);
                         } else {
                             reject(new Error('No se pudo procesar la compresión de la imagen.'));
                         }
                     },
-                    'image/png',
+                    'image/jpeg',
                     calidad
                 );
             };

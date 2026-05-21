@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
+import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
 
 import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
 import { negocioEditSchema, type NegocioEditFormValues } from '../../domain/negocio.schema';
@@ -86,7 +87,8 @@ const NegocioEditPage = () => {
             formData.append('instagram_id', data.instagram_id ?? '');
             formData.append('facebook_id', data.facebook_id ?? '');
             if (logoFile) {
-                formData.append('logo', logoFile);
+                const compressedLogo = await bajarCalidadImagen(logoFile);
+                formData.append('logo', compressedLogo);
             }
 
             await negocioRepository.actualizarMiNegocio(formData);

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'reac
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Grid, Alert, Paper } from '@mui/material';
 import { toast } from 'sonner';
+import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
 
 import ConfirmDialog from '../../../../shared/components/ui/dialog/ConfirmDialog';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
@@ -75,7 +76,8 @@ const ProductoDetailPage = () => {
 
         setUploading(true);
         try {
-            const updatedProduct = await ProductoRepository.subirImagen(id, file);
+            const compressedFile = await bajarCalidadImagen(file);
+            const updatedProduct = await ProductoRepository.subirImagen(id, compressedFile);
             setProducto(updatedProduct);
             toast.success('Imagen del producto actualizada correctamente');
         } catch (error) {
