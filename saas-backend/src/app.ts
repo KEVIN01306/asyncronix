@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 const app = express()
 
 app.use(cors({
-    origin: 'http://localhost:5173,https://asyncronix-ed7c3.web.app/',
+    origin: 'http://localhost:5173,https://asyncronix-ed7c3.web.app',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
