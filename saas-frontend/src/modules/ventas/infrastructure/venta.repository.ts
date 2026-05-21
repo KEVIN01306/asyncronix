@@ -34,8 +34,22 @@ export const ventaRepository = {
         const response = await api.put<{ data: Venta }>(`/ventas/${id}`, payload);
         return response as any;
     },
-    anular: async (id: string, sucursal_id?: string): Promise<{ data: Venta }> => {
-        const response = await api.patch<{ data: Venta }>(`/ventas/${id}/anular`, { sucursal_id });
+    anular: async (id: string, sucursal_id?: string, comentario?: string): Promise<{ data: Venta }> => {
+        const response = await api.patch<{ data: Venta }>(`/ventas/${id}/anular`, { sucursal_id, comentario });
+        return response as any;
+    }
+    ,
+    crearDetalle: async (ventaId: string, detalle: { producto_id: string, cantidad: number }, sucursal_id: string): Promise<any> => {
+        const payload = { producto_id: detalle.producto_id, cantidad: detalle.cantidad, sucursal_id };
+        const response = await api.post(`/ventas/${ventaId}/detalles`, payload);
+        return response as any;
+    },
+    eliminarDetalle: async (ventaId: string, detalleId: string, sucursal_id: string): Promise<any> => {
+        const response = await api.delete(`/ventas/${ventaId}/detalles/${detalleId}`, { data: { sucursal_id } });
+        return response as any;
+    },
+    finalizarVenta: async (ventaId: string, sucursal_id: string, metodo_pago?: string): Promise<{ data: Venta }> => {
+        const response = await api.patch<{ data: Venta }>(`/ventas/${ventaId}/finalizar`, { sucursal_id, metodo_pago });
         return response as any;
     }
 };

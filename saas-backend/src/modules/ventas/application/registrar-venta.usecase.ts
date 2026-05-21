@@ -2,19 +2,51 @@ import AppError from "../../../shared/errors/AppError.js";
 import { DatabaseError } from "../../../shared/database/errors/DatabaseError.js";
 import type { VentaRepository } from "../domain/venta.repository.js";
 import type { VentaCrear, VentaSimple } from "../domain/venta.entity.js";
+import type { LoteRepository } from "../../lote/domain/lote.repository.js";
 
 export class RegistrarVentaUseCase {
-    constructor(private readonly ventaRepository: VentaRepository) {}
+    constructor(private readonly ventaRepository: VentaRepository, private readonly loteRepository: LoteRepository) {}
 
     async execute(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string): Promise<VentaSimple> {
         if (!data.productos || data.productos.length === 0) {
             throw new AppError("La venta debe tener al menos un producto", "VENTA_SIN_PRODUCTOS", 400);
         }
         try {
+            // Resolver lotes por producto (solo lotes activos, con stock y de la sucursal)
+            const detallesToPersist: any[] = [];
+            let totalVenta = 0;
+            let totalCosto = 0;
+
+            for (const prodInput of data.productos) {
+                const res = await this.loteRepository.listarPorProducto(prodInput.producto_id, negocio_id, { page: 1, perPage: 100 });
+                const lote = res.data.find((l: any) => l.sucursal_id === sucursal_id && l.activo && (l.cantidad_actual ?? 0) > 0);
+                if (!lote) {
+                    throw new Error(`INSUFICIENTE_STOCK_${prodInput.producto_id}`);
+                }
+
+                const precioUnitario = lote.precio_venta ?? 0;
+                const costoUnitario = lote.costo_compra ?? 0;
+
+                detallesToPersist.push({
+                    lote_id: lote.id,
+                    descripcion: lote.producto?.nombre ?? '',
+                    cantidad: prodInput.cantidad,
+                    precio_unitario: precioUnitario,
+                    costo_unitario: costoUnitario
+                });
+
+                totalVenta += prodInput.cantidad * precioUnitario;
+                totalCosto += prodInput.cantidad * costoUnitario;
+            }
+
             const dataToPersist = {
                 ...data,
-                estado: 'PENDIENTE' as const
-            };
+                estado: 'PENDIENTE' as const,
+                detalles: detallesToPersist,
+                total: totalVenta,
+                total_costo: totalCosto
+            } as any;
+
             return await this.ventaRepository.registrar(dataToPersist, negocio_id, sucursal_id, usuario_id);
         } catch (error: any) {
             if (error.message && error.message.includes("INSUFICIENTE_STOCK")) {

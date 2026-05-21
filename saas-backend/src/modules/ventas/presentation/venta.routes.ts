@@ -28,10 +28,21 @@ routes.get("/:id",
     ventaController.obtener
 );
 
-routes.put("/:id",
+// Nota: la edición de ventas se elimina. Solo ver, anular y finalizar.
+
+routes.post("/:ventaId/detalles",
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    ventaController.crearDetalle
+);
+
+routes.delete("/:ventaId/detalles/:detalleId",
     authMiddleware.verificarPermiso(['EDITAR_VENTAS']),
-    validarMiddleware.validarBody(ventaActualizarSchema),
-    ventaController.actualizar
+    ventaController.eliminarDetalle
+);
+
+routes.patch("/:id/finalizar",
+    authMiddleware.verificarPermiso(['EDITAR_VENTAS']),
+    ventaController.finalizar
 );
 
 routes.patch("/:id/anular",

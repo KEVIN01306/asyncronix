@@ -1,5 +1,7 @@
 import type { EstadoVenta, MetodoPago } from "@prisma/client";
 
+export type { MetodoPago };
+
 export interface VentaProductoInput {
     producto_id: string;
     cantidad: number;
@@ -11,6 +13,10 @@ export interface VentaCrear {
     metodo_pago: MetodoPago;
     estado: EstadoVenta;
     productos: VentaProductoInput[];
+    // Campos opcionales que puede proporcionar el Use Case al persistir
+    detalles?: any[];
+    total?: number;
+    total_costo?: number;
 }
 
 export interface VentaActualizar {
@@ -40,6 +46,7 @@ export interface VentaSimple {
     cliente_id: string | null;
     total: number;
     total_costo: number;
+    comentarios?: string | null;
     estado: EstadoVenta;
     metodo_pago: MetodoPago;
     created_at: Date;

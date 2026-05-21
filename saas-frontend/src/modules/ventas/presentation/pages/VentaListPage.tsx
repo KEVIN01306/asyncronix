@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
-import { Add, Edit, Visibility, Search } from '@mui/icons-material';
+import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
+import { Add, Visibility, Search } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Venta } from '../../domain/interfaces/venta.interface';
 import { ventaRepository } from '../../infrastructure/venta.repository';
@@ -21,6 +21,10 @@ const VentasListPage = () => {
     const [ventas, setVentas] = useState<Venta[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [showAnularModal, setShowAnularModal] = useState(false);
+    const [ventaToAnular, setVentaToAnular] = useState<Venta | null>(null);
+    const [comentarioAnular, setComentarioAnular] = useState('');
+    const [anularSaving, setAnularSaving] = useState(false);
 
     const user = useAuthStore(state => state.user);
 
@@ -50,24 +54,41 @@ const VentasListPage = () => {
         fetchVentas();
     }, [fetchVentas]);
 
-    const handleAnular = async (row: Venta) => {
+    const handleAnular = (row: Venta) => {
+        setVentaToAnular(row);
+        setComentarioAnular('');
+        setShowAnularModal(true);
+    };
+
+    const confirmAnular = async () => {
+        if (!ventaToAnular) return;
         if (!user?.sucursal_id) {
             toast.error('No se pudo determinar la sucursal del usuario');
             return;
         }
-        if (!window.confirm('¿Está seguro de que desea anular esta venta? Esta acción devolverá el stock.')) return;
+        if (!comentarioAnular.trim()) {
+            toast.error('El comentario es obligatorio');
+            return;
+        }
+
         try {
-            await ventaRepository.anular(row.id, user.sucursal_id);
+            setAnularSaving(true);
+            await ventaRepository.anular(ventaToAnular.id, user.sucursal_id, comentarioAnular.trim());
             toast.success('Venta anulada exitosamente');
+            setShowAnularModal(false);
+            setVentaToAnular(null);
+            setComentarioAnular('');
             fetchVentas();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Error al anular la venta');
+        } finally {
+            setAnularSaving(false);
         }
     };
 
     const actions = [
         { name: 'Ver', icon: <Visibility fontSize="small" />, color: 'gray', onClick: (row: any) => navigate(`/ventas/${row.id}`) },
-        { name: 'Editar', icon: <Edit fontSize="small" />, color: 'blue', onClick: (row: any) => navigate(`/ventas/editar/${row.id}`), visible: (row: any) => row.estado === 'PENDIENTE' },
+        { name: 'Continuar', icon: <Visibility fontSize="small" />, color: 'primary', onClick: (row: any) => navigate(`/ventas/editar/${row.id}`), visible: (row: any) => row.estado === 'PENDIENTE' },
         { name: 'Anular', icon: <Add fontSize="small" />, color: 'red', onClick: (row: any) => handleAnular(row), visible: (row: any) => row.estado !== 'ANULADA' },
     ];
 
@@ -111,6 +132,27 @@ const VentasListPage = () => {
                     />
                 )}
             </TableContainer>
+            <Dialog open={showAnularModal} onClose={() => setShowAnularModal(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Anular Venta</DialogTitle>
+                <DialogContent>
+                    <Typography mb={2}>Indica el motivo por el cual anulas esta venta. Esta información es obligatoria.</Typography>
+                    <TextField
+                        fullWidth
+                        multiline
+                        minRows={4}
+                        label="Comentario"
+                        value={comentarioAnular}
+                        onChange={(e) => setComentarioAnular(e.target.value)}
+                        disabled={anularSaving}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowAnularModal(false)} disabled={anularSaving}>Cancelar</Button>
+                    <Button onClick={confirmAnular} variant="contained" color="error" disabled={anularSaving || comentarioAnular.trim().length === 0}>
+                        {anularSaving ? 'Anulando...' : 'Confirmar anulación'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

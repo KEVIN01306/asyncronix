@@ -22,6 +22,7 @@ export interface Venta {
     cliente_id: string | null;
     total: number;
     total_costo: number;
+    comentarios?: string | null;
     estado: EstadoVenta;
     metodo_pago: MetodoPago;
     created_at: string;

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Grid, useTheme, useMediaQuery } from '@mui/material';
+import { Grid, useTheme, useMediaQuery, IconButton } from '@mui/material';
 import { Box, Card, CardContent, Typography, Button, Table, TableHead, TableBody, TableRow, TableCell, Chip, Divider, Paper, TableContainer } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, Print as PrintIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Print as PrintIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { ventaRepository } from '../../infrastructure/venta.repository';
+import { useAuthStore } from '../../../../core/store/authStore';
 import type { Venta } from '../../domain/interfaces/venta.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 
@@ -12,6 +13,7 @@ export default function VentaDetallePage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [venta, setVenta] = useState<Venta | null>(null);
+    const user = useAuthStore(state => state.user);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -82,6 +84,7 @@ export default function VentaDetallePage() {
                                             <TableCell align="right"><strong>Cantidad</strong></TableCell>
                                             <TableCell align="right"><strong>Precio Unit.</strong></TableCell>
                                             <TableCell align="right"><strong>Subtotal</strong></TableCell>
+                                            <TableCell align="center"><strong>Acción</strong></TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -91,6 +94,23 @@ export default function VentaDetallePage() {
                                                 <TableCell align="right">{detalle.cantidad}</TableCell>
                                                 <TableCell align="right">{formatMoney(detalle.precio_unitario)}</TableCell>
                                                 <TableCell align="right">{formatMoney(detalle.subtotal)}</TableCell>
+                                                <TableCell align="center">
+                                                    {venta.estado === 'PENDIENTE' && user?.sucursal_id && (
+                                                        <IconButton color="error" size="small" onClick={async () => {
+                                                            if (!confirm('¿Eliminar este detalle?')) return;
+                                                            try {
+                                                                await ventaRepository.eliminarDetalle(venta.id, detalle.id, user.sucursal_id!);
+                                                                const refreshed = await ventaRepository.obtener(venta.id);
+                                                                setVenta(refreshed.data);
+                                                                toast.success('Detalle eliminado');
+                                                            } catch {
+                                                                toast.error('Error al eliminar detalle');
+                                                            }
+                                                        }}>
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    )}
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

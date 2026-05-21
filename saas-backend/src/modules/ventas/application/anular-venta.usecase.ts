@@ -6,9 +6,13 @@ import type { VentaSimple } from "../domain/venta.entity.js";
 export class AnularVentaUseCase {
     constructor(private readonly ventaRepository: VentaRepository) {}
 
-    async execute(id: string, negocio_id: string, sucursal_id: string): Promise<VentaSimple> {
+    async execute(id: string, negocio_id: string, sucursal_id: string, comentario: string): Promise<VentaSimple> {
+        if (!comentario || comentario.trim().length === 0) {
+            throw new AppError('El comentario es obligatorio para anular la venta', 'COMENTARIO_REQUERIDO', 400);
+        }
+
         try {
-            return await this.ventaRepository.anular(id, negocio_id, sucursal_id);
+            return await this.ventaRepository.anular(id, negocio_id, sucursal_id, comentario);
         } catch (error: any) {
             if (error.message === "VENTA_NO_ENCONTRADA") {
                 throw new AppError("La venta no existe", "NOT_FOUND", 404);

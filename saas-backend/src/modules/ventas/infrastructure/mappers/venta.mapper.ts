@@ -10,6 +10,7 @@ export class VentaMapper {
             cliente_id: venta.cliente_id,
             total: venta.total,
             total_costo: venta.total_costo,
+            comentarios: venta.comentarios ?? null,
             estado: venta.estado,
             metodo_pago: venta.metodo_pago,
             created_at: venta.created_at,

@@ -1,15 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { Box, Button, Card, CardContent, Divider, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Autocomplete, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
-import { Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Box, Button, Card, CardContent, Divider, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography, Autocomplete, useTheme, useMediaQuery } from '@mui/material';
+import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { ventaRepository } from '../../infrastructure/venta.repository';
+import SaleClientModal from '../components/SaleClientModal';
+import SalePaymentModal from '../components/SalePaymentModal';
 import { ProductoRepository } from '../../../productos/infrastructure/repositories/producto.repository';
 import type { EstadoVenta, MetodoPago, VentaProductoInput, VentaDetalleSimple } from '../../domain/interfaces/venta.interface';
 import type { Producto } from '../../../productos/domain/interfaces/producto.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
+import SaleProductsTable from '../components/SaleProductsTable';
+import SaleSummary from '../components/SaleSummary';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 type FormValues = {
     cliente_id: string;
@@ -28,6 +33,10 @@ export default function VentaFormPage() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [productosSeleccionados, setProductosSeleccionados] = useState<VentaProductoInput[]>([]);
+    const [ventaId, setVentaId] = useState<string | null>(null);
+    const [showClientModal, setShowClientModal] = useState(false);
+    const [pendingProduct, setPendingProduct] = useState<VentaProductoInput | null>(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
     const { control, register, handleSubmit, setValue, watch } = useForm<FormValues>({
         defaultValues: {
             cliente_id: '',
@@ -39,7 +48,6 @@ export default function VentaFormPage() {
     const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([]);
     const [searchProductoLoading, setSearchProductoLoading] = useState(false);
 
-    // Autocomplete state
     const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
     const [cantidadAgregar, setCantidadAgregar] = useState<number>(1);
 
@@ -49,7 +57,7 @@ export default function VentaFormPage() {
     const cargarProductosDisponibles = useCallback(async () => {
         try {
             setSearchProductoLoading(true);
-            const res = await ProductoRepository.listar(100, 0); // Traemos hasta 100 productos para buscar
+            const res = await ProductoRepository.listar(100, 0);
             setProductosDisponibles(res.data);
         } catch {
             toast.error("Error al cargar productos disponibles");
@@ -90,6 +98,7 @@ export default function VentaFormPage() {
             setLoading(true);
             const res = await ventaRepository.obtener(id!);
             const venta = res.data;
+            setVentaId(venta.id);
             setValue('cliente_id', venta.cliente_id || '');
             setValue('metodo_pago', venta.metodo_pago);
             setValue('estado', venta.estado);
@@ -109,85 +118,126 @@ export default function VentaFormPage() {
         }
     }, [isEdit, cargarProductosDisponibles, cargarVenta]);
 
-    const handleAgregarProducto = () => {
+    const handleClientConfirm = async () => {
+        setShowClientModal(false);
+        if (!pendingProduct || !user?.sucursal_id) return;
+
+        try {
+            setSaving(true);
+            const payload: any = {
+                sucursal_id: user.sucursal_id,
+                cliente_id: null,
+                metodo_pago: 'EFECTIVO',
+                estado: 'PENDIENTE',
+                productos: [{ producto_id: pendingProduct.producto_id, cantidad: pendingProduct.cantidad }]
+            };
+
+            const res = await ventaRepository.registrar(payload);
+            const venta = res.data;
+            setVentaId(venta.id);
+            setProductosSeleccionados(agruparDetalles(venta.detalles));
+            toast.success('Venta creada y primer detalle agregado');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al crear la venta');
+        } finally {
+            setSaving(false);
+            setPendingProduct(null);
+            setProductoSeleccionado(null);
+            setCantidadAgregar(1);
+        }
+    };
+
+    const handlePaymentConfirm = async (metodo: string) => {
+        if (!ventaId || !user?.sucursal_id) return;
+        try {
+            setSaving(true);
+            await ventaRepository.finalizarVenta(ventaId, user.sucursal_id, metodo);
+            toast.success('Venta finalizada');
+            navigate(`/ventas/${ventaId}`);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al finalizar la venta');
+        } finally {
+            setSaving(false);
+            setShowPaymentModal(false);
+        }
+    };
+
+    const handleAgregarProducto = async () => {
         if (!productoSeleccionado) return;
         if (cantidadAgregar <= 0) {
             toast.warning("La cantidad debe ser mayor a 0");
             return;
         }
 
-        const index = productosSeleccionados.findIndex(p => p.producto_id === productoSeleccionado.id);
-        if (index >= 0) {
-            const nuevos = [...productosSeleccionados];
-            nuevos[index].cantidad += cantidadAgregar;
-            nuevos[index].subtotal = nuevos[index].cantidad * (nuevos[index].precio_sugerido || 0);
-            setProductosSeleccionados(nuevos);
-        } else {
-            setProductosSeleccionados([...productosSeleccionados, {
-                producto_id: productoSeleccionado.id,
-                cantidad: cantidadAgregar,
-                nombre: productoSeleccionado.nombre,
-                precio_sugerido: productoSeleccionado.precio_sugerido,
-                subtotal: cantidadAgregar * productoSeleccionado.precio_sugerido
-            }]);
-        }
+        const prodInput: VentaProductoInput = {
+            producto_id: productoSeleccionado.id,
+            cantidad: cantidadAgregar,
+            nombre: productoSeleccionado.nombre,
+            precio_sugerido: productoSeleccionado.precio_sugerido,
+            subtotal: cantidadAgregar * productoSeleccionado.precio_sugerido
+        };
 
-        setProductoSeleccionado(null);
-        setCantidadAgregar(1);
-    };
-
-    const handleEliminarProducto = (index: number) => {
-        const nuevos = [...productosSeleccionados];
-        nuevos.splice(index, 1);
-        setProductosSeleccionados(nuevos);
-    };
-
-    const onSubmit = async (formData: FormValues) => {
-        if (!isEdit && productosSeleccionados.length === 0) {
-            toast.warning('Debe agregar al menos un producto a la venta');
-            return;
-        }
-
-        if (!user?.sucursal_id) {
-            toast.error('No se pudo determinar la sucursal del usuario');
+        if (!ventaId) {
+            setPendingProduct(prodInput);
+            setShowClientModal(true);
             return;
         }
 
         try {
             setSaving(true);
-
-            const payload: any = {
-                sucursal_id: user.sucursal_id,
-                cliente_id: formData.cliente_id || null,
-                metodo_pago: formData.metodo_pago,
-                estado: formData.estado
-            };
-
-            if (productosSeleccionados.length > 0) {
-                payload.productos = productosSeleccionados.map((p) => ({
-                    producto_id: p.producto_id,
-                    cantidad: p.cantidad
-                }));
-            }
-
-            if (isEdit) {
-                await ventaRepository.actualizar(id!, payload);
-                toast.success('Venta actualizada exitosamente');
-            } else {
-                await ventaRepository.registrar(payload);
-                toast.success('Venta registrada exitosamente');
-            }
-            navigate('/ventas');
+            await ventaRepository.crearDetalle(ventaId, { producto_id: prodInput.producto_id, cantidad: prodInput.cantidad }, user!.sucursal_id!);
+            const res = await ventaRepository.obtener(ventaId);
+            const venta = res.data;
+            setProductosSeleccionados(agruparDetalles(venta.detalles));
+            toast.success('Producto agregado a la venta');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Error al guardar la venta');
+            toast.error(error.response?.data?.message || 'Error al agregar producto');
         } finally {
             setSaving(false);
+            setProductoSeleccionado(null);
+            setCantidadAgregar(1);
         }
+    };
+
+    const handleEliminarProducto = (index: number) => {
+        const prod = productosSeleccionados[index];
+        if (!ventaId) {
+            const nuevos = [...productosSeleccionados];
+            nuevos.splice(index, 1);
+            setProductosSeleccionados(nuevos);
+            return;
+        }
+
+        (async () => {
+            try {
+                setSaving(true);
+                const res = await ventaRepository.obtener(ventaId);
+                const detalle = res.data.detalles.find((d: any) => (d.producto_id ?? d.lote_id ?? '') === prod.producto_id || d.descripcion === prod.nombre);
+                if (detalle) {
+                    await ventaRepository.eliminarDetalle(ventaId, detalle.id, user!.sucursal_id!);
+                    const ventaRef = await ventaRepository.obtener(ventaId);
+                    setProductosSeleccionados(agruparDetalles(ventaRef.data.detalles));
+                    toast.success('Detalle eliminado');
+                }
+            } catch (error: any) {
+                toast.error(error.response?.data?.message || 'Error al eliminar detalle');
+            } finally {
+                setSaving(false);
+            }
+        })();
+    };
+
+    const onSubmit = async () => {
+        if (!ventaId) {
+            toast.warning('Agregue productos para crear la venta');
+            return;
+        }
+        setShowPaymentModal(true);
     };
 
     const totalVenta = productosSeleccionados.reduce((acc, curr) => acc + (curr.subtotal || 0), 0);
 
-    if (loading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
+    if (loading) return <Loading />;
 
     return (
         <Box p={isMobile ? 2 : 4}>
@@ -197,7 +247,7 @@ export default function VentaFormPage() {
 
             <Paper sx={{ p: 2, border: (theme) => `1px solid ${theme.palette.divider}`, mb: 2 }}>
                 <Typography variant="h5" fontWeight={700}>
-                    {isEdit ? 'Editar Venta' : 'Nueva Venta'}
+                    {isEdit ? 'Continuar Venta' : 'Nueva Venta'}
                 </Typography>
             </Paper>
 
@@ -236,9 +286,10 @@ export default function VentaFormPage() {
                                             disabled={!isEditable}
                                         >
                                             <MenuItem value="EFECTIVO">EFECTIVO</MenuItem>
-                                            <MenuItem value="TARJETA">TARJETA</MenuItem>
+                                            <MenuItem value="TARJETA_CREDITO">TARJETA CRÉDITO</MenuItem>
+                                            <MenuItem value="TARJETA_DEBITO">TARJETA DÉBITO</MenuItem>
                                             <MenuItem value="TRANSFERENCIA">TRANSFERENCIA</MenuItem>
-                                            <MenuItem value="OTRO">OTRO</MenuItem>
+                                            <MenuItem value="OTROS">OTROS</MenuItem>
                                         </Select>
                                     )}
                                 />
@@ -252,14 +303,8 @@ export default function VentaFormPage() {
                                 disabled={!isEditable}
                             />
                             <Box mt={4}>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    fullWidth
-                                    onClick={handleSubmit(onSubmit)}
-                                    disabled={saving || !isEditable}
-                                >
-                                    {saving ? 'Guardando...' : 'Guardar Venta'}
+                                <Button variant="contained" color="primary" fullWidth onClick={handleSubmit(onSubmit)} disabled={saving || !isEditable}>
+                                    {saving ? 'Guardando...' : ventaId ? 'Finalizar Venta' : 'Iniciar Venta'}
                                 </Button>
                             </Box>
                         </CardContent>
@@ -301,50 +346,14 @@ export default function VentaFormPage() {
                                     Agregar
                                 </Button>
                             </Box>
-                            <TableContainer component={Paper} variant="outlined" elevation={0}>
-                                <Table>
-                                    <TableHead sx={{ bgcolor: 'background.default' }}>
-                                        <TableRow>
-                                            <TableCell><strong>Producto</strong></TableCell>
-                                            <TableCell align="right"><strong>Cant.</strong></TableCell>
-                                            <TableCell align="right"><strong>Precio Unit.</strong></TableCell>
-                                            <TableCell align="right"><strong>Subtotal</strong></TableCell>
-                                            <TableCell align="center"><strong>Acción</strong></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {productosSeleccionados.map((prod, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{prod.nombre}</TableCell>
-                                                <TableCell align="right">{prod.cantidad}</TableCell>
-                                                <TableCell align="right">{formatMoney(prod.precio_sugerido || 0)}</TableCell>
-                                                <TableCell align="right">{formatMoney(prod.subtotal || 0)}</TableCell>
-                                                <TableCell align="center">
-                                                    <IconButton color="error" onClick={() => handleEliminarProducto(index)} size="small" disabled={!isEditable}>
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                        {productosSeleccionados.length === 0 && (
-                                            <TableRow>
-                                                <TableCell colSpan={5} align="center">
-                                                    No se han agregado productos a la venta
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                            {productosSeleccionados.length > 0 && (
-                                <Box display="flex" justifyContent="flex-end" mt={3}>
-                                    <Typography variant="h5" fontWeight="bold">Total Calculado: {formatMoney(totalVenta)}</Typography>
-                                </Box>
-                            )}
+                            <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} />
+                            <SaleSummary total={totalVenta} clienteLabel={watch('cliente_id') || 'Consumidor Final'} onFinalize={() => setShowPaymentModal(true)} disabled={!ventaId} />
                         </CardContent>
                     </Card>
                 </Box>
             </Box>
+            <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
+            <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={watch('cliente_id') || 'Consumidor Final'} />
         </Box>
     );
 }
