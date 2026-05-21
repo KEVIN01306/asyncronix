@@ -37,7 +37,7 @@ const VentasListPage = () => {
         try {
             const response = await ventaRepository.listar(limit, offset);
             setVentas(response.data);
-            setTotal(response.meta?.total ?? response.total ?? 0);
+            setTotal(response.meta?.total ??  0);
         } catch (error) {
             console.error(error);
             toast.error('Error al cargar las ventas');

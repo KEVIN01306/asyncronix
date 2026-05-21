@@ -3,7 +3,6 @@ import {
   Inventory2,
   SettingsSuggest,
   StoreMallDirectory,
-  AttachMoney,
   BusinessCenterOutlined,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';

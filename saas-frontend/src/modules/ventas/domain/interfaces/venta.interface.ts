@@ -1,4 +1,4 @@
-import type { PaginatedResponse } from "../../../../core/api/interfaces/paginated.interface";
+import type { PaginatedResponse } from "../../../../core/api/interfaces/api-response.interface";
 
 export type EstadoVenta = 'PENDIENTE' | 'COMPLETADA' | 'ANULADA';
 export type MetodoPago = 'EFECTIVO' | 'TARJETA_CREDITO' | 'TARJETA_DEBITO' | 'TRANSFERENCIA' | 'OTROS';
