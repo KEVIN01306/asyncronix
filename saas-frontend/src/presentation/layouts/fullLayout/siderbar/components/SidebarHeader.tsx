@@ -1,5 +1,5 @@
 //import type { Theme } from "@emotion/react";
-import { /*alpha,*/ Box, Toolbar } from "@mui/material";
+import { /*alpha,*/ Box, Toolbar, Tooltip } from "@mui/material";
 import { useAuthStore } from "../../../../../core/store/authStore";
 
 export const SidebarHeader: React.FC = () =>  {
@@ -8,11 +8,12 @@ export const SidebarHeader: React.FC = () =>  {
   console.log("Usuario en SidebarHeader:", user); // Agrega este log para verificar el usuario
   return (
     <Toolbar sx={{ px: 1, my: 1, width: '100%', display:'flex',justifyContent: 'center'}} >
+          <Tooltip followCursor describeChild title={user?.negocio?.nombre_comercial} placement="top-end">
           <Box display="flex" justifyContent="center">
                   <Box
                       component="img"
                       src={import.meta.env.VITE_API_URL + "/" + (user?.negocio?.logo_url || "/icons/asyncronix.png")}
-                      alt="Logo Foxint"
+                      alt={user?.negocio?.nombre_comercial || "Logo"}
                       sx={{
                           height: 55,
                           width: 'auto',
@@ -21,7 +22,8 @@ export const SidebarHeader: React.FC = () =>  {
                           filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.1))'
                       }}
                   />
-      </Box>
+          </Box>
+          </Tooltip>
     </Toolbar>
   )
 };
