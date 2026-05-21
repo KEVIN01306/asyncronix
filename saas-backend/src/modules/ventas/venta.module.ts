@@ -19,7 +19,7 @@ const ventaRepository = new PrismaVentaRepository(prisma);
 const loteRepository = new PrismaLoteRepository(prisma);
 const productoRepository = new PrismaProductoRepository(prisma);
 
-const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository);
+const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository, productoRepository);
 const crearDetalleVentaUseCase = new CrearDetalleVentaUseCase(ventaRepository, loteRepository, productoRepository);
 const crearDetalleVentaPorSkuUseCase = new CrearDetalleVentaPorSkuUseCase(ventaRepository, loteRepository, productoRepository);
 const buscarProductoPorSkuUseCase = new BuscarProductoPorSkuUseCase(productoRepository);
