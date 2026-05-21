@@ -12,7 +12,6 @@ export class RegistrarVentaUseCase {
             throw new AppError("La venta debe tener al menos un producto", "VENTA_SIN_PRODUCTOS", 400);
         }
         try {
-            // Resolver lotes por producto (solo lotes activos, con stock y de la sucursal)
             const detallesToPersist: any[] = [];
             let totalVenta = 0;
             let totalCosto = 0;

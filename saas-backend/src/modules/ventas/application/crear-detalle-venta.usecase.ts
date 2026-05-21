@@ -2,22 +2,34 @@ import AppError from "../../../shared/errors/AppError.js";
 import { DatabaseError } from "../../../shared/database/errors/DatabaseError.js";
 import type { VentaRepository } from "../domain/venta.repository.js";
 import type { LoteRepository } from "../../lote/domain/lote.repository.js";
+import type { ProductoRepository } from "modules/producto/domain/producto.repository.js";
 
 export class CrearDetalleVentaUseCase {
-    constructor(private readonly ventaRepository: VentaRepository, private readonly loteRepository: LoteRepository) {}
+    constructor(
+        private readonly ventaRepository: VentaRepository,
+        private readonly loteRepository: LoteRepository,
+        private readonly productoRepository: ProductoRepository
+        
+        ) {}
 
     async execute(ventaId: string, productoId: string, cantidad: number, negocio_id: string, sucursal_id: string): Promise<any> {
         try {
-            // Buscar lotes disponibles del producto en la sucursal
-            const res = await this.loteRepository.listarPorProducto(productoId, negocio_id, { page: 1, perPage: 100 });
+            const producto = await this.productoRepository.obtener(productoId, negocio_id);
+            if (!producto) {
+                throw new AppError('Producto no encontrado', 'PRODUCTO_NO_ENCONTRADO', 404);
+            }
+
+            const res = await this.loteRepository.listarPorProducto(producto.id, negocio_id, { page: 1, perPage: 100 });
             const lote = res.data.find((l: any) => l.sucursal_id === sucursal_id && l.activo && (l.cantidad_actual ?? 0) > 0);
-            if (!lote) throw new AppError('No hay lotes activos con stock para el producto', 'NO_LOTE_DISPONIBLE', 400);
+            if (!lote) {
+                throw new AppError('No hay lotes activos con stock para el producto', 'NO_LOTE_DISPONIBLE', 400);
+            }
 
             const detalle = {
                 lote_id: lote.id,
-                descripcion: lote.producto?.nombre ?? '',
+                descripcion: lote.producto?.nombre ?? producto.nombre,
                 cantidad,
-                precio_unitario: lote.precio_venta ?? 0,
+                precio_unitario: producto.precio_sugerido ?? 0,
                 costo_unitario: lote.costo_compra ?? 0
             };
 

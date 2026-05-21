@@ -28,7 +28,7 @@ export class CrearDetalleVentaPorSkuUseCase {
                 lote_id: lote.id,
                 descripcion: lote.producto?.nombre ?? producto.nombre,
                 cantidad,
-                precio_unitario: lote.precio_venta ?? 0,
+                precio_unitario: producto.precio_sugerido ?? 0,
                 costo_unitario: lote.costo_compra ?? 0
             };
 
