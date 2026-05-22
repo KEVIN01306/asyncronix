@@ -1,17 +1,20 @@
 export interface Cliente {
     id: string;
     negocio_id: string;
-    nombre: string | null;
+    nombre: string;
+    apellido: string | null;
     telefono: string;
     email: string | null;
-    direccion_entrega: string | null;
-    fecha_registro: Date | null;
+    nit: string | null;
+    dpi: string | null;
+    created_at: Date;
+    updated_at: Date;
 }
 
 export interface ClienteObtenidoDetalle extends Omit<Cliente, "negocio_id"> { }
 
-export interface ClienteSimple extends Pick<Cliente, "id" | "nombre" | "telefono" | "email"> { }
+export interface ClienteSimple extends Pick<Cliente, "id" | "nombre" | "telefono" | "email" | "nit" | "dpi"> { }
 
-export interface ClienteCrear extends Omit<Cliente, "id" | "fecha_registro" | "negocio_id"> { }
+export interface ClienteCrear extends Omit<Cliente, "id" | "created_at" | "updated_at" | "negocio_id"> { }
 
 export interface ClienteActualizar extends Partial<ClienteCrear> { }

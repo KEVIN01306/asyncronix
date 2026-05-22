@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { AuthMiddleware } from "../../../app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "../../../app/middlewares/ValidarMiddleware.js";
 import { ventaController } from "../venta.module.js";
@@ -8,6 +9,10 @@ import { paginacionQuerySchema } from "../../../shared/presentation/validators/p
 const routes = Router();
 const authMiddleware = new AuthMiddleware();
 const validarMiddleware = new ValidarMiddleware();
+
+const ventaListQuerySchema = paginacionQuerySchema.extend({
+    cliente_id: z.string().uuid("Cliente inválido").optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v)
+});
 
 routes.use(authMiddleware.protegerRuta);
 
@@ -19,7 +24,7 @@ routes.post("/",
 
 routes.get("/",
     authMiddleware.verificarPermiso(['VER_VENTAS']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(ventaListQuerySchema),
     ventaController.listar
 );
 

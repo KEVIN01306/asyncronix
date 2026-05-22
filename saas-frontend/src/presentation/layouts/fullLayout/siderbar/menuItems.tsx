@@ -25,6 +25,7 @@ const MenuItems: MenuItem[] = [
     ]
   },
   { name: "Ventas", icon: BusinessCenterOutlined, link: "/ventas", permiso: "VER_VENTAS" },
+  { name: "Clientes", icon: BusinessCenterOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
   { module: "configuracion", name: "Configuración", icon: SettingsSuggest, children: [
       { name: "Usuarios", link: "/usuarios", icon: AdminPanelSettingsOutlined, permiso: "VER_USUARIOS" },
       { name: "Roles", link: "/roles", icon: AdminPanelSettingsOutlined, permiso: "VER_ROLES" },

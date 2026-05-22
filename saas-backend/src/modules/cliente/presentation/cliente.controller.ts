@@ -6,7 +6,7 @@ import type { ObtenerClientesUseCase } from "../application/obtener-clientes.js"
 import type { RegistrarClienteUseCase } from "../application/registrar-cliente.usecase.js";
 import type { ActualizarClienteUseCase } from "../application/actualizar-cliente.usecase.js";
 import type { EliminarClienteUseCase } from "../application/eliminar-cliente.usecase.js";
-
+import type { BuscarClientePorDocumentoUseCase } from "../application/buscar-cliente-por-documento.usecase.js";
 
 export class ClienteController extends BaseController {
 
@@ -15,7 +15,8 @@ export class ClienteController extends BaseController {
         private readonly obtenerClientesUseCase: ObtenerClientesUseCase,
         private readonly registrarClienteUseCase: RegistrarClienteUseCase,
         private readonly actualizarClienteUseCase: ActualizarClienteUseCase,
-        private readonly eliminarClienteUseCase: EliminarClienteUseCase
+        private readonly eliminarClienteUseCase: EliminarClienteUseCase,
+        private readonly buscarClientePorDocumentoUseCase: BuscarClientePorDocumentoUseCase
     ) {
         super()
     }
@@ -26,6 +27,17 @@ export class ClienteController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res)
             const cliente = await this.obtenerClienteUseCase.execute(id, negocio_id);
             res.status(200).json(Respuesta.exito('Cliente obtenido con exito', cliente))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    buscarPorDocumento = async (_req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res)
+            const { nit, dpi } = res.locals.query
+            const cliente = await this.buscarClientePorDocumentoUseCase.execute({ nit, dpi }, negocio_id)
+            res.status(200).json(Respuesta.exito('Búsqueda de cliente completada', cliente))
         } catch (error) {
             next(error)
         }

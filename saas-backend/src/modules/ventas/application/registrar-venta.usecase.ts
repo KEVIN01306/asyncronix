@@ -1,5 +1,8 @@
 import AppError from "../../../shared/errors/AppError.js";
 import { DatabaseError } from "../../../shared/database/errors/DatabaseError.js";
+import { PersistenceError } from '../../../shared/database/errors/PersistenceError.js';
+import { InsufficientStockPersistenceError } from '../../../shared/database/errors/InsufficientStockPersistenceError.js';
+import { LoteNotFoundPersistenceError } from '../../../shared/database/errors/LoteNotFoundPersistenceError.js';
 import type { VentaRepository } from "../domain/venta.repository.js";
 import type { VentaCrear, VentaSimple } from "../domain/venta.entity.js";
 import type { LoteRepository } from "../../lote/domain/lote.repository.js";
@@ -26,28 +29,44 @@ export class RegistrarVentaUseCase {
             for (const prodInput of data.productos) {
                 const producto = await this.productoRepository.obtener(prodInput.producto_id, negocio_id);
                 if (!producto) {
-                    throw new Error(`PRODUCTO_NO_ENCONTRADO_${prodInput.producto_id}`);
+                    throw new AppError(`PRODUCTO_NO_ENCONTRADO_${prodInput.producto_id}`, "PRODUCT_NOT_FOUND", 404);
                 }
 
-                const res = await this.loteRepository.listarPorProducto(prodInput.producto_id, negocio_id, { page: 1, perPage: 100 });
-                const lote = res.data.find((l: any) => l.sucursal_id === sucursal_id && l.activo && (l.cantidad_actual ?? 0) > 0);
-                if (!lote) {
-                    throw new Error(`INSUFICIENTE_STOCK_${prodInput.producto_id}`);
+                const res = await this.loteRepository.listarPorProducto(prodInput.producto_id, negocio_id, { page: 1, perPage: 1000 }, sucursal_id);
+                const lotes = res.data.filter((l: any) => l.activo && (l.cantidad_actual ?? 0) > 0);
+                if (!lotes || lotes.length === 0) {
+                    throw new AppError(`INSUFICIENTE_STOCK_${prodInput.producto_id}`, "INSUFFICIENT_STOCK", 400);
                 }
 
+                let restante = prodInput.cantidad;
                 const precioUnitario = producto.precio_sugerido ?? 0;
-                const costoUnitario = lote.costo_compra ?? 0;
 
-                detallesToPersist.push({
-                    lote_id: lote.id,
-                    descripcion: producto.nombre ?? lote.producto?.nombre ?? '',
-                    cantidad: prodInput.cantidad,
-                    precio_unitario: precioUnitario,
-                    costo_unitario: costoUnitario
-                });
+                // distribuir la cantidad requerida entre los lotes disponibles
+                for (const lote of lotes) {
+                    if (restante <= 0) break;
+                    const disponible = lote.cantidad_actual ?? 0;
+                    if (disponible <= 0) continue;
 
-                totalVenta += prodInput.cantidad * precioUnitario;
-                totalCosto += prodInput.cantidad * costoUnitario;
+                    const take = Math.min(restante, disponible);
+                    const costoUnitario = lote.costo_compra ?? 0;
+
+                    detallesToPersist.push({
+                        lote_id: lote.id,
+                        descripcion: producto.nombre ?? lote.producto?.nombre ?? '',
+                        cantidad: take,
+                        precio_unitario: precioUnitario,
+                        costo_unitario: costoUnitario
+                    });
+
+                    totalVenta += take * precioUnitario;
+                    totalCosto += take * costoUnitario;
+
+                    restante -= take;
+                }
+
+                if (restante > 0) {
+                    throw new AppError(`INSUFICIENTE_STOCK_${prodInput.producto_id}`, "INSUFFICIENT_STOCK", 400);
+                }
             }
 
             const dataToPersist = {
@@ -60,8 +79,14 @@ export class RegistrarVentaUseCase {
 
             return await this.ventaRepository.registrar(dataToPersist, negocio_id, sucursal_id, usuario_id);
         } catch (error: any) {
-            if (error.message && error.message.includes("INSUFICIENTE_STOCK")) {
-                throw new AppError(`Stock insuficiente para el producto seleccionado`, "INSUFICIENT_STOCK", 400);
+            if (error instanceof PersistenceError) {
+                if (error instanceof InsufficientStockPersistenceError) {
+                    throw new AppError(`Stock insuficiente para el producto seleccionado`, "INSUFICIENT_STOCK", 400);
+                }
+                if (error instanceof LoteNotFoundPersistenceError) {
+                    throw new AppError(`Lote no encontrado`, "LOTE_NO_ENCONTRADO", 404);
+                }
+                throw new AppError(error.message || 'Error de persistencia', 'PERSISTENCE_ERROR', 500);
             }
             if (error.message && error.message.includes("PRODUCTO_NO_ENCONTRADO")) {
                 throw new AppError("Uno de los productos seleccionados no existe o no está disponible", "PRODUCT_NOT_FOUND", 404);

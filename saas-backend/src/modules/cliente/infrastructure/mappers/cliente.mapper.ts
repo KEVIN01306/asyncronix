@@ -10,10 +10,13 @@ export class ClienteMapper {
         return {
             id: cliente.id,
             nombre: cliente.nombre,
+            apellido: cliente.apellido,
             telefono: cliente.telefono,
             email: cliente.email,
-            direccion_entrega: cliente.direccion_entrega,
-            fecha_registro: cliente.fecha_registro,
+            nit: cliente.nit,
+            dpi: cliente.dpi,
+            created_at: cliente.created_at,
+            updated_at: cliente.updated_at,
         };
     }
 
@@ -23,6 +26,8 @@ export class ClienteMapper {
             nombre: cliente.nombre,
             telefono: cliente.telefono,
             email: cliente.email,
+            nit: cliente.nit,
+            dpi: cliente.dpi,
         };
     }
 }

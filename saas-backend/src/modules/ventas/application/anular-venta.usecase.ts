@@ -1,5 +1,7 @@
 import AppError from "../../../shared/errors/AppError.js";
 import { DatabaseError } from "../../../shared/database/errors/DatabaseError.js";
+import { PersistenceError } from '../../../shared/database/errors/PersistenceError.js';
+import { VentaNotFoundPersistenceError } from '../../../shared/database/errors/VentaNotFoundPersistenceError.js';
 import type { VentaRepository } from "../domain/venta.repository.js";
 import type { VentaSimple } from "../domain/venta.entity.js";
 
@@ -14,8 +16,9 @@ export class AnularVentaUseCase {
         try {
             return await this.ventaRepository.anular(id, negocio_id, sucursal_id, comentario);
         } catch (error: any) {
-            if (error.message === "VENTA_NO_ENCONTRADA") {
-                throw new AppError("La venta no existe", "NOT_FOUND", 404);
+            if (error instanceof PersistenceError) {
+                if (error instanceof VentaNotFoundPersistenceError) throw new AppError('La venta no existe', 'NOT_FOUND', 404);
+                throw new AppError(error.message || 'Error de persistencia', 'PERSISTENCE_ERROR', 500);
             }
             if (error.message === "VENTA_YA_ANULADA") {
                 throw new AppError("La venta ya ha sido anulada previamente", "BAD_REQUEST", 400);

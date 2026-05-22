@@ -5,6 +5,11 @@ import type { Pagination } from "../../../shared/domain/pagination.js";
 import type { Paginated } from "../../../shared/domain/paginated.js";
 import { PrismaErrorMapper } from "../../../shared/database/prisma/PrismaErrorMapper.js";
 import { VentaMapper } from "./mappers/venta.mapper.js";
+import { LoteNotFoundPersistenceError } from '../../../shared/database/errors/LoteNotFoundPersistenceError.js';
+import { InsufficientStockPersistenceError } from '../../../shared/database/errors/InsufficientStockPersistenceError.js';
+import { VentaNotFoundPersistenceError } from '../../../shared/database/errors/VentaNotFoundPersistenceError.js';
+import { NotFoundPersistenceError } from '../../../shared/database/errors/NotFoundPersistenceError.js';
+import { PersistenceError } from '../../../shared/database/errors/PersistenceError.js';
 
 export class PrismaVentaRepository implements VentaRepository {
     constructor(private readonly db: PrismaClient) { }
@@ -13,6 +18,7 @@ export class PrismaVentaRepository implements VentaRepository {
         try {
             // Ahora el repo solo persiste la venta y los detalles ya resueltos por el Use Case.
             return await this.db.$transaction(async (tx) => {
+                // Create venta first without nested detalles. We'll insert detalles explicitly
                 const venta = await tx.venta.create({
                     data: {
                         negocio_id,
@@ -22,11 +28,31 @@ export class PrismaVentaRepository implements VentaRepository {
                         estado: data.estado,
                         metodo_pago: data.metodo_pago,
                         total: data.total ?? 0,
-                        total_costo: data.total_costo ?? 0,
-                        ...(data.detalles ? { detalles: { create: data.detalles } } : {})
-                    },
-                    include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { producto: true } } } } }
+                        total_costo: data.total_costo ?? 0
+                    }
                 });
+
+                // If detalles were provided, validate availability and create them one by one.
+                // We DO NOT perform manual lote updates here because a DB trigger (`descontar_stock_lote`) handles decrement on insert.
+                if (data.detalles && data.detalles.length > 0) {
+                    for (const d of data.detalles) {
+                        if (!d.lote_id) {
+                            await tx.ventaDetalle.create({ data: { venta_id: venta.id, descripcion: d.descripcion, cantidad: d.cantidad, precio_unitario: d.precio_unitario, costo_unitario: d.costo_unitario } });
+                            continue;
+                        }
+
+                        const loteRecord = await tx.lote.findFirst({ where: { id: d.lote_id, negocio_id } });
+                        if (!loteRecord) throw new LoteNotFoundPersistenceError();
+                        const actual = loteRecord.cantidad_actual ?? 0;
+                        if (actual < d.cantidad) throw new InsufficientStockPersistenceError();
+
+                        // Create ventaDetalle — the DB trigger will decrement lote.cantidad_actual atomically with the insert
+                        await tx.ventaDetalle.create({ data: { venta_id: venta.id, lote_id: d.lote_id, descripcion: d.descripcion, cantidad: d.cantidad, precio_unitario: d.precio_unitario, costo_unitario: d.costo_unitario } });
+                    }
+
+                    const ventaWithDetails = await tx.venta.findUnique({ where: { id: venta.id }, include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { producto: true } } } } } });
+                    return VentaMapper.mapDetalle(ventaWithDetails as any);
+                }
 
                 return VentaMapper.mapDetalle(venta);
             }, { maxWait: 5000, timeout: 20000 });
@@ -41,7 +67,7 @@ export class PrismaVentaRepository implements VentaRepository {
     async crearDetalle(ventaId: string, detalle: any, negocio_id: string, sucursal_id: string): Promise<any> {
         try {
             const venta = await this.db.venta.findFirst({ where: { id: ventaId, negocio_id, sucursal_id, activo: true } });
-            if (!venta) throw new Error('VENTA_NO_ENCONTRADA');
+            if (!venta) throw new VentaNotFoundPersistenceError();
 
             const created = await this.db.ventaDetalle.create({
                 data: {
@@ -69,6 +95,45 @@ export class PrismaVentaRepository implements VentaRepository {
 
             return created;
         } catch (error: any) {
+            if (error instanceof PersistenceError) throw error;
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async crearDetallesAtomicos(ventaId: string, detalles: any[], negocio_id: string, sucursal_id: string): Promise<any[]> {
+        try {
+            return await this.db.$transaction(async (tx) => {
+                const venta = await tx.venta.findFirst({ where: { id: ventaId, negocio_id, sucursal_id, activo: true } });
+                if (!venta) throw new VentaNotFoundPersistenceError();
+
+                const created: any[] = [];
+
+                for (const d of detalles) {
+                    if (!d.lote_id) {
+                        // create detalle without lote
+                        const c = await tx.ventaDetalle.create({ data: { venta_id: ventaId, descripcion: d.descripcion, cantidad: d.cantidad, precio_unitario: d.precio_unitario, costo_unitario: d.costo_unitario }, include: { lote: { include: { producto: true } } } });
+                        created.push(c);
+                        continue;
+                    }
+
+                    const loteRecord = await tx.lote.findFirst({ where: { id: d.lote_id, negocio_id } });
+                    if (!loteRecord) throw new LoteNotFoundPersistenceError();
+                    const actual = loteRecord.cantidad_actual ?? 0;
+                    if (actual < d.cantidad) throw new InsufficientStockPersistenceError();
+
+                    // Do not update lote here; DB trigger will decrement stock on insert.
+                    const c = await tx.ventaDetalle.create({ data: { venta_id: ventaId, lote_id: d.lote_id, descripcion: d.descripcion, cantidad: d.cantidad, precio_unitario: d.precio_unitario, costo_unitario: d.costo_unitario }, include: { lote: { include: { producto: true } } } });
+                    created.push(c);
+                }
+
+                const detallesVenta = await tx.ventaDetalle.findMany({ where: { venta_id: ventaId } });
+                const total = detallesVenta.reduce((s: number, d: any) => s + (d.precio_unitario * d.cantidad), 0);
+                await tx.venta.update({ where: { id: ventaId }, data: { total } });
+
+                return created;
+            });
+        } catch (error: any) {
+            if (error instanceof PersistenceError) throw error;
             throw PrismaErrorMapper.map(error);
         }
     }
@@ -76,7 +141,7 @@ export class PrismaVentaRepository implements VentaRepository {
     async eliminarDetalle(ventaId: string, detalleId: string, negocio_id: string, sucursal_id: string): Promise<void> {
         try {
             const detalle = await this.db.ventaDetalle.findFirst({ where: { id: detalleId, venta_id: ventaId } });
-            if (!detalle) throw new Error('DETALLE_NO_ENCONTRADO');
+            if (!detalle) throw new NotFoundPersistenceError();
 
             await this.db.ventaDetalle.delete({ where: { id: detalleId } });
 
@@ -93,7 +158,7 @@ export class PrismaVentaRepository implements VentaRepository {
         try {
             return await this.db.$transaction(async (tx) => {
                 const ventaActual = await tx.venta.findFirst({ where: { id: ventaId, negocio_id, sucursal_id, activo: true } });
-                if (!ventaActual) throw new Error('VENTA_NO_ENCONTRADA');
+                if (!ventaActual) throw new VentaNotFoundPersistenceError();
                 if (ventaActual.estado !== 'PENDIENTE') throw new Error('VENTA_NO_PENDIENTE');
 
                 const ventaUpdated = await tx.venta.update({
@@ -116,7 +181,7 @@ export class PrismaVentaRepository implements VentaRepository {
                     where: { id, negocio_id, sucursal_id, activo: true }
                 });
 
-                if (!ventaActual) throw new Error("VENTA_NO_ENCONTRADA");
+                if (!ventaActual) throw new VentaNotFoundPersistenceError();
                 if (ventaActual.estado === 'COMPLETADA' || ventaActual.estado === 'ANULADA') {
                     throw new Error("VENTA_NO_EDITABLE");
                 }
@@ -134,9 +199,7 @@ export class PrismaVentaRepository implements VentaRepository {
                 return VentaMapper.mapSimple(ventaUpdated);
             }, { maxWait: 5000, timeout: 20000 });
         } catch (error: any) {
-            if (error instanceof Error && error.message.includes("VENTA_")) {
-                throw error;
-            }
+            if (error instanceof PersistenceError) throw error;
             throw PrismaErrorMapper.map(error);
         }
     }
@@ -148,7 +211,7 @@ export class PrismaVentaRepository implements VentaRepository {
                     where: { id, negocio_id, sucursal_id, activo: true }
                 });
 
-                if (!ventaActual) throw new Error("VENTA_NO_ENCONTRADA");
+                if (!ventaActual) throw new VentaNotFoundPersistenceError();
                 if (ventaActual.estado === 'ANULADA') throw new Error("VENTA_YA_ANULADA");
 
                 const ventaUpdated = await tx.venta.update({
@@ -160,9 +223,7 @@ export class PrismaVentaRepository implements VentaRepository {
                 return VentaMapper.mapSimple(ventaUpdated);
             }, { maxWait: 5000, timeout: 20000 });
         } catch (error: any) {
-            if (error instanceof Error && error.message.includes("VENTA_")) {
-                throw error;
-            }
+            if (error instanceof PersistenceError) throw error;
             throw PrismaErrorMapper.map(error);
         }
     }
@@ -176,11 +237,16 @@ export class PrismaVentaRepository implements VentaRepository {
         return VentaMapper.mapDetalle(venta);
     }
 
-    async listar(negocio_id: string, sucursal_id: string, pagination: Pagination): Promise<Paginated<VentaSimple>> {
+    async listar(negocio_id: string, sucursal_id: string, pagination: Pagination, cliente_id?: string | null): Promise<Paginated<VentaSimple>> {
         const { page, perPage } = pagination;
         const offset = (page - 1) * perPage;
 
-        const where = { negocio_id, sucursal_id, activo: true };
+        const where = {
+            negocio_id,
+            sucursal_id,
+            activo: true,
+            ...(cliente_id ? { cliente_id } : {})
+        };
 
         const [total, ventas] = await Promise.all([
             this.db.venta.count({ where }),

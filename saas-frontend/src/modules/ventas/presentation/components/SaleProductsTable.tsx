@@ -22,7 +22,7 @@ export default function SaleProductsTable({ items, onDelete, isEditable = true }
             }}
         >
             <Table
-                sx={{ width: '100%', minWidth: 650, tableLayout: 'auto' }}
+                sx={{ width: '100%', minWidth: 300, tableLayout: 'auto' }}
             >
                 <TableHead sx={{ bgcolor: 'background.default' }}>
                     <TableRow sx={{ height: 55 }}>
@@ -88,14 +88,20 @@ export default function SaleProductsTable({ items, onDelete, isEditable = true }
                 </TableHead>
 
                 <TableBody>
-                    {items.map((it, idx) => (
+                    { items && items.length > 0 ?  items.map((it, idx) => (
                         <SaleDetailRow
                             key={it.producto_id + '-' + idx}
                             item={it}
                             onDelete={() => onDelete(idx)}
                             isEditable={isEditable}
                         />
-                    ))}
+                    )) : 
+                    <TableRow>
+                        <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                            No hay productos agregados
+                        </TableCell>
+                    </TableRow>
+                    }
                 </TableBody>
             </Table>
         </TableContainer>

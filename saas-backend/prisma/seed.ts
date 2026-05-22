@@ -51,6 +51,12 @@ const permisosData = [
     { codigo: "EDITAR_VENTAS" },
     { codigo: "ANULAR_VENTAS" },
 
+    { codigo: "VER_CLIENTES" },
+    { codigo: "VER_CLIENTES_DETALLE" },
+    { codigo: "CREAR_CLIENTES" },
+    { codigo: "EDITAR_CLIENTES" },
+    { codigo: "ELIMINAR_CLIENTES" }
+
 ];
 
 const modulosConPermisos = [
@@ -89,6 +95,10 @@ const modulosConPermisos = [
     {
         nombre: "VENTAS",
         permisos: ["VER_VENTAS", "VER_VENTAS_DETALLE", "CREAR_VENTAS", "EDITAR_VENTAS", "ANULAR_VENTAS"]
+    },
+    {
+        nombre: "CLIENTES",
+        permisos: ["VER_CLIENTES", "VER_CLIENTES_DETALLE", "CREAR_CLIENTES", "EDITAR_CLIENTES", "ELIMINAR_CLIENTES"]
     }
 ];
 

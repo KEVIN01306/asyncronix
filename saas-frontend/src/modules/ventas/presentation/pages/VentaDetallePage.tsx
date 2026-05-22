@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Grid, useTheme, useMediaQuery, IconButton, Alert, AlertTitle } from '@mui/material';
+import { Grid, useTheme, useMediaQuery, Alert, AlertTitle } from '@mui/material';
 import { Box, Card, CardContent, Typography, Button, Table, TableHead, TableBody, TableRow, TableCell, Chip, Divider, Paper, TableContainer } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, Print as PrintIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Print as PrintIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { ventaRepository } from '../../infrastructure/venta.repository';
 import { useAuthStore } from '../../../../core/store/authStore';
@@ -76,6 +76,11 @@ export default function VentaDetallePage() {
                             <Typography variant="body1"><strong>Vendedor:</strong> {venta.vendedor_nombre}</Typography>
                             <Typography variant="body1"><strong>Cliente:</strong> {venta.cliente_nombre || 'Consumidor Final'}</Typography>
                             <Typography variant="body1" mt={1}><strong>Método de Pago:</strong> {venta.metodo_pago}</Typography>
+                            {
+                                venta.comentarios && (
+                                    <Typography variant="body1" mt={1}><strong>Comentarios:</strong> {venta.comentarios}</Typography>
+                                )
+                            }
                             <Box mt={2}>
                                 <Typography variant="body1" component="span"><strong>Estado: </strong></Typography>
                                 <Chip variant='outlined' label={venta.estado} color={getEstadoColor(venta.estado)} size="small" />
@@ -96,7 +101,6 @@ export default function VentaDetallePage() {
                                             <TableCell align="right"><strong>Cantidad</strong></TableCell>
                                             <TableCell align="right"><strong>Precio Unit.</strong></TableCell>
                                             <TableCell align="right"><strong>Subtotal</strong></TableCell>
-                                            <TableCell align="center"><strong>Acción</strong></TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -106,23 +110,6 @@ export default function VentaDetallePage() {
                                                 <TableCell align="right">{detalle.cantidad}</TableCell>
                                                 <TableCell align="right">{formatMoney(detalle.precio_unitario)}</TableCell>
                                                 <TableCell align="right">{formatMoney(detalle.subtotal)}</TableCell>
-                                                <TableCell align="center">
-                                                    {venta.estado === 'PENDIENTE' && user?.sucursal_id && (
-                                                        <IconButton color="error" size="small" onClick={async () => {
-                                                            if (!confirm('¿Eliminar este detalle?')) return;
-                                                            try {
-                                                                await ventaRepository.eliminarDetalle(venta.id, detalle.id, user.sucursal_id!);
-                                                                const refreshed = await ventaRepository.obtener(venta.id);
-                                                                setVenta(refreshed.data);
-                                                                toast.success('Detalle eliminado');
-                                                            } catch {
-                                                                toast.error('Error al eliminar detalle');
-                                                            }
-                                                        }}>
-                                                            <DeleteIcon fontSize="small" />
-                                                        </IconButton>
-                                                    )}
-                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

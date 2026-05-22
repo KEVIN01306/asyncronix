@@ -87,13 +87,12 @@ export class VentaController extends BaseController {
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
-            console.log("esta es la sucursal: ", sucursal_id)
             if (!sucursal_id) throw new Error("SUCURSAL_REQUERIDA");
 
-            const { limit, offset } = res.locals.query;
+            const { limit, offset, cliente_id } = res.locals.query;
             const page = Math.floor(offset / limit) + 1;
 
-            const { total, data } = await this.obtenerVentasUseCase.execute(negocio_id, sucursal_id, { page, perPage: limit });
+            const { total, data } = await this.obtenerVentasUseCase.execute(negocio_id, sucursal_id, { page, perPage: limit }, cliente_id);
             res.status(200).json(Respuesta.paginacion("Ventas obtenidas con éxito", data, total, limit, offset));
         } catch (error) {
             next(error);

@@ -6,5 +6,6 @@ export interface ClienteRepository {
     actualizar(id: string, negocio_id: string, data: ClienteActualizar): Promise<ClienteObtenidoDetalle>;
     eliminar(id: string, negocio_id: string): Promise<void>;
     obtener(id: string, negocio_id: string): Promise<ClienteObtenidoDetalle | null>;
+    buscarPorDocumento(data: { nit?: string | null; dpi?: string | null }, negocio_id: string): Promise<ClienteObtenidoDetalle | null>;
     listar(params: { negocio_id: string; page: number; perPage: number }): Promise<Paginated<ClienteSimple>>;
 }

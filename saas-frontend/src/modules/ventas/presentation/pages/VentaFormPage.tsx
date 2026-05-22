@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { Grid, Button, Card, CardContent, Divider, FormControl, InputLabel, IconButton, MenuItem, Paper, Select, TextField, Typography, Autocomplete, useTheme, useMediaQuery, TableContainer } from '@mui/material';
+import { Grid, Button, Card, CardContent, Divider, FormControl, InputLabel, IconButton, MenuItem, Paper, Select, TextField, Typography, Autocomplete, useTheme, useMediaQuery, TableContainer, Box } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, QrCodeScanner as QrCodeScannerIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
@@ -40,7 +40,9 @@ export default function VentaFormPage() {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showScannerModal, setShowScannerModal] = useState(false);
     const [scanLoading, setScanLoading] = useState(false);
-    const { control, register, handleSubmit, setValue, watch } = useForm<FormValues>({
+    const [clienteNombre, setClienteNombre] = useState('Consumidor Final');
+    const [clientSelected, setClientSelected] = useState(false);
+    const { control, handleSubmit, setValue, watch } = useForm<FormValues>({
         defaultValues: {
             cliente_id: '',
             metodo_pago: 'EFECTIVO',
@@ -105,6 +107,8 @@ export default function VentaFormPage() {
             setValue('cliente_id', venta.cliente_id || '');
             setValue('metodo_pago', venta.metodo_pago);
             setValue('estado', venta.estado);
+            setClienteNombre(venta.cliente_nombre || 'Consumidor Final');
+            setClientSelected(true);
             setProductosSeleccionados(agruparDetalles(venta.detalles));
         } catch {
             toast.error('Error al cargar la venta');
@@ -121,20 +125,18 @@ export default function VentaFormPage() {
         }
     }, [isEdit, cargarProductosDisponibles, cargarVenta]);
 
-    const handleClientConfirm = async () => {
-        setShowClientModal(false);
-        if (!pendingProduct || !user?.sucursal_id) return;
-
+    const registrarNuevaVenta = async (primerProducto: VentaProductoInput) => {
+        if (!user?.sucursal_id) return;
         try {
             setSaving(true);
+            const cliente_id = watch('cliente_id') || null;
             const payload: any = {
                 sucursal_id: user.sucursal_id,
-                cliente_id: null,
-                metodo_pago: 'EFECTIVO',
+                cliente_id: cliente_id || null,
+                metodo_pago: watch('metodo_pago') || 'EFECTIVO',
                 estado: 'PENDIENTE',
-                productos: [{ producto_id: pendingProduct.producto_id, cantidad: pendingProduct.cantidad }]
+                productos: [{ producto_id: primerProducto.producto_id, cantidad: primerProducto.cantidad }]
             };
-
             const res = await ventaRepository.registrar(payload);
             const venta = res.data;
             setVentaId(venta.id);
@@ -144,9 +146,61 @@ export default function VentaFormPage() {
             toast.error(error.response?.data?.message || 'Error al crear la venta');
         } finally {
             setSaving(false);
-            setPendingProduct(null);
             setProductoSeleccionado(null);
             setCantidadAgregar(1);
+        }
+    };
+
+    const handleClientConfirm = async (data: {
+        cliente_id: string | null;
+        cf: boolean;
+        nit?: string | null;
+        dpi?: string | null;
+        nombre?: string | null;
+        apellido?: string | null;
+        telefono?: string | null;
+        email?: string | null;
+    }) => {
+        setShowClientModal(false);
+        const selectedNombre = data.nombre || 'Consumidor Final';
+        const targetClienteId = data.cliente_id || null;
+
+        setClienteNombre(selectedNombre);
+        setValue('cliente_id', targetClienteId || '');
+        setClientSelected(true);
+
+        if (!user?.sucursal_id) return;
+
+        try {
+            setSaving(true);
+            if (ventaId) {
+                await ventaRepository.actualizar(ventaId, {
+                    sucursal_id: user.sucursal_id,
+                    cliente_id: targetClienteId
+                });
+                toast.success('Cliente actualizado en la venta');
+            } else if (pendingProduct) {
+                const payload: any = {
+                    sucursal_id: user.sucursal_id,
+                    cliente_id: targetClienteId,
+                    metodo_pago: watch('metodo_pago') || 'EFECTIVO',
+                    estado: 'PENDIENTE',
+                    productos: [{ producto_id: pendingProduct.producto_id, cantidad: pendingProduct.cantidad }]
+                };
+
+                const res = await ventaRepository.registrar(payload);
+                const venta = res.data;
+                setVentaId(venta.id);
+                setProductosSeleccionados(agruparDetalles(venta.detalles));
+                toast.success('Venta creada y primer detalle agregado');
+                setPendingProduct(null);
+                setProductoSeleccionado(null);
+                setCantidadAgregar(1);
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al actualizar el cliente');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -170,9 +224,14 @@ export default function VentaFormPage() {
                     precio_sugerido: product.precio_sugerido,
                     subtotal: product.precio_sugerido
                 };
-                setProductoSeleccionado(product);
-                setPendingProduct(prodInput);
-                setShowClientModal(true);
+
+                if (clientSelected) {
+                    await registrarNuevaVenta(prodInput);
+                } else {
+                    setProductoSeleccionado(product);
+                    setPendingProduct(prodInput);
+                    setShowClientModal(true);
+                }
                 return;
             }
 
@@ -222,8 +281,12 @@ export default function VentaFormPage() {
         };
 
         if (!ventaId) {
-            setPendingProduct(prodInput);
-            setShowClientModal(true);
+            if (clientSelected) {
+                await registrarNuevaVenta(prodInput);
+            } else {
+                setPendingProduct(prodInput);
+                setShowClientModal(true);
+            }
             return;
         }
 
@@ -341,14 +404,43 @@ export default function VentaFormPage() {
                                     )}
                                 />
                             </FormControl>
-                            <TextField
-                                fullWidth
-                                margin="normal"
-                                label="ID del Cliente (Opcional)"
-                                {...register('cliente_id')}
-                                helperText="Deje en blanco para Consumidor Final"
-                                disabled={!isEditable}
-                            />
+                            <Box sx={{ mt: 2, mb: 2 }}>
+                                <Typography variant="caption" color="textSecondary" display="block" gutterBottom>
+                                    Cliente de la Venta
+                                </Typography>
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        borderRadius: 1,
+                                        bgcolor: 'background.default',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}
+                                >
+                                    <Box>
+                                        <Typography variant="body1" fontWeight={600}>
+                                            {clienteNombre}
+                                        </Typography>
+                                        {watch('cliente_id') && (
+                                            <Typography variant="caption" color="textSecondary" display="block">
+                                                ID: {watch('cliente_id')}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        onClick={() => setShowClientModal(true)}
+                                        disabled={!isEditable}
+                                        sx={{ textTransform: 'none' }}
+                                    >
+                                        {watch('cliente_id') ? 'Cambiar' : 'Seleccionar'}
+                                    </Button>
+                                </Box>
+                            </Box>
                             <Grid container sx={{ mt: 4 }}>
                                 <Button variant="contained" color="primary" fullWidth onClick={handleSubmit(onSubmit)} disabled={saving || !isEditable}>
                                     {saving ? 'Guardando...' : ventaId ? 'Finalizar Venta' : 'Iniciar Venta'}
@@ -364,7 +456,7 @@ export default function VentaFormPage() {
                             <Typography variant="h6" gutterBottom>Productos de la Venta</Typography>
                             <Grid container spacing={2} mb={3} alignItems="center">
                                 <Grid size={{ xs: 12, md: 8 }} container spacing={1} alignItems="center">
-                                    <Grid size={{ xs: 12 }}>
+                                    <Grid size={{ xs: 12, md: 2 }}>
                                         <IconButton
                                             color="primary"
                                             onClick={handleOpenScanner}
@@ -374,7 +466,7 @@ export default function VentaFormPage() {
                                             <QrCodeScannerIcon />
                                         </IconButton>
                                     </Grid>
-                                    <Grid size={{ xs: 12 }} md={4}>
+                                    <Grid size={{ xs: 12, md: 10 }}>
                                         <Autocomplete
                                             options={productosDisponibles}
                                             getOptionLabel={(option) => `${option.nombre} (Stock: ${option.stock_total}) - ${formatMoney(option.precio_sugerido)}`}
@@ -418,13 +510,13 @@ export default function VentaFormPage() {
                                 <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} />
                             </TableContainer>
 
-                            <SaleSummary total={totalVenta} clienteLabel={watch('cliente_id') || 'Consumidor Final'} onFinalize={() => setShowPaymentModal(true)} disabled={!ventaId} />
+                            <SaleSummary total={totalVenta} clienteLabel={clienteNombre} onFinalize={() => setShowPaymentModal(true)} disabled={!ventaId} />
                         </CardContent>
                     </Card>
                 </Grid>
             </Grid>
             <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
-            <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={watch('cliente_id') || 'Consumidor Final'} />
+            <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={clienteNombre} />
             <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleSkuLeido} />
         </Grid>
     );

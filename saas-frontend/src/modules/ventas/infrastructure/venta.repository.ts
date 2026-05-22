@@ -3,8 +3,10 @@ import type { Producto } from "../../productos/domain/interfaces/producto.interf
 import type { Venta, VentaCreateForm, VentaUpdateForm, VentaResponse } from "../domain/interfaces/venta.interface";
 
 export const ventaRepository = {
-    listar: async (limit: number, page: number): Promise<VentaResponse> => {
-        const response = await api.get<VentaResponse>('/ventas', { params: { page, limit } });
+    listar: async (limit: number, offset: number, cliente_id?: string | null): Promise<VentaResponse> => {
+        const params: any = { offset, limit };
+        if (cliente_id) params.cliente_id = cliente_id;
+        const response = await api.get<VentaResponse>('/ventas', { params });
         return response as any;
     },
     obtener: async (id: string): Promise<{ data: Venta }> => {
