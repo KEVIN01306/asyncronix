@@ -11,13 +11,36 @@ type Props = {
 
 export default function SaleDetailRow({ item, onDelete, isEditable = true }: Props) {
     return (
-        <TableRow>
-            <TableCell>{item.nombre}</TableCell>
-            <TableCell align="right">{item.cantidad}</TableCell>
-            <TableCell align="right">{formatMoney(item.precio_sugerido || 0)}</TableCell>
-            <TableCell align="right">{formatMoney(item.subtotal || 0)}</TableCell>
+        <TableRow sx={{ height: 55 }}>
+            <TableCell
+                sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                }}
+            >
+                {item.nombre}
+            </TableCell>
+
+            <TableCell align="right">
+                {item.cantidad}
+            </TableCell>
+
+            <TableCell align="right">
+                {formatMoney(item.precio_sugerido || 0)}
+            </TableCell>
+
+            <TableCell align="right">
+                {formatMoney(item.subtotal || 0)}
+            </TableCell>
+
             <TableCell align="center">
-                <IconButton color="error" onClick={onDelete} size="small" disabled={!isEditable}>
+                <IconButton
+                    color="error"
+                    onClick={onDelete}
+                    size="small"
+                    disabled={!isEditable}
+                >
                     <DeleteIcon />
                 </IconButton>
             </TableCell>

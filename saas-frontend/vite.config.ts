@@ -1,7 +1,39 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["icons/asyncronix_corto.png", "icons/asyncronix.png"],
+      manifest: {
+        name: "Asyncronix - ERP para PYMES",
+        short_name: "Asyncronix",
+        description: "Sistema de gestión empresarial para pymes, con módulos de ventas, productos, clientes y más.",
+        theme_color: "#ffffff",
+        background_color: "#ffffff",
+        display: "standalone",
+        start_url: "/",
+        scope: "/",
+        orientation: "portrait",
+        icons: [
+          {
+            src: "icons/asyncronix_corto.png",
+            sizes: "192x192",
+            type: "image/png"
+          },
+          {
+            src: "icons/asyncronix.png",
+            sizes: "512x512",
+            type: "image/png"
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,png,svg,ico}"]
+      }
+    })
+  ],
 })

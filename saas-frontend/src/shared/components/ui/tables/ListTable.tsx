@@ -69,7 +69,7 @@ const ListTable: React.FC<ListTableProps> = ({
             <Paper 
             sx={{ 
                 width: '100%', 
-                overflow: 'hidden', 
+                overflowX: 'auto', 
                 border: (theme) => `1px solid ${theme.palette.divider}`,
                 boxShadow: 'none' 
             }}
@@ -77,9 +77,11 @@ const ListTable: React.FC<ListTableProps> = ({
             <TableContainer
                 sx={{
                     backgroundColor: 'background.paper',
+                    overflowX: 'auto',
+                    width: '100%',
                 }}
             >
-                <Table sx={{ minWidth: 650,overflow: 'auto'}} aria-label="list table">
+                <Table sx={{ width: '100%', minWidth: 650, tableLayout: 'auto' }} aria-label="list table">
                     <TableHead sx={{ backgroundColor: '#f8fafc' }}>
                         <TableRow sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
                             {columns.map((column) => (
@@ -93,6 +95,9 @@ const ListTable: React.FC<ListTableProps> = ({
                                         letterSpacing: '0.05rem',
                                         py: 2,
                                         borderBottom: '1px solid #f1f5f9',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
                                     }}
                                 >
                                     {column.name}
@@ -119,7 +124,7 @@ const ListTable: React.FC<ListTableProps> = ({
                                 }}
                             >
                                 {columns.map((column) => (
-                                    <TableCell key={column.id} sx={{ py: 2 }}>
+                                    <TableCell key={column.id} sx={{ py: 2, maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         <Box sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.85rem' }}>
                                             {column.format ? column.format(row[column.id], row) : row[column.id]}
                                         </Box>

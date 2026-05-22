@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { Box, Button, Card, CardContent, Divider, FormControl, InputLabel, IconButton, MenuItem, Paper, Select, TextField, Typography, Autocomplete, useTheme, useMediaQuery } from '@mui/material';
+import { Grid, Button, Card, CardContent, Divider, FormControl, InputLabel, IconButton, MenuItem, Paper, Select, TextField, Typography, Autocomplete, useTheme, useMediaQuery, TableContainer } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, QrCodeScanner as QrCodeScannerIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
@@ -284,20 +284,24 @@ export default function VentaFormPage() {
     if (loading) return <Loading />;
 
     return (
-        <Box p={isMobile ? 2 : 4} mx="auto" sx={{ width: '100%', boxSizing: 'border-box' }}>
-            <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/ventas')} sx={{ mb: 2, textTransform: 'none' }}>
-                Volver
-            </Button>
+        <Grid container spacing={3} p={isMobile ? 2 : 4} mx="auto" sx={{ width: '100%', boxSizing: 'border-box' }}>
+            <Grid size={{ xs: 12 }}>
+                <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/ventas')} sx={{ mb: 2, textTransform: 'none' }}>
+                    Volver
+                </Button>
+            </Grid>
 
-            <Paper sx={{ p: 2, border: (theme) => `1px solid ${theme.palette.divider}`, mb: 2 }}>
-                <Typography variant="h5" fontWeight={700}>
-                    {isEdit ? 'Continuar Venta' : 'Nueva Venta'}
-                </Typography>
-            </Paper>
+            <Grid size={{ xs: 12 }}>
+                <Paper sx={{ p: 2, border: (theme) => `1px solid ${theme.palette.divider}`, mb: 2 }}>
+                    <Typography variant="h5" fontWeight={700}>
+                        {isEdit ? 'Continuar Venta' : 'Nueva Venta'}
+                    </Typography>
+                </Paper>
+            </Grid>
 
-            <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1fr 2fr' }}  gap={3}>
-                <Box >
-                    <Card >
+            <Grid size={{ xs: 12 }} container spacing={3}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>Datos de la Venta</Typography>
                             <Divider sx={{ mb: 2 }} />
@@ -345,80 +349,83 @@ export default function VentaFormPage() {
                                 helperText="Deje en blanco para Consumidor Final"
                                 disabled={!isEditable}
                             />
-                            <Box mt={4}>
+                            <Grid container sx={{ mt: 4 }}>
                                 <Button variant="contained" color="primary" fullWidth onClick={handleSubmit(onSubmit)} disabled={saving || !isEditable}>
                                     {saving ? 'Guardando...' : ventaId ? 'Finalizar Venta' : 'Iniciar Venta'}
                                 </Button>
-                            </Box>
+                            </Grid>
                         </CardContent>
                     </Card>
-                </Box>
+                </Grid>
 
-                <Box>
-                    <Card >
+                <Grid size={{ xs: 12, md: 8 }}>
+                    <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>Productos de la Venta</Typography>
-                            <Box
-                                display="flex"
-                                flexDirection={{ xs: 'column', sm: 'row' }} // En celular hacia abajo, en tablet en fila
-                                gap={2}
-                                mb={3}
-                                alignItems={{ xs: 'stretch', sm: 'center' }}
-                            >
-                                <Box display="flex" gap={1} alignItems="center" width="100%">
-                                    <IconButton
-                                        color="primary"
-                                        onClick={handleOpenScanner}
-                                        disabled={!isEditable || scanLoading}
-                                        sx={{ border: '1px solid', borderColor: 'divider', flexShrink: 0, height: 56, width: 56 }}
-                                    >
-                                        <QrCodeScannerIcon />
-                                    </IconButton>
+                            <Grid container spacing={2} mb={3} alignItems="center">
+                                <Grid size={{ xs: 12, md: 8 }} container spacing={1} alignItems="center">
+                                    <Grid size={{ xs: 12 }}>
+                                        <IconButton
+                                            color="primary"
+                                            onClick={handleOpenScanner}
+                                            disabled={!isEditable || scanLoading}
+                                            sx={{ border: '1px solid', borderColor: 'divider', flexShrink: 0, height: 56, width: 56 }}
+                                        >
+                                            <QrCodeScannerIcon />
+                                        </IconButton>
+                                    </Grid>
+                                    <Grid size={{ xs: 12 }} md={4}>
+                                        <Autocomplete
+                                            options={productosDisponibles}
+                                            getOptionLabel={(option) => `${option.nombre} (Stock: ${option.stock_total}) - ${formatMoney(option.precio_sugerido)}`}
+                                            value={productoSeleccionado}
+                                            onChange={(_e, newValue) => setProductoSeleccionado(newValue)}
+                                            loading={searchProductoLoading}
+                                            renderInput={(params) => (
+                                                <TextField {...params} label="Buscar Producto" variant="outlined" />
+                                            )}
+                                            disabled={!isEditable}
+                                        />
+                                    </Grid>
+                                </Grid>
 
-                                    <Autocomplete
-                                        sx={{ flexGrow: 1 }}
-                                        options={productosDisponibles}
-                                        getOptionLabel={(option) => `${option.nombre} (Stock: ${option.stock_total}) - ${formatMoney(option.precio_sugerido)}`}
-                                        value={productoSeleccionado}
-                                        onChange={(_e, newValue) => setProductoSeleccionado(newValue)}
-                                        loading={searchProductoLoading}
-                                        renderInput={(params) => (
-                                            <TextField {...params} label="Buscar Producto" variant="outlined" />
-                                        )}
-                                        disabled={!isEditable}
-                                    />
-                                </Box>
+                                <Grid size={{ xs: 12, md: 4 }} container spacing={2}>
+                                    <Grid size={{ xs: 4 }}>
+                                        <TextField
+                                            type="number"
+                                            label="Cant."
+                                            fullWidth
+                                            value={cantidadAgregar}
+                                            onChange={(e) => setCantidadAgregar(parseInt(e.target.value) || 0)}
+                                            inputProps={{ min: 1 }}
+                                            disabled={!isEditable}
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 8 }}>
+                                        <Button
+                                            variant="contained"
+                                            color="secondary"
+                                            onClick={handleAgregarProducto}
+                                            disabled={!productoSeleccionado || !isEditable}
+                                            sx={{ height: 56, width: '100%' }}
+                                        >
+                                            Agregar
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                            <TableContainer>
+                                <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} />
+                            </TableContainer>
 
-                                <Box display="flex" gap={2} width="100%">
-                                    <TextField
-                                        type="number"
-                                        label="Cant."
-                                        sx={{ flex: 1 }}
-                                        value={cantidadAgregar}
-                                        onChange={(e) => setCantidadAgregar(parseInt(e.target.value) || 0)}
-                                        inputProps={{ min: 1 }}
-                                        disabled={!isEditable}
-                                    />
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        onClick={handleAgregarProducto}
-                                        disabled={!productoSeleccionado || !isEditable}
-                                        sx={{ flex: 2, height: 56 }} 
-                                    >
-                                        Agregar
-                                    </Button>
-                                </Box>
-                            </Box>
-                            <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} />
                             <SaleSummary total={totalVenta} clienteLabel={watch('cliente_id') || 'Consumidor Final'} onFinalize={() => setShowPaymentModal(true)} disabled={!ventaId} />
                         </CardContent>
                     </Card>
-                </Box>
-            </Box>
+                </Grid>
+            </Grid>
             <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
             <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={watch('cliente_id') || 'Consumidor Final'} />
             <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleSkuLeido} />
-        </Box>
+        </Grid>
     );
 }
