@@ -7,6 +7,11 @@ import { FullPageLoader } from "../../shared/components/ui/Loaders/FullPageLoade
 import { categoriaRoutes } from "../../modules/categorias/presentation/categoria.routes";
 import { productoRoutes } from "../../modules/productos/presentation/producto.routes";
 import { loteRoutes } from "../../modules/lotes/presentation/lote.routes";
+import { lineasRoutes } from "../../modules/lineas/presentation/lineas.routes";
+import { marcasRoutes } from "../../modules/marcas/presentation/marcas.routes";
+import { modelosRoutes } from "../../modules/modelos/presentation/modelos.routes";
+import { cilindradasRoutes } from "../../modules/cilindradas/presentation/cilindradas.routes";
+import { vehiculoRoutes } from "../../modules/vehiculos/presentation/vehiculo.routes";
 import BlankLayout from "../layouts/blankLayout";
 import FullLayout from "../layouts/fullLayout";
 import { sucursalRoutes } from "../../modules/sucursales/presentation/sucursal.routes";
@@ -41,6 +46,11 @@ const appRouter = createBrowserRouter([
                 children: [
                     ...dahsboardRoutes,
                     ...categoriaRoutes,
+                    ...cilindradasRoutes,
+                    ...lineasRoutes,
+                    ...marcasRoutes,
+                    ...modelosRoutes,
+                    ...vehiculoRoutes,
                     ...productoRoutes,
                     ...loteRoutes,
                     ...sucursalRoutes,

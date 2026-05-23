@@ -21,7 +21,7 @@ export const storageConfig = {
     }),
 
     fileFilter: (_req: Request, file: Express.Multer.File, cb: any) => {
-        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp','image/svg+xml','application/pdf'];
         if (allowedMimeTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {

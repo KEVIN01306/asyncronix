@@ -66,7 +66,7 @@ model Negocio {
   usuarios     Usuario[]
   clientes     Cliente[]
   roles        Rol[]
-  motos        Moto[]
+  motos        Vehiculo[]
   categorias   CategoriaProducto[]
   productos    Producto[]
   lotes        Lote[]
@@ -165,7 +165,7 @@ model Cliente {
   updated_at DateTime @updatedAt
 
   negocio   Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  motos     Moto[]
+  motos     Vehiculo[]
   citas     Cita[]     @relation("CitaCliente")
   servicios Servicio[] @relation("ServicioCliente")
   ventas    Venta[]    @relation("VentaCliente")
@@ -237,6 +237,7 @@ model Modelo {
   marca_id      String   @db.Char(36)
   linea_id      String   @db.Char(36)
   cilindrada_id String   @db.Char(36)
+  vehiculo_tipo_id String?   @db.Char(36)
   activo        Boolean  @default(true)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
@@ -244,7 +245,8 @@ model Modelo {
   marca      Marca      @relation(fields: [marca_id], references: [id])
   linea      Linea      @relation(fields: [linea_id], references: [id])
   cilindrada Cilindrada @relation(fields: [cilindrada_id], references: [id])
-  motos      Moto[]
+  vehiculo_tipo VehiculoTipo? @relation(fields: [vehiculo_tipo_id], references: [id])
+  vehiculos  Vehiculo[]
 
   @@map("modelos")
 }
@@ -253,13 +255,14 @@ model Modelo {
 // 4. OPERATIVA DE TALLER
 // ==============================================================
 
-model Moto {
+model Vehiculo {
   id         String   @id @default(uuid()) @db.Char(36)
   negocio_id String   @db.Char(36)
   placa      String
   modelo_id  String   @db.Char(36)
-  avatar     String?
-  calcomania String?
+  avatar_url String?
+  calcomania_url String?
+  vehiculo_tipo_id String   @db.Char(36)
   cliente_id String?  @db.Char(36)
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
@@ -268,11 +271,25 @@ model Moto {
   negocio   Negocio    @relation(fields: [negocio_id], references: [id])
   modelo    Modelo     @relation(fields: [modelo_id], references: [id])
   cliente   Cliente?   @relation(fields: [cliente_id], references: [id])
+  vehiculo_tipo VehiculoTipo @relation(fields: [vehiculo_tipo_id], references: [id])
   servicios Servicio[]
   citas     Cita[]
 
   @@unique([negocio_id, placa])
-  @@map("motos")
+  @@map("vehiculos")
+}
+
+model VehiculoTipo {
+  id         String   @id @default(uuid()) @db.Char(36)
+  tipo       String   @unique
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  vehiculos Vehiculo[]
+  modelos Modelo[]
+
+  @@map("vehiculo_tipos")
 }
 
 model Cita {
@@ -280,7 +297,7 @@ model Cita {
   negocio_id        String     @db.Char(36)
   sucursal_id       String     @db.Char(36)
   cliente_id        String?    @db.Char(36)
-  moto_id           String?    @db.Char(36)
+  vehiculo_id       String?    @db.Char(36)
   tipo_servicio_id  String     @db.Char(36)
   nombre_contacto   String
   telefono_contacto String
@@ -296,7 +313,7 @@ model Cita {
   negocio       Negocio      @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal     @relation(fields: [sucursal_id], references: [id])
   cliente       Cliente?     @relation("CitaCliente", fields: [cliente_id], references: [id])
-  moto          Moto?        @relation(fields: [moto_id], references: [id])
+  vehiculo      Vehiculo?    @relation(fields: [vehiculo_id], references: [id])
   tipo_servicio TipoServicio @relation(fields: [tipo_servicio_id], references: [id])
 
   @@index([negocio_id])
@@ -307,7 +324,7 @@ model Servicio {
   id               String         @id @default(uuid()) @db.Char(36)
   negocio_id       String         @db.Char(36)
   sucursal_id      String         @db.Char(36)
-  moto_id          String         @db.Char(36)
+  vehiculo_id      String         @db.Char(36)
   mecanico_id      String         @db.Char(36)
   cliente_id       String?        @db.Char(36)
   tipo_servicio_id String         @db.Char(36)
@@ -325,7 +342,7 @@ model Servicio {
 
   negocio       Negocio      @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal     @relation(fields: [sucursal_id], references: [id])
-  moto          Moto         @relation(fields: [moto_id], references: [id])
+  vehiculo      Vehiculo?    @relation(fields: [vehiculo_id], references: [id])
   mecanico      Usuario      @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
   cliente       Cliente?     @relation("ServicioCliente", fields: [cliente_id], references: [id])
   tipo_servicio TipoServicio @relation(fields: [tipo_servicio_id], references: [id])

@@ -55,7 +55,26 @@ const permisosData = [
     { codigo: "VER_CLIENTES_DETALLE" },
     { codigo: "CREAR_CLIENTES" },
     { codigo: "EDITAR_CLIENTES" },
-    { codigo: "ELIMINAR_CLIENTES" }
+    { codigo: "ELIMINAR_CLIENTES" },
+
+    { codigo: "VER_CILINDRADAS" },
+    { codigo: "VER_CILINDRADAS_DETALLE" },
+
+    { codigo: "VER_MARCAS" },
+    { codigo: "VER_MARCAS_DETALLE" },
+
+    { codigo: "VER_LINEAS" },
+    { codigo: "VER_LINEAS_DETALLE" },
+
+    { codigo: "VER_MODELOS" },
+    { codigo: "VER_MODELOS_DETALLE" },
+
+    { codigo: "VER_VEHICULOS" },
+    { codigo: "VER_VEHICULOS_DETALLE" },
+    { codigo: "CREAR_VEHICULOS" },
+    { codigo: "EDITAR_VEHICULOS" },
+
+    { codigo: "VER_VEHICULOS_TIPOS" }
 
 ];
 
@@ -99,6 +118,30 @@ const modulosConPermisos = [
     {
         nombre: "CLIENTES",
         permisos: ["VER_CLIENTES", "VER_CLIENTES_DETALLE", "CREAR_CLIENTES", "EDITAR_CLIENTES", "ELIMINAR_CLIENTES"]
+    },
+    {
+        nombre: "CILINDRADAS",
+        permisos: ["VER_CILINDRADAS", "VER_CILINDRADAS_DETALLE"]
+    },
+    {
+        nombre: "MARCAS",
+        permisos: ["VER_MARCAS", "VER_MARCAS_DETALLE"]
+    },
+    {
+        nombre: "LINEAS",
+        permisos: ["VER_LINEAS", "VER_LINEAS_DETALLE"]
+    },
+    {
+        nombre: "MODELOS",
+        permisos: ["VER_MODELOS", "VER_MODELOS_DETALLE"]
+    },
+    {
+        nombre: "VEHICULOS",
+        permisos: ["VER_VEHICULOS", "VER_VEHICULOS_DETALLE", "CREAR_VEHICULOS", "EDITAR_VEHICULOS"]
+    },
+    {
+        nombre: "TIPOS DE VEHICULOS",
+        permisos: ["VER_VEHICULOS_TIPOS"]
     }
 ];
 
@@ -125,7 +168,7 @@ async function main() {
     }
 
     const negocio = await prisma.negocio.upsert({
-        where: { wa_id: "50243850410" },
+        where: { wa_id: "50230108703" },
         update: {
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))

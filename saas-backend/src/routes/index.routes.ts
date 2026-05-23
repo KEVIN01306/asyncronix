@@ -17,6 +17,12 @@ router.use('/productos', (await import('../modules/producto/presentation/product
 router.use('/lotes', (await import('../modules/lote/presentation/lote.routes.js')).default)
 router.use('/clientes', (await import('../modules/cliente/presentation/cliente.routes.js')).default)
 router.use('/ventas', (await import('../modules/ventas/presentation/venta.routes.js')).default)
+router.use('/cilindradas', (await import('../modules/cilindrada/presentation/cilindrada.routes.js')).default)
+router.use('/lineas', (await import('../modules/linea/presentation/linea.routes.js')).default)
+router.use('/marcas', (await import('../modules/marca/presentation/marca.routes.js')).default)
+router.use('/modelos', (await import('../modules/modelo/presentation/modelo.routes.js')).default)
+router.use('/vehiculotipos', (await import('../modules/vehiculotipo/presentation/vehiculotipo.routes.js')).default)
+router.use('/vehiculos', (await import('../modules/vehiculo/presentation/vehiculo.routes.js')).default)
 
 router.use(errorMiddleware)
 
