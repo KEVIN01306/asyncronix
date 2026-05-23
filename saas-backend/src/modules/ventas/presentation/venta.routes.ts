@@ -4,6 +4,7 @@ import { AuthMiddleware } from "../../../app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "../../../app/middlewares/ValidarMiddleware.js";
 import { ventaController } from "../venta.module.js";
 import { ventaCrearSchema, ventaActualizarSchema, buscarSkuSchema, ventaDetalleSkuSchema } from "./validators/venta.schema.js";
+import { buscarClienteNitVentaSchema, crearClienteVentaSchema } from "./validators/cliente-venta.schema.js";
 import { paginacionQuerySchema } from "../../../shared/presentation/validators/paginacion.query.schema.js";
 
 const routes = Router();
@@ -32,6 +33,18 @@ routes.get("/buscar-sku",
     authMiddleware.verificarPermiso(['CREAR_VENTAS']),
     validarMiddleware.validarQuery(buscarSkuSchema),
     ventaController.buscarPorSku
+);
+
+routes.get("/clientes/buscar-por-nit",
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarQuery(buscarClienteNitVentaSchema),
+    ventaController.buscarClientePorNit
+);
+
+routes.post("/clientes",
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarBody(crearClienteVentaSchema),
+    ventaController.registrarCliente
 );
 
 routes.get("/:id",

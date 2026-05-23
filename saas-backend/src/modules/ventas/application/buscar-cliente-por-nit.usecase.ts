@@ -1,9 +1,9 @@
 import AppError from "@shared/errors/AppError.js";
 import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
-import type { ClienteObtenidoDetalle } from "../domain/cliente.entity.js";
-import type { ClienteRepository } from "../domain/cliente.repository.js";
+import type { ClienteObtenidoDetalle } from "../../cliente/domain/cliente.entity.js";
+import type { ClienteRepository } from "../../cliente/domain/cliente.repository.js";
 
-export class BuscarClientePorDocumentoUseCase {
+export class BuscarClientePorNitVentaUseCase {
     constructor(
         private readonly clienteRepository: ClienteRepository
     ) { }

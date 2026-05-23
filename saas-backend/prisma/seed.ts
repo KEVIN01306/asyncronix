@@ -125,7 +125,7 @@ async function main() {
     }
 
     const negocio = await prisma.negocio.upsert({
-        where: { wa_id: "50230108703" },
+        where: { wa_id: "50243850410" },
         update: {
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))

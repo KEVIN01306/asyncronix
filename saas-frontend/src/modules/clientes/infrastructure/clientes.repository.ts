@@ -25,7 +25,7 @@ export const clienteRepository = {
         const response = await api.delete<ApiResponse<null>>(`${URL_MODULE}/${id}`);
         return response as any;
     },
-    buscarPorDocumento: async (params: { nit?: string | null; dpi?: string | null }): Promise<ApiResponse<Cliente | null>> => {
+    buscarPorDocumento: async (params: { nit: string }): Promise<ApiResponse<Cliente | null>> => {
         const response = await api.get<ApiResponse<Cliente | null>>(`${URL_MODULE}/buscar`, { params });
         return response as any;
     }

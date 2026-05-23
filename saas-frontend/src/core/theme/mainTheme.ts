@@ -3,20 +3,20 @@ import { createTheme } from '@mui/material/styles';
 export const mainTheme = createTheme({
     palette: {
         mode: 'light',
-        /*
         primary: {
-            main: '#673de6',
+            main: '#1E3A8A',
         },
         secondary: {
-            main: '#8863F8',
+            main: '#4c72a7',
         },
-        */
+        /*
         primary: {
             main: '#23395d',
         },
-        secondary: {
+        secondary: {    
             main: '#06B6D4',
         },
+        */
         warning: {
             main: '#f2ba5a',
         },

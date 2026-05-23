@@ -12,6 +12,8 @@ import type { CrearDetalleVentaPorSkuUseCase } from "../application/crear-detall
 import type { BuscarProductoPorSkuUseCase } from "../application/buscar-producto-por-sku.usecase.js";
 import type { EliminarDetalleVentaUseCase } from "../application/eliminar-detalle-venta.usecase.js";
 import type { FinalizarVentaUseCase } from "../application/finalizar-venta.usecase.js";
+import type { BuscarClientePorNitVentaUseCase } from "../application/buscar-cliente-por-nit.usecase.js";
+import type { RegistrarClienteParaVentaUseCase } from "../application/registrar-cliente-para-venta.usecase.js";
 
 export class VentaController extends BaseController {
     constructor(
@@ -24,7 +26,9 @@ export class VentaController extends BaseController {
         private readonly crearDetalleVentaPorSkuUseCase: CrearDetalleVentaPorSkuUseCase,
         private readonly buscarProductoPorSkuUseCase: BuscarProductoPorSkuUseCase,
         private readonly eliminarDetalleVentaUseCase: EliminarDetalleVentaUseCase,
-        private readonly finalizarVentaUseCase: FinalizarVentaUseCase
+        private readonly finalizarVentaUseCase: FinalizarVentaUseCase,
+        private readonly buscarClientePorNitVentaUseCase: BuscarClientePorNitVentaUseCase,
+        private readonly registrarClienteParaVentaUseCase: RegistrarClienteParaVentaUseCase
     ) {
         super();
     }
@@ -164,6 +168,27 @@ export class VentaController extends BaseController {
 
             const venta = await this.finalizarVentaUseCase.execute(id, negocio_id, sucursal_id, metodo_pago);
             res.status(200).json(Respuesta.exito('Venta finalizada', venta));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    buscarClientePorNit = async (_req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { nit } = res.locals.query;
+            const cliente = await this.buscarClientePorNitVentaUseCase.execute(nit, negocio_id);
+            res.status(200).json(Respuesta.exito('Búsqueda de cliente completada', cliente));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    registrarCliente = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res);
+            const cliente = await this.registrarClienteParaVentaUseCase.execute(req.body, negocio_id);
+            res.status(201).json(Respuesta.exito('Cliente creado con éxito', cliente));
         } catch (error) {
             next(error);
         }

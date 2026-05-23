@@ -39,14 +39,12 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
     const [mostrarCrear, setMostrarCrear] = useState(false);
     const [nombre, setNombre] = useState('');
     const [nit, setNit] = useState('');
-    const [dpi, setDpi] = useState('');
     const [creando, setCreando] = useState(false);
 
     const handleReset = useCallback(() => {
         setDocumento('');
         setNombre('');
         setNit('');
-        setDpi('');
         setMostrarCrear(false);
         setSearchError('');
     }, []);
@@ -72,7 +70,6 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
             try {
                 const result = await clienteRepository.buscarPorDocumento({
                     nit: cleanDoc,
-                    dpi: cleanDoc,
                 });
 
                 if (result.data) {
@@ -92,7 +89,7 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
                 } else {
                     setSearchError('No se encontró un cliente con este documento.');
                 }
-            } catch (err: any) {
+            } catch  {
                 setSearchError('Error al buscar el cliente.');
             } finally {
                 setSearching(false);
@@ -109,25 +106,22 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
         }
 
         const cleanNit = nit.trim();
-        const cleanDpi = dpi.trim();
 
-        if (!cleanNit && !cleanDpi) {
-            toast.error('Debe ingresar al menos un NIT o DPI');
+        if (!cleanNit) {
+            toast.error('El NIT es obligatorio');
             return;
         }
 
         setCreando(true);
 
         try {
-            const telefonoParaBD = cleanNit || cleanDpi;
-
             const result = await clienteRepository.registrar({
                 nombre: nombre.trim(),
-                nit: cleanNit || null,
-                dpi: cleanDpi || null,
-                telefono: telefonoParaBD,
+                nit: cleanNit,
+                telefono: cleanNit,
                 email: null,
                 apellido: null,
+                dpi: null,
             });
 
             if (result.data) {
@@ -161,13 +155,7 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
         setMostrarCrear(true);
         setSearchError('');
         const doc = documento.trim();
-        if (doc.length === 13) {
-            setDpi(doc);
-            setNit('');
-        } else {
-            setNit(doc);
-            setDpi('');
-        }
+        setNit(doc);
     };
 
     const handleSelectCF = () => {
@@ -194,12 +182,12 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
                 {!mostrarCrear ? (
                     <Box display="flex" flexDirection="column" gap={2.5} py={1}>
                         <Typography variant="body2" color="textSecondary">
-                            Escribe el NIT o DPI del cliente para buscarlo automáticamente.
+                            Escribe el NIT del cliente para buscarlo automáticamente.
                         </Typography>
                         <TextField
                             fullWidth
-                            label="Documento"
-                            placeholder="Buscar por NIT o DPI"
+                            label="NIT"
+                            placeholder="Buscar por NIT"
                             value={documento}
                             onChange={(e) => setDocumento(e.target.value)}
                             autoFocus
@@ -262,21 +250,14 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
                         <TextField
                             fullWidth
                             label="NIT"
-                            placeholder="Opcional si tiene DPI"
+                            placeholder="NIT del cliente"
                             value={nit}
                             onChange={(e) => setNit(e.target.value)}
                             disabled={creando}
-                        />
-                        <TextField
-                            fullWidth
-                            label="DPI"
-                            placeholder="Opcional si tiene NIT"
-                            value={dpi}
-                            onChange={(e) => setDpi(e.target.value)}
-                            disabled={creando}
+                            required
                         />
                         <Typography variant="caption" color="textSecondary">
-                            * Se requiere ingresar al menos el NIT o el DPI.
+                            * Nombre y NIT son obligatorios.
                         </Typography>
                     </Box>
                 )}

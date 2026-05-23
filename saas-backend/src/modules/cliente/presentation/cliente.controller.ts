@@ -35,8 +35,8 @@ export class ClienteController extends BaseController {
     buscarPorDocumento = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res)
-            const { nit, dpi } = res.locals.query
-            const cliente = await this.buscarClientePorDocumentoUseCase.execute({ nit, dpi }, negocio_id)
+            const { nit } = res.locals.query
+            const cliente = await this.buscarClientePorDocumentoUseCase.execute(nit, negocio_id)
             res.status(200).json(Respuesta.exito('Búsqueda de cliente completada', cliente))
         } catch (error) {
             next(error)

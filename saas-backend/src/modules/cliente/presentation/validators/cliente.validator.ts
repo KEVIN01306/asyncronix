@@ -47,12 +47,5 @@ export const clienteActualizarSchema = clienteCrearShape.partial().refine(
 )
 
 export const clienteBuscarSchema = z.object({
-    nit: z.string().max(50).optional().nullish().transform(transformNullish),
-    dpi: z.string().max(50).optional().nullish().transform(transformNullish),
-}).refine(
-    (data) => data.nit || data.dpi,
-    {
-        message: "Se requiere nit o dpi",
-        path: ["nit"],
-    }
-)
+    nit: z.string().min(1, "El NIT es obligatorio").max(50, "El NIT no puede exceder 50 caracteres")
+})
