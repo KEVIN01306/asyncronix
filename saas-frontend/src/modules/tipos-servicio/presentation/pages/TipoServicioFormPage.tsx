@@ -21,7 +21,7 @@ const TipoServicioFormPage = () => {
 
     const { register, handleSubmit, control, setValue, watch, formState: { errors, isSubmitting } } = useForm<TipoServicioFormValues>({
         resolver: zodResolver(tipoServicioSchema),
-        defaultValues: { opciones_ids: [] }
+        defaultValues: { opciones_ids: [], nombre: '', precio_base: 0 }
     });
 
     const selectedOptionIds = watch('opciones_ids') || [];
