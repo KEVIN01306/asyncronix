@@ -12,6 +12,9 @@ import { marcasRoutes } from "../../modules/marcas/presentation/marcas.routes";
 import { modelosRoutes } from "../../modules/modelos/presentation/modelos.routes";
 import { cilindradasRoutes } from "../../modules/cilindradas/presentation/cilindradas.routes";
 import { vehiculoRoutes } from "../../modules/vehiculos/presentation/vehiculo.routes";
+import { opcionesServicioRoutes } from "../../modules/opciones-servicio/presentation/opciones-servicio.routes";
+import { tiposServicioRoutes } from "../../modules/tipos-servicio/presentation/tipos-servicio.routes";
+import { checklistItemsRoutes } from "../../modules/checklist-items/presentation/checklist-items.routes";
 import BlankLayout from "../layouts/blankLayout";
 import FullLayout from "../layouts/fullLayout";
 import { sucursalRoutes } from "../../modules/sucursales/presentation/sucursal.routes";
@@ -51,6 +54,9 @@ const appRouter = createBrowserRouter([
                     ...marcasRoutes,
                     ...modelosRoutes,
                     ...vehiculoRoutes,
+                    ...opcionesServicioRoutes,
+                    ...tiposServicioRoutes,
+                    ...checklistItemsRoutes,
                     ...productoRoutes,
                     ...loteRoutes,
                     ...sucursalRoutes,

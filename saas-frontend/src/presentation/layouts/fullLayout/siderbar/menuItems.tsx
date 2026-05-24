@@ -5,7 +5,11 @@ import {
   StoreMallDirectory,
   BusinessCenterOutlined,
   AccountCircleOutlined,
-  DirectionsCar,
+  CarCrash,
+  Build,
+  PrecisionManufacturing,
+  ListAlt,
+  SettingsSharp
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -20,26 +24,26 @@ export interface MenuItem {
 
 const MenuItems: MenuItem[] = [
   { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/" },
+  { name: "Ventas", icon: BusinessCenterOutlined, link: "/ventas", permiso: "VER_VENTAS" },
+  { name: "Clientes", icon: AccountCircleOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
   {
     module: "inventario", name: "Inventario", icon: Inventory2, children: [
       { name: "Categorías", link: "/categorias", icon: AdminPanelSettingsOutlined, permiso: "VER_CATEGORIAS_PRODUCTOS" },
-      { name: "Marcas", link: "/marcas", icon: AdminPanelSettingsOutlined, permiso: "VER_MARCA" },
-      { name: "Líneas", link: "/lineas", icon: AdminPanelSettingsOutlined, permiso: "VER_LINEA" },
-      { name: "Cilindradas", link: "/cilindradas", icon: AdminPanelSettingsOutlined, permiso: "VER_CILINDRADA" },
-      { name: "Modelos", link: "/modelos", icon: AdminPanelSettingsOutlined, permiso: "VER_MODELO" },
-      { name: "Vehículos", link: "/vehiculos", icon: DirectionsCar, permiso: "VER_VEHICULOS" },
       { name: "Productos", link: "/productos", icon: AdminPanelSettingsOutlined, permiso: "VER_PRODUCTOS" },
       { name: "Lotes", link: "/lotes", icon: AdminPanelSettingsOutlined, permiso: "VER_LOTES" },
     ]
   },
-  { name: "Ventas", icon: BusinessCenterOutlined, link: "/ventas", permiso: "VER_VENTAS" },
-  { name: "Clientes", icon: AccountCircleOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
-  { module: "Vehiculos Configuración", icon: StoreMallDirectory, children: [
-    { name: "Vehiculos", link: "/vehiculos", icon: DirectionsCar, permiso: "VER_VEHICULOS" },
+  { module: "Vehiculos Configuración", icon: CarCrash, children: [
+    { name: "Vehiculos", link: "/vehiculos", icon: AdminPanelSettingsOutlined, permiso: "VER_VEHICULOS" },
     { name: "Marcas", link: "/marcas", icon: AdminPanelSettingsOutlined, permiso: "VER_MARCAS" },
     { name: "Líneas", link: "/lineas", icon: AdminPanelSettingsOutlined, permiso: "VER_LINEAS" },
     { name: "Cilindradas", link: "/cilindradas", icon: AdminPanelSettingsOutlined, permiso: "VER_CILINDRADAS" },
     { name: "Modelos", link: "/modelos", icon: AdminPanelSettingsOutlined, permiso: "VER_MODELOS" },
+  ]}, 
+    { module: "Servicio Vehiculos Configuración", icon: SettingsSharp, children: [
+    { name: "Opciones servicio", link: "/opciones-servicio", icon: Build, permiso: "VER_OPCION_SERVICIO" },
+    { name: "Tipos servicio", link: "/tipos-servicio", icon: PrecisionManufacturing, permiso: "VER_TIPO_SERVICIO" },
+    { name: "Checklist", link: "/checklist", icon: ListAlt, permiso: "VER_CHECKLIST" },
   ]}, 
   {
     module: "configuracion", name: "Configuración", icon: SettingsSuggest, children: [

@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent } from 'react';
+import { useRef } from 'react';
 import { Box, Button, Typography, Avatar } from '@mui/material';
 import { PhotoCamera, PictureAsPdf } from '@mui/icons-material';
 

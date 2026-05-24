@@ -23,6 +23,9 @@ router.use('/marcas', (await import('../modules/marca/presentation/marca.routes.
 router.use('/modelos', (await import('../modules/modelo/presentation/modelo.routes.js')).default)
 router.use('/vehiculotipos', (await import('../modules/vehiculotipo/presentation/vehiculotipo.routes.js')).default)
 router.use('/vehiculos', (await import('../modules/vehiculo/presentation/vehiculo.routes.js')).default)
+router.use('/opciones-servicio', (await import('../modules/opcion-servicio/presentation/opcion-servicio.routes.js')).default)
+router.use('/tipos-servicio', (await import('../modules/tipo-servicio/presentation/tipo-servicio.routes.js')).default)
+router.use('/checklist-items', (await import('../modules/checklist-item/presentation/checklist-item.routes.js')).default)
 
 router.use(errorMiddleware)
 

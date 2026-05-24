@@ -74,7 +74,22 @@ const permisosData = [
     { codigo: "CREAR_VEHICULOS" },
     { codigo: "EDITAR_VEHICULOS" },
 
-    { codigo: "VER_VEHICULOS_TIPOS" }
+    { codigo: "VER_VEHICULOS_TIPOS" },
+    { codigo: "VER_OPCION_SERVICIO" },
+    { codigo: "VER_OPCION_SERVICIO_DETALLE" },
+    { codigo: "CREAR_OPCION_SERVICIO" },
+    { codigo: "EDITAR_OPCION_SERVICIO" },
+    { codigo: "ELIMINAR_OPCION_SERVICIO" },
+    { codigo: "VER_TIPO_SERVICIO" },
+    { codigo: "VER_TIPO_SERVICIO_DETALLE" },
+    { codigo: "CREAR_TIPO_SERVICIO" },
+    { codigo: "EDITAR_TIPO_SERVICIO" },
+    { codigo: "ELIMINAR_TIPO_SERVICIO" },
+    { codigo: "VER_CHECKLIST" },
+    { codigo: "VER_CHECKLIST_DETALLE" },
+    { codigo: "CREAR_CHECKLIST" },
+    { codigo: "EDITAR_CHECKLIST" },
+    { codigo: "ELIMINAR_CHECKLIST" }
 
 ];
 
@@ -142,7 +157,19 @@ const modulosConPermisos = [
     {
         nombre: "TIPOS DE VEHICULOS",
         permisos: ["VER_VEHICULOS_TIPOS"]
-    }
+    },
+    {
+        nombre: "OPCIONES SERVICIO",
+        permisos: ["VER_OPCION_SERVICIO", "VER_OPCION_SERVICIO_DETALLE", "CREAR_OPCION_SERVICIO", "EDITAR_OPCION_SERVICIO", "ELIMINAR_OPCION_SERVICIO"]
+    },
+    {
+        nombre: "TIPOS SERVICIO",
+        permisos: ["VER_TIPO_SERVICIO", "VER_TIPO_SERVICIO_DETALLE", "CREAR_TIPO_SERVICIO", "EDITAR_TIPO_SERVICIO", "ELIMINAR_TIPO_SERVICIO"]
+    },
+    {
+        nombre: "CHECKLIST ITEMS",
+        permisos: ["VER_CHECKLIST", "VER_CHECKLIST_DETALLE", "CREAR_CHECKLIST", "EDITAR_CHECKLIST", "ELIMINAR_CHECKLIST"]
+    },
 ];
 
 async function main() {

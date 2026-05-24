@@ -107,7 +107,6 @@ const VehiculoDetailPage = () => {
     if (loading) return <Loading />;
     if (!vehiculo) return <ErrorPageLoading text="Vehículo no encontrado" navigate={() => navigate('/vehiculos')} />;
 
-    const imageSource = vehiculo.avatar_url ? `${import.meta.env.VITE_API_URL}/${vehiculo.avatar_url}` : undefined;
     const pdfName = vehiculo.calcomania_url?.split('/').pop();
 
     return (
@@ -122,7 +121,7 @@ const VehiculoDetailPage = () => {
             </Box>
 
             <Grid container spacing={3}>
-                <Grid item xs={12} md={7}>
+                <Grid size={{ xs: 12, md: 7 }}>
                     <Paper sx={{ p: 3, border: (theme) => `1px solid ${theme.palette.divider}` }}>
                         <Typography variant="h6" mb={2} fontWeight={700}>Información general</Typography>
                         <Stack spacing={2}>
@@ -152,7 +151,7 @@ const VehiculoDetailPage = () => {
                     </Box>
                 </Grid>
 
-                <Grid item xs={12} md={5}>
+                <Grid size={{ xs: 12, md: 5 }}>
                     <Paper sx={{ p: 3, border: (theme) => `1px solid ${theme.palette.divider}` }}>
                         <Typography variant="h6" mb={2} fontWeight={700}>Archivos</Typography>
                         {vehiculo.calcomania_url ? (

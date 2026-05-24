@@ -325,10 +325,10 @@ model Servicio {
   negocio_id       String         @db.Char(36)
   sucursal_id      String         @db.Char(36)
   vehiculo_id      String         @db.Char(36)
-  mecanico_id      String         @db.Char(36)
+  mecanico_id      String?         @db.Char(36)
   cliente_id       String?        @db.Char(36)
-  tipo_servicio_id String         @db.Char(36)
-  descripcion      String         @db.Text
+  tipo_servicio_id String?         @db.Char(36)
+  descripcion      String?         @db.Text
   diagnostico      String?        @db.Text
   kilometraje      Int?
   fecha_entrada    DateTime       @default(now())
@@ -343,9 +343,9 @@ model Servicio {
   negocio       Negocio      @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal     @relation(fields: [sucursal_id], references: [id])
   vehiculo      Vehiculo?    @relation(fields: [vehiculo_id], references: [id])
-  mecanico      Usuario      @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
+  mecanico      Usuario?      @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
   cliente       Cliente?     @relation("ServicioCliente", fields: [cliente_id], references: [id])
-  tipo_servicio TipoServicio @relation(fields: [tipo_servicio_id], references: [id])
+  tipo_servicio TipoServicio? @relation(fields: [tipo_servicio_id], references: [id])
   
   imagenes  Imagen[]
   checklist ChecklistRespuesta[]
@@ -410,30 +410,27 @@ model ChecklistItem {
   id         String   @id @default(uuid()) @db.Char(36)
   negocio_id String   @db.Char(36)
   nombre     String
-  categoria  String?
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   negocio    Negocio              @relation(fields: [negocio_id], references: [id])
-  respuestas ChecklistRespuesta[]
 
   @@map("checklist_items")
 }
 
 model ChecklistRespuesta {
   id                String          @id @default(uuid()) @db.Char(36)
-  checklist_item_id String          @db.Char(36)
+  checklist_item    String          @db.Char(36)
   servicio_id       String          @db.Char(36)
   estado            EstadoChecklist @default(OPTIMO)
   observaciones     String?
   created_at        DateTime        @default(now())
   updated_at        DateTime        @updatedAt
 
-  checklist_item ChecklistItem @relation(fields: [checklist_item_id], references: [id])
   servicio       Servicio      @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
 
-  @@unique([servicio_id, checklist_item_id])
+  @@unique([servicio_id, checklist_item])
   @@map("checklist_respuestas")
 }
 
@@ -647,6 +644,7 @@ enum EstadoCita {
 
 enum EstadoServicio {
   RECEPCION
+  EN_SERVICIO
   EN_DIAGNOSTICO
   ESPERA_REPUESTOS
   EN_REPARACION
