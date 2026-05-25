@@ -8,6 +8,17 @@ export interface Vehiculo {
     avatar_url?: string | null;
     calcomania_url?: string | null;
     cliente_id?: string | null;
+    modelo_nombre?: string | null;
+    marca?: string | null;
+    linea?: string | null;
+    cilindrada?: number | null;
+    tipo_vehiculo?: string | null;
+    cliente?: {
+        id: string;
+        nombre: string;
+        nit?: string | null;
+        dpi?: string | null;
+    } | null;
     activo?: boolean;
     created_at?: string;
     updated_at?: string;

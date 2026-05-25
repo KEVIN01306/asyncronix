@@ -39,6 +39,9 @@ const MenuItems: MenuItem[] = [
     { name: "Líneas", link: "/lineas", icon: AdminPanelSettingsOutlined, permiso: "VER_LINEAS" },
     { name: "Cilindradas", link: "/cilindradas", icon: AdminPanelSettingsOutlined, permiso: "VER_CILINDRADAS" },
     { name: "Modelos", link: "/modelos", icon: AdminPanelSettingsOutlined, permiso: "VER_MODELOS" },
+  ]},
+  { module: "Recepción", icon: Build, children: [
+    { name: "Servicios", link: "/servicios", icon: Build, permiso: "VER_SERVICIOS" },
   ]}, 
     { module: "Servicio Vehiculos Configuración", icon: SettingsSharp, children: [
     { name: "Opciones servicio", link: "/opciones-servicio", icon: Build, permiso: "VER_OPCION_SERVICIO" },

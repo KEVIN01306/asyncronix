@@ -24,7 +24,31 @@ export class PrismaVehiculoRepository implements VehiculoRepository {
 
     async obtener(id: string, negocio_id: string) {
         try {
-            const v = await this.db.vehiculo.findFirst({ where: { id, negocio_id, activo: true } });
+            const v = await this.db.vehiculo.findFirst({
+                where: { id, negocio_id, activo: true },
+                include: {
+                    modelo: { include: { marca: true, linea: true, cilindrada: true } },
+                    vehiculo_tipo: true,
+                    cliente: true
+                }
+            });
+            if (!v) return null;
+            return VehiculoMapper.mapDetalle(v as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async obtenerPorPlaca(placa: string, negocio_id: string) {
+        try {
+            const v = await this.db.vehiculo.findFirst({
+                where: { placa, negocio_id, activo: true },
+                include: {
+                    modelo: { include: { marca: true, linea: true, cilindrada: true } },
+                    vehiculo_tipo: true,
+                    cliente: true
+                }
+            });
             if (!v) return null;
             return VehiculoMapper.mapDetalle(v as any);
         } catch (error) {
@@ -34,7 +58,14 @@ export class PrismaVehiculoRepository implements VehiculoRepository {
 
     async crear(data: VehiculoCrear, negocio_id: string) {
         try {
-            const creado = await this.db.vehiculo.create({ data: { ...data, negocio_id } });
+            const creado = await this.db.vehiculo.create({
+                data: { ...data, negocio_id },
+                include: {
+                    modelo: { include: { marca: true, linea: true, cilindrada: true } },
+                    vehiculo_tipo: true,
+                    cliente: true
+                }
+            });
             return VehiculoMapper.mapDetalle(creado as any);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
@@ -43,7 +74,15 @@ export class PrismaVehiculoRepository implements VehiculoRepository {
 
     async actualizar(id: string, negocio_id: string, data: VehiculoActualizar) {
         try {
-            const actualizado = await this.db.vehiculo.update({ where: { id, negocio_id, activo: true }, data });
+            const actualizado = await this.db.vehiculo.update({
+                where: { id, negocio_id, activo: true },
+                data,
+                include: {
+                    modelo: { include: { marca: true, linea: true, cilindrada: true } },
+                    vehiculo_tipo: true,
+                    cliente: true
+                }
+            });
             return VehiculoMapper.mapDetalle(actualizado as any);
         } catch (error) {
             throw PrismaErrorMapper.map(error);

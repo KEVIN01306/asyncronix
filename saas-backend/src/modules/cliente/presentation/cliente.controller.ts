@@ -43,6 +43,17 @@ export class ClienteController extends BaseController {
         }
     }
 
+    buscarPorNit = async (req: Request<{ nit: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res)
+            const { nit } = req.params
+            const cliente = await this.buscarClientePorDocumentoUseCase.execute(nit, negocio_id)
+            res.status(200).json(Respuesta.exito('Búsqueda de cliente por NIT completada', cliente))
+        } catch (error) {
+            next(error)
+        }
+    }
+
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res)

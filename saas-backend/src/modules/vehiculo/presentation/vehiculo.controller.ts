@@ -3,20 +3,26 @@ import BaseController from "@shared/presentation/base.controller.js";
 import Respuesta from "@app/http/respuesta.js";
 import type { ObtenerVehiculosUseCase } from "../application/obtener-vehiculos.usecase.js";
 import type { ObtenerVehiculoUseCase } from "../application/obtener-vehiculo.usecase.js";
+import type { ObtenerVehiculoPorPlacaUseCase } from "../application/obtener-vehiculo-por-placa.usecase.js";
 import type { RegistrarVehiculoUseCase } from "../application/registrar-vehiculo.usecase.js";
 import type { ActualizarVehiculoUseCase } from "../application/actualizar-vehiculo.usecase.js";
 import type { SubirAvatarVehiculoUseCase } from "../application/subir-avatar.usecase.js";
 import type { SubirCalcomaniaVehiculoUseCase } from "../application/subir-calcomania.usecase.js";
+import type { AsociarClienteVehiculoUseCase } from "../application/asociar-cliente.usecase.js";
+import type { CrearYAsociarClienteUseCase } from "../application/crear-y-asociar-cliente.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class VehiculoController extends BaseController {
     constructor(
         private readonly obtenerVehiculosUseCase: ObtenerVehiculosUseCase,
         private readonly obtenerVehiculoUseCase: ObtenerVehiculoUseCase,
+        private readonly obtenerVehiculoPorPlacaUseCase: ObtenerVehiculoPorPlacaUseCase,
         private readonly registrarVehiculoUseCase: RegistrarVehiculoUseCase,
         private readonly actualizarVehiculoUseCase: ActualizarVehiculoUseCase,
         private readonly subirAvatarUseCase: SubirAvatarVehiculoUseCase,
-        private readonly subirCalcomaniaUseCase: SubirCalcomaniaVehiculoUseCase
+        private readonly subirCalcomaniaUseCase: SubirCalcomaniaVehiculoUseCase,
+        private readonly asociarClienteUseCase: AsociarClienteVehiculoUseCase,
+        private readonly crearYAsociarClienteUseCase: CrearYAsociarClienteUseCase
     ) { super(); }
 
     listar = async (_req: Request, res: Response, next: NextFunction) => {
@@ -35,6 +41,15 @@ export class VehiculoController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             const v = await this.obtenerVehiculoUseCase.execute(id, negocio_id);
             res.status(200).json(Respuesta.exito('Vehículo obtenido', v));
+        } catch (error) { next(error); }
+    }
+
+    obtenerPorPlaca = async (req: Request<{ placa: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { placa } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const v = await this.obtenerVehiculoPorPlacaUseCase.execute(placa, negocio_id);
+            res.status(200).json(Respuesta.exito('Vehículo obtenido por placa', v));
         } catch (error) { next(error); }
     }
 
@@ -74,6 +89,26 @@ export class VehiculoController extends BaseController {
             const url = req.file.path.replace(/\\/g, '/');
             await this.subirCalcomaniaUseCase.execute(id, negocio_id, url);
             res.status(200).json(Respuesta.exito('Calcomanía actualizada', null));
+        } catch (error) { next(error); }
+    }
+
+    asociarCliente = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { nit } = req.body;
+            const updated = await this.asociarClienteUseCase.execute(id, nit, negocio_id);
+            res.status(200).json(Respuesta.exito('Cliente asociado al vehículo', updated));
+        } catch (error) { next(error); }
+    }
+
+    crearYAsociarCliente = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const payload = req.body;
+            const result = await this.crearYAsociarClienteUseCase.execute(id, payload, negocio_id);
+            res.status(201).json(Respuesta.exito('Cliente creado y asociado al vehículo', result));
         } catch (error) { next(error); }
     }
 }

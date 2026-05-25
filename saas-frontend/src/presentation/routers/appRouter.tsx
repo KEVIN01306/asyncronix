@@ -14,6 +14,7 @@ import { cilindradasRoutes } from "../../modules/cilindradas/presentation/cilind
 import { vehiculoRoutes } from "../../modules/vehiculos/presentation/vehiculo.routes";
 import { opcionesServicioRoutes } from "../../modules/opciones-servicio/presentation/opciones-servicio.routes";
 import { tiposServicioRoutes } from "../../modules/tipos-servicio/presentation/tipos-servicio.routes";
+import { servicioRoutes } from "../../modules/servicios/presentation/servicio.routes";
 import { checklistItemsRoutes } from "../../modules/checklist-items/presentation/checklist-items.routes";
 import BlankLayout from "../layouts/blankLayout";
 import FullLayout from "../layouts/fullLayout";
@@ -54,6 +55,7 @@ const appRouter = createBrowserRouter([
                     ...marcasRoutes,
                     ...modelosRoutes,
                     ...vehiculoRoutes,
+                    ...servicioRoutes,
                     ...opcionesServicioRoutes,
                     ...tiposServicioRoutes,
                     ...checklistItemsRoutes,

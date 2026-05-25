@@ -89,7 +89,12 @@ const permisosData = [
     { codigo: "VER_CHECKLIST_DETALLE" },
     { codigo: "CREAR_CHECKLIST" },
     { codigo: "EDITAR_CHECKLIST" },
-    { codigo: "ELIMINAR_CHECKLIST" }
+    { codigo: "ELIMINAR_CHECKLIST" },
+    { codigo: "VER_SERVICIOS" },
+    { codigo: "VER_SERVICIOS_DETALLE" },
+    { codigo: "CREAR_SERVICIOS" },
+    { codigo: "EDITAR_SERVICIOS" },
+    { codigo: "ELIMINAR_SERVICIOS" }
 
 ];
 
@@ -170,6 +175,10 @@ const modulosConPermisos = [
         nombre: "CHECKLIST ITEMS",
         permisos: ["VER_CHECKLIST", "VER_CHECKLIST_DETALLE", "CREAR_CHECKLIST", "EDITAR_CHECKLIST", "ELIMINAR_CHECKLIST"]
     },
+    {
+        nombre: "SERVICIOS",
+        permisos: ["VER_SERVICIOS", "VER_SERVICIOS_DETALLE", "CREAR_SERVICIOS", "EDITAR_SERVICIOS", "ELIMINAR_SERVICIOS"]
+    }
 ];
 
 async function main() {

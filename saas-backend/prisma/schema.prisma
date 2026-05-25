@@ -421,7 +421,6 @@ model ChecklistItem {
 
 model ChecklistRespuesta {
   id                String          @id @default(uuid()) @db.Char(36)
-  checklist_item    String          @db.Char(36)
   checklist_item_id String          @db.Char(36)
   servicio_id       String          @db.Char(36)
   estado            EstadoChecklist @default(OPTIMO)
@@ -430,8 +429,8 @@ model ChecklistRespuesta {
   updated_at        DateTime        @updatedAt
 
   servicio       Servicio      @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
-  checklist_item_rel ChecklistItem @relation(fields: [checklist_item_id], references: [id], onDelete: Cascade)
-  @@unique([servicio_id, checklist_item])
+  checklist_item ChecklistItem @relation(fields: [checklist_item_id], references: [id], onDelete: Cascade)
+  @@unique([servicio_id, checklist_item_id])
   @@map("checklist_respuestas")
 }
 

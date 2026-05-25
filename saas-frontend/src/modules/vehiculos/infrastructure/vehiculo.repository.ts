@@ -20,6 +20,11 @@ export const vehiculoRepository = {
         return response.data;
     },
 
+    buscarPorPlaca: async (placa: string): Promise<ApiResponse<Vehiculo | null>> => {
+        const response = await api.get<ApiResponse<Vehiculo | null>>(`${URL_MODULE}/placa/${placa}`);
+        return response;
+    },
+
     registrar: async (data: any): Promise<Vehiculo> => {
         const response = await api.post<ApiResponse<Vehiculo>>(URL_MODULE, data);
         return response.data;

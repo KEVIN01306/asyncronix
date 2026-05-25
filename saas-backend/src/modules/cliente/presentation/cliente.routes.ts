@@ -18,6 +18,11 @@ router.get('/buscar',
     clienteController.buscarPorDocumento
 );
 
+router.get('/nit/:nit',
+    authMiddleware.verificarPermiso(['VER_CLIENTES']),
+    clienteController.buscarPorNit
+);
+
 router.get('/',
     authMiddleware.verificarPermiso(['VER_CLIENTES']),
     validarMiddleware.validarQuery(paginacionQuerySchema),

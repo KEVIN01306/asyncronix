@@ -11,3 +11,13 @@ export const vehiculoCrearSchema = z.object({
 export const vehiculoActualizarSchema = vehiculoCrearSchema.partial();
 
 export const vehiculoListQuerySchema = paginacionQuerySchema;
+
+export const vehiculoAsociarClienteSchema = z.object({
+    nit: z.string()
+});
+
+export const vehiculoCrearClienteSchema = z.object({
+    nombre: z.string().min(1).max(100),
+    nit: z.string().max(50).optional().nullable(),
+    dpi: z.string().max(50).optional().nullable()
+}).refine((d) => d.nit || d.dpi, { message: 'Se requiere NIT o DPI', path: ['nit'] });
