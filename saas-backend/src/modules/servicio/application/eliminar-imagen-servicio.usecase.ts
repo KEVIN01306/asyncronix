@@ -10,7 +10,7 @@ export class EliminarImagenServicioUseCase {
             const imagen = await this.repository.obtenerImagen(imagen_id);
             if (!imagen) throw new AppError('Imagen no encontrada', 'IMAGE_NOT_FOUND', 404);
             if (imagen.servicio_id !== servicio_id) throw new AppError('Imagen no pertenece al servicio', 'IMAGE_NOT_BELONG', 400);
-            await this.repository.eliminarImagen(imagen_id);
+            await this.repository.eliminarImagen(imagen_id, negocio_id);
         } catch (error) {
             if (error instanceof AppError) throw error;
             if (error instanceof DatabaseError) throw new AppError('Error en DB', 'DATABASE_ERROR', 500);

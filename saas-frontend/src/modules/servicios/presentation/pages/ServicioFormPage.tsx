@@ -24,10 +24,11 @@ const ServicioFormPage = () => {
     const [step, setStep] = useState<'placa' | 'detalles' | 'editar'>('placa');
     const [tipos, setTipos] = useState<TipoServicio[]>([]);
     const [vehiculo, setVehiculo] = useState<Vehiculo | null>(null);
+    const [servicioClienteId, setServicioClienteId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [isEdit, setIsEdit] = useState(false);
 
-    const { control, register, handleSubmit, reset, formState: { isSubmitting } } = useForm<ServicioFormValues>({
+    const { control, register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ServicioFormValues>({
         defaultValues: {
             placa: '',
             vehiculo_id: undefined,
@@ -67,6 +68,7 @@ const ServicioFormPage = () => {
                 kilometraje: response.kilometraje ?? null,
                 MetodoPago: (response.MetodoPago ?? 'EFECTIVO') as 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'OTRO'
             });
+            setServicioClienteId(response.cliente_id ?? null);
         } catch (error) {
             console.error(error);
             toast.error('No se pudo cargar el servicio');
@@ -185,7 +187,22 @@ const ServicioFormPage = () => {
                                 <Typography><strong>Línea:</strong> {vehiculo.linea ?? 'N/A'}</Typography>
                                 <Typography><strong>Cilindrada:</strong> {vehiculo.cilindrada ?? 'N/A'}</Typography>
                                 <Typography><strong>Tipo de vehículo:</strong> {vehiculo.tipo_vehiculo ?? vehiculo.vehiculo_tipo_id}</Typography>
-                                <Typography><strong>Cliente asociado:</strong> {vehiculo.cliente ? `${vehiculo.cliente.nombre} (${vehiculo.cliente.nit ?? vehiculo.cliente.dpi ?? 'Sin documento'})` : 'Sin cliente asociado'}</Typography>
+                                    <Box display="flex" alignItems="center" gap={1}>
+                                        <Typography><strong>Cliente asociado:</strong> {vehiculo.cliente ? `${vehiculo.cliente.nombre} (${vehiculo.cliente.nit ?? vehiculo.cliente.dpi ?? 'Sin documento'})` : 'Sin cliente asociado'}</Typography>
+                                        {isEdit && vehiculo.cliente && servicioClienteId !== vehiculo.cliente.id && params.id && (
+                                            <Button size="small" variant="outlined" onClick={async () => {
+                                                try {
+                                                    const updated = await servicioRepository.asociarCliente(params.id as string);
+                                                    setServicioClienteId(updated.cliente_id ?? null);
+                                                    setValue('cliente_id', updated.cliente_id ?? null);
+                                                    toast.success('Cliente asociado al servicio correctamente');
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    toast.error('No se pudo asociar el cliente');
+                                                }
+                                            }}>Asociar cliente</Button>
+                                        )}
+                                    </Box>
                             </Box>
                         </Paper>
 

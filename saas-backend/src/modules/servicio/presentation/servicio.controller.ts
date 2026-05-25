@@ -6,12 +6,14 @@ import type { ObtenerServicioUseCase } from "../application/obtener-servicio.use
 import type { RegistrarServicioUseCase } from "../application/registrar-servicio.usecase.js";
 import type { ActualizarServicioUseCase } from "../application/actualizar-servicio.usecase.js";
 import type { CambiarEstadoServicioUseCase } from "../application/cambiar-estado-servicio.usecase.js";
+import type { GuardarFirmaEntradaUseCase } from "../application/guardar-firma-entrada.usecase.js";
 import type { SubirImagenServicioUseCase } from "../application/subir-imagen-servicio.usecase.js";
 import type { EliminarImagenServicioUseCase } from "../application/eliminar-imagen-servicio.usecase.js";
 import type { ListarChecklistRespuestasUseCase } from "../application/listar-checklist-respuestas.usecase.js";
 import type { RegistrarChecklistRespuestaUseCase } from "../application/registrar-checklist-respuesta.usecase.js";
 import type { ActualizarChecklistRespuestaUseCase } from "../application/actualizar-checklist-respuesta.usecase.js";
 import type { EliminarChecklistRespuestaUseCase } from "../application/eliminar-checklist-respuesta.usecase.js";
+import type { AsociarClienteServicioUseCase } from "../application/asociar-cliente-servicio.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ServicioController extends BaseController {
@@ -21,12 +23,15 @@ export class ServicioController extends BaseController {
         private readonly registrarServicioUseCase: RegistrarServicioUseCase,
         private readonly actualizarServicioUseCase: ActualizarServicioUseCase,
         private readonly cambiarEstadoServicioUseCase: CambiarEstadoServicioUseCase,
+        private readonly guardarFirmaEntradaUseCase: GuardarFirmaEntradaUseCase,
         private readonly subirImagenServicioUseCase: SubirImagenServicioUseCase,
         private readonly eliminarImagenServicioUseCase: EliminarImagenServicioUseCase,
         private readonly listarChecklistRespuestasUseCase: ListarChecklistRespuestasUseCase,
         private readonly registrarChecklistRespuestaUseCase: RegistrarChecklistRespuestaUseCase,
         private readonly actualizarChecklistRespuestaUseCase: ActualizarChecklistRespuestaUseCase,
         private readonly eliminarChecklistRespuestaUseCase: EliminarChecklistRespuestaUseCase
+        ,
+        private readonly asociarClienteServicioUseCase?: AsociarClienteServicioUseCase
     ) {
         super();
     }
@@ -82,6 +87,19 @@ export class ServicioController extends BaseController {
             const { estado } = req.body;
             const servicio = await this.cambiarEstadoServicioUseCase.execute(id, negocio_id, estado);
             res.status(200).json(Respuesta.exito('Estado del servicio actualizado', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    guardarFirmaEntrada = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!req.file) throw new AppError('No se ha subido ninguna firma', 'SIGNATURE_REQUIRED', 400);
+            const firma_url = req.file.path.replace(/\\/g, '/');
+            const servicio = await this.guardarFirmaEntradaUseCase.execute(id, firma_url, negocio_id);
+            res.status(200).json(Respuesta.exito('Firma de entrada registrada exitosamente', servicio));
         } catch (error) {
             next(error);
         }
@@ -152,6 +170,18 @@ export class ServicioController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             await this.eliminarChecklistRespuestaUseCase.execute(respuesta_id, id, negocio_id);
             res.status(200).json(Respuesta.exito('Respuesta de checklist eliminada', null));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    asociarCliente = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.asociarClienteServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            const servicio = await this.asociarClienteServicioUseCase.execute(id, negocio_id);
+            res.status(200).json(Respuesta.exito('Cliente asociado al servicio', servicio));
         } catch (error) {
             next(error);
         }

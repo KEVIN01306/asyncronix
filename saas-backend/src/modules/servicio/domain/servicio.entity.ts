@@ -29,6 +29,8 @@ export interface Servicio {
     kilometraje?: number | null;
     fecha_entrada?: Date;
     fecha_salida?: Date | null;
+    firma_entrada?: string | null;
+    firma_salida?: string | null;
     total?: number;
     estado: string;
     MetodoPago: string;
@@ -37,7 +39,28 @@ export interface Servicio {
     updated_at?: Date;
 }
 
-export type ServicioSimple = Pick<Servicio, 'id' | 'sucursal_id' | 'vehiculo_id' | 'cliente_id' | 'tipo_servicio_id' | 'estado' | 'total' | 'created_at'>;
+export type ServicioSimple = Pick<Servicio, 'id' | 'sucursal_id' | 'vehiculo_id' | 'cliente_id' | 'tipo_servicio_id' | 'estado' | 'total' | 'created_at'> & {
+    vehiculo?: {
+        id: string;
+        placa: string;
+        modelo_id: string;
+        modelo_nombre?: string | null;
+        marca?: string | null;
+        linea?: string | null;
+        cilindrada?: number | null;
+    } | null;
+    tipo_servicio?: {
+        id: string;
+        nombre: string;
+        precio_base: number;
+    } | null;
+    cliente?: {
+        id: string;
+        nombre: string;
+        telefono?: string | null;
+        email?: string | null;
+    } | null;
+};
 
 export interface ServicioDetalle extends Servicio {
     imagenes: ImagenServicio[];

@@ -1,9 +1,10 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { Add, Edit, Visibility } from '@mui/icons-material';
-import { Box, Button, CircularProgress, Paper, TableContainer, useTheme } from '@mui/material';
+import { Box, Button, Chip, CircularProgress, Paper, TableContainer, useTheme } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
+import { formatMoney } from '../../../../core/utils/formatMoney';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
 import { toast } from 'sonner';
@@ -19,13 +20,33 @@ const ServiciosListPage = () => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
 
+    const getEstadoColor = (estado: string) => {
+        switch (estado) {
+            case 'RECEPCION':
+                return 'warning';
+            case 'TERMINADO':
+            case 'FINALIZADO':
+            case 'COMPLETADO':
+                return 'success';
+            case 'CANCELADO':
+            case 'RECHAZADO':
+                return 'error';
+            default:
+                return 'info';
+        }
+    };
+
     const columns = [
-        { id: 'id', name: 'Servicio' },
-        { id: 'vehiculo_id', name: 'Vehículo' },
-        { id: 'tipo_servicio_id', name: 'Tipo de servicio' },
-        { id: 'estado', name: 'Estado' },
-        { id: 'total', name: 'Total', format: (value: any) => value != null ? `$${Number(value).toFixed(2)}` : '$0.00' },
-        { id: 'created_at', name: 'Fecha' }
+        { id: 'vehiculo_id', name: 'Placa', format: (_value: any, row: any) => row.vehiculo?.placa || 'N/A' },
+        { id: 'modelo', name: 'Modelo', format: (_value: any, row: any) => row.vehiculo?.modelo_nombre || 'N/A' },
+        { id: 'tipo_servicio_id', name: 'Tipo de servicio', format: (_value: any, row: any) => row.tipo_servicio?.nombre || 'N/A' },
+        {
+            id: 'estado',
+            name: 'Estado',
+            format: (value: any) => <Chip variant='outlined' label={value} color={getEstadoColor(value)} size='small' />
+        },
+        { id: 'total', name: 'Total', format: (value: any) => formatMoney(Number(value ?? 0)) },
+        { id: 'created_at', name: 'Fecha', format: (value: any) => value ? new Date(value).toLocaleString() : 'N/A' }
     ];
 
     const fetchServicios = useCallback(async () => {

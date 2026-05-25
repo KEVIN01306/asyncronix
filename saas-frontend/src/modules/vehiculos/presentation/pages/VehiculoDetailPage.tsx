@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Grid, Paper, Typography, Button, Stack, Alert } from '@mui/material';
+import { Box, Grid, Paper, Typography, Button, Stack, Alert, TextField } from '@mui/material';
 import { ArrowBack, Edit, PictureAsPdf, Download } from '@mui/icons-material';
 import { toast } from 'sonner';
 
 import { vehiculoRepository } from '../../infrastructure/vehiculo.repository';
 import { vehiculoTipoRepository } from '../../infrastructure/vehiculo-tipo.repository';
 import { modelosRepository } from '../../../modelos/infrastructure/modelos.repository';
+import { clienteRepository } from '../../../clientes/infrastructure/clientes.repository';
 import type { Vehiculo } from '../../domain/interfaces/vehiculo.interface';
 import type { VehiculoTipo } from '../../domain/interfaces/vehiculo-tipo.interface';
 import type { Modelo } from '../../../modelos/domain/interface/modelo.interface';
@@ -24,6 +25,9 @@ const VehiculoDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingPdf, setUploadingPdf] = useState(false);
+    const [searchNit, setSearchNit] = useState('');
+    const [searchingCliente, setSearchingCliente] = useState(false);
+    const [clienteSearchMessage, setClienteSearchMessage] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
         if (!id) return;
@@ -104,6 +108,37 @@ const VehiculoDetailPage = () => {
         }
     };
 
+    const handleBuscarYAsociarCliente = async () => {
+        if (!id) return;
+        const cleanNit = searchNit.trim();
+        if (!cleanNit) {
+            setClienteSearchMessage('Ingresa un NIT válido para buscar.');
+            return;
+        }
+
+        setSearchingCliente(true);
+        setClienteSearchMessage(null);
+
+        try {
+            const response = await clienteRepository.buscarPorDocumento({ nit: cleanNit });
+            const cliente = response.data ?? null;
+            if (cliente) {
+                await vehiculoRepository.actualizar(id, { cliente_id: cliente.id });
+                await fetchData();
+                toast.success('Cliente asociado correctamente.');
+                setSearchNit('');
+                setClienteSearchMessage(null);
+            } else {
+                setClienteSearchMessage('Cliente no encontrado. Vuelve a buscar o crea un cliente.');
+            }
+        } catch (error) {
+            console.error(error);
+            setClienteSearchMessage('Error al buscar cliente. Intenta de nuevo.');
+        } finally {
+            setSearchingCliente(false);
+        }
+    };
+
     if (loading) return <Loading />;
     if (!vehiculo) return <ErrorPageLoading text="Vehículo no encontrado" navigate={() => navigate('/vehiculos')} />;
 
@@ -131,6 +166,40 @@ const VehiculoDetailPage = () => {
                             <Typography variant="body2"><strong>Marca:</strong> {modelo?.marca ?? '-'}</Typography>
                             <Typography variant="body2"><strong>Línea:</strong> {modelo?.linea ?? '-'}</Typography>
                             <Typography variant="body2"><strong>Cilindrada:</strong> {modelo?.cilindrada ?? '-'}</Typography>
+                            <Typography variant="body2"><strong>Cliente:</strong></Typography>
+                            {vehiculo.cliente ? (
+                                <Box>
+                                    <Typography>{vehiculo.cliente.nombre}</Typography>
+                                    <Typography variant="body2" color="text.secondary">NIT: {vehiculo.cliente.nit ?? 'Sin NIT'}</Typography>
+                                    <Typography variant="body2" color="text.secondary">DPI: {vehiculo.cliente.dpi ?? 'Sin DPI'}</Typography>
+                                    <Button sx={{ mt: 1, p: 0 }} onClick={() => navigate(`/clientes/${vehiculo.cliente?.id}`)}>
+                                        Ver detalle del cliente
+                                    </Button>
+                                </Box>
+                            ) : (
+                                <Box sx={{ mt: 1 }}>
+                                    <TextField
+                                        label="Buscar cliente por NIT"
+                                        value={searchNit}
+                                        onChange={(event) => setSearchNit(event.target.value)}
+                                        fullWidth
+                                        size="small"
+                                    />
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mt={2}>
+                                        <Button variant="contained" onClick={handleBuscarYAsociarCliente} disabled={searchingCliente}>
+                                            {searchingCliente ? 'Buscando...' : 'Buscar y asociar'}
+                                        </Button>
+                                        <Button variant="outlined" onClick={() => navigate(`/clientes/nuevo?nit=${encodeURIComponent(searchNit)}`)}>
+                                            Crear cliente nuevo
+                                        </Button>
+                                    </Stack>
+                                    {clienteSearchMessage && (
+                                        <Alert severity="info" sx={{ mt: 2 }}>
+                                            {clienteSearchMessage}
+                                        </Alert>
+                                    )}
+                                </Box>
+                            )}
                         </Stack>
                     </Paper>
 

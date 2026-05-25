@@ -31,7 +31,7 @@ const ClientesListPage = () => {
             name: 'Detalle',
             icon: <Info fontSize="small" />,
             color: 'info',
-            onClick: (row: any) => navigate(`/clientes/${row.id}/detalle`),
+            onClick: (row: any) => navigate(`/clientes/${row.id}`),
         },
         {
             name: 'Editar',

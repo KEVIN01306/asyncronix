@@ -30,6 +30,8 @@ export interface Servicio {
     kilometraje?: number | null;
     fecha_entrada?: string | null;
     fecha_salida?: string | null;
+    firma_entrada?: string | null;
+    firma_salida?: string | null;
     total?: number | null;
     estado: string;
     MetodoPago: string;
@@ -38,6 +40,26 @@ export interface Servicio {
     updated_at?: string;
     imagenes?: ImagenServicio[];
     checklist?: ChecklistRespuesta[];
+    vehiculo?: {
+        id: string;
+        placa: string;
+        modelo_id: string;
+        modelo_nombre?: string | null;
+        marca?: string | null;
+        linea?: string | null;
+        cilindrada?: number | null;
+    } | null;
+    tipo_servicio?: {
+        id: string;
+        nombre: string;
+        precio_base: number;
+    } | null;
+    cliente?: {
+        id: string;
+        nombre: string;
+        telefono?: string | null;
+        email?: string | null;
+    } | null;
 }
 
 export type ServicioDetailResponse = ApiResponse<Servicio>;

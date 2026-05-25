@@ -5,12 +5,14 @@ import { ObtenerServicioUseCase } from './application/obtener-servicio.usecase.j
 import { RegistrarServicioUseCase } from './application/registrar-servicio.usecase.js';
 import { ActualizarServicioUseCase } from './application/actualizar-servicio.usecase.js';
 import { CambiarEstadoServicioUseCase } from './application/cambiar-estado-servicio.usecase.js';
+import { GuardarFirmaEntradaUseCase } from './application/guardar-firma-entrada.usecase.js';
 import { SubirImagenServicioUseCase } from './application/subir-imagen-servicio.usecase.js';
 import { EliminarImagenServicioUseCase } from './application/eliminar-imagen-servicio.usecase.js';
 import { ListarChecklistRespuestasUseCase } from './application/listar-checklist-respuestas.usecase.js';
 import { RegistrarChecklistRespuestaUseCase } from './application/registrar-checklist-respuesta.usecase.js';
 import { ActualizarChecklistRespuestaUseCase } from './application/actualizar-checklist-respuesta.usecase.js';
 import { EliminarChecklistRespuestaUseCase } from './application/eliminar-checklist-respuesta.usecase.js';
+import { AsociarClienteServicioUseCase } from './application/asociar-cliente-servicio.usecase.js';
 import { ServicioController } from './presentation/servicio.controller.js';
 
 const repository = new PrismaServicioRepository(prisma as any);
@@ -19,12 +21,14 @@ const obtenerServicioUseCase = new ObtenerServicioUseCase(repository);
 const registrarServicioUseCase = new RegistrarServicioUseCase(repository);
 const actualizarServicioUseCase = new ActualizarServicioUseCase(repository);
 const cambiarEstadoServicioUseCase = new CambiarEstadoServicioUseCase(repository);
+const guardarFirmaEntradaUseCase = new GuardarFirmaEntradaUseCase(repository);
 const subirImagenServicioUseCase = new SubirImagenServicioUseCase(repository);
 const eliminarImagenServicioUseCase = new EliminarImagenServicioUseCase(repository);
 const listarChecklistRespuestasUseCase = new ListarChecklistRespuestasUseCase(repository);
 const registrarChecklistRespuestaUseCase = new RegistrarChecklistRespuestaUseCase(repository);
 const actualizarChecklistRespuestaUseCase = new ActualizarChecklistRespuestaUseCase(repository);
 const eliminarChecklistRespuestaUseCase = new EliminarChecklistRespuestaUseCase(repository);
+const asociarClienteServicioUseCase = new AsociarClienteServicioUseCase(repository);
 
 export const servicioController = new ServicioController(
     obtenerServiciosUseCase,
@@ -32,10 +36,13 @@ export const servicioController = new ServicioController(
     registrarServicioUseCase,
     actualizarServicioUseCase,
     cambiarEstadoServicioUseCase,
+    guardarFirmaEntradaUseCase,
     subirImagenServicioUseCase,
     eliminarImagenServicioUseCase,
     listarChecklistRespuestasUseCase,
     registrarChecklistRespuestaUseCase,
     actualizarChecklistRespuestaUseCase,
     eliminarChecklistRespuestaUseCase
+    ,
+    asociarClienteServicioUseCase
 );

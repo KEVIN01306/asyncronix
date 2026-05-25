@@ -23,7 +23,7 @@ export const clientesRoutes: RouteObject[] = [
                 )
             },
             {
-                path: ':id/detalle',
+                path: ':id',
                 element: (
                     <RouteProtector requiredPermission="VER_CLIENTES_DETALLE">
                         <ClienteDetallePage />

@@ -42,6 +42,16 @@ export const servicioRepository = {
         return response.data;
     },
 
+    guardarFirmaEntrada: async (id: string, file: File): Promise<Servicio> => {
+        const formData = new FormData();
+        formData.append('firma', file);
+
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/firma-entrada`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
     eliminarImagen: async (id: string, imagenId: string): Promise<void> => {
         await api.delete(`${URL_MODULE}/${id}/imagenes/${imagenId}`);
     },
@@ -63,5 +73,10 @@ export const servicioRepository = {
 
     eliminarChecklistRespuesta: async (id: string, respuestaId: string): Promise<void> => {
         await api.delete(`${URL_MODULE}/${id}/checklist-respuestas/${respuestaId}`);
+    }
+,
+    asociarCliente: async (id: string): Promise<Servicio> => {
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/asociar-cliente`);
+        return response.data;
     }
 };

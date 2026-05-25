@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress } from '@mui/material';
@@ -14,6 +14,7 @@ import type { ClienteCreateFormValues } from '../../domain/interfaces/cliente.in
 const ClienteFormPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const isEdit = Boolean(id);
     const [loading, setLoading] = useState(isEdit);
 
@@ -52,8 +53,16 @@ const ClienteFormPage = () => {
             };
 
             fetchCliente();
+        } else {
+            const nitFromQuery = searchParams.get('nit');
+            if (nitFromQuery) {
+                reset((current) => ({
+                    ...current,
+                    nit: nitFromQuery,
+                }));
+            }
         }
-    }, [id, isEdit, reset]);
+    }, [id, isEdit, reset, searchParams]);
 
     const onSubmit: SubmitHandler<ClienteFormInput> = async (data) => {
         try {
@@ -64,7 +73,7 @@ const ClienteFormPage = () => {
                 await clienteRepository.registrar(data as ClienteCreateFormValues);
                 toast.success('Cliente creado correctamente');
             }
-            navigate('/clientes');
+            navigate(-1);
         } catch (error) {
             console.error(error);
             toast.error('Error al guardar el cliente');

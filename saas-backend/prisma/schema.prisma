@@ -331,6 +331,8 @@ model Servicio {
   descripcion      String?         @db.Text
   diagnostico      String?        @db.Text
   kilometraje      Int?
+  firma_entrada    String?        @db.Text
+  firma_salida     String?        @db.Text
   fecha_entrada    DateTime       @default(now())
   fecha_salida     DateTime?
   total            Float          @default(0)

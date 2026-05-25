@@ -47,6 +47,13 @@ router.patch(
 );
 
 router.post(
+    "/:id/firma-entrada",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
+    FileUploadMiddleware.single('firma', 'servicios'),
+    servicioController.guardarFirmaEntrada
+);
+
+router.post(
     "/:id/imagenes",
     authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
     FileUploadMiddleware.single('imagen', 'servicios'),
@@ -83,6 +90,12 @@ router.delete(
     "/:id/checklist-respuestas/:respuesta_id",
     authMiddleware.verificarRol(['ELIMINAR_CHECKLIST']),
     servicioController.eliminarChecklistRespuesta
+);
+
+router.post(
+    "/:id/asociar-cliente",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
+    servicioController.asociarCliente
 );
 
 export default router;

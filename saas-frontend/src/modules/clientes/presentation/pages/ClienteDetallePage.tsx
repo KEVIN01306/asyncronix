@@ -50,7 +50,7 @@ export default function ClienteDetallePage() {
             const res = await ventaRepository.listar(itemsPerPage, offset, clienteId);
             setVentas(res.data);
             setTotalVentas(res.meta?.total ?? 0);
-        } catch (error) {
+        } catch {
             toast.error("Error al cargar ventas del cliente");
             setVentas([]);
             setTotalVentas(0);
