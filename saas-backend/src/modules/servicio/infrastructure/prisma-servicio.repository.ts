@@ -36,6 +36,7 @@ const mapServicioDetalle = (record: any): ServicioDetalle => ({
     imagenes: (record.imagenes ?? []).map((item: any) => ({
         id: item.id,
         servicio_id: item.servicio_id,
+        descripcion: item.descripcion,
         url: item.imagen,
         created_at: item.created_at,
         updated_at: item.updated_at

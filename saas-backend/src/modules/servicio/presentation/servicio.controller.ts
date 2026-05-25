@@ -94,6 +94,7 @@ export class ServicioController extends BaseController {
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
             const url = req.file.path.replace(/\\/g, '/');
             const descripcion = typeof req.body.descripcion === 'string' ? req.body.descripcion : null;
+            console.log("esta es la descripccion", descripcion)
             const servicio = await this.subirImagenServicioUseCase.execute({ servicio_id: id, url, negocio_id, descripcion });
             res.status(201).json(Respuesta.exito('Imagen agregada al servicio', servicio));
         } catch (error) {

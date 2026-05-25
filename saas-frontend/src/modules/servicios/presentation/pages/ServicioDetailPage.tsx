@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import { Edit } from '@mui/icons-material';
-import { Box, Button, Card, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Paper, Select, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
+//import { useForm, Controller} from 'react-hook-form';
+import { ArrowBack, Edit } from '@mui/icons-material';
+import { Box, Breadcrumbs, Button, Card, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Paper, Select, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useMediaQuery, useTheme,Link } from '@mui/material';
 import { toast } from 'sonner';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import { vehiculoRepository } from '../../../vehiculos/infrastructure/vehiculo.repository';
@@ -13,12 +13,13 @@ import type { ChecklistItem } from '../../../checklist-items/domain/interfaces/c
 import type { TipoServicio } from '../../../tipos-servicio/domain/interfaces/tipo-servicio.interface';
 import type { Vehiculo } from '../../../vehiculos/domain/interfaces/vehiculo.interface';
 
+/*
 interface ChecklistFormValues {
     checklist_item_id: string;
     estado: string;
     observaciones: string;
 }
-
+*/
 const estadosServicio = ['RECEPCION', 'EN_SERVICIO', 'EN_DIAGNOSTICO', 'ESPERA_REPUESTOS', 'EN_REPARACION', 'LISTO_ENTREGA', 'FINALIZADO', 'CANCELADO'];
 const checklistEstados = ['OPTIMO', 'REGULAR', 'REQUIERE_CAMBIO', 'NO_APLICA'];
 
@@ -47,7 +48,7 @@ const ServicioDetailPage = () => {
     const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
     const [previewImageDescription, setPreviewImageDescription] = useState<string | null>(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
+    /*
     const { control, register, handleSubmit, reset, formState: { isSubmitting } } = useForm<ChecklistFormValues>({
         defaultValues: {
             checklist_item_id: '',
@@ -55,7 +56,7 @@ const ServicioDetailPage = () => {
             observaciones: ''
         }
     });
-
+*/
     const fetchService = useCallback(async () => {
         if (!id) return;
         try {
@@ -70,14 +71,14 @@ const ServicioDetailPage = () => {
                 const tipoResponse = await TipoServicioRepository.Obtener(response.tipo_servicio_id);
                 setTipoServicio(tipoResponse);
             }
-            reset({ checklist_item_id: '', estado: 'OPTIMO', observaciones: '' });
+            //reset({ checklist_item_id: '', estado: 'OPTIMO', observaciones: '' });
         } catch (error) {
             console.error(error);
             toast.error('No se pudo cargar el servicio');
         } finally {
             setLoading(false);
         }
-    }, [id, reset]);
+    }, [id, /*reset*/]);
 
     useEffect(() => {
         const imageCount = servicio?.imagenes?.length ?? 0;
@@ -252,7 +253,7 @@ const ServicioDetailPage = () => {
             setSavingAll(false);
         }
     };
-
+    /*
     const onSubmitChecklist = async (data: ChecklistFormValues) => {
         if (!id) return;
         try {
@@ -274,7 +275,7 @@ const ServicioDetailPage = () => {
             toast.error('No se pudo agregar la respuesta');
         }
     };
-
+    */
     if (loading) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" height="100%" p={4}>
@@ -295,6 +296,22 @@ const ServicioDetailPage = () => {
     return (
         <Box p={isMobile ? 2 : 4}>
             <Stack spacing={2}>
+                <Box>
+                    <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+                        <Link
+                            underline="hover" 
+                            color="inherit" 
+                            sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }} 
+                            onClick={() => navigate('/servicios')}
+                        >
+                            <ArrowBack sx={{ fontSize: 16 }} /> Servicios
+                        </Link>
+                        <Typography color="text.primary">Vista Detallada</Typography>
+                    </Breadcrumbs>
+                    <Typography variant="h4" fontWeight={800} color="text.primary">
+                        {vehiculo?.modelo_nombre}
+                    </Typography>
+                </Box>
                 <Paper sx={{ p: 3 }}>
                     <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={2}>
                         <Box>
@@ -333,69 +350,10 @@ const ServicioDetailPage = () => {
                     </FormControl>
                 </Paper>
 
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Paper sx={{ p: 3, height: '100%' }}>
-                            <Typography variant="h6" mb={2}>Imágenes del servicio</Typography>
-                            <Button variant="contained" component="label" disabled={uploading}>
-                                {uploading ? 'Subiendo...' : 'Subir imagen'}
-                                <input hidden accept="image/*" type="file" onChange={handleImageSelect} />
-                            </Button>
-                            {servicio.imagenes?.length ? (
-                                <>
-                                    <Card sx={{ mt: 2, cursor: 'pointer' }} onClick={() => selectedImage && handleOpenImagePreview(selectedImage)}>
-                                        <CardMedia
-                                            component="img"
-                                            height="280"
-                                            image={`${import.meta.env.VITE_API_URL}/${servicio.imagenes[selectedImageIndex]?.url}`}
-                                            alt={servicio.imagenes[selectedImageIndex]?.descripcion ?? 'Servicio'}
-                                        />
-                                        <Box sx={{ p: 2 }}>
-                                            <Typography variant="body1" fontWeight={600} noWrap>
-                                                {servicio.imagenes[selectedImageIndex]?.descripcion ?? 'Sin descripción'}
-                                            </Typography>
-                                        </Box>
-                                    </Card>
-                                    <Box sx={{ mt: 2, display: 'flex', gap: 1, overflowX: 'auto', pb: 1 }}>
-                                        {servicio.imagenes.map((imagen, index) => {
-                                            const isSelected = index === selectedImageIndex;
-                                            return (
-                                                <Card
-                                                    key={imagen.id}
-                                                    onClick={() => setSelectedImageIndex(index)}
-                                                    sx={{
-                                                        minWidth: 100,
-                                                        maxWidth: 120,
-                                                        flex: '0 0 auto',
-                                                        border: isSelected ? `2px solid ${theme.palette.primary.main}` : '1px solid rgba(0,0,0,0.12)',
-                                                        boxShadow: isSelected ? theme.shadows[4] : theme.shadows[1],
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    <CardMedia
-                                                        component="img"
-                                                        height="84"
-                                                        image={`${import.meta.env.VITE_API_URL}/${imagen.url}`}
-                                                        alt={imagen.descripcion ?? 'Miniatura'}
-                                                    />
-                                                </Card>
-                                            );
-                                        })}
-                                    </Box>
-                                    <Button sx={{ mt: 1 }} color="error" onClick={() => selectedImage && handleDeleteImage(selectedImage.id)}>
-                                        Eliminar imagen seleccionada
-                                    </Button>
-                                </>
-                            ) : (
-                                <Typography color="text.secondary" sx={{ mt: 2 }}>No hay imágenes cargadas.</Typography>
-                            )}
-                        </Paper>
-                    </Grid>
 
-                    <Grid  size={{ xs: 12, md: 6 }} >
-                        <Paper sx={{ p: 3 }}>
-                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                                <Typography variant="h6">Checklist</Typography>
+                <Paper sx={{ p: 3 }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                            <Typography variant="h6">Checklist</Typography>
                                 <Box>
                                     {!editingAll ? (
                                         <Button variant="outlined" size="small" onClick={startEditAll} sx={{ mr: 1 }} disabled={savingAll}>Editar checklist</Button>
@@ -407,51 +365,6 @@ const ServicioDetailPage = () => {
                                     )}
                                 </Box>
                             </Box>
-                            <Box component="form" onSubmit={handleSubmit(onSubmitChecklist)} noValidate>
-                                <FormControl fullWidth sx={{ mb: 2 }}>
-                                    <InputLabel id="checklist-item-label">Item de checklist</InputLabel>
-                                    <Controller
-                                        name="checklist_item_id"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select {...field} labelId="checklist-item-label" label="Item de checklist">
-                                                <MenuItem value="">Selecciona un item</MenuItem>
-                                                                {checklistItems.map((item) => (
-                                                                    <MenuItem key={item.id} value={item.id}>{item.nombre}</MenuItem>
-                                                                ))}
-                                            </Select>
-                                        )}
-                                    />
-                                </FormControl>
-                                <FormControl fullWidth sx={{ mb: 2 }}>
-                                    <InputLabel id="estado-checklist-label">Estado</InputLabel>
-                                    <Controller
-                                        name="estado"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select {...field} labelId="estado-checklist-label" label="Estado">
-                                                {checklistEstados.map((estado) => (
-                                                    <MenuItem key={estado} value={estado}>{estado.replace('_', ' ')}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        )}
-                                    />
-                                </FormControl>
-                                <TextField
-                                    label="Observaciones"
-                                    fullWidth
-                                    multiline
-                                    minRows={3}
-                                    {...register('observaciones')}
-                                />
-                                <Button variant="contained" type="submit" sx={{ mt: 2 }} disabled={isSubmitting}>Agregar respuesta</Button>
-                            </Box>
-                        </Paper>
-                    </Grid>
-                </Grid>
-
-                <Paper sx={{ p: 3 }}>
-                    <Typography variant="h6" mb={2}>Respuestas del checklist</Typography>
                     {servicio.checklist?.length ? (
                         <TableContainer>
                             <Table>
@@ -544,6 +457,126 @@ const ServicioDetailPage = () => {
                         <Typography color="text.secondary">No se han registrado respuestas de checklist aún.</Typography>
                     )}
                 </Paper>
+
+                <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Paper sx={{ p: 3, height: '100%' }}>
+                            <Typography variant="h6" mb={2}>Imágenes del servicio</Typography>
+                            <Button variant="contained" component="label" disabled={uploading}>
+                                {uploading ? 'Subiendo...' : 'Subir imagen'}
+                                <input hidden accept="image/*" type="file" onChange={handleImageSelect} capture={isMobile ? 'environment' : undefined} />
+                            </Button>
+                            {servicio.imagenes?.length ? (
+                                <>
+                                    <Card sx={{ mt: 2, cursor: 'pointer' }} onClick={() => selectedImage && handleOpenImagePreview(selectedImage)}>
+                                        <CardMedia
+                                            component="img"
+                                            height="280"
+                                            image={`${import.meta.env.VITE_API_URL}/${servicio.imagenes[selectedImageIndex]?.url}`}
+                                            alt={servicio.imagenes[selectedImageIndex]?.descripcion ?? 'Servicio'}
+                                        />
+                                        <Box sx={{ p: 2 }}>
+                                            <Typography variant="body1" fontWeight={600} noWrap>
+                                                {servicio.imagenes[selectedImageIndex]?.descripcion ?? 'Sin descripción'}
+                                            </Typography>
+                                        </Box>
+                                    </Card>
+                                    <Box sx={{ mt: 2, display: 'flex', gap: 1, overflowX: 'auto', pb: 1 }}>
+                                        {servicio.imagenes.map((imagen, index) => {
+                                            const isSelected = index === selectedImageIndex;
+                                            return (
+                                                <Card
+                                                    key={imagen.id}
+                                                    onClick={() => setSelectedImageIndex(index)}
+                                                    sx={{
+                                                        minWidth: 100,
+                                                        maxWidth: 120,
+                                                        flex: '0 0 auto',
+                                                        border: isSelected ? `2px solid ${theme.palette.primary.main}` : '1px solid rgba(0,0,0,0.12)',
+                                                        boxShadow: isSelected ? theme.shadows[4] : theme.shadows[1],
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <CardMedia
+                                                        component="img"
+                                                        height="84"
+                                                        image={`${import.meta.env.VITE_API_URL}/${imagen.url}`}
+                                                        alt={imagen.descripcion ?? 'Miniatura'}
+                                                    />
+                                                </Card>
+                                            );
+                                        })}
+                                    </Box>
+                                    <Button sx={{ mt: 1 }} color="error" onClick={() => selectedImage && handleDeleteImage(selectedImage.id)}>
+                                        Eliminar imagen seleccionada
+                                    </Button>
+                                </>
+                            ) : (
+                                <Typography color="text.secondary" sx={{ mt: 2 }}>No hay imágenes cargadas.</Typography>
+                            )}
+                        </Paper>
+                    </Grid>
+
+                    {/*
+                    <Grid  size={{ xs: 12, md: 6 }} >
+                        <Paper sx={{ p: 3 }}>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                                <Typography variant="h6">Checklist</Typography>
+                                <Box>
+                                    {!editingAll ? (
+                                        <Button variant="outlined" size="small" onClick={startEditAll} sx={{ mr: 1 }} disabled={savingAll}>Editar checklist</Button>
+                                    ) : (
+                                        <>
+                                            <Button variant="contained" size="small" onClick={saveAllEdits} sx={{ mr: 1 }} disabled={savingAll}>{savingAll ? 'Guardando...' : 'Guardar cambios'}</Button>
+                                            <Button variant="outlined" size="small" onClick={cancelEditAll} disabled={savingAll}>Cancelar</Button>
+                                        </>
+                                    )}
+                                </Box>
+                            </Box>
+                            <Box component="form" onSubmit={handleSubmit(onSubmitChecklist)} noValidate>
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel id="checklist-item-label">Item de checklist</InputLabel>
+                                    <Controller
+                                        name="checklist_item_id"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select {...field} labelId="checklist-item-label" label="Item de checklist">
+                                                <MenuItem value="">Selecciona un item</MenuItem>
+                                                                {checklistItems.map((item) => (
+                                                                    <MenuItem key={item.id} value={item.id}>{item.nombre}</MenuItem>
+                                                                ))}
+                                            </Select>
+                                        )}
+                                    />
+                                </FormControl>
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel id="estado-checklist-label">Estado</InputLabel>
+                                    <Controller
+                                        name="estado"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select {...field} labelId="estado-checklist-label" label="Estado">
+                                                {checklistEstados.map((estado) => (
+                                                    <MenuItem key={estado} value={estado}>{estado.replace('_', ' ')}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        )}
+                                    />
+                                </FormControl>
+                                <TextField
+                                    label="Observaciones"
+                                    fullWidth
+                                    multiline
+                                    minRows={3}
+                                    {...register('observaciones')}
+                                />
+                                <Button variant="contained" type="submit" sx={{ mt: 2 }} disabled={isSubmitting}>Agregar respuesta</Button>
+                            </Box>
+                        </Paper>
+                    </Grid>
+                    */}
+                </Grid>
+
                 <Dialog open={openUploadModal} onClose={closeUploadModal} fullWidth maxWidth="sm">
                     <DialogTitle>Descripción de la imagen</DialogTitle>
                     <DialogContent>

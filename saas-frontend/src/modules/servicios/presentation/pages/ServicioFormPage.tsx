@@ -12,6 +12,7 @@ import { TipoServicioRepository } from '../../../tipos-servicio/infrastructure/r
 import { vehiculoRepository } from '../../../vehiculos/infrastructure/vehiculo.repository';
 import type { TipoServicio } from '../../../tipos-servicio/domain/interfaces/tipo-servicio.interface';
 import type { Vehiculo } from '../../../vehiculos/domain/interfaces/vehiculo.interface';
+import { ArrowBack } from '@mui/icons-material';
 
 const ServicioFormPage = () => {
     const navigate = useNavigate();
@@ -137,6 +138,13 @@ const ServicioFormPage = () => {
     return (
         <>
         <Box p={isMobile ? 2 : 4}>
+            <Button
+                    startIcon={<ArrowBack />}
+                    onClick={() => navigate(-1)}
+                    sx={{ mb: 2, textTransform: 'none' }}
+                >
+                    Volver
+            </Button>
             <Stack spacing={3}>
                 {step === 'placa' && (
                     <Paper sx={{ p: 3 }}>
