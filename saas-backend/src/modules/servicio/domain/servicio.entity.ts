@@ -1,3 +1,5 @@
+import type { EstadoServicio, MetodoPago } from './servicio.constants.js';
+
 export interface ImagenServicio {
     id: string;
     servicio_id: string;
@@ -12,6 +14,16 @@ export interface ChecklistRespuestaSimple {
     servicio_id: string;
     estado: string;
     observaciones?: string | null;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface ServicioTarea {
+    id: string;
+    servicio_id: string;
+    nombre: string;
+    completado: boolean;
+    observacion?: string | null;
     created_at: Date;
     updated_at: Date;
 }
@@ -32,8 +44,8 @@ export interface Servicio {
     firma_entrada?: string | null;
     firma_salida?: string | null;
     total?: number;
-    estado: string;
-    MetodoPago: string;
+    estado: EstadoServicio;
+    MetodoPago: MetodoPago;
     activo?: boolean;
     created_at?: Date;
     updated_at?: Date;
@@ -65,6 +77,7 @@ export type ServicioSimple = Pick<Servicio, 'id' | 'sucursal_id' | 'vehiculo_id'
 export interface ServicioDetalle extends Servicio {
     imagenes: ImagenServicio[];
     checklist: ChecklistRespuestaSimple[];
+    tareas: ServicioTarea[];
 }
 
 export type ServicioCrear = Omit<Servicio, 'id' | 'activo' | 'created_at' | 'updated_at' | 'fecha_entrada' | 'estado'> & {

@@ -6,6 +6,7 @@ import { Grid } from '@mui/material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { type ServicioFormValues } from '../../domain/schemas/servicio.schema';
+import { METODO_PAGO } from '../../domain/servicio.constants';
 import Step1BuscarPlaca from './components/Step1BuscarPlaca';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import { TipoServicioRepository } from '../../../tipos-servicio/infrastructure/repositories/tipo-servicio.repository';
@@ -37,7 +38,7 @@ const ServicioFormPage = () => {
             descripcion: '',
             diagnostico: '',
             kilometraje: null,
-            MetodoPago: 'EFECTIVO'
+            MetodoPago: METODO_PAGO.EFECTIVO
         }
     });
 
@@ -66,7 +67,7 @@ const ServicioFormPage = () => {
                 descripcion: response.descripcion ?? '',
                 diagnostico: response.diagnostico ?? '',
                 kilometraje: response.kilometraje ?? null,
-                MetodoPago: (response.MetodoPago ?? 'EFECTIVO') as 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'OTRO'
+                MetodoPago: (response.MetodoPago ?? METODO_PAGO.EFECTIVO) as any
             });
             setServicioClienteId(response.cliente_id ?? null);
         } catch (error) {
@@ -110,7 +111,7 @@ const ServicioFormPage = () => {
             descripcion: data.descripcion ?? null,
             diagnostico: data.diagnostico ?? null,
             kilometraje: data.kilometraje ?? null,
-            MetodoPago: 'EFECTIVO'
+            MetodoPago: METODO_PAGO.EFECTIVO
         };
 
         try {

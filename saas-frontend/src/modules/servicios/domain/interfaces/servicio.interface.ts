@@ -1,4 +1,5 @@
 import type { ApiResponse, PaginatedResponse } from '../../../../core/api/interfaces/api-response.interface';
+import type { EstadoServicio } from '../servicio.constants';
 
 export interface ImagenServicio {
     id: string;
@@ -33,13 +34,14 @@ export interface Servicio {
     firma_entrada?: string | null;
     firma_salida?: string | null;
     total?: number | null;
-    estado: string;
+    estado: EstadoServicio;
     MetodoPago: string;
     activo?: boolean;
     created_at?: string;
     updated_at?: string;
     imagenes?: ImagenServicio[];
     checklist?: ChecklistRespuesta[];
+    tareas?: ServicioTarea[];
     vehiculo?: {
         id: string;
         placa: string;
@@ -60,6 +62,16 @@ export interface Servicio {
         telefono?: string | null;
         email?: string | null;
     } | null;
+}
+
+export interface ServicioTarea {
+    id: string;
+    servicio_id: string;
+    nombre: string;
+    completado: boolean;
+    observacion?: string | null;
+    created_at: string;
+    updated_at: string;
 }
 
 export type ServicioDetailResponse = ApiResponse<Servicio>;

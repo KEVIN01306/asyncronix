@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
-import { ServiciosListPage, ServicioFormPage, ServicioDetailPage } from './servicio-lazy';
+import { ServiciosListPage, ServicioFormPage, ServicioDetailPage, ServicioProgresoPage } from './servicio-lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 
 export const servicioRoutes: RouteObject[] = [
@@ -19,6 +19,14 @@ export const servicioRoutes: RouteObject[] = [
                 element: (
                     <RouteProtector requiredPermission="CREAR_SERVICIOS">
                         <ServicioFormPage />
+                    </RouteProtector>
+                )
+            },
+            {
+                path: ':id/progreso',
+                element: (
+                    <RouteProtector requiredPermission="EDITAR_SERVICIOS">
+                        <ServicioProgresoPage />
                     </RouteProtector>
                 )
             },

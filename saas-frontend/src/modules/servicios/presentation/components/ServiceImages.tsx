@@ -6,6 +6,7 @@ import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
 import CreateImageModal from './modals/CreateImageModal';
 import ImagePreviewModal from './modals/ImagePreviewModal';
+import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 
 type Props = {
   servicio: Servicio;
@@ -19,10 +20,10 @@ const ServiceImages: React.FC<Props> = ({ servicio, onUpdate, isMobile }) => {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
   const [openUpload, setOpenUpload] = useState(false);
-  const [uploadDescription, setUploadDescription] = useState('RECEPCION: ');
+  const [uploadDescription, setUploadDescription] = useState(`${ESTADO_SERVICIO.RECEPCION}: `);
   const [openPreview, setOpenPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const canModify = servicio.estado === 'RECEPCION';
+  const canModify = servicio.estado === ESTADO_SERVICIO.RECEPCION;
 
   useEffect(() => {
     const count = servicio.imagenes?.length ?? 0;
@@ -34,7 +35,7 @@ const ServiceImages: React.FC<Props> = ({ servicio, onUpdate, isMobile }) => {
     if (!file) return;
     setPendingFile(file);
     setPendingPreview(URL.createObjectURL(file));
-    setUploadDescription('RECEPCION: ');
+    setUploadDescription(`${ESTADO_SERVICIO.RECEPCION}: `);
     setOpenUpload(true);
     e.currentTarget.value = '';
   };
@@ -44,7 +45,7 @@ const ServiceImages: React.FC<Props> = ({ servicio, onUpdate, isMobile }) => {
     if (pendingPreview) URL.revokeObjectURL(pendingPreview);
     setPendingFile(null);
     setPendingPreview(null);
-    setUploadDescription('RECEPCION: ');
+    setUploadDescription(`${ESTADO_SERVICIO.RECEPCION}: `);
   };
 
   const handleUploadConfirm = async () => {
@@ -52,7 +53,11 @@ const ServiceImages: React.FC<Props> = ({ servicio, onUpdate, isMobile }) => {
     setUploading(true);
     try {
       const preparado = await bajarCalidadImagen(pendingFile);
-      const updated = await servicioRepository.subirImagen(servicio.id, preparado, uploadDescription.trim() || 'RECEPCION: ');
+      const updated = await servicioRepository.subirImagen(
+        servicio.id,
+        preparado,
+        uploadDescription.trim() || `${ESTADO_SERVICIO.RECEPCION}: `
+      );
       onUpdate(updated);
       toast.success('Imagen subida correctamente');
       closeUpload();

@@ -5,6 +5,7 @@ import { ChecklistItemRepository } from '../../../checklist-items/infrastructure
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
 import type { ChecklistItem } from '../../../checklist-items/domain/interfaces/checklist-item.interface';
+import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 
 const checklistEstados = ['OPTIMO', 'REGULAR', 'REQUIERE_CAMBIO', 'NO_APLICA'];
 
@@ -13,7 +14,7 @@ type Props = { servicio: Servicio; onUpdate: (s: Servicio) => void };
 const ServiceChecklistTable: React.FC<Props> = ({ servicio, onUpdate }) => {
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [editingRespuestaId, setEditingRespuestaId] = useState<string | null>(null);
-  const [editingEstado, setEditingEstado] = useState<string>('OPTIMO');
+  const [editingEstado, setEditingEstado] = useState<string>(checklistEstados[0]);
   const [editingObservaciones, setEditingObservaciones] = useState<string>('');
   const [editingAll, setEditingAll] = useState(false);
   const [editingMap, setEditingMap] = useState<Record<string, { estado: string; observaciones: string }>>({});
@@ -23,7 +24,7 @@ const ServiceChecklistTable: React.FC<Props> = ({ servicio, onUpdate }) => {
   useEffect(() => { const load = async () => { try { const resp = await ChecklistItemRepository.listar(100,0); setChecklistItems(resp.data); } catch (e) { console.error(e); toast.error('No se pudieron cargar los items de checklist'); } }; load(); }, []);
 
   const startEditRespuesta = (respuesta: any) => { setEditingRespuestaId(respuesta.id); setEditingEstado(respuesta.estado); setEditingObservaciones(respuesta.observaciones ?? ''); };
-  const cancelEditRespuesta = () => { setEditingRespuestaId(null); setEditingEstado('OPTIMO'); setEditingObservaciones(''); };
+  const cancelEditRespuesta = () => { setEditingRespuestaId(null); setEditingEstado(checklistEstados[0]); setEditingObservaciones(''); };
 
   const saveEditRespuesta = async (respuestaId: string) => {
     if (!servicio.id) return;
@@ -63,9 +64,9 @@ const ServiceChecklistTable: React.FC<Props> = ({ servicio, onUpdate }) => {
     <Paper sx={{ p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6">Checklist</Typography>
-        <Box>
+            <Box>
           {!editingAll ? (
-            <Button variant="outlined" size="small" onClick={startEditAll} sx={{ mr: 1 }} disabled={savingAll || servicio.estado !== 'RECEPCION'}>Editar checklist</Button>
+            <Button variant="outlined" size="small" onClick={startEditAll} sx={{ mr: 1 }} disabled={savingAll || servicio.estado !== ESTADO_SERVICIO.RECEPCION}>Editar checklist</Button>
           ) : (
             <>
               <Button variant="contained" size="small" onClick={saveAllEdits} sx={{ mr: 1 }} disabled={savingAll}>{savingAll ? 'Guardando...' : 'Guardar cambios'}</Button>
@@ -125,11 +126,11 @@ const ServiceChecklistTable: React.FC<Props> = ({ servicio, onUpdate }) => {
                   );
                 }
                 return (
-                  <TableRow key={respuesta.id}>
+                    <TableRow key={respuesta.id}>
                     <TableCell>{itemNombre}</TableCell>
                     <TableCell>{respuesta.estado}</TableCell>
                     <TableCell>{respuesta.observaciones ?? 'Sin observaciones'}</TableCell>
-                    <TableCell><Button size="small" onClick={() => startEditRespuesta(respuesta)} disabled={savingAll || savingRespuesta || servicio.estado !== 'RECEPCION'}>Editar</Button></TableCell>
+                    <TableCell><Button size="small" onClick={() => startEditRespuesta(respuesta)} disabled={savingAll || savingRespuesta || servicio.estado !== ESTADO_SERVICIO.RECEPCION}>Editar</Button></TableCell>
                   </TableRow>
                 );
               })}

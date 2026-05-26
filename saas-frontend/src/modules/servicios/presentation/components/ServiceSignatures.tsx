@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import SignaturePadModal from './modals/SignaturePadModal';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
+import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 
 type Props = { servicio: Servicio; onUpdate: (s: Servicio) => void; };
 
@@ -43,10 +44,10 @@ const ServiceSignatures: React.FC<Props> = ({ servicio, onUpdate }) => {
 
   return (
     <Paper sx={{ p: 3 }}>
-      {servicio.estado === 'RECEPCION' ? (
+      {servicio.estado === ESTADO_SERVICIO.RECEPCION ? (
         <Box>
           <Typography variant="h6" mb={2}>Finalizar Recepción</Typography>
-          <Button variant="contained" color="primary" onClick={handleFinalize} disabled={saving}>Finalizar RECEPCION</Button>
+          <Button variant="contained" color="primary" onClick={handleFinalize} disabled={saving}>Finalizar {ESTADO_SERVICIO.RECEPCION}</Button>
         </Box>
       ) : (
         <Box>

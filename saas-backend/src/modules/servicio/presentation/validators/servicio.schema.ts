@@ -1,17 +1,8 @@
 import { z } from "zod";
+import { ESTADO_SERVICIO_VALUES, METODO_PAGO_VALUES } from "../../domain/servicio.constants.js";
 
-const estadoServicioEnum = z.enum([
-    'RECEPCION',
-    'EN_SERVICIO',
-    'EN_DIAGNOSTICO',
-    'ESPERA_REPUESTOS',
-    'EN_REPARACION',
-    'LISTO_ENTREGA',
-    'FINALIZADO',
-    'CANCELADO'
-]);
-
-const metodoPagoEnum = z.enum(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO']);
+const estadoServicioEnum = z.enum(ESTADO_SERVICIO_VALUES as [string, ...string[]]);
+const metodoPagoEnum = z.enum(METODO_PAGO_VALUES as [string, ...string[]]);
 
 export const servicioCrearSchema = z.object({
     sucursal_id: z.string().uuid(),
@@ -28,6 +19,12 @@ export const servicioCrearSchema = z.object({
 });
 
 export const servicioActualizarSchema = servicioCrearSchema.partial();
+
+export const servicioTareaActualizarSchema = z.object({
+    nombre: z.string().optional(),
+    completado: z.boolean().optional(),
+    observacion: z.string().optional().nullable()
+});
 
 export const servicioCambiarEstadoSchema = z.object({
     estado: estadoServicioEnum

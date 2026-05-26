@@ -9,79 +9,86 @@ import ServiceImages from '../components/ServiceImages';
 import ServiceChecklist from '../components/ServiceChecklist';
 import ServiceSignatures from '../components/ServiceSignatures';
 import ServiceGeneralInfo from '../components/ServiceGeneralInfo';
+import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
+import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
 const ServicioDetailPage = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const [servicio, setServicio] = useState<Servicio | null>(null);
-  const [loading, setLoading] = useState(true);
+    const [servicio, setServicio] = useState<Servicio | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  const fetchService = useCallback(async () => {
-    if (!id) return;
-    try {
-      setLoading(true);
-      const response = await servicioRepository.obtener(id);
-      setServicio(response);
-    } catch (error) {
-      console.error(error);
-      toast.error('No se pudo cargar el servicio');
-    } finally {
-      setLoading(false);
+    const fetchService = useCallback(async () => {
+        if (!id) return;
+        try {
+            setLoading(true);
+            const response = await servicioRepository.obtener(id);
+            setServicio(response);
+        } catch (error) {
+            console.error(error);
+            toast.error('No se pudo cargar el servicio');
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
+    useEffect(() => { fetchService(); }, [fetchService]);
+
+    if (loading) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100%" p={4}>
+                <CircularProgress />
+            </Box>
+        );
     }
-  }, [id]);
 
-  useEffect(() => { fetchService(); }, [fetchService]);
+    if (!servicio) {
+        return <ErrorPageLoading text='Servicio no encontrado' navigate={() => navigate('/servicios')} />;
+    }
 
-  if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100%" p={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+        <Box p={isMobile ? 2 : 4}>
+            <Stack spacing={2}>
+                <Box>
+                    <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+                        <Link underline="hover" color="inherit" sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }} onClick={() => navigate('/servicios')}>
+                            <ArrowBack sx={{ fontSize: 16 }} /> Servicios
+                        </Link>
+                        <Typography color="text.primary">Vista Detallada</Typography>
+                    </Breadcrumbs>
+                    <Typography variant="h4" fontWeight={800} color="text.primary">Servicio #{servicio.id}</Typography>
+                </Box>
 
-  if (!servicio) {
-    return (
-      <Box p={4}>
-        <Typography variant="h6">Servicio no encontrado</Typography>
-        <Button variant="contained" onClick={() => navigate('/servicios')} sx={{ mt: 2 }}>Volver a servicios</Button>
-      </Box>
-    );
-  }
+                <ServiceGeneralInfo servicio={servicio} onEdit={() => navigate(`/servicios/${servicio.id}/editar`)} />
 
-  return (
-    <Box p={isMobile ? 2 : 4}>
-      <Stack spacing={2}>
-        <Box>
-          <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
-            <Link underline="hover" color="inherit" sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }} onClick={() => navigate('/servicios')}>
-              <ArrowBack sx={{ fontSize: 16 }} /> Servicios
-            </Link>
-            <Typography color="text.primary">Vista Detallada</Typography>
-          </Breadcrumbs>
-          <Typography variant="h4" fontWeight={800} color="text.primary">Servicio #{servicio.id}</Typography>
+                {(
+                    servicio.estado === ESTADO_SERVICIO.EN_SERVICIO ||
+                    servicio.estado === ESTADO_SERVICIO.EN_PRUEBAS ||
+                    servicio.estado === ESTADO_SERVICIO.ESPERA_REPUESTOS
+                ) && (
+                    <Button variant="outlined" onClick={() => navigate(`/servicios/${servicio.id}/progreso`)}>
+                        Ver progreso
+                    </Button>
+                )}
+
+                <ServiceSignatures servicio={servicio} onUpdate={(s) => setServicio(s)} />
+
+                <ServiceChecklist servicio={servicio} onUpdate={(s) => setServicio(s)} />
+
+                <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <Paper sx={{ p: 3, height: '100%' }}>
+                            <Typography variant="h6" mb={2}>Imágenes del servicio</Typography>
+                            <ServiceImages servicio={servicio} onUpdate={(s) => setServicio(s)} isMobile={isMobile} />
+                        </Paper>
+                    </Grid>
+                </Grid>
+            </Stack>
         </Box>
-
-        <ServiceGeneralInfo servicio={servicio} onEdit={() => navigate(`/servicios/${servicio.id}/editar`)} />
-
-        <ServiceSignatures servicio={servicio} onUpdate={(s) => setServicio(s)} />
-
-        <ServiceChecklist servicio={servicio} onUpdate={(s) => setServicio(s)} />
-
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" mb={2}>Imágenes del servicio</Typography>
-              <ServiceImages servicio={servicio} onUpdate={(s) => setServicio(s)} isMobile={isMobile} />
-            </Paper>
-          </Grid>
-        </Grid>
-      </Stack>
-    </Box>
-  );
+    );
 };
 
 export default ServicioDetailPage;

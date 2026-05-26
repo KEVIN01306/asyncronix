@@ -8,11 +8,13 @@ import type { ActualizarServicioUseCase } from "../application/actualizar-servic
 import type { CambiarEstadoServicioUseCase } from "../application/cambiar-estado-servicio.usecase.js";
 import type { GuardarFirmaEntradaUseCase } from "../application/guardar-firma-entrada.usecase.js";
 import type { SubirImagenServicioUseCase } from "../application/subir-imagen-servicio.usecase.js";
+import type { SubirImagenProgresoServicioUseCase } from "../application/subir-imagen-progreso-servicio.usecase.js";
 import type { EliminarImagenServicioUseCase } from "../application/eliminar-imagen-servicio.usecase.js";
 import type { ListarChecklistRespuestasUseCase } from "../application/listar-checklist-respuestas.usecase.js";
 import type { RegistrarChecklistRespuestaUseCase } from "../application/registrar-checklist-respuesta.usecase.js";
 import type { ActualizarChecklistRespuestaUseCase } from "../application/actualizar-checklist-respuesta.usecase.js";
 import type { EliminarChecklistRespuestaUseCase } from "../application/eliminar-checklist-respuesta.usecase.js";
+import type { ActualizarServicioTareaUseCase } from "../application/actualizar-servicio-tarea.usecase.js";
 import type { AsociarClienteServicioUseCase } from "../application/asociar-cliente-servicio.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
@@ -25,12 +27,13 @@ export class ServicioController extends BaseController {
         private readonly cambiarEstadoServicioUseCase: CambiarEstadoServicioUseCase,
         private readonly guardarFirmaEntradaUseCase: GuardarFirmaEntradaUseCase,
         private readonly subirImagenServicioUseCase: SubirImagenServicioUseCase,
+        private readonly subirImagenProgresoServicioUseCase: SubirImagenProgresoServicioUseCase,
         private readonly eliminarImagenServicioUseCase: EliminarImagenServicioUseCase,
         private readonly listarChecklistRespuestasUseCase: ListarChecklistRespuestasUseCase,
         private readonly registrarChecklistRespuestaUseCase: RegistrarChecklistRespuestaUseCase,
         private readonly actualizarChecklistRespuestaUseCase: ActualizarChecklistRespuestaUseCase,
-        private readonly eliminarChecklistRespuestaUseCase: EliminarChecklistRespuestaUseCase
-        ,
+        private readonly eliminarChecklistRespuestaUseCase: EliminarChecklistRespuestaUseCase,
+        private readonly actualizarTareaUseCase: ActualizarServicioTareaUseCase,
         private readonly asociarClienteServicioUseCase?: AsociarClienteServicioUseCase
     ) {
         super();
@@ -115,6 +118,31 @@ export class ServicioController extends BaseController {
             console.log("esta es la descripccion", descripcion)
             const servicio = await this.subirImagenServicioUseCase.execute({ servicio_id: id, url, negocio_id, descripcion });
             res.status(201).json(Respuesta.exito('Imagen agregada al servicio', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    subirImagenProgreso = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
+            const url = req.file.path.replace(/\\/g, '/');
+            const descripcion = typeof req.body.descripcion === 'string' ? req.body.descripcion : null;
+            const servicio = await this.subirImagenProgresoServicioUseCase.execute({ servicio_id: id, url, negocio_id, descripcion });
+            res.status(201).json(Respuesta.exito('Imagen de progreso agregada al servicio', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    actualizarTarea = async (req: Request<{ id: string; tarea_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id, tarea_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            await this.actualizarTareaUseCase.execute(tarea_id, id, negocio_id, req.body);
+            res.status(200).json(Respuesta.exito('Tarea actualizada con éxito', null));
         } catch (error) {
             next(error);
         }

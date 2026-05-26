@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
+import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
 import { toast } from 'sonner';
 
@@ -22,14 +23,12 @@ const ServiciosListPage = () => {
 
     const getEstadoColor = (estado: string) => {
         switch (estado) {
-            case 'RECEPCION':
+            case ESTADO_SERVICIO.RECEPCION:
                 return 'warning';
-            case 'TERMINADO':
-            case 'FINALIZADO':
-            case 'COMPLETADO':
+            case ESTADO_SERVICIO.FINALIZADO:
+            case ESTADO_SERVICIO.LISTO_ENTREGA:
                 return 'success';
-            case 'CANCELADO':
-            case 'RECHAZADO':
+            case ESTADO_SERVICIO.CANCELADO:
                 return 'error';
             default:
                 return 'info';

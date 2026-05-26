@@ -68,19 +68,36 @@ export class AuthMiddleware {
         return (req: Request, res: Response, next: NextFunction) => {
             const usuario = (req as any).usuario;
 
-            console.log("Permisos requeridos:", permisos);
-            console.log("Permisos del usuario:", usuario);
-
             if (!usuario || !usuario.permisos) {
                 return next(new AppError("Usuario no autenticado o sin permisos definidos", "FORBIDDEN", 403));
             }
-
 
             const tieneTodo = permisos.every((permiso) => 
                 usuario.permisos.includes(permiso)
             );
 
             if (!tieneTodo) {
+                return next(new AppError("No tienes permisos para realizar esta acción", "FORBIDDEN", 403));
+            }
+
+            next();
+        };
+    };
+
+
+    public verificarPermisoSome = (permisos: string[]) => {
+        return (req: Request, res: Response, next: NextFunction) => {
+            const usuario = (req as any).usuario;
+
+            if (!usuario || !usuario.permisos) {
+                return next(new AppError("Usuario no autenticado o sin permisos definidos", "FORBIDDEN", 403));
+            }
+
+            const tieneAlguno = permisos.some((permiso) => 
+                usuario.permisos.includes(permiso)
+            );
+
+            if (!tieneAlguno) {
                 return next(new AppError("No tienes permisos para realizar esta acción", "FORBIDDEN", 403));
             }
 

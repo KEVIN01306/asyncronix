@@ -56,6 +56,21 @@ export const servicioRepository = {
         await api.delete(`${URL_MODULE}/${id}/imagenes/${imagenId}`);
     },
 
+    subirImagenProgreso: async (id: string, file: File, descripcion?: string): Promise<Servicio> => {
+        const formData = new FormData();
+        formData.append('imagen', file);
+        if (descripcion) formData.append('descripcion', descripcion);
+
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/progreso/imagenes`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
+    actualizarTarea: async (id: string, tareaId: string, data: { nombre?: string; completado?: boolean; observacion?: string | null }): Promise<void> => {
+        await api.put(`${URL_MODULE}/${id}/tareas/${tareaId}`, data);
+    },
+
     listarChecklistRespuestas: async (id: string): Promise<any[]> => {
         const response = await api.get<any>(`${URL_MODULE}/${id}/checklist-respuestas`);
         return response.data.data;
