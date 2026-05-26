@@ -12,8 +12,7 @@ export class RegistrarVentaUseCase {
     constructor(
         private readonly ventaRepository: VentaRepository,
         private readonly loteRepository: LoteRepository,
-        private readonly productoRepository: ProductoRepository
-        
+        private readonly productoRepository: ProductoRepository,        
         ) {}
 
     async execute(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string): Promise<VentaSimple> {
@@ -41,7 +40,6 @@ export class RegistrarVentaUseCase {
                 let restante = prodInput.cantidad;
                 const precioUnitario = producto.precio_sugerido ?? 0;
 
-                // distribuir la cantidad requerida entre los lotes disponibles
                 for (const lote of lotes) {
                     if (restante <= 0) break;
                     const disponible = lote.cantidad_actual ?? 0;

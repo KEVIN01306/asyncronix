@@ -12,6 +12,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import LoginForm from '../components/LoginForm';
+import { obtenerTokenFCM } from '../../../../core/notificaciones/notificaciones.config';
+import { notificacionRepository } from '../../../notificaciones/infrastructure/repositories/notificacion.repository';
 
 const LoginPage = () => {
     const setAuth = useAuthStore((state) => state.login);
@@ -35,6 +37,15 @@ const LoginPage = () => {
 
             const response = await authRepository.signIn(cleanData);
             setAuth(response.usuario, response.accessToken);
+
+            const tokenFCM = await obtenerTokenFCM();
+            if (tokenFCM) {
+                try {
+                    await notificacionRepository.guardarTokenFCM(tokenFCM);
+                } catch (error) {
+                    console.error('Error al guardar token FCM:', error);
+                }
+            }
 
             goTo(from, {replace: true})
 

@@ -120,6 +120,27 @@ export class PrismaAuthRespository implements AuthRepository {
         return {
             id: sessionDb.id,
             token: sessionDb.token,
+            fcm_token: sessionDb.fcm_token,
+            usuario_id: sessionDb.usuario_id,
+            fecha_expiracion: sessionDb.fecha_expiracion,
+            fecha_creacion: sessionDb.fecha_creacion
+        }
+    }
+
+    async buscarSesionPorUsuarioId(
+        usuario_id: UsuarioAutentificacion["id"]
+    ): Promise<Session | null> {
+        
+        const sessionDb = await this.db.session.findUnique({
+            where: { usuario_id }
+        });
+
+        if (!sessionDb) return null;
+
+        return {
+            id: sessionDb.id,
+            token: sessionDb.token,
+            fcm_token: sessionDb.fcm_token,
             usuario_id: sessionDb.usuario_id,
             fecha_expiracion: sessionDb.fecha_expiracion,
             fecha_creacion: sessionDb.fecha_creacion

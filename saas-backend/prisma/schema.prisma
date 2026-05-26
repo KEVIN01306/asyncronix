@@ -107,6 +107,7 @@ model Sucursal {
 model Session {
   id            String   @id @default(uuid()) @db.Char(36)
   token         String   @unique(map: "token") @db.VarChar(255)
+  fcm_token     String?  @db.VarChar(255)
   usuario_id    String   @db.Char(36) 
   fecha_expiracion       DateTime
   fecha_creacion DateTime @default(now())
