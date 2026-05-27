@@ -63,9 +63,6 @@ export class PrismaNotificacionRepository implements INotificacionRepository {
     }
 
 
-    async enviarPush(payload: NotificacionPayload): Promise<void> {}
-
-
 
     private mapearNotificacionToken(sesion: any): NotificacionToken {
         return {

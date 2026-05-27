@@ -7,9 +7,11 @@ import type { Vehiculo } from '../../../vehiculos/domain/interfaces/vehiculo.int
 import type { TipoServicio } from '../../../tipos-servicio/domain/interfaces/tipo-servicio.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 
-type Props = { servicio: Servicio; onEdit?: () => void };
+import AssignMechanicModal from './AssignMechanicModal';
 
-const ServiceGeneralInfo: React.FC<Props> = ({ servicio, onEdit }) => {
+type Props = { servicio: Servicio; onEdit?: () => void; onMechanicUpdated?: (s: Servicio) => void };
+
+const ServiceGeneralInfo: React.FC<Props> = ({ servicio, onEdit, onMechanicUpdated }) => {
     const [vehiculo, setVehiculo] = useState<Vehiculo | null>(null);
     const [tipoServicio, setTipoServicio] = useState<TipoServicio | null>(null);
 
@@ -31,6 +33,13 @@ const ServiceGeneralInfo: React.FC<Props> = ({ servicio, onEdit }) => {
         load();
     }, [servicio.vehiculo_id, servicio.tipo_servicio_id]);
 
+    const [openAssign, setOpenAssign] = useState(false);
+
+    const handleSuccess = (s: Servicio) => {
+        // bubble up
+        if (typeof (onMechanicUpdated) === 'function') onMechanicUpdated(s as any);
+    };
+
     return (
         <Paper sx={{ p: 3 }}>
             <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={2}>
@@ -40,6 +49,18 @@ const ServiceGeneralInfo: React.FC<Props> = ({ servicio, onEdit }) => {
                 </Box>
                 <Button variant="contained" onClick={onEdit}>Editar servicio</Button>
             </Box>
+            <Box mt={2} display="flex" gap={2}>
+                {servicio.mecanico ? (
+                    <>
+                        <Typography><strong>Mecánico:</strong> {servicio.mecanico.nombre ?? servicio.mecanico.id} - {servicio.mecanico.email ?? ''}</Typography>
+                        <Button variant="outlined" onClick={() => setOpenAssign(true)}>Cambiar mecánico</Button>
+                    </>
+                ) : (
+                    <Button variant="contained" onClick={() => setOpenAssign(true)}>Asociar mecánico</Button>
+                )}
+            </Box>
+
+            <AssignMechanicModal open={openAssign} onClose={() => setOpenAssign(false)} servicio={servicio} onSuccess={handleSuccess} />
             <Box mt={3} display="grid" gap={2} gridTemplateColumns={{ xs: '1fr', md: '1fr 1fr' }}>
                 <Typography>
                     <strong>Vehículo:</strong>{' '}

@@ -84,6 +84,12 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         telefono: record.cliente.telefono,
         email: record.cliente.email
     } : null,
+    mecanico: record.mecanico ? {
+        id: record.mecanico.id,
+        nombre: record.mecanico.nombre,
+        apellido: record.mecanico.apellido ?? null,
+        email: record.mecanico.email ?? null
+    } : null,
 });
 
 export const mapChecklistRespuesta = (record: any): ChecklistRespuestaSimple => ({

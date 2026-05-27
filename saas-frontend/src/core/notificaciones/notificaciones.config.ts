@@ -37,6 +37,8 @@ export async function obtenerTokenFCM(): Promise<string | null> {
             return null;
         }
 
+        console.log("Valid key: ", VAPID_KEY)
+
         console.log("¡Permiso concedido!");
 
         const token = await getFirebaseToken(messaging, {

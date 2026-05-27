@@ -62,6 +62,12 @@ export interface Servicio {
         telefono?: string | null;
         email?: string | null;
     } | null;
+    mecanico?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+        email?: string | null;
+    } | null;
 }
 
 export interface ServicioTarea {

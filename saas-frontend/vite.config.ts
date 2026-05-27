@@ -7,9 +7,9 @@ export default defineConfig({
   plugins: [react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/asyncronix_corto.png", "icons/asyncronix.png"],
+      includeAssets: ["icons/logo_app.png","icons/asyncronix_corto.png", "icons/asyncronix.png"],
       manifest: {
-        name: "Asyncronix - ERP para PYMES",
+        name: "Asyncronix ERP",
         short_name: "Asyncronix",
         description: "Sistema de gestión empresarial para pymes, con módulos de ventas, productos, clientes y más.",
         theme_color: "#ffffff",
@@ -20,8 +20,8 @@ export default defineConfig({
         orientation: "portrait",
         icons: [
           {
-            src: "icons/asyncronix_corto.png",
-            sizes: "192x192",
+            src: "icons/logo_app.png",
+            sizes: "150x150",
             type: "image/png"
           },
           {

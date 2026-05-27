@@ -35,3 +35,12 @@ export const servicioListarQuerySchema = z.object({
     offset: z.coerce.number().min(0).optional().default(0),
     estado: estadoServicioEnum.optional()
 });
+
+export const asociarMecanicoSchema = z.object({
+    mecanico_id: z.string().uuid()
+});
+
+export const cambiarMecanicoSchema = z.object({
+    mecanicoAnteriorId: z.string().uuid(),
+    mecanicoNuevoId: z.string().uuid()
+});

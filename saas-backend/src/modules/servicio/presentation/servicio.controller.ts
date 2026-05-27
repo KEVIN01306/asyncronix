@@ -16,6 +16,8 @@ import type { ActualizarChecklistRespuestaUseCase } from "../application/actuali
 import type { EliminarChecklistRespuestaUseCase } from "../application/eliminar-checklist-respuesta.usecase.js";
 import type { ActualizarServicioTareaUseCase } from "../application/actualizar-servicio-tarea.usecase.js";
 import type { AsociarClienteServicioUseCase } from "../application/asociar-cliente-servicio.usecase.js";
+import type { AsociarMecanicoServicioUseCase } from "../application/asociar-mecanico-servicio.usecase.js";
+import type { CambiarMecanicoServicioUseCase } from "../application/cambiar-mecanico-servicio.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ServicioController extends BaseController {
@@ -34,7 +36,9 @@ export class ServicioController extends BaseController {
         private readonly actualizarChecklistRespuestaUseCase: ActualizarChecklistRespuestaUseCase,
         private readonly eliminarChecklistRespuestaUseCase: EliminarChecklistRespuestaUseCase,
         private readonly actualizarTareaUseCase: ActualizarServicioTareaUseCase,
-        private readonly asociarClienteServicioUseCase?: AsociarClienteServicioUseCase
+        private readonly asociarClienteServicioUseCase?: AsociarClienteServicioUseCase,
+        private readonly asociarMecanicoServicioUseCase?: AsociarMecanicoServicioUseCase,
+        private readonly cambiarMecanicoServicioUseCase?: CambiarMecanicoServicioUseCase
     ) {
         super();
     }
@@ -210,6 +214,32 @@ export class ServicioController extends BaseController {
             if (!this.asociarClienteServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
             const servicio = await this.asociarClienteServicioUseCase.execute(id, negocio_id);
             res.status(200).json(Respuesta.exito('Cliente asociado al servicio', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    asociarMecanico = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { mecanico_id } = req.body;
+            if (!this.asociarMecanicoServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            const servicio = await this.asociarMecanicoServicioUseCase.execute(id, mecanico_id, negocio_id);
+            res.status(200).json(Respuesta.exito('Mecánico asociado al servicio', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    cambiarMecanico = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { mecanicoAnteriorId, mecanicoNuevoId } = req.body;
+            if (!this.cambiarMecanicoServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            const servicio = await this.cambiarMecanicoServicioUseCase.execute(id, mecanicoAnteriorId, mecanicoNuevoId, negocio_id);
+            res.status(200).json(Respuesta.exito('Mecánico cambiado en el servicio', servicio));
         } catch (error) {
             next(error);
         }

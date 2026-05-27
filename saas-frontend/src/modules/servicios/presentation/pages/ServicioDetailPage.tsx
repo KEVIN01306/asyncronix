@@ -62,7 +62,7 @@ const ServicioDetailPage = () => {
                     <Typography variant="h4" fontWeight={800} color="text.primary">Servicio #{servicio.id}</Typography>
                 </Box>
 
-                <ServiceGeneralInfo servicio={servicio} onEdit={() => navigate(`/servicios/${servicio.id}/editar`)} />
+                <ServiceGeneralInfo servicio={servicio} onEdit={() => navigate(`/servicios/${servicio.id}/editar`)} onMechanicUpdated={(s) => setServicio(s)} />
 
                 {(
                     servicio.estado === ESTADO_SERVICIO.EN_SERVICIO ||

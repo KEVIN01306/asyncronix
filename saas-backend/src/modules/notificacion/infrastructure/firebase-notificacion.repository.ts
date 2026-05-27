@@ -20,6 +20,13 @@ if (admin.apps.length === 0) {
             privateKey: privateKey.replace(/\\n/g, '\n'),
         }),
     });
+
+    console.log('Firebase Admin SDK inicializado correctamente');
+    console.log('Variables de entorno de Firebase:', {
+        projectId: projectId,
+        clientEmail: clientEmail,
+        privateKey: privateKey ? '[REDACTED]' : 'No proporcionada',
+    });
 }
 
 export class FirebaseNotificacionRepository implements INotificacionService {
@@ -35,7 +42,11 @@ export class FirebaseNotificacionRepository implements INotificacionService {
             token: token,
         };
 
+        console.log('--- Enviando push con Firebase ---');
+        console.log('Payload del mensaje:', mensaje);
+
         try {
+            console.log('Enviando mensaje a Firebase...');
             await admin.messaging().send(mensaje);
             console.log('--- Push enviado por Firebase con éxito ---');
         } catch (error) {

@@ -11,6 +11,7 @@ const firebaseConfig = {
     measurementId: "G-NGRF7FNEQM"
 };
 
+
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
@@ -20,7 +21,12 @@ messaging.onBackgroundMessage((payload) => {
     const tituloNotificacion = payload.notification.title;
     const opcionesNotificacion = {
         body: payload.notification.body,
-        icon: 'icons/asyncronix_corto.png'
+        color: "#e4f9ff",
+        icon: 'icons/asyncronix.png',
+        badge: 'icons/asyncronix_corto.png',
+        vibrate: [200, 100, 200],
+        requireInteraction: true,
+        tag: 'asyncronix-notification'
     };
 
     self.registration.showNotification(tituloNotificacion, opcionesNotificacion);
