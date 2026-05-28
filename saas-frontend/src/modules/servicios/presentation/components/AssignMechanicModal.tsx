@@ -22,7 +22,6 @@ export default function AssignMechanicModal({ open, onClose, servicio, onSuccess
             try {
                 const res = await usuarioRepository.listar(100, 0);
                 const users = res.data ?? [];
-                // filter by servicio.sucursal_id and only users with same sucursal
                 const filtered = users.filter((u: any) => u.sucursal && servicio.sucursal_id && u.sucursal.id === servicio.sucursal_id);
                 setOptions(filtered);
             } catch (e) {

@@ -39,21 +39,11 @@ const LoginPage = () => {
             setAuth(response.usuario, response.accessToken);
             
             const tokenFCM = await obtenerTokenFCM();
-            console.log("token FCM: ", tokenFCM)
-
-
-            console.log({
-                apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-                authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-                projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-                appId: import.meta.env.VITE_FIREBASE_APP_ID
-                });
-
             if (tokenFCM) {
                 try {
                     await notificacionRepository.guardarTokenFCM(tokenFCM);
-                } catch (error) {
-                    console.error('Error al guardar token FCM:', error);
+                } catch /*(error)*/ {
+                    //console.error('Error al guardar token FCM:', error);
                 }
             }
 

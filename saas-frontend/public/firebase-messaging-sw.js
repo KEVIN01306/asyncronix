@@ -22,9 +22,9 @@ messaging.onBackgroundMessage((payload) => {
     const opcionesNotificacion = {
         body: payload.notification.body,
         color: "#e4f9ff",
-        icon: 'icons/asyncronix.png',
+        icon: 'icons/asyncronix_corto.png',
         badge: 'icons/asyncronix_corto.png',
-        vibrate: [200, 100, 200],
+        vibrate: [300, 200, 300, 200, 500],
         requireInteraction: true,
         tag: 'asyncronix-notification'
     };

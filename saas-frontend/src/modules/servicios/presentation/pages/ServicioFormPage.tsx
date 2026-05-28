@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
-import { Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Grid } from '@mui/material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
@@ -14,6 +14,7 @@ import { vehiculoRepository } from '../../../vehiculos/infrastructure/vehiculo.r
 import type { TipoServicio } from '../../../tipos-servicio/domain/interfaces/tipo-servicio.interface';
 import type { Vehiculo } from '../../../vehiculos/domain/interfaces/vehiculo.interface';
 import { ArrowBack } from '@mui/icons-material';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ServicioFormPage = () => {
     const navigate = useNavigate();
@@ -111,6 +112,7 @@ const ServicioFormPage = () => {
             descripcion: data.descripcion ?? null,
             diagnostico: data.diagnostico ?? null,
             kilometraje: data.kilometraje ?? null,
+            total: data.total ?? null,
             MetodoPago: METODO_PAGO.EFECTIVO
         };
 
@@ -130,13 +132,7 @@ const ServicioFormPage = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%" p={4}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+    if (loading) return <Loading />
 
     return (
         <>
@@ -240,6 +236,14 @@ const ServicioFormPage = () => {
                                             label="Descripción del problema"
                                             fullWidth
                                             {...register('descripcion')}
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <TextField
+                                            label="Total"
+                                            type="number"
+                                            fullWidth
+                                            {...register('total')}
                                         />
                                     </Grid>
                                     <Grid size={{ xs: 12 }}>

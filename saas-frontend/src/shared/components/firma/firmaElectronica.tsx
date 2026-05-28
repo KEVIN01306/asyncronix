@@ -10,7 +10,7 @@ interface SignaturePadProps {
 
 const SignaturePad = ({ 
     onSave, 
-    height = 200, 
+    height = 300, 
     label = "Firma Autorizada" 
 }: SignaturePadProps) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
