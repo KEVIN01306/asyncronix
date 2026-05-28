@@ -35,7 +35,22 @@ export interface Servicio {
     vehiculo_id: string;
     mecanico_id?: string | null;
     cliente_id?: string | null;
+    nombre_extra?: string | null;
+    documento_extra?: string | null;
+    numero_extra?: string | null;
     tipo_servicio_id?: string | null;
+    cliente?: {
+        id: string;
+        nombre: string;
+        telefono?: string | null;
+        email?: string | null;
+    } | null;
+    mecanico?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+        email?: string | null;
+    } | null;
     descripcion?: string | null;
     diagnostico?: string | null;
     kilometraje?: number | null;

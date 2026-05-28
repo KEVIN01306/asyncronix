@@ -16,6 +16,7 @@ import type { ActualizarChecklistRespuestaUseCase } from "../application/actuali
 import type { EliminarChecklistRespuestaUseCase } from "../application/eliminar-checklist-respuesta.usecase.js";
 import type { ActualizarServicioTareaUseCase } from "../application/actualizar-servicio-tarea.usecase.js";
 import type { AsociarClienteServicioUseCase } from "../application/asociar-cliente-servicio.usecase.js";
+import type { ActualizarClienteExternoServicioUseCase } from "../application/actualizar-cliente-externo-servicio.usecase.js";
 import type { AsociarMecanicoServicioUseCase } from "../application/asociar-mecanico-servicio.usecase.js";
 import type { CambiarMecanicoServicioUseCase } from "../application/cambiar-mecanico-servicio.usecase.js";
 import AppError from "@shared/errors/AppError.js";
@@ -37,6 +38,7 @@ export class ServicioController extends BaseController {
         private readonly eliminarChecklistRespuestaUseCase: EliminarChecklistRespuestaUseCase,
         private readonly actualizarTareaUseCase: ActualizarServicioTareaUseCase,
         private readonly asociarClienteServicioUseCase?: AsociarClienteServicioUseCase,
+        private readonly actualizarClienteExternoServicioUseCase?: ActualizarClienteExternoServicioUseCase,
         private readonly asociarMecanicoServicioUseCase?: AsociarMecanicoServicioUseCase,
         private readonly cambiarMecanicoServicioUseCase?: CambiarMecanicoServicioUseCase
     ) {
@@ -214,6 +216,18 @@ export class ServicioController extends BaseController {
             if (!this.asociarClienteServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
             const servicio = await this.asociarClienteServicioUseCase.execute(id, negocio_id);
             res.status(200).json(Respuesta.exito('Cliente asociado al servicio', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    actualizarClienteExterno = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.actualizarClienteExternoServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            const servicio = await this.actualizarClienteExternoServicioUseCase.execute(id, negocio_id, req.body);
+            res.status(200).json(Respuesta.exito('Cliente externo actualizado en el servicio', servicio));
         } catch (error) {
             next(error);
         }

@@ -18,6 +18,7 @@ export interface ServicioRepository {
     eliminarChecklistRespuesta(id: string, servicio_id: string, negocio_id: string): Promise<void>;
     actualizarTarea(id: string, servicio_id: string, negocio_id: string, data: { nombre?: string; completado?: boolean; observacion?: string | null }): Promise<void>;
     asociarCliente(servicio_id: string, negocio_id: string): Promise<ServicioDetalle>;
+    actualizarClienteExterno(servicio_id: string, negocio_id: string, data: { nombre_extra: string; documento_extra: string; numero_extra: string }): Promise<ServicioDetalle>;
     asociarMecanico(servicio_id: string, mecanico_id: string, negocio_id: string): Promise<ServicioDetalle>;
     cambiarMecanico(servicio_id: string, mecanicoAnteriorId: string, mecanicoNuevoId: string, negocio_id: string): Promise<ServicioDetalle>;
 }

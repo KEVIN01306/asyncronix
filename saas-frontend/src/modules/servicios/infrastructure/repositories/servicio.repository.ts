@@ -102,5 +102,9 @@ export const servicioRepository = {
     cambiarMecanico: async (id: string, mecanicoAnteriorId: string, mecanicoNuevoId: string): Promise<Servicio> => {
         const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/cambiar-mecanico`, { mecanicoAnteriorId, mecanicoNuevoId });
         return response.data;
+    },
+    actualizarClienteExterno: async (id: string, data: { nombre_extra: string; documento_extra: string; numero_extra: string }): Promise<Servicio> => {
+        const response = await api.put<ServicioDetailResponse>(`${URL_MODULE}/${id}/cliente-externo`, data);
+        return response.data;
     }
 };

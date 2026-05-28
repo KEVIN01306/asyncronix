@@ -66,7 +66,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                     kilometraje: data.kilometraje ?? null,
                     fecha_salida: data.fecha_salida ? new Date(data.fecha_salida) : null,
                     total: data.total ?? 0,
-                    estado: data.estado ?? ESTADO_SERVICIO.RECEPCION,
+                    estado: data.estado ? data.estado as any : ESTADO_SERVICIO.RECEPCION,
                     MetodoPago: data.MetodoPago ?? METODO_PAGO.EFECTIVO,
                     checklist: {
                         create: checklistItems.map((item) => ({
@@ -82,7 +82,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                             observacion: null
                         }))
                     } : undefined
-                },
+                } as any,
                 include: { imagenes: true, checklist: true, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
             });
             return mapServicioDetalle(created as any);
@@ -106,9 +106,9 @@ export class PrismaServicioRepository implements ServicioRepository {
                     kilometraje: data.kilometraje ?? undefined,
                     fecha_salida: data.fecha_salida ? new Date(data.fecha_salida) : undefined,
                     total: data.total ?? undefined,
-                    estado: data.estado ?? undefined,
+                    estado: data.estado ? data.estado as any : undefined,
                     MetodoPago: data.MetodoPago ?? undefined
-                }
+                } as any
             });
 
             if (updated.count === 0) throw new Error('Servicio no encontrado');
@@ -128,7 +128,7 @@ export class PrismaServicioRepository implements ServicioRepository {
         try {
             const updated = await this.db.servicio.updateMany({
                 where: { id, negocio_id, activo: true },
-                data: { estado }
+                data: { estado: estado as any } as any
             });
             if (updated.count === 0) throw new Error('Servicio no encontrado');
 
@@ -167,7 +167,7 @@ export class PrismaServicioRepository implements ServicioRepository {
         try {
             const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
             if (!servicio) throw new Error('Servicio no encontrado');
-            if (![ESTADO_SERVICIO.EN_SERVICIO, ESTADO_SERVICIO.ESPERA_REPUESTOS].includes(servicio.estado)) {
+            if (!([ESTADO_SERVICIO.EN_SERVICIO, ESTADO_SERVICIO.ESPERA_REPUESTOS] as string[]).includes(servicio.estado)) {
                 throw new Error('No se pueden agregar imágenes desde progreso en este estado');
             }
 
@@ -245,7 +245,7 @@ export class PrismaServicioRepository implements ServicioRepository {
 
             const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
             if (!servicio) throw new Error('Servicio no encontrado');
-            if (![ESTADO_SERVICIO.EN_SERVICIO, ESTADO_SERVICIO.ESPERA_REPUESTOS].includes(servicio.estado)) {
+            if (!([ESTADO_SERVICIO.EN_SERVICIO, ESTADO_SERVICIO.ESPERA_REPUESTOS] as string[]).includes(servicio.estado)) {
                 throw new Error('No se pueden editar tareas en este estado');
             }
 
@@ -255,7 +255,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                     nombre: data.nombre ?? undefined,
                     completado: data.completado ?? undefined,
                     observacion: data.observacion ?? undefined
-                }
+                } as any
             });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
@@ -286,7 +286,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                 data: {
                     checklist_item_id: data.checklist_item_id,
                     servicio_id: data.servicio_id,
-                    estado: data.estado,
+                    estado: data.estado as any,
                     observaciones: data.observaciones ?? null
                 }
             });
@@ -309,9 +309,9 @@ export class PrismaServicioRepository implements ServicioRepository {
                 where: { id },
                 data: {
                     checklist_item_id: data.checklist_item_id ?? undefined,
-                    estado: data.estado ?? undefined,
+                    estado: data.estado ? data.estado as any : undefined,
                     observaciones: data.observaciones ?? undefined
-                }
+                } as any
             });
             return mapChecklistRespuesta(updated as any);
         } catch (error) {
@@ -347,6 +347,27 @@ export class PrismaServicioRepository implements ServicioRepository {
                 where: { id: servicio_id },
                 data: { cliente_id: vehiculo.cliente_id },
                 include: { imagenes: true, checklist: true, tareas: true }
+            });
+            return mapServicioDetalle(updated as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async actualizarClienteExterno(servicio_id: string, negocio_id: string, data: { nombre_extra: string; documento_extra: string; numero_extra: string }) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+            if (servicio.estado !== ESTADO_SERVICIO.RECEPCION) throw new Error('El servicio no está en estado RECEPCION');
+
+            const updated = await this.db.servicio.update({
+                where: { id: servicio_id },
+                data: {
+                    nombre_extra: data.nombre_extra,
+                    documento_extra: data.documento_extra,
+                    numero_extra: data.numero_extra
+                },
+                include: { imagenes: true, checklist: true, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
             });
             return mapServicioDetalle(updated as any);
         } catch (error) {

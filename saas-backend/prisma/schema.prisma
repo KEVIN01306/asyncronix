@@ -337,6 +337,9 @@ model Servicio {
   fecha_entrada    DateTime       @default(now())
   fecha_salida     DateTime?
   total            Float          @default(0)
+  documento_extra  String?        @db.VarChar(20)
+  nombre_extra     String?        @db.VarChar(255)
+  numero_extra     String?        @db.VarChar(20)
   estado           EstadoServicio @default(RECEPCION)
   activo           Boolean        @default(true)
   MetodoPago       MetodoPago     @default(EFECTIVO)

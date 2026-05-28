@@ -62,6 +62,9 @@ export interface Servicio {
         telefono?: string | null;
         email?: string | null;
     } | null;
+    nombre_extra?: string | null;
+    documento_extra?: string | null;
+    numero_extra?: string | null;
     mecanico?: {
         id: string;
         nombre: string;

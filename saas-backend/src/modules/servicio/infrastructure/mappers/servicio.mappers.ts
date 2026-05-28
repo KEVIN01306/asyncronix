@@ -84,6 +84,9 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         telefono: record.cliente.telefono,
         email: record.cliente.email
     } : null,
+    nombre_extra: record.nombre_extra ?? null,
+    documento_extra: record.documento_extra ?? null,
+    numero_extra: record.numero_extra ?? null,
     mecanico: record.mecanico ? {
         id: record.mecanico.id,
         nombre: record.mecanico.nombre,

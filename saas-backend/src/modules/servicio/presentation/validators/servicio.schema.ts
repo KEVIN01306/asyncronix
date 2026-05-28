@@ -44,3 +44,9 @@ export const cambiarMecanicoSchema = z.object({
     mecanicoAnteriorId: z.string().uuid(),
     mecanicoNuevoId: z.string().uuid()
 });
+
+export const clienteExternoSchema = z.object({
+    nombre_extra: z.string().trim().min(1),
+    documento_extra: z.string().trim().min(1),
+    numero_extra: z.string().trim().min(1)
+});

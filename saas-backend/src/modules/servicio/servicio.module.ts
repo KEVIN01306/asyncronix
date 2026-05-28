@@ -15,6 +15,7 @@ import { ActualizarChecklistRespuestaUseCase } from './application/actualizar-ch
 import { EliminarChecklistRespuestaUseCase } from './application/eliminar-checklist-respuesta.usecase.js';
 import { ActualizarServicioTareaUseCase } from './application/actualizar-servicio-tarea.usecase.js';
 import { AsociarClienteServicioUseCase } from './application/asociar-cliente-servicio.usecase.js';
+import { ActualizarClienteExternoServicioUseCase } from './application/actualizar-cliente-externo-servicio.usecase.js';
 import { AsociarMecanicoServicioUseCase } from './application/asociar-mecanico-servicio.usecase.js';
 import { CambiarMecanicoServicioUseCase } from './application/cambiar-mecanico-servicio.usecase.js';
 import { ServicioController } from './presentation/servicio.controller.js';
@@ -36,6 +37,7 @@ const actualizarChecklistRespuestaUseCase = new ActualizarChecklistRespuestaUseC
 const eliminarChecklistRespuestaUseCase = new EliminarChecklistRespuestaUseCase(repository);
 const actualizarTareaUseCase = new ActualizarServicioTareaUseCase(repository);
 const asociarClienteServicioUseCase = new AsociarClienteServicioUseCase(repository);
+const actualizarClienteExternoServicioUseCase = new ActualizarClienteExternoServicioUseCase(repository);
 const asociarMecanicoServicioUseCase = new AsociarMecanicoServicioUseCase(repository, enviarNotificacionUseCase);
 const cambiarMecanicoServicioUseCase = new CambiarMecanicoServicioUseCase(repository, enviarNotificacionUseCase);
 
@@ -54,8 +56,8 @@ export const servicioController = new ServicioController(
     actualizarChecklistRespuestaUseCase,
     eliminarChecklistRespuestaUseCase,
     actualizarTareaUseCase,
-    asociarClienteServicioUseCase
-    ,
+    asociarClienteServicioUseCase,
+    actualizarClienteExternoServicioUseCase,
     asociarMecanicoServicioUseCase,
     cambiarMecanicoServicioUseCase
 );
