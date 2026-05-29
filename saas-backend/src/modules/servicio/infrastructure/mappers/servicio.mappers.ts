@@ -28,6 +28,12 @@ export const mapServicioSimple = (record: any): ServicioSimple => ({
         nombre: record.cliente.nombre,
         telefono: record.cliente.telefono,
         email: record.cliente.email
+    } : null,
+    mecanico: record.mecanico ? {
+        id: record.mecanico.id,
+        nombre: record.mecanico.nombre,
+        apellido: record.mecanico.apellido ?? null,
+        email: record.mecanico.email ?? null
     } : null
 });
 
@@ -79,6 +85,14 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         updated_at: item.updated_at
     })),
     cliente: record.cliente ? {
+        repuestos: (record.ServicioRepuestoCliente ?? []).map((r: any) => ({
+            id: r.id,
+            servicio_id: r.servicio_id,
+            repuesto: r.repuesto,
+            cantidad: r.cantidad,
+            created_at: r.created_at,
+            updated_at: r.updated_at
+        })),
         id: record.cliente.id,
         nombre: record.cliente.nombre,
         telefono: record.cliente.telefono,

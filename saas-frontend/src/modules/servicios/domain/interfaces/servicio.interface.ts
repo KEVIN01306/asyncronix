@@ -20,6 +20,15 @@ export interface ChecklistRespuesta {
     updated_at: string;
 }
 
+export interface ServicioRepuestoCliente {
+    id: string;
+    servicio_id: string;
+    repuesto: string;
+    cantidad: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Servicio {
     id: string;
     sucursal_id: string;
@@ -41,6 +50,7 @@ export interface Servicio {
     updated_at?: string;
     imagenes?: ImagenServicio[];
     checklist?: ChecklistRespuesta[];
+    repuestos?: ServicioRepuestoCliente[];
     tareas?: ServicioTarea[];
     vehiculo?: {
         id: string;

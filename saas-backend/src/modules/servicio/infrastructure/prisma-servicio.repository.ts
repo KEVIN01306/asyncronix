@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { ServicioRepository } from "../domain/servicio.repository.js";
+import type { ServicioRepository, ListarServiciosParams } from "../domain/servicio.repository.js";
 import type { ServicioCrear, ServicioActualizar, ServicioDetalle, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple } from "../domain/servicio.entity.js";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
 import { mapServicioSimple, mapServicioDetalle, mapChecklistRespuesta } from "./mappers/servicio.mappers.js";
@@ -8,19 +8,63 @@ import { ESTADO_SERVICIO, METODO_PAGO } from "../domain/servicio.constants.js";
 export class PrismaServicioRepository implements ServicioRepository {
     constructor(private readonly db: PrismaClient) { }
 
-    async listar(negocio_id: string, page: number, perPage: number) {
+    async listar(params: ListarServiciosParams) {
+        const { negocio_id, page, perPage, estado, placa, codigo, q, mecanico_id, usuario_id, isAdministrador } = params;
         const skip = (page - 1) * perPage;
+        const filters: any[] = [{ negocio_id, activo: true }];
+
+        if (isAdministrador) {
+            if (mecanico_id) {
+                filters.push({ mecanico_id });
+            }
+        } else if (usuario_id) {
+            filters.push({ mecanico_id: usuario_id });
+        }
+
+        if (estado) {
+            filters.push({ estado });
+        }
+
+        if (placa) {
+            filters.push({ vehiculo: { placa: { contains: placa } } });
+        }
+
+        const orConditions: any[] = [];
+
+        if (codigo) {
+            orConditions.push({ id: { contains: codigo } });
+        }
+
+        if (q) {
+            orConditions.push(
+                { id: { contains: q } },
+                { descripcion: { contains: q } },
+                { vehiculo: { placa: { contains: q } } },
+                { cliente: { nombre: { contains: q } } },
+                { mecanico: { nombre: { contains: q } } },
+                { mecanico: { apellido: { contains: q } } },
+                { tipo_servicio: { nombre: { contains: q } } }
+            );
+        }
+
+        const where: any = { AND: filters };
+        if (orConditions.length > 0) {
+            where.AND.push({ OR: orConditions });
+        }
+
         try {
             const [total, items] = await Promise.all([
-                this.db.servicio.count({ where: { negocio_id, activo: true } }),
+                this.db.servicio.count({ where }),
                 this.db.servicio.findMany({
-                    where: { negocio_id, activo: true },
+                    where,
                     skip,
                     take: perPage,
                     orderBy: { created_at: 'desc' },
                     include: {
                         vehiculo: { include: { modelo: true } },
-                        tipo_servicio: true
+                        tipo_servicio: true,
+                        cliente: { select: { id: true, nombre: true, telefono: true, email: true } },
+                        mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }
                     }
                 })
             ]);
@@ -34,10 +78,21 @@ export class PrismaServicioRepository implements ServicioRepository {
         try {
             const record = await this.db.servicio.findFirst({
                 where: { id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: true, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: true, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, ServicioRepuestoCliente: true }
             });
             if (!record) return null;
             return mapServicioDetalle(record as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async listarRepuestosCliente(servicio_id: string, negocio_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+            const items = await this.db.servicioRepuestoCliente.findMany({ where: { servicio_id } });
+            return items as any;
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
@@ -386,6 +441,40 @@ export class PrismaServicioRepository implements ServicioRepository {
                 include: { imagenes: true, checklist: true, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
             });
             return mapServicioDetalle(updated as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async registrarRepuestoCliente(data: any, servicio_id: string, negocio_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+            if (servicio.estado !== ESTADO_SERVICIO.EN_REPARACION) throw new Error('No se pueden crear repuestos en este estado');
+
+            const created = await this.db.servicioRepuestoCliente.create({
+                data: {
+                    servicio_id,
+                    repuesto: data.repuesto,
+                    cantidad: data.cantidad
+                }
+            });
+            return created as any;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async eliminarRepuestoCliente(id: string, servicio_id: string, negocio_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+            if (servicio.estado !== ESTADO_SERVICIO.EN_REPARACION) throw new Error('No se pueden eliminar repuestos en este estado');
+
+            const rep = await this.db.servicioRepuestoCliente.findUnique({ where: { id } });
+            if (!rep || rep.servicio_id !== servicio_id) throw new Error('Repuesto no encontrado');
+
+            await this.db.servicioRepuestoCliente.delete({ where: { id } });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

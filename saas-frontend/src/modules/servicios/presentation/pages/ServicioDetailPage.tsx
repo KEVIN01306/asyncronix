@@ -9,6 +9,7 @@ import ServiceImages from '../components/ServiceImages';
 import ServiceChecklist from '../components/ServiceChecklist';
 import ServiceSignatures from '../components/ServiceSignatures';
 import ServiceGeneralInfo from '../components/ServiceGeneralInfo';
+import ServiceClientParts from '../components/ServiceClientParts';
 import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
@@ -77,6 +78,8 @@ const ServicioDetailPage = () => {
                 <ServiceSignatures servicio={servicio} onUpdate={(s) => setServicio(s)} />
 
                 <ServiceChecklist servicio={servicio} onUpdate={(s) => setServicio(s)} />
+
+                <ServiceClientParts servicio={servicio} onUpdate={(s) => setServicio(s)} />
 
                 <Grid container spacing={2}>
                     <Grid size={{ xs: 12, md: 6 }}>

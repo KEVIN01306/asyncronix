@@ -19,6 +19,8 @@ import type { AsociarClienteServicioUseCase } from "../application/asociar-clien
 import type { ActualizarClienteExternoServicioUseCase } from "../application/actualizar-cliente-externo-servicio.usecase.js";
 import type { AsociarMecanicoServicioUseCase } from "../application/asociar-mecanico-servicio.usecase.js";
 import type { CambiarMecanicoServicioUseCase } from "../application/cambiar-mecanico-servicio.usecase.js";
+import type { RegistrarRepuestoClienteUseCase } from "../application/registrar-repuesto-cliente.usecase.js";
+import type { EliminarRepuestoClienteUseCase } from "../application/eliminar-repuesto-cliente.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ServicioController extends BaseController {
@@ -40,17 +42,57 @@ export class ServicioController extends BaseController {
         private readonly asociarClienteServicioUseCase?: AsociarClienteServicioUseCase,
         private readonly actualizarClienteExternoServicioUseCase?: ActualizarClienteExternoServicioUseCase,
         private readonly asociarMecanicoServicioUseCase?: AsociarMecanicoServicioUseCase,
-        private readonly cambiarMecanicoServicioUseCase?: CambiarMecanicoServicioUseCase
+        private readonly cambiarMecanicoServicioUseCase?: CambiarMecanicoServicioUseCase,
+        private readonly registrarRepuestoClienteUseCase?: RegistrarRepuestoClienteUseCase,
+        private readonly eliminarRepuestoClienteUseCase?: EliminarRepuestoClienteUseCase
     ) {
         super();
     }
 
-    listar = async (_req: Request, res: Response, next: NextFunction) => {
+    registrarRepuestoCliente = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const usuario = (req as any).usuario;
+            if (!this.registrarRepuestoClienteUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            const payload = req.body;
+            const repuesto = await this.registrarRepuestoClienteUseCase.execute({ repuesto: payload.nombre, cantidad: payload.cantidad }, id, negocio_id);
+            res.status(201).json(Respuesta.exito('Repuesto creado', repuesto));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    eliminarRepuestoCliente = async (req: Request<{ servicioId: string; id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { servicioId, id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.eliminarRepuestoClienteUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            await this.eliminarRepuestoClienteUseCase.execute(id, servicioId, negocio_id);
+            res.status(200).json(Respuesta.exito('Repuesto eliminado', null));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listar = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res);
-            const { limit, offset, estado } = res.locals.query;
+            const { limit, offset, estado, codigo, placa, q, mecanico_id } = res.locals.query;
+            const usuario = (req as any).usuario;
             const page = Math.floor(offset / limit) + 1;
-            const result = await this.obtenerServiciosUseCase.execute(negocio_id, page, limit as number);
+            const result = await this.obtenerServiciosUseCase.execute({
+                negocio_id,
+                page,
+                perPage: limit as number,
+                estado,
+                placa,
+                codigo,
+                q,
+                mecanico_id,
+                usuario_id: usuario?.id,
+                isAdministrador: usuario?.permisos?.includes('ADMIN_SERVICIOS')
+            });
             res.status(200).json(Respuesta.paginacion('Servicios obtenidos con éxito', result.data, result.total, limit as number, offset as number));
         } catch (error) {
             next(error);

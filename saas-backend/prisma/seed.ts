@@ -94,7 +94,8 @@ const permisosData = [
     { codigo: "VER_SERVICIOS_DETALLE" },
     { codigo: "CREAR_SERVICIOS" },
     { codigo: "EDITAR_SERVICIOS" },
-    { codigo: "ELIMINAR_SERVICIOS" }
+    { codigo: "ELIMINAR_SERVICIOS" },
+    { codigo: "ADMIN_SERVICIOS" }
 
 ];
 
@@ -177,7 +178,7 @@ const modulosConPermisos = [
     },
     {
         nombre: "SERVICIOS",
-        permisos: ["VER_SERVICIOS", "VER_SERVICIOS_DETALLE", "CREAR_SERVICIOS", "EDITAR_SERVICIOS", "ELIMINAR_SERVICIOS"]
+        permisos: ["VER_SERVICIOS", "VER_SERVICIOS_DETALLE", "CREAR_SERVICIOS", "EDITAR_SERVICIOS", "ELIMINAR_SERVICIOS", "ADMIN_SERVICIOS"]
     }
 ];
 

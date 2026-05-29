@@ -33,7 +33,16 @@ export const servicioCambiarEstadoSchema = z.object({
 export const servicioListarQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).optional().default(10),
     offset: z.coerce.number().min(0).optional().default(0),
-    estado: estadoServicioEnum.optional()
+    estado: estadoServicioEnum.optional(),
+    codigo: z.string().trim().optional(),
+    placa: z.string().trim().optional(),
+    q: z.string().trim().optional(),
+    mecanico_id: z.string().uuid().optional()
+});
+
+export const repuestoClienteCrearSchema = z.object({
+    nombre: z.string().trim().min(1),
+    cantidad: z.coerce.number().int().min(1)
 });
 
 export const asociarMecanicoSchema = z.object({

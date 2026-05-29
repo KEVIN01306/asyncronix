@@ -18,6 +18,8 @@ import { AsociarClienteServicioUseCase } from './application/asociar-cliente-ser
 import { ActualizarClienteExternoServicioUseCase } from './application/actualizar-cliente-externo-servicio.usecase.js';
 import { AsociarMecanicoServicioUseCase } from './application/asociar-mecanico-servicio.usecase.js';
 import { CambiarMecanicoServicioUseCase } from './application/cambiar-mecanico-servicio.usecase.js';
+import { RegistrarRepuestoClienteUseCase } from './application/registrar-repuesto-cliente.usecase.js';
+import { EliminarRepuestoClienteUseCase } from './application/eliminar-repuesto-cliente.usecase.js';
 import { ServicioController } from './presentation/servicio.controller.js';
 import { enviarNotificacionUseCase } from '../notificacion/notificacion.module.js';
 
@@ -40,6 +42,8 @@ const asociarClienteServicioUseCase = new AsociarClienteServicioUseCase(reposito
 const actualizarClienteExternoServicioUseCase = new ActualizarClienteExternoServicioUseCase(repository);
 const asociarMecanicoServicioUseCase = new AsociarMecanicoServicioUseCase(repository, enviarNotificacionUseCase);
 const cambiarMecanicoServicioUseCase = new CambiarMecanicoServicioUseCase(repository, enviarNotificacionUseCase);
+const registrarRepuestoClienteUseCase = new RegistrarRepuestoClienteUseCase(repository);
+const eliminarRepuestoClienteUseCase = new EliminarRepuestoClienteUseCase(repository);
 
 export const servicioController = new ServicioController(
     obtenerServiciosUseCase,
@@ -60,4 +64,5 @@ export const servicioController = new ServicioController(
     actualizarClienteExternoServicioUseCase,
     asociarMecanicoServicioUseCase,
     cambiarMecanicoServicioUseCase
+    , registrarRepuestoClienteUseCase, eliminarRepuestoClienteUseCase
 );

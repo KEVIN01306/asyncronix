@@ -87,6 +87,12 @@ export type ServicioSimple = Pick<Servicio, 'id' | 'sucursal_id' | 'vehiculo_id'
         telefono?: string | null;
         email?: string | null;
     } | null;
+    mecanico?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+        email?: string | null;
+    } | null;
 };
 
 export interface ServicioDetalle extends Servicio {
@@ -101,3 +107,18 @@ export type ServicioCrear = Omit<Servicio, 'id' | 'activo' | 'created_at' | 'upd
 };
 
 export type ServicioActualizar = Partial<Omit<Servicio, 'id' | 'negocio_id' | 'activo' | 'created_at' | 'updated_at'>>;
+
+export interface ServicioRepuestoCliente {
+    id: string;
+    servicio_id: string;
+    repuesto: string;
+    cantidad: number;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export type ServicioRepuestoClienteCrear = {
+    repuesto: string;
+    cantidad: number;
+    servicio_id?: string;
+};

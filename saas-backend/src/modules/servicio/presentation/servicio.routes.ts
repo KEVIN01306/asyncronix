@@ -3,7 +3,7 @@ import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
 import { servicioController } from "../servicio.module.js";
-import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioTareaActualizarSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema } from "./validators/servicio.schema.js";
+import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioTareaActualizarSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema } from "./validators/servicio.schema.js";
 import { checklistRespuestaCrearSchema, checklistRespuestaActualizarSchema } from "./validators/checklist-respuesta.schema.js";
 
 const router = Router();
@@ -131,6 +131,19 @@ router.post(
     authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
     validarMiddleware.validarBody(cambiarMecanicoSchema),
     servicioController.cambiarMecanico
+);
+
+router.post(
+    "/:id/repuestos-cliente",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
+    validarMiddleware.validarBody(repuestoClienteCrearSchema),
+    servicioController.registrarRepuestoCliente
+);
+
+router.delete(
+    "/:servicioId/repuestos-cliente/:id",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
+    servicioController.eliminarRepuestoCliente
 );
 
 export default router;

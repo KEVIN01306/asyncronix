@@ -1,8 +1,21 @@
 import type { Paginated } from "@shared/domain/paginated.js";
 import type { ServicioDetalle, ServicioCrear, ServicioActualizar, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple } from "./servicio.entity.js";
 
+export interface ListarServiciosParams {
+    negocio_id: string;
+    page: number;
+    perPage: number;
+    estado?: string;
+    placa?: string;
+    codigo?: string;
+    q?: string;
+    mecanico_id?: string;
+    usuario_id?: string;
+    isAdministrador?: boolean;
+}
+
 export interface ServicioRepository {
-    listar(negocio_id: string, page: number, perPage: number): Promise<Paginated<ServicioSimple>>;
+    listar(params: ListarServiciosParams): Promise<Paginated<ServicioSimple>>;
     obtener(id: string, negocio_id: string): Promise<ServicioDetalle | null>;
     registrar(data: ServicioCrear, negocio_id: string): Promise<ServicioDetalle>;
     actualizar(id: string, negocio_id: string, data: ServicioActualizar): Promise<ServicioDetalle>;
@@ -21,4 +34,7 @@ export interface ServicioRepository {
     actualizarClienteExterno(servicio_id: string, negocio_id: string, data: { nombre_extra: string; documento_extra: string; numero_extra: string }): Promise<ServicioDetalle>;
     asociarMecanico(servicio_id: string, mecanico_id: string, negocio_id: string): Promise<ServicioDetalle>;
     cambiarMecanico(servicio_id: string, mecanicoAnteriorId: string, mecanicoNuevoId: string, negocio_id: string): Promise<ServicioDetalle>;
+    listarRepuestosCliente(servicio_id: string, negocio_id: string): Promise<import('./servicio.entity.js').ServicioRepuestoCliente[]>;
+    registrarRepuestoCliente(data: import('./servicio.entity.js').ServicioRepuestoClienteCrear, servicio_id: string, negocio_id: string): Promise<import('./servicio.entity.js').ServicioRepuestoCliente>;
+    eliminarRepuestoCliente(id: string, servicio_id: string, negocio_id: string): Promise<void>;
 }

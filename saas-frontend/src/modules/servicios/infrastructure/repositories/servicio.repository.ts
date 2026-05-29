@@ -3,10 +3,28 @@ import type { Servicio, ServicioDetailResponse, ServiciosResponse } from '../../
 
 const URL_MODULE = '/servicios';
 
+export type ServicioListParams = {
+    limit: number;
+    offset: number;
+    estado?: string;
+    placa?: string;
+    codigo?: string;
+    q?: string;
+    mecanico_id?: string;
+};
+
 export const servicioRepository = {
-    listar: async (limit: number = 10, offset: number = 0): Promise<ServiciosResponse> => {
+    listar: async (params: ServicioListParams): Promise<ServiciosResponse> => {
+        const searchParams = { ...params } as Record<string, unknown>;
+        Object.keys(searchParams).forEach((key) => {
+            const value = searchParams[key];
+            if (value === undefined || value === '') {
+                delete searchParams[key];
+            }
+        });
+
         const response = await api.get<ServiciosResponse>(`${URL_MODULE}`, {
-            params: { limit, offset }
+            params: searchParams
         });
         return response as any;
     },
@@ -97,6 +115,14 @@ export const servicioRepository = {
     ,
     asociarMecanico: async (id: string, mecanicoId: string): Promise<Servicio> => {
         const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/asociar-mecanico`, { mecanico_id: mecanicoId });
+        return response.data;
+    },
+    crearRepuestoCliente: async (servicioId: string, data: { nombre: string; cantidad: number }) => {
+        const response = await api.post(`${URL_MODULE}/${servicioId}/repuestos-cliente`, data);
+        return response.data;
+    },
+    eliminarRepuestoCliente: async (servicioId: string, id: string) => {
+        const response = await api.delete(`${URL_MODULE}/${servicioId}/repuestos-cliente/${id}`);
         return response.data;
     },
     cambiarMecanico: async (id: string, mecanicoAnteriorId: string, mecanicoNuevoId: string): Promise<Servicio> => {
