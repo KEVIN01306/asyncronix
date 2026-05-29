@@ -36,4 +36,10 @@ export default defineConfig({
       }
     })
   ],
+
+  server: {
+    host: '0.0.0.0',
+    allowedHosts: ['app.asyncronix.com', 'www.app.asyncronix.com'],
+    port: 5001,
+  },
 })
