@@ -37,4 +37,11 @@ export interface ServicioRepository {
     listarRepuestosCliente(servicio_id: string, negocio_id: string): Promise<import('./servicio.entity.js').ServicioRepuestoCliente[]>;
     registrarRepuestoCliente(data: import('./servicio.entity.js').ServicioRepuestoClienteCrear, servicio_id: string, negocio_id: string): Promise<import('./servicio.entity.js').ServicioRepuestoCliente>;
     eliminarRepuestoCliente(id: string, servicio_id: string, negocio_id: string): Promise<void>;
+    // Inventory-backed repuestos (lote-based)
+    crearRepuestosAtomicos(servicio_id: string, detalles: any[], negocio_id: string, sucursal_id: string): Promise<any[]>;
+    crearRepuesto(servicio_id: string, detalle: any, negocio_id: string, sucursal_id: string): Promise<any>;
+    eliminarRepuesto(id: string, servicio_id: string, negocio_id: string, sucursal_id: string): Promise<void>;
+    eliminarTareas(servicio_id: string, negocio_id: string): Promise<void>;
+    crearTareasDesdeTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string): Promise<void>;
+    actualizarObservaciones(id: string, negocio_id: string, observaciones: string | null): Promise<ServicioDetalle>;
 }

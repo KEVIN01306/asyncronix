@@ -21,6 +21,9 @@ import type { AsociarMecanicoServicioUseCase } from "../application/asociar-meca
 import type { CambiarMecanicoServicioUseCase } from "../application/cambiar-mecanico-servicio.usecase.js";
 import type { RegistrarRepuestoClienteUseCase } from "../application/registrar-repuesto-cliente.usecase.js";
 import type { EliminarRepuestoClienteUseCase } from "../application/eliminar-repuesto-cliente.usecase.js";
+import type { CrearServicioRepuestoUseCase } from "../application/crear-repuesto-servicio.usecase.js";
+import type { EliminarServicioRepuestoUseCase } from "../application/eliminar-repuesto-servicio.usecase.js";
+import type { ActualizarObservacionesServicioUseCase } from "../application/actualizar-observaciones-servicio.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ServicioController extends BaseController {
@@ -44,7 +47,10 @@ export class ServicioController extends BaseController {
         private readonly asociarMecanicoServicioUseCase?: AsociarMecanicoServicioUseCase,
         private readonly cambiarMecanicoServicioUseCase?: CambiarMecanicoServicioUseCase,
         private readonly registrarRepuestoClienteUseCase?: RegistrarRepuestoClienteUseCase,
-        private readonly eliminarRepuestoClienteUseCase?: EliminarRepuestoClienteUseCase
+        private readonly eliminarRepuestoClienteUseCase?: EliminarRepuestoClienteUseCase,
+        private readonly crearServicioRepuestoUseCase?: CrearServicioRepuestoUseCase,
+        private readonly eliminarServicioRepuestoUseCase?: EliminarServicioRepuestoUseCase,
+        private readonly actualizarObservacionesServicioUseCase?: ActualizarObservacionesServicioUseCase
     ) {
         super();
     }
@@ -58,6 +64,36 @@ export class ServicioController extends BaseController {
             const payload = req.body;
             const repuesto = await this.registrarRepuestoClienteUseCase.execute({ repuesto: payload.nombre, cantidad: payload.cantidad }, id, negocio_id);
             res.status(201).json(Respuesta.exito('Repuesto creado', repuesto));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    registrarRepuesto = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { sucursal_id, producto_id, cantidad } = req.body;
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+            if (!this.crearServicioRepuestoUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+
+            const detalle = await this.crearServicioRepuestoUseCase.execute(id, producto_id, cantidad, negocio_id, sucursal_id);
+            res.status(201).json(Respuesta.exito('Repuesto creado', detalle));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    eliminarRepuesto = async (req: Request<{ servicioId: string; id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { servicioId, id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { sucursal_id } = req.body;
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+            if (!this.eliminarServicioRepuestoUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+
+            await this.eliminarServicioRepuestoUseCase.execute(servicioId, id, negocio_id, sucursal_id);
+            res.status(200).json(Respuesta.exito('Repuesto eliminado', null));
         } catch (error) {
             next(error);
         }
@@ -180,6 +216,20 @@ export class ServicioController extends BaseController {
             const descripcion = typeof req.body.descripcion === 'string' ? req.body.descripcion : null;
             const servicio = await this.subirImagenProgresoServicioUseCase.execute({ servicio_id: id, url, negocio_id, descripcion });
             res.status(201).json(Respuesta.exito('Imagen de progreso agregada al servicio', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    actualizarObservaciones = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const usuario = (req as any).usuario;
+            if (!this.actualizarObservacionesServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            const observaciones = typeof req.body.observaciones === 'string' ? req.body.observaciones : null;
+            const servicio = await this.actualizarObservacionesServicioUseCase.execute(id, negocio_id, observaciones, usuario?.permisos ?? []);
+            res.status(200).json(Respuesta.exito('Observaciones actualizadas con éxito', servicio));
         } catch (error) {
             next(error);
         }

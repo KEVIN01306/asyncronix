@@ -3,7 +3,8 @@ import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
 import { servicioController } from "../servicio.module.js";
-import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioTareaActualizarSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema } from "./validators/servicio.schema.js";
+import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioTareaActualizarSchema, servicioObservacionesSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema } from "./validators/servicio.schema.js";
+import { repuestoCrearSchema } from "./validators/servicio.schema.js";
 import { checklistRespuestaCrearSchema, checklistRespuestaActualizarSchema } from "./validators/checklist-respuesta.schema.js";
 
 const router = Router();
@@ -71,6 +72,13 @@ router.delete(
     "/:id/imagenes/:imagen_id",
     authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
     servicioController.eliminarImagen
+);
+
+router.put(
+    "/:id/observaciones",
+    authMiddleware.verificarPermisoSome(['EDITAR_SERVICIOS', 'ADMIN_SERVICIOS']),
+    validarMiddleware.validarBody(servicioObservacionesSchema),
+    servicioController.actualizarObservaciones
 );
 
 router.put(
@@ -144,6 +152,19 @@ router.delete(
     "/:servicioId/repuestos-cliente/:id",
     authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
     servicioController.eliminarRepuestoCliente
+);
+
+router.post(
+    "/:id/repuestos",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS','EDITAR_SERVICIOS_REPUESTOS']),
+    validarMiddleware.validarBody(repuestoCrearSchema),
+    servicioController.registrarRepuesto
+);
+
+router.delete(
+    "/:servicioId/repuestos/:id",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS','EDITAR_SERVICIOS_REPUESTOS']),
+    servicioController.eliminarRepuesto
 );
 
 export default router;

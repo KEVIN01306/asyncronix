@@ -45,8 +45,18 @@ export const repuestoClienteCrearSchema = z.object({
     cantidad: z.coerce.number().int().min(1)
 });
 
+export const repuestoCrearSchema = z.object({
+    producto_id: z.string().uuid(),
+    cantidad: z.coerce.number().int().min(1),
+    sucursal_id: z.string().uuid()
+});
+
 export const asociarMecanicoSchema = z.object({
     mecanico_id: z.string().uuid()
+});
+
+export const servicioObservacionesSchema = z.object({
+    observaciones: z.string().max(500, 'Las observaciones no pueden exceder 500 caracteres').nullable().optional()
 });
 
 export const cambiarMecanicoSchema = z.object({

@@ -20,8 +20,13 @@ import { AsociarMecanicoServicioUseCase } from './application/asociar-mecanico-s
 import { CambiarMecanicoServicioUseCase } from './application/cambiar-mecanico-servicio.usecase.js';
 import { RegistrarRepuestoClienteUseCase } from './application/registrar-repuesto-cliente.usecase.js';
 import { EliminarRepuestoClienteUseCase } from './application/eliminar-repuesto-cliente.usecase.js';
+import { CrearServicioRepuestoUseCase } from './application/crear-repuesto-servicio.usecase.js';
+import { EliminarServicioRepuestoUseCase } from './application/eliminar-repuesto-servicio.usecase.js';
+import { ActualizarObservacionesServicioUseCase } from './application/actualizar-observaciones-servicio.usecase.js';
 import { ServicioController } from './presentation/servicio.controller.js';
 import { enviarNotificacionUseCase } from '../notificacion/notificacion.module.js';
+import { PrismaLoteRepository } from '../lote/infrastructure/prisma-lote.repository.js';
+import { PrismaProductoRepository } from '../producto/infrastructure/prisma-producto.repository.js';
 
 const repository = new PrismaServicioRepository(prisma as any);
 const obtenerServiciosUseCase = new ObtenerServiciosUseCase(repository);
@@ -44,6 +49,11 @@ const asociarMecanicoServicioUseCase = new AsociarMecanicoServicioUseCase(reposi
 const cambiarMecanicoServicioUseCase = new CambiarMecanicoServicioUseCase(repository, enviarNotificacionUseCase);
 const registrarRepuestoClienteUseCase = new RegistrarRepuestoClienteUseCase(repository);
 const eliminarRepuestoClienteUseCase = new EliminarRepuestoClienteUseCase(repository);
+const loteRepository = new PrismaLoteRepository(prisma as any);
+const productoRepository = new PrismaProductoRepository(prisma as any);
+const crearServicioRepuestoUseCase = new CrearServicioRepuestoUseCase(repository, loteRepository, productoRepository);
+const eliminarServicioRepuestoUseCase = new EliminarServicioRepuestoUseCase(repository);
+const actualizarObservacionesServicioUseCase = new ActualizarObservacionesServicioUseCase(repository);
 
 export const servicioController = new ServicioController(
     obtenerServiciosUseCase,
@@ -64,5 +74,5 @@ export const servicioController = new ServicioController(
     actualizarClienteExternoServicioUseCase,
     asociarMecanicoServicioUseCase,
     cambiarMecanicoServicioUseCase
-    , registrarRepuestoClienteUseCase, eliminarRepuestoClienteUseCase
+    , registrarRepuestoClienteUseCase, eliminarRepuestoClienteUseCase, crearServicioRepuestoUseCase, eliminarServicioRepuestoUseCase, actualizarObservacionesServicioUseCase
 );

@@ -78,7 +78,7 @@ export class PrismaServicioRepository implements ServicioRepository {
         try {
             const record = await this.db.servicio.findFirst({
                 where: { id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: true, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, ServicioRepuestoCliente: true }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, ServicioRepuestoCliente: true, repuestos: { include: { lote: { include: { producto: true } } } } }
             });
             if (!record) return null;
             return mapServicioDetalle(record as any);
@@ -138,7 +138,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                         }))
                     } : undefined
                 } as any,
-                include: { imagenes: true, checklist: true, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
             });
             return mapServicioDetalle(created as any);
         } catch (error) {
@@ -170,7 +170,7 @@ export class PrismaServicioRepository implements ServicioRepository {
 
             const record = await this.db.servicio.findFirst({
                 where: { id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: true, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true }
             });
             if (!record) throw new Error('Servicio no encontrado');
             return mapServicioDetalle(record as any);
@@ -189,7 +189,7 @@ export class PrismaServicioRepository implements ServicioRepository {
 
             const record = await this.db.servicio.findFirst({
                 where: { id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: true, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true }
             });
             if (!record) throw new Error('Servicio no encontrado');
             return mapServicioDetalle(record as any);
@@ -210,7 +210,7 @@ export class PrismaServicioRepository implements ServicioRepository {
 
             const record = await this.db.servicio.findFirst({
                 where: { id: servicio_id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: true, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true }
             });
             return mapServicioDetalle(record as any);
         } catch (error) {
@@ -234,7 +234,7 @@ export class PrismaServicioRepository implements ServicioRepository {
 
             const record = await this.db.servicio.findFirst({
                 where: { id: servicio_id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: true, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true }
             });
             return mapServicioDetalle(record as any);
         } catch (error) {
@@ -254,7 +254,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                     firma_entrada: firma_url,
                     estado: ESTADO_SERVICIO.EN_SERVICIO
                 },
-                include: { imagenes: true, checklist: true, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true }
             });
             return mapServicioDetalle(updated as any);
         } catch (error) {
@@ -323,7 +323,8 @@ export class PrismaServicioRepository implements ServicioRepository {
             if (!servicio) throw new Error('Servicio no encontrado');
 
             const respuestas = await this.db.checklistRespuesta.findMany({
-                where: { servicio_id }
+                where: { servicio_id },
+                include: { checklist_item: { select: { id: true, nombre: true } } }
             });
             return respuestas.map(mapChecklistRespuesta);
         } catch (error) {
@@ -343,7 +344,8 @@ export class PrismaServicioRepository implements ServicioRepository {
                     servicio_id: data.servicio_id,
                     estado: data.estado as any,
                     observaciones: data.observaciones ?? null
-                }
+                },
+                include: { checklist_item: { select: { id: true, nombre: true } } }
             });
             return mapChecklistRespuesta(created as any);
         } catch (error) {
@@ -366,7 +368,8 @@ export class PrismaServicioRepository implements ServicioRepository {
                     checklist_item_id: data.checklist_item_id ?? undefined,
                     estado: data.estado ? data.estado as any : undefined,
                     observaciones: data.observaciones ?? undefined
-                } as any
+                } as any,
+                include: { checklist_item: { select: { id: true, nombre: true } } }
             });
             return mapChecklistRespuesta(updated as any);
         } catch (error) {
@@ -401,7 +404,7 @@ export class PrismaServicioRepository implements ServicioRepository {
             const updated = await this.db.servicio.update({
                 where: { id: servicio_id },
                 data: { cliente_id: vehiculo.cliente_id },
-                include: { imagenes: true, checklist: true, tareas: true }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, tipo_servicio: true }
             });
             return mapServicioDetalle(updated as any);
         } catch (error) {
@@ -422,7 +425,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                     documento_extra: data.documento_extra,
                     numero_extra: data.numero_extra
                 },
-                include: { imagenes: true, checklist: true, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
             });
             return mapServicioDetalle(updated as any);
         } catch (error) {
@@ -438,7 +441,7 @@ export class PrismaServicioRepository implements ServicioRepository {
             const updated = await this.db.servicio.update({
                 where: { id: servicio_id },
                 data: { mecanico_id },
-                include: { imagenes: true, checklist: true, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
             });
             return mapServicioDetalle(updated as any);
         } catch (error) {
@@ -450,7 +453,7 @@ export class PrismaServicioRepository implements ServicioRepository {
         try {
             const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
             if (!servicio) throw new Error('Servicio no encontrado');
-            if (servicio.estado !== ESTADO_SERVICIO.EN_REPARACION) throw new Error('No se pueden crear repuestos en este estado');
+            if (servicio.estado !== ESTADO_SERVICIO.RECEPCION) throw new Error('No se pueden crear repuestos en este estado');
 
             const created = await this.db.servicioRepuestoCliente.create({
                 data: {
@@ -465,16 +468,137 @@ export class PrismaServicioRepository implements ServicioRepository {
         }
     }
 
+    async crearRepuesto(servicio_id: string, detalle: any, negocio_id: string, sucursal_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            const created = await this.db.servicioRepuesto.create({
+                data: {
+                    servicio_id,
+                    lote_id: detalle.lote_id ?? undefined,
+                    cantidad: detalle.cantidad,
+                    precio_venta: detalle.precio_venta,
+                    costo: detalle.costo_unitario ?? undefined
+                },
+                include: { lote: { include: { producto: true } } }
+            });
+
+            // Recalculate total for servicio based on repuestos
+            const detalles = await this.db.servicioRepuesto.findMany({ where: { servicio_id } });
+            const total = detalles.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
+            await this.db.servicio.update({ where: { id: servicio_id }, data: { total } });
+
+            return created;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async crearRepuestosAtomicos(servicio_id: string, detalles: any[], negocio_id: string, sucursal_id: string) {
+        try {
+            return await this.db.$transaction(async (tx) => {
+                const servicio = await tx.servicio.findFirst({ where: { id: servicio_id, negocio_id, sucursal_id, activo: true } });
+                if (!servicio) throw new Error('Servicio no encontrado');
+
+                const created: any[] = [];
+
+                for (const d of detalles) {
+                    if (!d.lote_id) {
+                        throw new Error('LOTE_REQUERIDO');
+                    }
+
+                    const loteRecord = await tx.lote.findFirst({ where: { id: d.lote_id, negocio_id } });
+                    if (!loteRecord) throw new Error('LOTE_NO_ENCONTRADO');
+                    const actual = loteRecord.cantidad_actual ?? 0;
+                    if (actual < d.cantidad) throw new Error('INSUFICIENTE_STOCK');
+
+                    const c = await tx.servicioRepuesto.create({ data: { servicio_id, lote_id: d.lote_id, cantidad: d.cantidad, precio_venta: d.precio_venta, costo: d.costo_unitario }, include: { lote: { include: { producto: true } } } });
+                    created.push(c);
+                }
+
+                const detallesServicio = await tx.servicioRepuesto.findMany({ where: { servicio_id } });
+                const total = detallesServicio.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
+                await tx.servicio.update({ where: { id: servicio_id }, data: { total } });
+
+                return created;
+            }, {
+                timeout: 10000,
+            } );
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
     async eliminarRepuestoCliente(id: string, servicio_id: string, negocio_id: string) {
         try {
             const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
             if (!servicio) throw new Error('Servicio no encontrado');
-            if (servicio.estado !== ESTADO_SERVICIO.EN_REPARACION) throw new Error('No se pueden eliminar repuestos en este estado');
+            if (servicio.estado !== ESTADO_SERVICIO.RECEPCION) throw new Error('No se pueden eliminar repuestos en este estado');
 
             const rep = await this.db.servicioRepuestoCliente.findUnique({ where: { id } });
             if (!rep || rep.servicio_id !== servicio_id) throw new Error('Repuesto no encontrado');
 
             await this.db.servicioRepuestoCliente.delete({ where: { id } });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async eliminarRepuesto(id: string, servicio_id: string, negocio_id: string, sucursal_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, sucursal_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            const rep = await this.db.servicioRepuesto.findFirst({ where: { id, servicio_id } });
+            if (!rep) throw new Error('Repuesto no encontrado');
+
+            await this.db.servicioRepuesto.delete({ where: { id } });
+
+            const detalles = await this.db.servicioRepuesto.findMany({ where: { servicio_id } });
+            const total = detalles.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
+            await this.db.servicio.update({ where: { id: servicio_id }, data: { total } });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async eliminarTareas(servicio_id: string, negocio_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            await this.db.servicioTarea.deleteMany({ where: { servicio_id } });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async crearTareasDesdeTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string) {
+        try {
+            if (!tipo_servicio_id) return;
+
+            const tipoServicio = await this.db.tipoServicio.findFirst({ where: { id: tipo_servicio_id, negocio_id, activo: true }, include: { opciones: { include: { opcion_servicio: true } } } });
+            if (!tipoServicio) throw new Error('Tipo de servicio no encontrado');
+
+            const tareasData = (tipoServicio.opciones ?? []).map((op) => ({ servicio_id, nombre: op.opcion_servicio.nombre, completado: false, observacion: null }));
+            if (tareasData.length === 0) return;
+
+            // createMany may ignore duplicates; use create for safety in case of DB constraints
+            await this.db.servicioTarea.createMany({ data: tareasData });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async actualizarObservaciones(id: string, negocio_id: string, observaciones: string | null) {
+        try {
+            const updated = await this.db.servicio.update({
+                where: { id, negocio_id, activo: true },
+                data: { observaciones },
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+            });
+            return mapServicioDetalle(updated as any);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
@@ -490,7 +614,7 @@ export class PrismaServicioRepository implements ServicioRepository {
             const updated = await this.db.servicio.update({
                 where: { id: servicio_id },
                 data: { mecanico_id: mecanicoNuevoId },
-                include: { imagenes: true, checklist: true, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: true, vehiculo: true, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
             });
             return mapServicioDetalle(updated as any);
         } catch (error) {

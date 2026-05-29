@@ -20,6 +20,8 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
 
+  const [placaBuscada, setPlacaBuscada] = useState<string>('');
+
   const onSubmit = async (data: FormData) => {
     setSearching(true);
     try {
@@ -30,11 +32,14 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
         setSearchError(null);
       } else {
         setVehiculo(null);
+        setPlacaBuscada(data.placa.toUpperCase());
         setOpenCrearVehiculo(true);
       }
     } catch (error) {
       console.error(error);
       setSearchError('Error al buscar la placa. Intenta de nuevo.');
+      setPlacaBuscada(data.placa.toUpperCase());
+      setOpenCrearVehiculo(true);
     } finally {
       setSearching(false);
     }
@@ -96,6 +101,7 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
           setOpenCrearVehiculo(false);
           onVehiculoSeleccionado(v);
         }}
+        placaPredeterminada={placaBuscada}
       />
 
       <ModalCrearCliente
@@ -113,7 +119,7 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
   );
 }
 
-export function ModalCrearVehiculo({ open, onClose, onCreado }: any) {
+export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminada = '' }: any) {
   const [modelos, setModelos] = useState<any[]>([]);
   const [tipos, setTipos] = useState<any[]>([]);
   const [nit, setNit] = useState('');
@@ -141,7 +147,7 @@ export function ModalCrearVehiculo({ open, onClose, onCreado }: any) {
 
   const schema = z.object({ modelo_id: z.string().uuid(), vehiculo_tipo_id: z.string().uuid(), placa: z.string().min(1) });
   type Form = z.infer<typeof schema>;
-  const { control, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: { modelo_id: '', vehiculo_tipo_id: '', placa: '' } });
+  const { control, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: { modelo_id: '', vehiculo_tipo_id: '', placa: placaPredeterminada } });
 
   const buscarCliente = async () => {
     if (!nit.trim()) {

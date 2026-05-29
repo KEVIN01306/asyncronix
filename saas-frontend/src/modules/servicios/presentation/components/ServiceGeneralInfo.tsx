@@ -27,7 +27,9 @@ const ServiceGeneralInfo: React.FC<Props> = ({ servicio, onEdit, onMechanicUpdat
                     const v = await vehiculoRepository.obtener(servicio.vehiculo_id);
                     setVehiculo(v);
                 }
-                if (servicio.tipo_servicio_id) {
+                if (servicio.tipo_servicio) {
+                    setTipoServicio(servicio.tipo_servicio as any);
+                } else if (servicio.tipo_servicio_id) {
                     const t = await TipoServicioRepository.Obtener(servicio.tipo_servicio_id);
                     setTipoServicio(t);
                 }

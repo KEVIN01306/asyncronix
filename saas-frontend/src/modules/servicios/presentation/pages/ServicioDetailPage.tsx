@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import { Box, Breadcrumbs, Button, CircularProgress, Stack, Typography, useMediaQuery, useTheme, Link, Grid, Paper } from '@mui/material';
 import { toast } from 'sonner';
+import { useAuthStore } from '../../../../core/store/authStore';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
 import ServiceImages from '../components/ServiceImages';
@@ -21,6 +22,8 @@ const ServicioDetailPage = () => {
 
     const [servicio, setServicio] = useState<Servicio | null>(null);
     const [loading, setLoading] = useState(true);
+    const user = useAuthStore((state: any) => state.user);
+    const canManageRepuestos = user?.permisos?.includes('EDITAR_SERVICIOS') && user?.permisos?.includes('EDITAR_SERVICIOS_REPUESTOS');
 
     const fetchService = useCallback(async () => {
         if (!id) return;
@@ -70,9 +73,16 @@ const ServicioDetailPage = () => {
                     servicio.estado === ESTADO_SERVICIO.EN_PRUEBAS ||
                     servicio.estado === ESTADO_SERVICIO.ESPERA_REPUESTOS
                 ) && (
-                    <Button variant="outlined" onClick={() => navigate(`/servicios/${servicio.id}/progreso`)}>
-                        Ver progreso
-                    </Button>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <Button variant="outlined" onClick={() => navigate(`/servicios/${servicio.id}/progreso`)}>
+                            Ver progreso
+                        </Button>
+                        {canManageRepuestos && (
+                            <Button variant="outlined" onClick={() => navigate(`/servicios/${servicio.id}/repuestos`)}>
+                                Administrar repuestos
+                            </Button>
+                        )}
+                    </Stack>
                 )}
 
                 <ServiceSignatures servicio={servicio} onUpdate={(s) => setServicio(s)} />

@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
-import { ServiciosListPage, ServicioFormPage, ServicioDetailPage, ServicioProgresoPage } from './servicio-lazy';
+import { ServiciosListPage, ServicioFormPage, ServicioDetailPage, ServicioProgresoPage, ServicioRepuestosPage } from './servicio-lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 
 export const servicioRoutes: RouteObject[] = [
@@ -27,6 +27,14 @@ export const servicioRoutes: RouteObject[] = [
                 element: (
                     <RouteProtector requiredPermission="EDITAR_SERVICIOS">
                         <ServicioProgresoPage />
+                    </RouteProtector>
+                )
+            },
+            {
+                path: ':id/repuestos',
+                element: (
+                    <RouteProtector requiredPermission={["EDITAR_SERVICIOS", "EDITAR_SERVICIOS_REPUESTOS"]}>
+                        <ServicioRepuestosPage />
                     </RouteProtector>
                 )
             },

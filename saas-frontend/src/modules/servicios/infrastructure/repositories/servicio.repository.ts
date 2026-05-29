@@ -89,6 +89,11 @@ export const servicioRepository = {
         await api.put(`${URL_MODULE}/${id}/tareas/${tareaId}`, data);
     },
 
+    actualizarObservaciones: async (id: string, data: { observaciones?: string | null }): Promise<Servicio> => {
+        const response = await api.put<ServicioDetailResponse>(`${URL_MODULE}/${id}/observaciones`, data);
+        return response.data;
+    },
+
     listarChecklistRespuestas: async (id: string): Promise<any[]> => {
         const response = await api.get<any>(`${URL_MODULE}/${id}/checklist-respuestas`);
         return response.data.data;
@@ -106,8 +111,8 @@ export const servicioRepository = {
 
     eliminarChecklistRespuesta: async (id: string, respuestaId: string): Promise<void> => {
         await api.delete(`${URL_MODULE}/${id}/checklist-respuestas/${respuestaId}`);
-    }
-,
+    },
+    
     asociarCliente: async (id: string): Promise<Servicio> => {
         const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/asociar-cliente`);
         return response.data;
@@ -123,6 +128,14 @@ export const servicioRepository = {
     },
     eliminarRepuestoCliente: async (servicioId: string, id: string) => {
         const response = await api.delete(`${URL_MODULE}/${servicioId}/repuestos-cliente/${id}`);
+        return response.data;
+    },
+    crearRepuesto: async (servicioId: string, data: { producto_id: string; cantidad: number; sucursal_id: string }) => {
+        const response = await api.post(`${URL_MODULE}/${servicioId}/repuestos`, data);
+        return response.data;
+    },
+    eliminarRepuesto: async (servicioId: string, id: string, sucursal_id: string) => {
+        const response = await api.delete(`${URL_MODULE}/${servicioId}/repuestos/${id}`, { data: { sucursal_id } });
         return response.data;
     },
     cambiarMecanico: async (id: string, mecanicoAnteriorId: string, mecanicoNuevoId: string): Promise<Servicio> => {

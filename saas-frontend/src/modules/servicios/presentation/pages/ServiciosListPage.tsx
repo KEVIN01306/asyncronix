@@ -1,6 +1,6 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { Add, Edit, Visibility } from '@mui/icons-material';
-import { Autocomplete, Box, Button, Chip, CircularProgress, Paper, TextField, TableContainer, useTheme } from '@mui/material';
+import { Autocomplete, Box, Button, Chip, CircularProgress, Paper, TextField, TableContainer, useTheme, AlertTitle, Alert } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
@@ -143,6 +143,13 @@ const ServiciosListPage = () => {
             onClick: (row: any) => navigate(`/servicios/${row.id}`)
         },
         {
+            name: 'Ver progreso',
+            icon: <Visibility fontSize="small" />,
+            color: 'info.main',
+            visible: (row: any) => [ESTADO_SERVICIO.EN_SERVICIO, ESTADO_SERVICIO.EN_PRUEBAS].includes(row.estado),
+            onClick: (row: any) => navigate(`/servicios/${row.id}/progreso`)
+        },
+        {
             name: 'Editar',
             icon: <Edit fontSize="small" />, 
             color: 'primary.main',
@@ -166,25 +173,27 @@ const ServiciosListPage = () => {
 
     return (
         <Box p={isMobile ? 2 : 4}>
+
+            <Alert
+            severity="info" sx={{ mb: 3, boxShadow: 'none', border: (theme) => `1px solid ${theme.palette.divider}` }}>
+                <AlertTitle>Servicios</AlertTitle>
+                Administra tus servicios, crea nuevos registros y actualiza la información de contacto en cualquier momento.
+            </Alert>
             <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" gap={2} mb={2} component={Paper} p={2}>
-                <Box>
-                    <Box component="h1" sx={{ m: 0, fontSize: 24, fontWeight: 700 }}>Servicios</Box>
-                    <Box color="text.secondary">Administra la recepción, estado y detalle de los servicios en taller.</Box>
-                </Box>
+                <TextField
+                        fullWidth
+                        label="Buscar servicio"
+                        value={searchText}
+                        onChange={(event) => setSearchText(event.target.value)}
+                    />
                 <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/servicios/nuevo')}>
                     Nuevo servicio
                 </Button>
             </Box>
 
             <Paper sx={{ p: 2, mb: 2 }}>
-                <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: isAdmin ? 'repeat(5, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))' }} gap={2}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Buscar servicio"
-                        value={searchText}
-                        onChange={(event) => setSearchText(event.target.value)}
-                    />
+                <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: isAdmin ? 'repeat(4, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))' }} gap={2}>
+
                     <TextField
                         fullWidth
                         size="small"

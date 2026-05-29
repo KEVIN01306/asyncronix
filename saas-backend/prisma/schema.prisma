@@ -331,6 +331,7 @@ model Servicio {
   tipo_servicio_id String?         @db.Char(36)
   descripcion      String?         @db.Text
   diagnostico      String?        @db.Text
+  observaciones    String?        @db.Text
   kilometraje      Int?
   firma_entrada    String?        @db.Text
   firma_salida     String?        @db.Text

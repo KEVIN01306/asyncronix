@@ -1,3 +1,4 @@
+import type { TipoServicioSimple } from 'modules/tipo-servicio/domain/tipo-servicio.entity.js';
 import type { EstadoServicio, MetodoPago } from './servicio.constants.js';
 
 export interface ImagenServicio {
@@ -14,6 +15,10 @@ export interface ChecklistRespuestaSimple {
     servicio_id: string;
     estado: string;
     observaciones?: string | null;
+    item?: {
+        id: string;
+        nombre: string;
+    } | null;
     created_at: Date;
     updated_at: Date;
 }
@@ -51,8 +56,10 @@ export interface Servicio {
         apellido?: string | null;
         email?: string | null;
     } | null;
+    repuestos?: ServicioRepuestoCliente[];
     descripcion?: string | null;
     diagnostico?: string | null;
+    observaciones?: string | null;
     kilometraje?: number | null;
     fecha_entrada?: Date;
     fecha_salida?: Date | null;
@@ -99,6 +106,11 @@ export interface ServicioDetalle extends Servicio {
     imagenes: ImagenServicio[];
     checklist: ChecklistRespuestaSimple[];
     tareas: ServicioTarea[];
+    tipo_servicio?: {
+        id: string;
+        nombre: string;
+    } | null;
+    repuestos_inventario?: ServicioRepuesto[];
 }
 
 export type ServicioCrear = Omit<Servicio, 'id' | 'activo' | 'created_at' | 'updated_at' | 'fecha_entrada' | 'estado'> & {
@@ -122,3 +134,15 @@ export type ServicioRepuestoClienteCrear = {
     cantidad: number;
     servicio_id?: string;
 };
+
+export interface ServicioRepuesto {
+    id: string;
+    servicio_id: string;
+    lote_id?: string | null;
+    producto?: { id: string; nombre: string } | null;
+    cantidad: number;
+    precio_venta: number;
+    costo?: number | null;
+    created_at: Date;
+    updated_at: Date;
+}

@@ -16,6 +16,25 @@ export interface ChecklistRespuesta {
     servicio_id: string;
     estado: string;
     observaciones?: string | null;
+    item?: {
+        id: string;
+        nombre: string;
+    } | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ServicioRepuesto {
+    id: string;
+    servicio_id: string;
+    lote_id?: string | null;
+    producto?: {
+        id: string;
+        nombre: string;
+    } | null;
+    cantidad: number;
+    precio_venta: number;
+    costo?: number | null;
     created_at: string;
     updated_at: string;
 }
@@ -37,6 +56,7 @@ export interface Servicio {
     tipo_servicio_id?: string | null;
     descripcion?: string | null;
     diagnostico?: string | null;
+    observaciones?: string | null;
     kilometraje?: number | null;
     fecha_entrada?: string | null;
     fecha_salida?: string | null;
@@ -51,6 +71,7 @@ export interface Servicio {
     imagenes?: ImagenServicio[];
     checklist?: ChecklistRespuesta[];
     repuestos?: ServicioRepuestoCliente[];
+    repuestos_inventario?: ServicioRepuesto[];
     tareas?: ServicioTarea[];
     vehiculo?: {
         id: string;

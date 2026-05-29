@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface RouteProtectorProps {
     children: React.ReactElement;
-    requiredPermission: string;
+    requiredPermission: string | string[];
 }
 
 export const RouteProtector = ({ children, requiredPermission }: RouteProtectorProps) => {
@@ -16,7 +16,11 @@ export const RouteProtector = ({ children, requiredPermission }: RouteProtectorP
         return <Navigate to="/auth/login" state={{ from: location }} replace />;
     }
 
-    if (!user?.permisos.includes(requiredPermission)) {
+    const hasPermission = Array.isArray(requiredPermission)
+        ? requiredPermission.every((permission) => user?.permisos.includes(permission))
+        : user?.permisos.includes(requiredPermission);
+
+    if (!hasPermission) {
         toast.error('Acceso denegado', {
             description: 'No tienes permisos para esto.',
         });

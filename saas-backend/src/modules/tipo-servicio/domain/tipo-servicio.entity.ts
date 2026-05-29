@@ -1,4 +1,4 @@
-import type { OpcionServicioSimple } from "../opcion-servicio/domain/opcion-servicio.entity.js";
+import type { OpcionServicioSimple } from "../../opcion-servicio/domain/opcion-servicio.entity.js";
 
 export interface TipoServicio {
     id: string;

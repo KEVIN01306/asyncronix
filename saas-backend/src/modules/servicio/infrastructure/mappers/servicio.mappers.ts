@@ -72,6 +72,10 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         servicio_id: item.servicio_id,
         estado: item.estado,
         observaciones: item.observaciones,
+        item: item.checklist_item ? {
+            id: item.checklist_item.id,
+            nombre: item.checklist_item.nombre
+        } : null,
         created_at: item.created_at,
         updated_at: item.updated_at
     })),
@@ -85,19 +89,35 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         updated_at: item.updated_at
     })),
     cliente: record.cliente ? {
-        repuestos: (record.ServicioRepuestoCliente ?? []).map((r: any) => ({
-            id: r.id,
-            servicio_id: r.servicio_id,
-            repuesto: r.repuesto,
-            cantidad: r.cantidad,
-            created_at: r.created_at,
-            updated_at: r.updated_at
-        })),
         id: record.cliente.id,
         nombre: record.cliente.nombre,
         telefono: record.cliente.telefono,
         email: record.cliente.email
     } : null,
+    observaciones: record.observaciones,
+    tipo_servicio: record.tipo_servicio ? {
+        id: record.tipo_servicio.id,
+        nombre: record.tipo_servicio.nombre,
+    } : null,
+    repuestos: (record.ServicioRepuestoCliente ?? []).map((r: any) => ({
+        id: r.id,
+        servicio_id: r.servicio_id,
+        repuesto: r.repuesto,
+        cantidad: r.cantidad,
+        created_at: r.created_at,
+        updated_at: r.updated_at
+    })),
+    repuestos_inventario: (record.repuestos ?? []).map((r: any) => ({
+        id: r.id,
+        servicio_id: r.servicio_id,
+        lote_id: r.lote_id,
+        producto: r.lote && r.lote.producto ? { id: r.lote.producto.id, nombre: r.lote.producto.nombre } : null,
+        cantidad: r.cantidad,
+        precio_venta: r.precio_venta,
+        costo: r.costo,
+        created_at: r.created_at,
+        updated_at: r.updated_at
+    })),
     nombre_extra: record.nombre_extra ?? null,
     documento_extra: record.documento_extra ?? null,
     numero_extra: record.numero_extra ?? null,
@@ -115,6 +135,10 @@ export const mapChecklistRespuesta = (record: any): ChecklistRespuestaSimple => 
     servicio_id: record.servicio_id,
     estado: record.estado,
     observaciones: record.observaciones,
+    item: record.checklist_item ? {
+        id: record.checklist_item.id,
+        nombre: record.checklist_item.nombre
+    } : null,
     created_at: record.created_at,
     updated_at: record.updated_at
 });

@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, FormControl, InputLabel, Select, MenuItem, TextField, Stack } from '@mui/material';
 import { toast } from 'sonner';
-import { ChecklistItemRepository } from '../../../checklist-items/infrastructure/repositories/checklist-item.repository';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
-import type { ChecklistItem } from '../../../checklist-items/domain/interfaces/checklist-item.interface';
 import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 
 const checklistEstados = ['OPTIMO', 'REGULAR', 'REQUIERE_CAMBIO', 'NO_APLICA'];
@@ -12,16 +10,13 @@ const checklistEstados = ['OPTIMO', 'REGULAR', 'REQUIERE_CAMBIO', 'NO_APLICA'];
 type Props = { servicio: Servicio; onUpdate: (s: Servicio) => void };
 
 const ServiceChecklistTable: React.FC<Props> = ({ servicio, onUpdate }) => {
-  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
-  const [editingRespuestaId, setEditingRespuestaId] = useState<string | null>(null);
+    const [editingRespuestaId, setEditingRespuestaId] = useState<string | null>(null);
   const [editingEstado, setEditingEstado] = useState<string>(checklistEstados[0]);
   const [editingObservaciones, setEditingObservaciones] = useState<string>('');
   const [editingAll, setEditingAll] = useState(false);
   const [editingMap, setEditingMap] = useState<Record<string, { estado: string; observaciones: string }>>({});
   const [savingRespuesta, setSavingRespuesta] = useState(false);
   const [savingAll, setSavingAll] = useState(false);
-
-  useEffect(() => { const load = async () => { try { const resp = await ChecklistItemRepository.listar(100,0); setChecklistItems(resp.data); } catch (e) { console.error(e); toast.error('No se pudieron cargar los items de checklist'); } }; load(); }, []);
 
   const startEditRespuesta = (respuesta: any) => { setEditingRespuestaId(respuesta.id); setEditingEstado(respuesta.estado); setEditingObservaciones(respuesta.observaciones ?? ''); };
   const cancelEditRespuesta = () => { setEditingRespuestaId(null); setEditingEstado(checklistEstados[0]); setEditingObservaciones(''); };
@@ -89,12 +84,11 @@ const ServiceChecklistTable: React.FC<Props> = ({ servicio, onUpdate }) => {
             </TableHead>
             <TableBody>
               {servicio.checklist.map((respuesta) => {
-                const itemNombre = checklistItems.find(i => i.id === respuesta.checklist_item_id)?.nombre ?? respuesta.checklist_item_id;
                 if (editingAll) {
                   const bulkState = editingMap[respuesta.id];
                   return (
                     <TableRow key={respuesta.id}>
-                      <TableCell>{itemNombre}</TableCell>
+                      <TableCell>{respuesta.item?.nombre ?? respuesta.checklist_item_id}</TableCell>
                       <TableCell>
                         <FormControl fullWidth>
                           <InputLabel id={`bulk-estado-${respuesta.id}`}>Estado</InputLabel>
@@ -111,7 +105,7 @@ const ServiceChecklistTable: React.FC<Props> = ({ servicio, onUpdate }) => {
                 if (editingRespuestaId === respuesta.id) {
                   return (
                     <TableRow key={respuesta.id}>
-                      <TableCell>{itemNombre}</TableCell>
+                      <TableCell>{respuesta.item?.nombre ?? respuesta.checklist_item_id}</TableCell>
                       <TableCell>
                         <FormControl fullWidth>
                           <InputLabel id={`estado-edit-${respuesta.id}`}>Estado</InputLabel>
@@ -127,7 +121,7 @@ const ServiceChecklistTable: React.FC<Props> = ({ servicio, onUpdate }) => {
                 }
                 return (
                     <TableRow key={respuesta.id}>
-                    <TableCell>{itemNombre}</TableCell>
+                    <TableCell>{respuesta.item?.nombre ?? respuesta.checklist_item_id}</TableCell>
                     <TableCell>{respuesta.estado}</TableCell>
                     <TableCell>{respuesta.observaciones ?? 'Sin observaciones'}</TableCell>
                     <TableCell><Button size="small" onClick={() => startEditRespuesta(respuesta)} disabled={savingAll || savingRespuesta || servicio.estado !== ESTADO_SERVICIO.RECEPCION}>Editar</Button></TableCell>

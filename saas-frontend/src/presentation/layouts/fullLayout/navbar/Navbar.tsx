@@ -10,7 +10,8 @@ import {
   alpha,
   Menu,
   MenuItem,
-  ListItemIcon
+  ListItemIcon,
+  Tooltip
 } from "@mui/material";
 import { 
   //Search as SearchIcon, 
@@ -18,11 +19,12 @@ import {
   //ChatBubbleOutlineOutlined as ChatIcon,
   MenuOutlined as MenuIcon, 
   PersonOutline,
-  Logout
+  Logout,
+  CopyAll,
 } from "@mui/icons-material";
 import { useAuthStore } from "../../../../core/store/authStore";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -49,6 +51,13 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
   const handleProfileClick = () => {
     handleMenuClose();
     navigate('/perfil');
+  };
+
+  const location = useLocation();
+
+  const handleDuplicate = () => {
+    const fullUrl = `${window.location.origin}${location.pathname}`;
+    window.open(fullUrl, '_blank');
   };
 
   return (
@@ -116,6 +125,11 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
         </Stack>
 
         <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Tooltip followCursor describeChild title="Duplicar página" placement="top-end">
+              <ListItemIcon sx={{ borderRadius: 1, padding: 2 }} onClick={handleDuplicate}>
+                    <CopyAll fontSize="small" />
+              </ListItemIcon>
+            </Tooltip>
           <Box sx={{ width: '1px', height: '24px', bgcolor: alpha('#6889b8', 0.2), mx: 1 }} />
 
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ cursor: 'pointer' }} onClick={handleMenuOpen}>
