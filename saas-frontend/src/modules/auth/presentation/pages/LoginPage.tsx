@@ -33,28 +33,29 @@ const LoginPage = () => {
 
     const onSubmit = async (data: LoginFormValues) => {
         try {
-            const cleanData = { ...data, telefono: data.email };
-
-            const response = await authRepository.signIn(cleanData);
+            const response = await authRepository.signIn(data);
             setAuth(response.usuario, response.accessToken);
-            
+
             const tokenFCM = await obtenerTokenFCM();
             if (tokenFCM) {
                 try {
                     await notificacionRepository.guardarTokenFCM(tokenFCM);
-                } catch /*(error)*/ {
-                    //console.error('Error al guardar token FCM:', error);
+                } catch {
+                    // no-op
                 }
             }
 
-            goTo(from, {replace: true})
+            goTo(from, { replace: true });
 
             toast.success('Login Exitoso', {
-                description: "Hola, Bienvenido"
-            })
-
-        } catch (error) {
-            console.error("Error en el inicio de sesión", error);
+                description: 'Hola, Bienvenido',
+            });
+        } catch (error: any) {
+            const backendMessage = error?.response?.data?.message || 'Usuario o contraseña incorrectos.';
+            toast.error('Error de acceso', {
+                description: backendMessage,
+            });
+            console.error('Error en el inicio de sesión', error);
         }
     };
 

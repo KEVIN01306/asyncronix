@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 interface User {
     id: string;
@@ -29,39 +28,36 @@ interface AuthState {
     refreshToken: (token: string) => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-    persist(
-        (set) => ({
+const initialToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+export const useAuthStore = create<AuthState>()((set) => ({
+    user: null,
+    status: initialToken ? 'checking' : 'unauthenticated',
+    isAuthenticated: Boolean(initialToken),
+    login: (user, token) => {
+        localStorage.setItem('accessToken', token);
+        set({
+            user,
+            status: 'authenticated',
+            isAuthenticated: true,
+        });
+    },
+    logout: () => {
+        localStorage.removeItem('accessToken');
+        set({
             user: null,
             status: 'unauthenticated',
             isAuthenticated: false,
-            login: (user, token) => {
-                localStorage.setItem('accessToken', token);
-                set({
-                    user,
-                    status: 'authenticated',
-                    isAuthenticated: true
-                });
-            },
-            logout: () => {
-                localStorage.removeItem('accessToken');
-                set({
-                    user: null,
-                    status: 'unauthenticated',
-                    isAuthenticated: false
-                });
-            },
-            getMe: (user) => {
-                set({
-                    user,
-                    status: 'authenticated',
-                    isAuthenticated: true
-                })
-            },
-            refreshToken: (token) => {
-                localStorage.setItem('accessToken', token)
-            }
-        }),
-        { name: 'auth-storage' }
-    )
-);
+        });
+    },
+    getMe: (user) => {
+        set({
+            user,
+            status: 'authenticated',
+            isAuthenticated: true,
+        });
+    },
+    refreshToken: (token) => {
+        localStorage.setItem('accessToken', token);
+    },
+}));

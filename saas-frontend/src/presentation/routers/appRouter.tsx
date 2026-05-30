@@ -41,10 +41,15 @@ const appRouter = createBrowserRouter([
     },
     {
         path: '/',
-        element: <ProtectedRoute />,
+        element: ( 
+            <Suspense fallback={<FullPageLoader />}>
+                <ProtectedRoute />
+            </Suspense>
+            ),
         children: [
             {
-                element: <Suspense fallback={<FullPageLoader />}>
+                element: 
+                <Suspense fallback={<FullPageLoader />}>
                     <FullLayout />
                 </Suspense>,
                 children: [

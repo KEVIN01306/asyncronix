@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
 import Sidebar from "./siderbar/Sidebar";
 import Navbar from "./navbar/Navbar";
 import { Outlet } from "react-router-dom";
 import MenuItems from "./siderbar/menuItems";
 import { useAuthStore } from "../../../core/store/authStore";
-import { authRepository } from "../../../modules/auth/infrastructure/repositories/auth.repository";
-import { toast } from "sonner";
 
 const DRAWER_WIDTH = 220;
 
@@ -18,7 +16,6 @@ const FullLayout = () => {
     const [open, setOpen] = useState(!isMobile);
 
     const user = useAuthStore((state) => state.user);
-    const getMeStore = useAuthStore((state) => state.getMe)
 
     const toggleSidebar = () => setOpen(!open);
 
@@ -35,22 +32,6 @@ const FullLayout = () => {
         }
         return item;
     });
-
-    const obtenerMe = async () => {
-        const token = localStorage.getItem('accessToken')
-
-        if (!token) return;
-        try {
-        const usuario = await authRepository.getMe();
-        getMeStore(usuario);
-        } catch  {
-            toast.error("Error al recuperar la sesión:");
-        }
-    }
-
-    useEffect( () => {
-        obtenerMe()
-    },[])
     
     return (
         <Box sx={{
