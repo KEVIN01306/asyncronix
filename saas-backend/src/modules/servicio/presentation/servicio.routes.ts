@@ -3,7 +3,7 @@ import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
 import { servicioController } from "../servicio.module.js";
-import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioTareaActualizarSchema, servicioObservacionesSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema } from "./validators/servicio.schema.js";
+import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioTareaCrearSchema, servicioTareaActualizarSchema, servicioObservacionesSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema } from "./validators/servicio.schema.js";
 import { repuestoCrearSchema } from "./validators/servicio.schema.js";
 import { checklistRespuestaCrearSchema, checklistRespuestaActualizarSchema } from "./validators/checklist-respuesta.schema.js";
 
@@ -81,11 +81,24 @@ router.put(
     servicioController.actualizarObservaciones
 );
 
+router.post(
+    "/:id/tareas",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
+    validarMiddleware.validarBody(servicioTareaCrearSchema),
+    servicioController.registrarTarea
+);
+
 router.put(
     "/:id/tareas/:tarea_id",
     authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
     validarMiddleware.validarBody(servicioTareaActualizarSchema),
     servicioController.actualizarTarea
+);
+
+router.delete(
+    "/:id/tareas/:tarea_id",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
+    servicioController.eliminarTarea
 );
 
 router.get(

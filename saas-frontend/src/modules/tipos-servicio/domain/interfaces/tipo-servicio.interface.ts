@@ -6,6 +6,7 @@ export interface TipoServicio {
     nombre: string;
     precio_base: number;
     activo: boolean;
+    checklist: boolean;
     opciones: OpcionServicio[];
     created_at: string;
     updated_at: string;

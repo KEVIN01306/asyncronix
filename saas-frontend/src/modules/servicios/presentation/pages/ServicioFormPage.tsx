@@ -30,7 +30,7 @@ const ServicioFormPage = () => {
     const [loading, setLoading] = useState(true);
     const [isEdit, setIsEdit] = useState(false);
 
-    const { control, register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ServicioFormValues>({
+    const { control, register, handleSubmit, reset, setValue, watch, formState: { isSubmitting } } = useForm<ServicioFormValues>({
         defaultValues: {
             placa: '',
             vehiculo_id: undefined,
@@ -92,6 +92,9 @@ const ServicioFormPage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.id]);
 
+
+    const selectedTipoServicioId = watch('tipo_servicio_id');
+    const selectedTipo = tipos.find((tipo) => tipo.id === selectedTipoServicioId);
 
     const onSubmit = async (data: ServicioFormValues) => {
         if (!user?.sucursal_id) {
@@ -222,6 +225,14 @@ const ServicioFormPage = () => {
                                                 )}
                                             />
                                         </FormControl>
+                                        {selectedTipo && selectedTipo.opciones.length === 0 && (
+                                            <Box mt={2} p={2} sx={{ bgcolor: 'grey.100', borderRadius: 1 }}>
+                                                <Typography variant="subtitle2">Tipo de servicio sin opciones</Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Este tipo de servicio no generará tareas automáticas. Podrás agregar o actualizar tareas manualmente desde el detalle del servicio.
+                                                </Typography>
+                                            </Box>
+                                        )}
                                     </Grid>
                                     <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField

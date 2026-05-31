@@ -5,6 +5,7 @@ export interface TipoServicio {
     negocio_id: string;
     nombre: string;
     precio_base: number;
+    checklist: boolean;
     activo: boolean;
     opciones: OpcionServicioSimple[];
     created_at: Date;

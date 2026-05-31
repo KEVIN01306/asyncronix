@@ -20,6 +20,10 @@ export const servicioCrearSchema = z.object({
 
 export const servicioActualizarSchema = servicioCrearSchema.partial();
 
+export const servicioTareaCrearSchema = z.object({
+    nombre: z.string().trim().min(1, 'El nombre de la tarea es requerido')
+});
+
 export const servicioTareaActualizarSchema = z.object({
     nombre: z.string().optional(),
     completado: z.boolean().optional(),

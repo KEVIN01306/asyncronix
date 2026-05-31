@@ -19,7 +19,6 @@ export const ProtectedRoute = () => {
         const validarSesion = async () => {
             const token = localStorage.getItem('accessToken');
 
-            // Si no hay user, no hay token o no está autenticado, hacer refresh
             if (!user || !token || !isAuth) {
                 try {
                     const refreshResponse = await authRepository.refreshToken();
@@ -40,14 +39,13 @@ export const ProtectedRoute = () => {
                     setIsLoading(false);
                 }
             } else {
-                // Si ya tiene todo, no necesita validar
                 setHasCheckedAuth(true);
                 setIsLoading(false);
             }
         };
 
         validarSesion();
-    }, []);
+    }, [user, isAuth, getMeStore, refreshTokenStore, logout]);
 
     if (isLoading) {
         return <FullPageLoader message="Validando sesión..." />;

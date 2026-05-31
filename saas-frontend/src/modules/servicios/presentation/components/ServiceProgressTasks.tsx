@@ -8,11 +8,14 @@ import { ESTADO_SERVICIO, type EstadoServicio } from '../../domain/servicio.cons
 type Props = {
     servicio: Servicio;
     onUpdate: (s: Servicio) => void;
+    canAddManual?: boolean;
 };
 
-const ServiceProgressTasks: React.FC<Props> = ({ servicio, onUpdate }) => {
+const ServiceProgressTasks: React.FC<Props> = ({ servicio, onUpdate, canAddManual = false }) => {
     const [taskUpdates, setTaskUpdates] = useState<Record<string, { completado: boolean; observacion: string }>>({});
     const [savingTaskId, setSavingTaskId] = useState<string | null>(null);
+    const [newTaskName, setNewTaskName] = useState('');
+    const [creatingTask, setCreatingTask] = useState(false);
 
     const estadosPermitidos: EstadoServicio[] = [
         ESTADO_SERVICIO.EN_SERVICIO,
@@ -70,56 +73,97 @@ const ServiceProgressTasks: React.FC<Props> = ({ servicio, onUpdate }) => {
         }
     };
 
+    const handleCreateTarea = async () => {
+        if (!newTaskName.trim()) {
+            toast.error('El nombre de la tarea es requerido');
+            return;
+        }
+        setCreatingTask(true);
+        try {
+            await servicioRepository.registrarTarea(servicio.id, { nombre: newTaskName.trim() });
+            const updated = await servicioRepository.obtener(servicio.id);
+            onUpdate(updated);
+            setNewTaskName('');
+            toast.success('Tarea manual creada correctamente');
+        } catch (error) {
+            console.error(error);
+            toast.error('No se pudo crear la tarea manual');
+        } finally {
+            setCreatingTask(false);
+        }
+    };
+
     if (!servicio.tareas?.length) {
-        return <Typography color="text.secondary">No hay tareas de progreso disponibles para este servicio.</Typography>;
+        return (
+            <Paper sx={{ p: 2 }}>
+                <Typography color="text.secondary" mb={2}>
+                    No hay tareas de progreso disponibles para este servicio.
+                </Typography>
+                {canAddManual && canEdit && (
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
+                        <TextField
+                            fullWidth
+                            label="Nueva tarea manual"
+                            value={newTaskName}
+                            onChange={(e) => setNewTaskName(e.target.value)}
+                        />
+                        <Button variant="contained" onClick={handleCreateTarea} disabled={creatingTask}>
+                            {creatingTask ? 'Creando...' : 'Crear tarea'}
+                        </Button>
+                    </Stack>
+                )}
+            </Paper>
+        );
     }
 
     return (
-        <TableContainer component={Paper} sx={{ p: 0 }}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Tarea</TableCell>
-                        <TableCell>Completado</TableCell>
-                        <TableCell>Observación</TableCell>
-                        <TableCell align="right">Acción</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {servicio.tareas.map((tarea) => {
-                        const update = taskUpdates[tarea.id] ?? { completado: tarea.completado, observacion: tarea.observacion ?? '' };
-                        return (
-                            <TableRow key={tarea.id}>
-                                <TableCell>{tarea.nombre}</TableCell>
-                                <TableCell>
-                                    <Checkbox checked={update.completado} disabled={!canEdit} onChange={() => handleToggleCompletion(tarea)} />
-                                </TableCell>
-                                <TableCell>
-                                    {canEdit ? (
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            minRows={2}
-                                            value={update.observacion}
-                                            onChange={(e) => handleObservacionChange(tarea, e.target.value)}
-                                        />
-                                    ) : (
-                                        <Typography>{tarea.observacion ?? 'Sin observación'}</Typography>
-                                    )}
-                                </TableCell>
-                                <TableCell align="right">
-                                    <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                                        <Button variant="contained" size="small" disabled={!canEdit || savingTaskId === tarea.id} onClick={() => handleSaveTarea(tarea)}>
-                                            {savingTaskId === tarea.id ? 'Guardando...' : 'Guardar'}
-                                        </Button>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                        );
-                    })}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <Stack spacing={2}>
+            <TableContainer component={Paper} sx={{ p: 0 }}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Tarea</TableCell>
+                            <TableCell>Completado</TableCell>
+                            <TableCell>Observación</TableCell>
+                            <TableCell align="right">Acción</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {servicio.tareas.map((tarea) => {
+                            const update = taskUpdates[tarea.id] ?? { completado: tarea.completado, observacion: tarea.observacion ?? '' };
+                            return (
+                                <TableRow key={tarea.id}>
+                                    <TableCell>{tarea.nombre}</TableCell>
+                                    <TableCell>
+                                        <Checkbox checked={update.completado} disabled={!canEdit} onChange={() => handleToggleCompletion(tarea)} />
+                                    </TableCell>
+                                    <TableCell>
+                                        {canEdit ? (
+                                            <TextField
+                                                fullWidth
+                                                multiline
+                                                minRows={2}
+                                                value={update.observacion}
+                                                onChange={(e) => handleObservacionChange(tarea, e.target.value)}
+                                            />
+                                        ) : (
+                                            <Typography>{tarea.observacion ?? 'Sin observación'}</Typography>
+                                        )}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                                                    <Button variant="contained" size="small" disabled={!canEdit || savingTaskId === tarea.id} onClick={() => handleSaveTarea(tarea)}>
+                                                {savingTaskId === tarea.id ? 'Guardando...' : 'Guardar'}
+                                            </Button>
+                                        </Stack>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Stack>
     );
 };
 

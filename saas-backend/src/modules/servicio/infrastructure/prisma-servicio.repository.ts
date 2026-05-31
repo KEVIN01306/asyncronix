@@ -78,7 +78,7 @@ export class PrismaServicioRepository implements ServicioRepository {
         try {
             const record = await this.db.servicio.findFirst({
                 where: { id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, ServicioRepuestoCliente: true, repuestos: { include: { lote: { include: { producto: true } } } } }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: { include: { opciones: { include: { opcion_servicio: true } } } }, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, ServicioRepuestoCliente: true, repuestos: { include: { lote: { include: { producto: true } } } } }
             });
             if (!record) return null;
             return mapServicioDetalle(record as any);
@@ -116,21 +116,21 @@ export class PrismaServicioRepository implements ServicioRepository {
                     vehiculo_id: data.vehiculo_id,
                     mecanico_id: data.mecanico_id ?? null,
                     cliente_id: data.cliente_id ?? null,
-                    tipo_servicio_id: data.tipo_servicio_id ?? null,
+                            tipo_servicio_id: data.tipo_servicio_id ?? null,
                     descripcion: data.descripcion ?? null,
                     kilometraje: data.kilometraje ?? null,
                     fecha_salida: data.fecha_salida ? new Date(data.fecha_salida) : null,
                     total: data.total ?? 0,
                     estado: data.estado ? data.estado as any : ESTADO_SERVICIO.RECEPCION,
                     MetodoPago: data.MetodoPago ?? METODO_PAGO.EFECTIVO,
-                    checklist: {
+                    checklist: tipoServicio?.checklist ? {
                         create: checklistItems.map((item) => ({
                             checklist_item_id: item.id,
                             estado: 'OPTIMO',
                             observaciones: null
                         }))
-                    },
-                    tareas: tipoServicio ? {
+                    } : undefined,
+                    tareas: tipoServicio?.opciones?.length ? {
                         create: tipoServicio.opciones.map((item) => ({
                             nombre: item.opcion_servicio.nombre,
                             completado: false,
@@ -141,6 +141,73 @@ export class PrismaServicioRepository implements ServicioRepository {
                 include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } }
             });
             return mapServicioDetalle(created as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async crearTarea(servicio_id: string, data: { nombre: string }, negocio_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            const tarea = await this.db.servicioTarea.create({
+                data: {
+                    servicio_id,
+                    nombre: data.nombre,
+                    completado: false,
+                    observacion: null
+                }
+            });
+
+            return tarea as any;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async eliminarTarea(id: string, servicio_id: string, negocio_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            const deleted = await this.db.servicioTarea.deleteMany({ where: { id, servicio_id } });
+            if (deleted.count === 0) throw new Error('Tarea no encontrada');
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async actualizarChecklistRespuestasPorTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string) {
+        try {
+            const servicio = await this.db.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            if (!tipo_servicio_id) {
+                await this.db.checklistRespuesta.deleteMany({ where: { servicio_id } });
+                return;
+            }
+
+            const tipoServicio = await this.db.tipoServicio.findFirst({ where: { id: tipo_servicio_id, negocio_id, activo: true } });
+            if (!tipoServicio) throw new Error('Tipo de servicio no encontrado');
+
+            if (!tipoServicio.checklist) {
+                await this.db.checklistRespuesta.deleteMany({ where: { servicio_id } });
+                return;
+            }
+
+            const checklistItems = await this.db.checklistItem.findMany({ where: { negocio_id, activo: true } });
+            if (checklistItems.length === 0) return;
+
+            await this.db.checklistRespuesta.createMany({
+                data: checklistItems.map((item) => ({
+                    servicio_id,
+                    checklist_item_id: item.id,
+                    estado: 'OPTIMO',
+                    observaciones: null
+                })),
+                skipDuplicates: true
+            });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

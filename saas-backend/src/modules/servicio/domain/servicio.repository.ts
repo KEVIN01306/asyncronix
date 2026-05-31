@@ -1,5 +1,5 @@
 import type { Paginated } from "@shared/domain/paginated.js";
-import type { ServicioDetalle, ServicioCrear, ServicioActualizar, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple } from "./servicio.entity.js";
+import type { ServicioDetalle, ServicioCrear, ServicioActualizar, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple, ServicioTarea } from "./servicio.entity.js";
 
 export interface ListarServiciosParams {
     negocio_id: string;
@@ -43,5 +43,8 @@ export interface ServicioRepository {
     eliminarRepuesto(id: string, servicio_id: string, negocio_id: string, sucursal_id: string): Promise<void>;
     eliminarTareas(servicio_id: string, negocio_id: string): Promise<void>;
     crearTareasDesdeTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string): Promise<void>;
+    crearTarea(servicio_id: string, data: { nombre: string }, negocio_id: string): Promise<ServicioTarea>;
+    eliminarTarea(id: string, servicio_id: string, negocio_id: string): Promise<void>;
+    actualizarChecklistRespuestasPorTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string): Promise<void>;
     actualizarObservaciones(id: string, negocio_id: string, observaciones: string | null): Promise<ServicioDetalle>;
 }

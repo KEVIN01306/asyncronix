@@ -7,6 +7,7 @@ const mapTipoServicio = (record: any): TipoServicioSimple => ({
     negocio_id: record.negocio_id,
     nombre: record.nombre,
     precio_base: record.precio_base,
+    checklist: record.checklist ?? true,
     activo: record.activo,
     created_at: record.created_at,
     updated_at: record.updated_at,

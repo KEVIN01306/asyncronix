@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Autocomplete, Box, Button, CircularProgress, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, CircularProgress, FormControlLabel, Paper, Stack, Switch, TextField, Typography } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
@@ -19,12 +19,12 @@ const TipoServicioFormPage = () => {
     const [loading, setLoading] = useState(isEdit);
     const [opciones, setOpciones] = useState<OpcionServicio[]>([]);
 
-    const { register, handleSubmit, control, setValue, watch, formState: { errors, isSubmitting } } = useForm<TipoServicioFormValues>({
+    const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } = useForm<TipoServicioFormValues>({
         resolver: zodResolver(tipoServicioSchema),
-        defaultValues: { opciones_ids: [], nombre: '', precio_base: 0 }
+        defaultValues: { opciones_ids: [], nombre: '', precio_base: 0, checklist: true }
     });
 
-    const selectedOptionIds = watch('opciones_ids') || [];
+    const selectedOptionIds = useWatch({ control, name: 'opciones_ids', defaultValue: [] }) as string[];
 
     useEffect(() => {
         OpcionServicioRepository.listar(100, 0)
@@ -38,6 +38,7 @@ const TipoServicioFormPage = () => {
                 .then(data => {
                     setValue('nombre', data.nombre);
                     setValue('precio_base', data.precio_base);
+                    setValue('checklist', data.checklist ?? true);
                     setValue('opciones_ids', data.opciones.map((opcion) => opcion.id));
                 })
                 .catch(console.error)
@@ -91,6 +92,16 @@ const TipoServicioFormPage = () => {
                             {...register('precio_base', { valueAsNumber: true })}
                             error={!!errors.precio_base}
                             helperText={errors.precio_base?.message}
+                        />
+                        <Controller
+                            name="checklist"
+                            control={control}
+                            render={({ field }) => (
+                                <FormControlLabel
+                                    control={<Switch {...field} checked={field.value} />}
+                                    label="Checklist automático"
+                                />
+                            )}
                         />
                         <Controller
                             name="opciones_ids"

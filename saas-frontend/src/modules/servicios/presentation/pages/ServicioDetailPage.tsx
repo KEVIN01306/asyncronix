@@ -6,11 +6,14 @@ import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
+import type { TipoServicio } from '../../../tipos-servicio/domain/interfaces/tipo-servicio.interface';
 import ServiceImages from '../components/ServiceImages';
 import ServiceChecklist from '../components/ServiceChecklist';
 import ServiceSignatures from '../components/ServiceSignatures';
 import ServiceGeneralInfo from '../components/ServiceGeneralInfo';
 import ServiceClientParts from '../components/ServiceClientParts';
+import ServiceDetailManualTasks from '../components/ServiceDetailManualTasks';
+import { TipoServicioRepository } from '../../../tipos-servicio/infrastructure/repositories/tipo-servicio.repository';
 import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
@@ -21,6 +24,7 @@ const ServicioDetailPage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [servicio, setServicio] = useState<Servicio | null>(null);
+    const [tipoServicio, setTipoServicio] = useState<TipoServicio | null>(null);
     const [loading, setLoading] = useState(true);
     const user = useAuthStore((state: any) => state.user);
     const canManageRepuestos = user?.permisos?.includes('EDITAR_SERVICIOS') && user?.permisos?.includes('EDITAR_SERVICIOS_REPUESTOS');
@@ -40,6 +44,17 @@ const ServicioDetailPage = () => {
     }, [id]);
 
     useEffect(() => { fetchService(); }, [fetchService]);
+
+    useEffect(() => {
+        if (!servicio?.tipo_servicio_id) {
+            setTipoServicio(null);
+            return;
+        }
+
+        TipoServicioRepository.Obtener(servicio.tipo_servicio_id)
+            .then(setTipoServicio)
+            .catch(console.error);
+    }, [servicio?.tipo_servicio_id]);
 
     if (loading) {
         return (
@@ -88,6 +103,16 @@ const ServicioDetailPage = () => {
                 <ServiceSignatures servicio={servicio} onUpdate={(s) => setServicio(s)} />
 
                 <ServiceChecklist servicio={servicio} onUpdate={(s) => setServicio(s)} />
+
+                {tipoServicio && tipoServicio.opciones.length === 0 && (
+                    <Paper sx={{ p: 3 }}>
+                        <Typography variant="h6" mb={2}>Tareas del Servicio</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>
+                            El tipo de servicio seleccionado no tiene opciones automáticas. Aquí puedes crear y gestionar tareas manuales.
+                        </Typography>
+                        <ServiceDetailManualTasks servicio={servicio} onUpdate={(s) => setServicio(s)} />
+                    </Paper>
+                )}
 
                 <ServiceClientParts servicio={servicio} onUpdate={(s) => setServicio(s)} />
 

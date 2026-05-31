@@ -7,12 +7,12 @@ import { servicioRepository } from '../../infrastructure/repositories/servicio.r
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
 import ServiceGeneralInfo from '../components/ServiceGeneralInfo';
 import ServiceProgressImages from '../components/ServiceProgressImages';
-import ServiceProgressTasks from '../components/ServiceProgressTasks';
 import ServiceProgressObservaciones from '../components/ServiceProgressObservaciones';
 import { ESTADO_SERVICIO, type EstadoServicio } from '../../domain/servicio.constants';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { ListTableSimple } from '../../../../shared/components/ui/tables/ListTableSimple';
 import { useAuthStore } from '../../../../core/store/authStore';
+import ServiceProgressTasks from '../components/ServiceProgressTasks';
 
 const allowedStates: EstadoServicio[] = [
     ESTADO_SERVICIO.EN_SERVICIO,
@@ -224,15 +224,15 @@ const ServicioProgresoPage = () => {
                     <Grid size={12}>
                             {
                                 servicio.estado === ESTADO_SERVICIO.EN_SERVICIO ? (
-                                    <ServiceProgressTasks servicio={servicio} onUpdate={(s) => setServicio(s)} />
+                                    <ServiceProgressTasks servicio={servicio} onUpdate={(s) => setServicio(s)} canAddManual />
                                 ) : (
                                     <ListTableSimple 
                                         columns={[
-                                            { id: 'item', name: 'Item', format: (value) => value.nombre || '-' },
-                                            { id: 'estado', name: 'Estado' },
-                                            { id: 'observaciones', name: 'Observaciones', format: (value) => value || '-' },
+                                            { id: 'nombre', name: 'Tarea', format: (value) => value || '-' },
+                                            { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
+                                            { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' },
                                         ]}
-                                        data={servicio.checklist || []}
+                                        data={servicio.tareas || []}
                                         headerBgColor={theme.palette.primary.main}
                                         headerTextColor="#fff"
                                     />

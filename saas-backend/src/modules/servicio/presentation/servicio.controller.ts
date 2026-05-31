@@ -15,6 +15,8 @@ import type { RegistrarChecklistRespuestaUseCase } from "../application/registra
 import type { ActualizarChecklistRespuestaUseCase } from "../application/actualizar-checklist-respuesta.usecase.js";
 import type { EliminarChecklistRespuestaUseCase } from "../application/eliminar-checklist-respuesta.usecase.js";
 import type { ActualizarServicioTareaUseCase } from "../application/actualizar-servicio-tarea.usecase.js";
+import type { RegistrarServicioTareaUseCase } from "../application/registrar-servicio-tarea.usecase.js";
+import type { EliminarServicioTareaUseCase } from "../application/eliminar-servicio-tarea.usecase.js";
 import type { AsociarClienteServicioUseCase } from "../application/asociar-cliente-servicio.usecase.js";
 import type { ActualizarClienteExternoServicioUseCase } from "../application/actualizar-cliente-externo-servicio.usecase.js";
 import type { AsociarMecanicoServicioUseCase } from "../application/asociar-mecanico-servicio.usecase.js";
@@ -42,6 +44,8 @@ export class ServicioController extends BaseController {
         private readonly actualizarChecklistRespuestaUseCase: ActualizarChecklistRespuestaUseCase,
         private readonly eliminarChecklistRespuestaUseCase: EliminarChecklistRespuestaUseCase,
         private readonly actualizarTareaUseCase: ActualizarServicioTareaUseCase,
+        private readonly registrarServicioTareaUseCase: RegistrarServicioTareaUseCase,
+        private readonly eliminarServicioTareaUseCase: EliminarServicioTareaUseCase,
         private readonly asociarClienteServicioUseCase?: AsociarClienteServicioUseCase,
         private readonly actualizarClienteExternoServicioUseCase?: ActualizarClienteExternoServicioUseCase,
         private readonly asociarMecanicoServicioUseCase?: AsociarMecanicoServicioUseCase,
@@ -235,12 +239,34 @@ export class ServicioController extends BaseController {
         }
     }
 
+    registrarTarea = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const tarea = await this.registrarServicioTareaUseCase.execute(id, req.body, negocio_id);
+            res.status(201).json(Respuesta.exito('Tarea creada con éxito', tarea));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     actualizarTarea = async (req: Request<{ id: string; tarea_id: string }>, res: Response, next: NextFunction) => {
         try {
             const { id, tarea_id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             await this.actualizarTareaUseCase.execute(tarea_id, id, negocio_id, req.body);
             res.status(200).json(Respuesta.exito('Tarea actualizada con éxito', null));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    eliminarTarea = async (req: Request<{ id: string; tarea_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id, tarea_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            await this.eliminarServicioTareaUseCase.execute(tarea_id, id, negocio_id);
+            res.status(200).json(Respuesta.exito('Tarea eliminada con éxito', null));
         } catch (error) {
             next(error);
         }

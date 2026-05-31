@@ -85,8 +85,17 @@ export const servicioRepository = {
         return response.data;
     },
 
+    registrarTarea: async (id: string, data: { nombre: string }): Promise<any> => {
+        const response = await api.post(`${URL_MODULE}/${id}/tareas`, data);
+        return response.data.data;
+    },
+
     actualizarTarea: async (id: string, tareaId: string, data: { nombre?: string; completado?: boolean; observacion?: string | null }): Promise<void> => {
         await api.put(`${URL_MODULE}/${id}/tareas/${tareaId}`, data);
+    },
+
+    eliminarTarea: async (id: string, tareaId: string): Promise<void> => {
+        await api.delete(`${URL_MODULE}/${id}/tareas/${tareaId}`);
     },
 
     actualizarObservaciones: async (id: string, data: { observaciones?: string | null }): Promise<Servicio> => {

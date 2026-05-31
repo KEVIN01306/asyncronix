@@ -369,6 +369,7 @@ model TipoServicio {
   negocio_id  String   @db.Char(36)
   nombre      String
   precio_base Float    @default(0)
+  checklist   Boolean  @default(true)
   activo      Boolean  @default(true)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
@@ -542,7 +543,7 @@ model ServicioRepuesto {
   lote_id      String   @db.Char(36)
   cantidad     Int
   precio_venta Float
-  costo        Float
+  costo        Float?
   activo       Boolean  @default(true)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt

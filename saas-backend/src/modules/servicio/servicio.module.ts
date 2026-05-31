@@ -14,6 +14,8 @@ import { RegistrarChecklistRespuestaUseCase } from './application/registrar-chec
 import { ActualizarChecklistRespuestaUseCase } from './application/actualizar-checklist-respuesta.usecase.js';
 import { EliminarChecklistRespuestaUseCase } from './application/eliminar-checklist-respuesta.usecase.js';
 import { ActualizarServicioTareaUseCase } from './application/actualizar-servicio-tarea.usecase.js';
+import { RegistrarServicioTareaUseCase } from './application/registrar-servicio-tarea.usecase.js';
+import { EliminarServicioTareaUseCase } from './application/eliminar-servicio-tarea.usecase.js';
 import { AsociarClienteServicioUseCase } from './application/asociar-cliente-servicio.usecase.js';
 import { ActualizarClienteExternoServicioUseCase } from './application/actualizar-cliente-externo-servicio.usecase.js';
 import { AsociarMecanicoServicioUseCase } from './application/asociar-mecanico-servicio.usecase.js';
@@ -43,6 +45,8 @@ const registrarChecklistRespuestaUseCase = new RegistrarChecklistRespuestaUseCas
 const actualizarChecklistRespuestaUseCase = new ActualizarChecklistRespuestaUseCase(repository);
 const eliminarChecklistRespuestaUseCase = new EliminarChecklistRespuestaUseCase(repository);
 const actualizarTareaUseCase = new ActualizarServicioTareaUseCase(repository);
+const registrarServicioTareaUseCase = new RegistrarServicioTareaUseCase(repository);
+const eliminarServicioTareaUseCase = new EliminarServicioTareaUseCase(repository);
 const asociarClienteServicioUseCase = new AsociarClienteServicioUseCase(repository);
 const actualizarClienteExternoServicioUseCase = new ActualizarClienteExternoServicioUseCase(repository);
 const asociarMecanicoServicioUseCase = new AsociarMecanicoServicioUseCase(repository, enviarNotificacionUseCase);
@@ -70,6 +74,8 @@ export const servicioController = new ServicioController(
     actualizarChecklistRespuestaUseCase,
     eliminarChecklistRespuestaUseCase,
     actualizarTareaUseCase,
+    registrarServicioTareaUseCase,
+    eliminarServicioTareaUseCase,
     asociarClienteServicioUseCase,
     actualizarClienteExternoServicioUseCase,
     asociarMecanicoServicioUseCase,
