@@ -63,7 +63,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                     include: {
                         vehiculo: { include: { modelo: true } },
                         tipo_servicio: true,
-                        cliente: { select: { id: true, nombre: true, telefono: true, email: true } },
+                        cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } },
                         mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }
                     }
                 })
@@ -78,10 +78,32 @@ export class PrismaServicioRepository implements ServicioRepository {
         try {
             const record = await this.db.servicio.findFirst({
                 where: { id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true } }, vehiculo: { include: { modelo: true } }, tipo_servicio: { include: { opciones: { include: { opcion_servicio: true } } } }, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, ServicioRepuestoCliente: true, repuestos: { include: { lote: { include: { producto: true } } } } }
+                include: {
+                    imagenes: true,
+                    checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } },
+                    tareas: true,
+                    cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } },
+                    vehiculo: { include: { modelo: true } },
+                    tipo_servicio: { include: { opciones: { include: { opcion_servicio: true } } } },
+                    mecanico: { select: { id: true, nombre: true, apellido: true, email: true } },
+                    ServicioRepuestoCliente: true,
+                    repuestos: { include: { lote: { include: { producto: true } } } }
+                }
             });
             if (!record) return null;
             return mapServicioDetalle(record as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async obtenerEstado(id: string, negocio_id: string) {
+        try {
+            const record = await this.db.servicio.findFirst({
+                where: { id, negocio_id, activo: true },
+                select: { id: true, estado: true }
+            });
+            return record ? { id: record.id, estado: record.estado } : null;
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
@@ -119,7 +141,9 @@ export class PrismaServicioRepository implements ServicioRepository {
                             tipo_servicio_id: data.tipo_servicio_id ?? null,
                     descripcion: data.descripcion ?? null,
                     kilometraje: data.kilometraje ?? null,
+                    kilometraje_proximo: data.kilometraje_proximo ?? null,
                     fecha_salida: data.fecha_salida ? new Date(data.fecha_salida) : null,
+                    diagnostico: data.diagnostico ?? null,
                     total: data.total ?? 0,
                     estado: data.estado ? data.estado as any : ESTADO_SERVICIO.RECEPCION,
                     MetodoPago: data.MetodoPago ?? METODO_PAGO.EFECTIVO,
@@ -224,9 +248,11 @@ export class PrismaServicioRepository implements ServicioRepository {
                     cliente_id: data.cliente_id ?? undefined,
                     tipo_servicio_id: data.tipo_servicio_id ?? undefined,
                     descripcion: data.descripcion ?? undefined,
-                    diagnostico: data.diagnostico ?? undefined,
+                    diagnostico: data.diagnostico ?? null,
                     kilometraje: data.kilometraje ?? undefined,
+                    kilometraje_proximo: data.kilometraje_proximo ?? undefined,
                     fecha_salida: data.fecha_salida ? new Date(data.fecha_salida) : undefined,
+                    firma_salida: data.firma_salida ?? undefined,
                     total: data.total ?? undefined,
                     estado: data.estado ? data.estado as any : undefined,
                     MetodoPago: data.MetodoPago ?? undefined
@@ -237,7 +263,7 @@ export class PrismaServicioRepository implements ServicioRepository {
 
             const record = await this.db.servicio.findFirst({
                 where: { id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true, vehiculo: { include: { modelo: true } } }
             });
             if (!record) throw new Error('Servicio no encontrado');
             return mapServicioDetalle(record as any);
@@ -256,7 +282,7 @@ export class PrismaServicioRepository implements ServicioRepository {
 
             const record = await this.db.servicio.findFirst({
                 where: { id, negocio_id, activo: true },
-                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true }
+                include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }, tipo_servicio: true, vehiculo: { include: { modelo: true } } }
             });
             if (!record) throw new Error('Servicio no encontrado');
             return mapServicioDetalle(record as any);
@@ -552,9 +578,9 @@ export class PrismaServicioRepository implements ServicioRepository {
             });
 
             // Recalculate total for servicio based on repuestos
-            const detalles = await this.db.servicioRepuesto.findMany({ where: { servicio_id } });
-            const total = detalles.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
-            await this.db.servicio.update({ where: { id: servicio_id }, data: { total } });
+            //const detalles = await this.db.servicioRepuesto.findMany({ where: { servicio_id } });
+            //const total = detalles.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
+            //await this.db.servicio.update({ where: { id: servicio_id }, data: { total } });
 
             return created;
         } catch (error) {
@@ -584,9 +610,9 @@ export class PrismaServicioRepository implements ServicioRepository {
                     created.push(c);
                 }
 
-                const detallesServicio = await tx.servicioRepuesto.findMany({ where: { servicio_id } });
-                const total = detallesServicio.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
-                await tx.servicio.update({ where: { id: servicio_id }, data: { total } });
+                //const detallesServicio = await tx.servicioRepuesto.findMany({ where: { servicio_id } });
+                //const total = detallesServicio.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
+                //await tx.servicio.update({ where: { id: servicio_id }, data: { total } });
 
                 return created;
             }, {
@@ -622,9 +648,9 @@ export class PrismaServicioRepository implements ServicioRepository {
 
             await this.db.servicioRepuesto.delete({ where: { id } });
 
-            const detalles = await this.db.servicioRepuesto.findMany({ where: { servicio_id } });
-            const total = detalles.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
-            await this.db.servicio.update({ where: { id: servicio_id }, data: { total } });
+            //const detalles = await this.db.servicioRepuesto.findMany({ where: { servicio_id } });
+            //const total = detalles.reduce((s: number, d: any) => s + (d.precio_venta * d.cantidad), 0);
+            //await this.db.servicio.update({ where: { id: servicio_id }, data: { total } });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

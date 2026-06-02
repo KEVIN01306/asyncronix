@@ -28,6 +28,7 @@ const ServiciosListPage = () => {
     const [selectedMechanic, setSelectedMechanic] = useState<{ id: string; label: string } | null>(null);
 
     const isAdmin = useAuthStore((state) => state.user?.permisos.includes('ADMIN_SERVICIOS')) ?? false;
+    const hasSalidaPermission = useAuthStore((state) => state.user?.permisos.includes('SALIDA_SERVICIOS')) ?? false;
 
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -143,6 +144,13 @@ const ServiciosListPage = () => {
             onClick: (row: any) => navigate(`/servicios/${row.id}`)
         },
         {
+            name: 'Ver configuración',
+            icon: <Visibility fontSize="small" />, 
+            color: 'primary.main',
+            visible: (row: any) => row.estado !== ESTADO_SERVICIO.FINALIZADO && [ESTADO_SERVICIO.EN_SERVICIO, ESTADO_SERVICIO.EN_PRUEBAS, ESTADO_SERVICIO.RECEPCION].includes(row.estado),
+            onClick: (row: any) => navigate(`/servicios/${row.id}/configuracion`)
+        },
+        {
             name: 'Ver progreso',
             icon: <Visibility fontSize="small" />,
             color: 'info.main',
@@ -150,9 +158,17 @@ const ServiciosListPage = () => {
             onClick: (row: any) => navigate(`/servicios/${row.id}/progreso`)
         },
         {
+            name: 'Dar salida',
+            icon: <Visibility fontSize="small" />,
+            color: 'success.main',
+            visible: (row: any) => hasSalidaPermission && row.estado === ESTADO_SERVICIO.LISTO_ENTREGA,
+            onClick: (row: any) => navigate(`/servicios/${row.id}/salida`)
+        },
+        {
             name: 'Editar',
             icon: <Edit fontSize="small" />, 
             color: 'primary.main',
+            visible: (row: any) => row.estado !== ESTADO_SERVICIO.FINALIZADO,
             onClick: (row: any) => navigate(`/servicios/${row.id}/editar`)
         }
     ];

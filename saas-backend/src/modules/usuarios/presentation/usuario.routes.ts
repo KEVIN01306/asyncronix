@@ -43,6 +43,12 @@ router.get('/:id',
     usuarioController.obtener
 )
 
+router.patch('/:id/restablecer-contrasena',
+    authMiddleware.verificarPermiso(['ADMIN_USUARIOS']),
+    validarMiddleware.validarBody(cambiarPasswordSchema),
+    usuarioController.restablecerPasswordUsuario
+)
+
 router.post('/',
     authMiddleware.verificarPermiso(['CREAR_USUARIOS']),
     validarMiddleware.validarBody(usuariosCrearSchema),

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Paper, Typography, Button, Skeleton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { vehiculoRepository } from '../../../vehiculos/infrastructure/vehiculo.repository';
@@ -14,7 +14,7 @@ import ExternalClientModal from './ExternalClientModal';
 
 type Props = { servicio: Servicio; onEdit?: () => void; onMechanicUpdated?: (s: Servicio) => void };
 
-const ServiceGeneralInfo: React.FC<Props> = ({ servicio, onEdit, onMechanicUpdated }) => {
+const ServiceGeneralInfo= ({ servicio, onEdit, onMechanicUpdated }: Props) => {
     const navigate = useNavigate();
     const [vehiculo, setVehiculo] = useState<Vehiculo | null>(null);
     const [tipoServicio, setTipoServicio] = useState<TipoServicio | null>(null);
@@ -109,6 +109,8 @@ const ServiceGeneralInfo: React.FC<Props> = ({ servicio, onEdit, onMechanicUpdat
                 </Typography>
                 <Typography><strong>Total estimado:</strong>{formatMoney(servicio.total ?? 0)}</Typography>
                 <Typography><strong>Kilometraje:</strong> {servicio.kilometraje ?? 'N/A'}</Typography>
+                <Typography><strong>Kilometraje próximo:</strong> {servicio.kilometraje_proximo ?? 'N/A'}</Typography>
+
                 <Typography><strong>Método de pago:</strong> {servicio.MetodoPago}</Typography>
             </Box>
         </Paper>

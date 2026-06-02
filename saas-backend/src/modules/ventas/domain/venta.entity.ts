@@ -38,6 +38,23 @@ export interface VentaDetalleSimple {
     subtotal: number;
 }
 
+export interface VentaClienteInfo {
+    id: string;
+    nombre: string;
+    dpi?: string | null;
+}
+
+export interface VentaModeloInfo {
+    id: string;
+    modelo: string;
+}
+
+export interface VentaVehiculoInfo {
+    id: string;
+    placa: string;
+    modelo?: VentaModeloInfo | null;
+}
+
 export interface VentaSimple {
     id: string;
     negocio_id: string;
@@ -53,6 +70,8 @@ export interface VentaSimple {
     updated_at: Date;
     vendedor_nombre: string;
     cliente_nombre: string | undefined;
+    cliente?: VentaClienteInfo | null;
+    vehiculo?: VentaVehiculoInfo | null;
 }
 
 export interface VentaObtenerDetalle extends VentaSimple {

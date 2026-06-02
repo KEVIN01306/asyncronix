@@ -128,4 +128,16 @@ export class UsuarioController extends BaseController {
             next(error)
         }
     }
+
+    restablecerPasswordUsuario = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params
+            const { negocio_id } = this.obtenerEntorno(res)
+            const { password } = req.body
+            await this.cambiarPasswordUseCase.execute(id, negocio_id, password)
+            res.status(200).json(Respuesta.exito('Contraseña restablecida con exito', null))
+        } catch (error) {
+            next(error)
+        }
+    }
 }

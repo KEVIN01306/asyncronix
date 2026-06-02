@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Autocomplete, Button, CircularProgress, Paper, Stack, TextField, createFilterOptions, Grid } from '@mui/material';
+import { Autocomplete, Button, CircularProgress, Paper, Stack, TextField, createFilterOptions, Grid, useTheme } from '@mui/material';
 import { toast } from 'sonner';
 import { ListTableSimple } from '../../../../shared/components/ui/tables/ListTableSimple';
 import { OpcionServicioRepository } from '../../../opciones-servicio/infrastructure/repositories/opcion-servicio.repository';
@@ -28,6 +28,8 @@ const ServiceDetailManualTasks: React.FC<Props> = ({ servicio, onUpdate }) => {
     const [selectedTaskOption, setSelectedTaskOption] = useState<TaskOption | null>(null);
     const [taskInputValue, setTaskInputValue] = useState('');
     const [creatingTask, setCreatingTask] = useState(false);
+    const theme = useTheme();
+    
 
     useEffect(() => {
         const fetchOpciones = async () => {
@@ -200,7 +202,7 @@ const ServiceDetailManualTasks: React.FC<Props> = ({ servicio, onUpdate }) => {
                         }
                     ]}
                     data={servicio.tareas || []}
-                    headerBgColor="#1565c0"
+                    headerBgColor={theme.palette.primary.main}
                     headerTextColor="#fff"
                 />
             </Stack>

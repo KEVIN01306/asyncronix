@@ -50,7 +50,15 @@ export class PrismaVentaRepository implements VentaRepository {
                         await tx.ventaDetalle.create({ data: { venta_id: venta.id, lote_id: d.lote_id, descripcion: d.descripcion, cantidad: d.cantidad, precio_unitario: d.precio_unitario, costo_unitario: d.costo_unitario } });
                     }
 
-                    const ventaWithDetails = await tx.venta.findUnique({ where: { id: venta.id }, include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { producto: true } } } } } });
+                    const ventaWithDetails = await tx.venta.findUnique({
+                        where: { id: venta.id },
+                        include: {
+                            usuario: true,
+                            cliente: true,
+                            servicio: { include: { vehiculo: { include: { modelo: true } } } },
+                            detalles: { include: { lote: { include: { producto: true } } } }
+                        }
+                    });
                     return VentaMapper.mapDetalle(ventaWithDetails as any);
                 }
 
@@ -164,7 +172,7 @@ export class PrismaVentaRepository implements VentaRepository {
                 const ventaUpdated = await tx.venta.update({
                     where: { id: ventaId },
                     data: { estado: 'COMPLETADA', metodo_pago: metodo_pago ?? ventaActual.metodo_pago },
-                    include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { producto: true } } } } }
+                    include: { usuario: true, cliente: true, servicio: { include: { vehiculo: { include: { modelo: true } } } }, detalles: { include: { lote: { include: { producto: true } } } } }
                 });
 
                 return VentaMapper.mapSimple(ventaUpdated);
@@ -193,7 +201,7 @@ export class PrismaVentaRepository implements VentaRepository {
                         metodo_pago: data.metodo_pago ?? ventaActual.metodo_pago,
                         estado: data.estado ?? ventaActual.estado
                     },
-                    include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { producto: true } } } } }
+                    include: { usuario: true, cliente: true, servicio: { include: { vehiculo: { include: { modelo: true } } } }, detalles: { include: { lote: { include: { producto: true } } } } }
                 });
 
                 return VentaMapper.mapSimple(ventaUpdated);
@@ -217,7 +225,7 @@ export class PrismaVentaRepository implements VentaRepository {
                 const ventaUpdated = await tx.venta.update({
                     where: { id, negocio_id, sucursal_id },
                     data: { estado: 'ANULADA', comentarios: comentario },
-                    include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { producto: true } } } } }
+                    include: { usuario: true, cliente: true, servicio: { include: { vehiculo: { include: { modelo: true } } } }, detalles: { include: { lote: { include: { producto: true } } } } }
                 });
 
                 return VentaMapper.mapSimple(ventaUpdated);
@@ -231,7 +239,7 @@ export class PrismaVentaRepository implements VentaRepository {
     async obtener(id: string, negocio_id: string, sucursal_id: string): Promise<VentaObtenerDetalle | null> {
         const venta = await this.db.venta.findFirst({
             where: { id, negocio_id, sucursal_id, activo: true },
-            include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { producto: true } } } } }
+            include: { usuario: true, cliente: true, servicio: { include: { vehiculo: { include: { modelo: true } } } }, detalles: { include: { lote: { include: { producto: true } } } } }
         });
         if (!venta) return null;
         return VentaMapper.mapDetalle(venta);
@@ -252,7 +260,7 @@ export class PrismaVentaRepository implements VentaRepository {
             this.db.venta.count({ where }),
             this.db.venta.findMany({
                 where,
-                include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { producto: true } } } } },
+                include: { usuario: true, cliente: true, servicio: { include: { vehiculo: { include: { modelo: true } } } }, detalles: { include: { lote: { include: { producto: true } } } } },
                 take: perPage,
                 skip: offset,
                 orderBy: { created_at: 'desc' }

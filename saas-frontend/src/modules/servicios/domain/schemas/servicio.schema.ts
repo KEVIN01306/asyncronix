@@ -8,6 +8,7 @@ export const servicioSchema = z.object({
     descripcion: z.string().optional().nullable(),
     diagnostico: z.string().optional().nullable(),
     kilometraje: z.coerce.number().int().nonnegative().optional().nullable(),
+    kilometraje_proximo: z.coerce.number().int().nonnegative().optional().nullable(),
     total:       z.coerce.number().int().nonnegative().optional().nullable(),
     MetodoPago: z.enum(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO']),
 });

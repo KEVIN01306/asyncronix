@@ -3,9 +3,12 @@ import BaseController from "@shared/presentation/base.controller.js";
 import Respuesta from "@app/http/respuesta.js";
 import type { ObtenerServiciosUseCase } from "../application/obtener-servicios.usecase.js";
 import type { ObtenerServicioUseCase } from "../application/obtener-servicio.usecase.js";
+import type { ObtenerEstadoServicioUseCase } from "../application/obtener-estado-servicio.usecase.js";
 import type { RegistrarServicioUseCase } from "../application/registrar-servicio.usecase.js";
 import type { ActualizarServicioUseCase } from "../application/actualizar-servicio.usecase.js";
 import type { CambiarEstadoServicioUseCase } from "../application/cambiar-estado-servicio.usecase.js";
+import type { FinalizarServicioUseCase } from "../application/finalizar-servicio.usecase.js";
+import { ESTADO_SERVICIO } from "../domain/servicio.constants.js";
 import type { GuardarFirmaEntradaUseCase } from "../application/guardar-firma-entrada.usecase.js";
 import type { SubirImagenServicioUseCase } from "../application/subir-imagen-servicio.usecase.js";
 import type { SubirImagenProgresoServicioUseCase } from "../application/subir-imagen-progreso-servicio.usecase.js";
@@ -32,9 +35,11 @@ export class ServicioController extends BaseController {
     constructor(
         private readonly obtenerServiciosUseCase: ObtenerServiciosUseCase,
         private readonly obtenerServicioUseCase: ObtenerServicioUseCase,
+        private readonly obtenerEstadoServicioUseCase: ObtenerEstadoServicioUseCase,
         private readonly registrarServicioUseCase: RegistrarServicioUseCase,
         private readonly actualizarServicioUseCase: ActualizarServicioUseCase,
         private readonly cambiarEstadoServicioUseCase: CambiarEstadoServicioUseCase,
+        private readonly finalizarServicioUseCase: FinalizarServicioUseCase,
         private readonly guardarFirmaEntradaUseCase: GuardarFirmaEntradaUseCase,
         private readonly subirImagenServicioUseCase: SubirImagenServicioUseCase,
         private readonly subirImagenProgresoServicioUseCase: SubirImagenProgresoServicioUseCase,
@@ -150,6 +155,17 @@ export class ServicioController extends BaseController {
         }
     }
 
+    obtenerEstado = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const servicio = await this.obtenerEstadoServicioUseCase.execute(id, negocio_id);
+            res.status(200).json(Respuesta.exito('Estado del servicio obtenido con éxito', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     registrar = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res);
@@ -178,6 +194,31 @@ export class ServicioController extends BaseController {
             const { estado } = req.body;
             const servicio = await this.cambiarEstadoServicioUseCase.execute(id, negocio_id, estado);
             res.status(200).json(Respuesta.exito('Estado del servicio actualizado', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listoSalida = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const servicio = await this.cambiarEstadoServicioUseCase.execute(id, negocio_id, ESTADO_SERVICIO.LISTO_ENTREGA);
+            res.status(200).json(Respuesta.exito('Servicio marcado listo para entrega', servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    finalizarSalida = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!req.file) throw new AppError('No se ha subido ninguna firma', 'SIGNATURE_REQUIRED', 400);
+            const { metodo_pago } = req.body;
+            const firma_url = req.file.path.replace(/\\/g, '/');
+            const servicio = await this.finalizarServicioUseCase.execute(id, negocio_id, firma_url, metodo_pago);
+            res.status(200).json(Respuesta.exito('Servicio finalizado con éxito', servicio));
         } catch (error) {
             next(error);
         }

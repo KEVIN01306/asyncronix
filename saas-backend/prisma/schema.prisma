@@ -333,6 +333,7 @@ model Servicio {
   diagnostico      String?        @db.Text
   observaciones    String?        @db.Text
   kilometraje      Int?
+  kilometraje_proximo      Int?
   firma_entrada    String?        @db.Text
   firma_salida     String?        @db.Text
   fecha_entrada    DateTime       @default(now())

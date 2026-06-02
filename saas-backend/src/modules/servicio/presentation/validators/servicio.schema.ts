@@ -11,7 +11,9 @@ export const servicioCrearSchema = z.object({
     mecanico_id: z.string().uuid().optional().nullable(),
     tipo_servicio_id: z.string().uuid().optional().nullable(),
     descripcion: z.string().optional().nullable(),
+    diagnostico: z.string().optional().nullable(),
     kilometraje: z.coerce.number().int().optional().nullable(),
+    kilometraje_proximo: z.coerce.number().int().optional().nullable(),
     fecha_salida: z.string().datetime().optional().nullable(),
     total: z.coerce.number().nonnegative().optional().nullable(),
     estado: estadoServicioEnum.optional(),
@@ -42,6 +44,10 @@ export const servicioListarQuerySchema = z.object({
     placa: z.string().trim().optional(),
     q: z.string().trim().optional(),
     mecanico_id: z.string().uuid().optional()
+});
+
+export const servicioSalidaSchema = z.object({
+    metodo_pago: metodoPagoEnum
 });
 
 export const repuestoClienteCrearSchema = z.object({

@@ -15,21 +15,27 @@ import {
     Card,
     CardContent,
 } from '@mui/material';
-import { ArrowBack, Edit, Phone, Email } from '@mui/icons-material';
+import { ArrowBack, Edit, Phone, Email, Lock } from '@mui/icons-material';
 import { toast } from 'sonner';
 
 import { usuarioRepository } from '../../infrastructure/repositories/usuario.repository';
 import type { Usuario } from '../../domain/interfaces/usuario.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
+import { useAuthStore } from '../../../../core/store/authStore';
+import { ChangePasswordModal } from '../../../perfil/presentation/components/ChangePasswordModal';
+import type { CambiarPasswordForm } from '../../../perfil/domain/interfaces/perfil.interface';
 
 const UsuarioDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const user = useAuthStore((state: any) => state.user);
     const [usuario, setUsuario] = useState<Usuario | null>(null);
     const [loading, setLoading] = useState(true);
+    const [openRestablecerPassword, setOpenRestablecerPassword] = useState(false);
     const AvatarSource = usuario?.avatar_url ? `${import.meta.env.VITE_API_URL}/${usuario.avatar_url}` : undefined;
 
+    const canRestablecerPassword = user?.permisos?.includes('ADMIN_USUARIOS');
 
     const fetchUsuario = useCallback(async () => {
         if (!id) return;
@@ -43,6 +49,17 @@ const UsuarioDetailPage = () => {
             setLoading(false);
         }
     }, [id]);
+
+    const handleRestablecerPassword = async (data: CambiarPasswordForm) => {
+        if (!id) return;
+        try {
+            await usuarioRepository.restablecerContrasena(id, data);
+            toast.success('Contraseña restablecida exitosamente');
+            setOpenRestablecerPassword(false);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al restablecer contraseña');
+        }
+    };
 
     useEffect(() => {
         if (id) fetchUsuario();
@@ -76,13 +93,24 @@ const UsuarioDetailPage = () => {
                     </Typography>
                 </Box>
 
-                <Button
-                    variant="contained"
-                    startIcon={<Edit />}
-                    onClick={() => navigate(`/usuarios/${id}/editar`)}
-                >
-                    Editar
-                </Button>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    {canRestablecerPassword && (
+                        <Button
+                            variant="outlined"
+                            startIcon={<Lock />}
+                            onClick={() => setOpenRestablecerPassword(true)}
+                        >
+                            Restablecer Contraseña
+                        </Button>
+                    )}
+                    <Button
+                        variant="contained"
+                        startIcon={<Edit />}
+                        onClick={() => navigate(`/usuarios/${id}/editar`)}
+                    >
+                        Editar
+                    </Button>
+                </Stack>
             </Stack>
 
             <Grid container spacing={3}>
@@ -180,6 +208,12 @@ const UsuarioDetailPage = () => {
                     </Card>
                 </Grid>
             </Grid>
+
+            <ChangePasswordModal
+                open={openRestablecerPassword}
+                onClose={() => setOpenRestablecerPassword(false)}
+                onSubmit={handleRestablecerPassword}
+            />
         </Box>
     );
 };

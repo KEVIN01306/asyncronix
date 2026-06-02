@@ -49,6 +49,20 @@ export interface Servicio {
         nombre: string;
         telefono?: string | null;
         email?: string | null;
+        dpi?: string | null;
+    } | null;
+    vehiculo?: {
+        id: string;
+        placa: string;
+        modelo_id: string;
+        modelo_nombre?: string | null;
+        marca?: string | null;
+        linea?: string | null;
+        cilindrada?: number | null;
+        modelo?: {
+            id: string;
+            modelo: string;
+        } | null;
     } | null;
     mecanico?: {
         id: string;
@@ -61,6 +75,7 @@ export interface Servicio {
     diagnostico?: string | null;
     observaciones?: string | null;
     kilometraje?: number | null;
+    kilometraje_proximo?: number | null;
     fecha_entrada?: Date;
     fecha_salida?: Date | null;
     firma_entrada?: string | null;
@@ -93,6 +108,7 @@ export type ServicioSimple = Pick<Servicio, 'id' | 'sucursal_id' | 'vehiculo_id'
         nombre: string;
         telefono?: string | null;
         email?: string | null;
+        dpi?: string | null;
     } | null;
     mecanico?: {
         id: string;

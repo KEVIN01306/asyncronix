@@ -2,9 +2,11 @@ import prisma from '@infrastructure/config/prisma.js';
 import { PrismaServicioRepository } from './infrastructure/prisma-servicio.repository.js';
 import { ObtenerServiciosUseCase } from './application/obtener-servicios.usecase.js';
 import { ObtenerServicioUseCase } from './application/obtener-servicio.usecase.js';
+import { ObtenerEstadoServicioUseCase } from './application/obtener-estado-servicio.usecase.js';
 import { RegistrarServicioUseCase } from './application/registrar-servicio.usecase.js';
 import { ActualizarServicioUseCase } from './application/actualizar-servicio.usecase.js';
 import { CambiarEstadoServicioUseCase } from './application/cambiar-estado-servicio.usecase.js';
+import { FinalizarServicioUseCase } from './application/finalizar-servicio.usecase.js';
 import { GuardarFirmaEntradaUseCase } from './application/guardar-firma-entrada.usecase.js';
 import { SubirImagenServicioUseCase } from './application/subir-imagen-servicio.usecase.js';
 import { SubirImagenProgresoServicioUseCase } from './application/subir-imagen-progreso-servicio.usecase.js';
@@ -33,9 +35,11 @@ import { PrismaProductoRepository } from '../producto/infrastructure/prisma-prod
 const repository = new PrismaServicioRepository(prisma as any);
 const obtenerServiciosUseCase = new ObtenerServiciosUseCase(repository);
 const obtenerServicioUseCase = new ObtenerServicioUseCase(repository);
+const obtenerEstadoServicioUseCase = new ObtenerEstadoServicioUseCase(repository);
 const registrarServicioUseCase = new RegistrarServicioUseCase(repository);
 const actualizarServicioUseCase = new ActualizarServicioUseCase(repository);
-const cambiarEstadoServicioUseCase = new CambiarEstadoServicioUseCase(repository);
+const cambiarEstadoServicioUseCase = new CambiarEstadoServicioUseCase(repository, enviarNotificacionUseCase);
+const finalizarServicioUseCase = new FinalizarServicioUseCase(repository);
 const guardarFirmaEntradaUseCase = new GuardarFirmaEntradaUseCase(repository);
 const subirImagenServicioUseCase = new SubirImagenServicioUseCase(repository);
 const subirImagenProgresoServicioUseCase = new SubirImagenProgresoServicioUseCase(repository);
@@ -62,9 +66,11 @@ const actualizarObservacionesServicioUseCase = new ActualizarObservacionesServic
 export const servicioController = new ServicioController(
     obtenerServiciosUseCase,
     obtenerServicioUseCase,
+    obtenerEstadoServicioUseCase,
     registrarServicioUseCase,
     actualizarServicioUseCase,
     cambiarEstadoServicioUseCase,
+    finalizarServicioUseCase,
     guardarFirmaEntradaUseCase,
     subirImagenServicioUseCase,
     subirImagenProgresoServicioUseCase,
@@ -79,6 +85,10 @@ export const servicioController = new ServicioController(
     asociarClienteServicioUseCase,
     actualizarClienteExternoServicioUseCase,
     asociarMecanicoServicioUseCase,
-    cambiarMecanicoServicioUseCase
-    , registrarRepuestoClienteUseCase, eliminarRepuestoClienteUseCase, crearServicioRepuestoUseCase, eliminarServicioRepuestoUseCase, actualizarObservacionesServicioUseCase
+    cambiarMecanicoServicioUseCase,
+    registrarRepuestoClienteUseCase, 
+    eliminarRepuestoClienteUseCase, 
+    crearServicioRepuestoUseCase, 
+    eliminarServicioRepuestoUseCase, 
+    actualizarObservacionesServicioUseCase
 );

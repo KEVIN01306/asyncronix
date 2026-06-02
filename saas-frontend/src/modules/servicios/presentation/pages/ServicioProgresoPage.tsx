@@ -91,6 +91,22 @@ const ServicioProgresoPage = () => {
         }
     };
 
+    const handleApproveForDelivery = async () => {
+        if (!servicio) return;
+        try {
+            setChangingState(true);
+            await servicioRepository.listoSalida(servicio.id);
+            const updated = await servicioRepository.obtener(servicio.id);
+            setServicio(updated);
+            toast.success('Servicio aprobado y pasado a LISTO_ENTREGA');
+        } catch (error) {
+            console.error(error);
+            toast.error('No se pudo aprobar el servicio');
+        } finally {
+            setChangingState(false);
+        }
+    };
+
     if (loading) return <Loading />;
 
     if (!servicio) {
@@ -132,7 +148,7 @@ const ServicioProgresoPage = () => {
                 </Grid>
 
 
-                <Grid size={ 12 }  alignItems="center">
+                <Grid size={ 12 }  alignItems="center" gap={2}>
                     <Paper sx={{ p: 3 }}>
                         <Typography variant="h6" mb={2}>Acciones</Typography>
                         
@@ -151,6 +167,11 @@ const ServicioProgresoPage = () => {
                         <Button color="secondary" variant="contained" disabled={changingState} onClick={handleTransitionToServicio}>
                             {changingState ? 'Cambiando estado...' : 'No aprobadas, regresar a EN_SERVICIO'}
                         </Button>                        
+                    ) : null}
+                    {servicio.estado === ESTADO_SERVICIO.EN_PRUEBAS && user?.permisos.includes('ADMIN_SERVICIOS') ? (
+                        <Button sx={{ ml: 2 }} color="success" variant="outlined" disabled={changingState} onClick={handleApproveForDelivery}>
+                            {changingState ? 'Procesando...' : 'Aprobar y marcar LISTO_ENTREGA'}
+                        </Button>
                     ) : null}
                     </Paper>
                 </Grid>

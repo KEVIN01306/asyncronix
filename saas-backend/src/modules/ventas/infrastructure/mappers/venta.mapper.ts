@@ -16,14 +16,27 @@ export class VentaMapper {
             created_at: venta.created_at,
             updated_at: venta.updated_at,
             vendedor_nombre: `${venta.usuario.nombre} ${venta.usuario.apellido || ''}`.trim(),
-            cliente_nombre: venta.cliente ? `${venta.cliente.nombre} ${venta.cliente.apellido || ''}`.trim() : undefined
+            cliente_nombre: venta.cliente ? `${venta.cliente.nombre} ${venta.cliente.apellido || ''}`.trim() : undefined,
+            cliente: venta.cliente ? {
+                id: venta.cliente.id,
+                nombre: `${venta.cliente.nombre} ${venta.cliente.apellido || ''}`.trim(),
+                dpi: venta.cliente.dpi ?? null
+            } : null,
+            vehiculo: venta.servicio?.vehiculo ? {
+                id: venta.servicio.vehiculo.id,
+                placa: venta.servicio.vehiculo.placa,
+                modelo: venta.servicio.vehiculo.modelo ? {
+                    id: venta.servicio.vehiculo.modelo.id,
+                    modelo: venta.servicio.vehiculo.modelo.modelo
+                } : null
+            } : null
         };
     }
 
     static mapDetalle(venta: any): VentaObtenerDetalle {
         return {
             ...this.mapSimple(venta),
-            detalles: venta.detalles.map((d: any) => ({
+            detalles: (venta.detalles ?? []).map((d: any) => ({
                 id: d.id,
                 producto_id: d.lote?.producto_id ?? null,
                 lote_id: d.lote_id,

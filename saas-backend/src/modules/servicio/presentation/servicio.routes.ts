@@ -3,8 +3,7 @@ import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
 import { servicioController } from "../servicio.module.js";
-import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioTareaCrearSchema, servicioTareaActualizarSchema, servicioObservacionesSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema } from "./validators/servicio.schema.js";
-import { repuestoCrearSchema } from "./validators/servicio.schema.js";
+import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioSalidaSchema, servicioTareaCrearSchema, servicioTareaActualizarSchema, servicioObservacionesSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema, repuestoCrearSchema } from "./validators/servicio.schema.js";
 import { checklistRespuestaCrearSchema, checklistRespuestaActualizarSchema } from "./validators/checklist-respuesta.schema.js";
 
 const router = Router();
@@ -26,6 +25,11 @@ router.get(
     servicioController.obtener
 );
 
+router.get(
+    "/:id/estado",
+    servicioController.obtenerEstado
+);
+
 router.post(
     "/",
     authMiddleware.verificarPermiso(['CREAR_SERVICIOS']),
@@ -45,6 +49,20 @@ router.patch(
     authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
     validarMiddleware.validarBody(servicioCambiarEstadoSchema),
     servicioController.cambiarEstado
+);
+
+router.post(
+    "/:id/listo-salida",
+    authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
+    servicioController.listoSalida
+);
+
+router.post(
+    "/:id/salida",
+    authMiddleware.verificarPermiso(['SALIDA_SERVICIOS']),
+    FileUploadMiddleware.single('firma_cliente', 'servicios'),
+    validarMiddleware.validarBody(servicioSalidaSchema),
+    servicioController.finalizarSalida
 );
 
 router.post(

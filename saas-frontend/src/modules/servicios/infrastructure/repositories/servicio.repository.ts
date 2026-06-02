@@ -1,5 +1,5 @@
 import api from '../../../../core/api/api';
-import type { Servicio, ServicioDetailResponse, ServiciosResponse } from '../../../servicios/domain/interfaces/servicio.interface';
+import type { Servicio, ServicioDetailResponse, ServicioEstadoResponse, ServicioEstado, ServiciosResponse } from '../../../servicios/domain/interfaces/servicio.interface';
 
 const URL_MODULE = '/servicios';
 
@@ -30,23 +30,43 @@ export const servicioRepository = {
     },
 
     obtener: async (id: string): Promise<Servicio> => {
-        const response = await api.get<ServicioDetailResponse>(`${URL_MODULE}/${id}`);
+        const response = await api.get<ServicioDetailResponse>(`${URL_MODULE}/${id}`) as unknown as ServicioDetailResponse;
+        return response.data;
+    },
+
+    obtenerEstado: async (id: string): Promise<ServicioEstado> => {
+        const response = await api.get<ServicioEstadoResponse>(`${URL_MODULE}/${id}/estado`) as unknown as ServicioEstadoResponse;
         return response.data;
     },
 
     registrar: async (data: any): Promise<Servicio> => {
-        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}`, data);
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}`, data) as unknown as ServicioDetailResponse;
         return response.data;
     },
 
     actualizar: async (id: string, data: any): Promise<Servicio> => {
-        const response = await api.put<ServicioDetailResponse>(`${URL_MODULE}/${id}`, data);
+        const response = await api.put<ServicioDetailResponse>(`${URL_MODULE}/${id}`, data) as unknown as ServicioDetailResponse;
         return response.data;
     },
 
     cambiarEstado: async (id: string, estado: string): Promise<Servicio> => {
-        const response = await api.patch<ServicioDetailResponse>(`${URL_MODULE}/${id}/estado`, { estado });
-        return response.data.data;
+        const response = await api.patch<ServicioDetailResponse>(`${URL_MODULE}/${id}/estado`, { estado }) as unknown as ServicioDetailResponse;
+        return response.data;
+    },
+
+    listoSalida: async (id: string): Promise<Servicio> => {
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/listo-salida`) as unknown as ServicioDetailResponse;
+        return response.data;
+    },
+
+    finalizarSalida: async (id: string, file: File, metodo_pago: string): Promise<Servicio> => {
+        const formData = new FormData();
+        formData.append('firma_cliente', file);
+        formData.append('metodo_pago', metodo_pago);
+
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/salida`, formData) as unknown as ServicioDetailResponse;
+
+        return response.data;
     },
 
     subirImagen: async (id: string, file: File, descripcion?: string): Promise<Servicio> => {
@@ -54,9 +74,7 @@ export const servicioRepository = {
         formData.append('imagen', file);
         if (descripcion) formData.append('descripcion', descripcion);
 
-        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/imagenes`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/imagenes`, formData);
         return response.data;
     },
 
@@ -64,9 +82,7 @@ export const servicioRepository = {
         const formData = new FormData();
         formData.append('firma', file);
 
-        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/firma-entrada`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/firma-entrada`, formData);
         return response.data;
     },
 
@@ -79,9 +95,7 @@ export const servicioRepository = {
         formData.append('imagen', file);
         if (descripcion) formData.append('descripcion', descripcion);
 
-        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/progreso/imagenes`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const response = await api.post<ServicioDetailResponse>(`${URL_MODULE}/${id}/progreso/imagenes`, formData);
         return response.data;
     },
 

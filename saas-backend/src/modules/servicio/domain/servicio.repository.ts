@@ -17,6 +17,7 @@ export interface ListarServiciosParams {
 export interface ServicioRepository {
     listar(params: ListarServiciosParams): Promise<Paginated<ServicioSimple>>;
     obtener(id: string, negocio_id: string): Promise<ServicioDetalle | null>;
+    obtenerEstado(id: string, negocio_id: string): Promise<Pick<ServicioSimple, 'id' | 'estado'> | null>;
     registrar(data: ServicioCrear, negocio_id: string): Promise<ServicioDetalle>;
     actualizar(id: string, negocio_id: string, data: ServicioActualizar): Promise<ServicioDetalle>;
     cambiarEstado(id: string, negocio_id: string, estado: string): Promise<ServicioDetalle>;

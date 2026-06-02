@@ -16,26 +16,31 @@ export const mapServicioSimple = (record: any): ServicioSimple => ({
         modelo_nombre: record.vehiculo.modelo?.modelo ?? null,
         marca: record.vehiculo.modelo?.marca ?? null,
         linea: record.vehiculo.modelo?.linea ?? null,
-        cilindrada: record.vehiculo.modelo?.cilindrada ?? null
+        cilindrada: record.vehiculo.modelo?.cilindrada ?? null,
+        modelo: record.vehiculo.modelo ? {
+            id: record.vehiculo.modelo.id,
+            modelo: record.vehiculo.modelo.modelo
+        } : null
     } : null,
     tipo_servicio: record.tipo_servicio ? {
         id: record.tipo_servicio.id,
         nombre: record.tipo_servicio.nombre,
         precio_base: record.tipo_servicio.precio_base
     } : null,
-    cliente: record.cliente ? {
+    cliente: record.cliente ? ({
         id: record.cliente.id,
         nombre: record.cliente.nombre,
         telefono: record.cliente.telefono,
-        email: record.cliente.email
-    } : null,
+        email: record.cliente.email,
+        dpi: record.cliente.dpi ?? null
+    } as ServicioSimple['cliente']) : null,
     mecanico: record.mecanico ? {
         id: record.mecanico.id,
         nombre: record.mecanico.nombre,
         apellido: record.mecanico.apellido ?? null,
         email: record.mecanico.email ?? null
     } : null
-});
+} as ServicioSimple);
 
 export const mapServicioDetalle = (record: any): ServicioDetalle => ({
     id: record.id,
@@ -48,6 +53,7 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
     descripcion: record.descripcion,
     diagnostico: record.diagnostico,
     kilometraje: record.kilometraje,
+    kilometraje_proximo: record.kilometraje_proximo,
     fecha_entrada: record.fecha_entrada,
     fecha_salida: record.fecha_salida,
     firma_entrada: record.firma_entrada,
@@ -92,7 +98,21 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         id: record.cliente.id,
         nombre: record.cliente.nombre,
         telefono: record.cliente.telefono,
-        email: record.cliente.email
+        email: record.cliente.email,
+        dpi: record.cliente.dpi ?? null
+    } : null,
+    vehiculo: record.vehiculo ? {
+        id: record.vehiculo.id,
+        placa: record.vehiculo.placa,
+        modelo_id: record.vehiculo.modelo_id,
+        modelo_nombre: record.vehiculo.modelo?.modelo ?? null,
+        marca: record.vehiculo.modelo?.marca ?? null,
+        linea: record.vehiculo.modelo?.linea ?? null,
+        cilindrada: record.vehiculo.modelo?.cilindrada ?? null,
+        modelo: record.vehiculo.modelo ? {
+            id: record.vehiculo.modelo.id,
+            modelo: record.vehiculo.modelo.modelo
+        } : null
     } : null,
     observaciones: record.observaciones,
     tipo_servicio: record.tipo_servicio ? {

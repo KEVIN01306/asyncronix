@@ -39,6 +39,8 @@ const ServicioFormPage = () => {
             descripcion: '',
             diagnostico: '',
             kilometraje: null,
+            kilometraje_proximo: null,
+            total: null,
             MetodoPago: METODO_PAGO.EFECTIVO
         }
     });
@@ -67,7 +69,9 @@ const ServicioFormPage = () => {
                 tipo_servicio_id: response.tipo_servicio_id ?? '',
                 descripcion: response.descripcion ?? '',
                 diagnostico: response.diagnostico ?? '',
-                kilometraje: response.kilometraje ?? null,
+                    kilometraje: response.kilometraje ?? null,
+                    kilometraje_proximo: response.kilometraje_proximo ?? null,
+                    total: response.total ?? null,
                 MetodoPago: (response.MetodoPago ?? METODO_PAGO.EFECTIVO) as any
             });
             setServicioClienteId(response.cliente_id ?? null);
@@ -115,6 +119,7 @@ const ServicioFormPage = () => {
             descripcion: data.descripcion ?? null,
             diagnostico: data.diagnostico ?? null,
             kilometraje: data.kilometraje ?? null,
+            kilometraje_proximo: data.kilometraje_proximo ?? null,
             total: data.total ?? null,
             MetodoPago: METODO_PAGO.EFECTIVO
         };
@@ -123,11 +128,11 @@ const ServicioFormPage = () => {
             if (isEdit && params.id) {
                 await servicioRepository.actualizar(params.id, payload);
                 toast.success('Servicio actualizado correctamente');
-                navigate(`/servicios/${params.id}`);
+                navigate(`/servicios/${params.id}/configuracion`);
             } else {
                 const service = await servicioRepository.registrar(payload);
                 toast.success('Servicio creado correctamente');
-                navigate(`/servicios/${service.id}`);
+                navigate(`/servicios/${service.id}/configuracion`);
             }
         } catch (error) {
             console.error(error);
@@ -161,7 +166,8 @@ const ServicioFormPage = () => {
                                     tipo_servicio_id: '',
                                     descripcion: '',
                                     diagnostico: '',
-                                    kilometraje: null
+                                    kilometraje: null,
+                                    kilometraje_proximo: null
                                 });
                                 setStep('detalles');
                             }}
@@ -240,6 +246,14 @@ const ServicioFormPage = () => {
                                             type="number"
                                             fullWidth
                                             {...register('kilometraje')}
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <TextField
+                                            label="Kilometraje próximo"
+                                            type="number"
+                                            fullWidth
+                                            {...register('kilometraje_proximo')}
                                         />
                                     </Grid>
                                     <Grid size={{ xs: 12, sm: 6 }}>

@@ -58,6 +58,7 @@ export interface Servicio {
     diagnostico?: string | null;
     observaciones?: string | null;
     kilometraje?: number | null;
+    kilometraje_proximo?: number | null;
     fecha_entrada?: string | null;
     fecha_salida?: string | null;
     firma_entrada?: string | null;
@@ -81,6 +82,10 @@ export interface Servicio {
         marca?: string | null;
         linea?: string | null;
         cilindrada?: number | null;
+        modelo?: {
+            id: string;
+            modelo: string;
+        } | null;
     } | null;
     tipo_servicio?: {
         id: string;
@@ -92,6 +97,7 @@ export interface Servicio {
         nombre: string;
         telefono?: string | null;
         email?: string | null;
+        dpi?: string | null;
     } | null;
     nombre_extra?: string | null;
     documento_extra?: string | null;
@@ -114,5 +120,7 @@ export interface ServicioTarea {
     updated_at: string;
 }
 
+export type ServicioEstado = Pick<Servicio, 'id' | 'estado'>;
 export type ServicioDetailResponse = ApiResponse<Servicio>;
+export type ServicioEstadoResponse = ApiResponse<ServicioEstado>;
 export type ServiciosResponse = PaginatedResponse<Servicio>;

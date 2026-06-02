@@ -2,6 +2,7 @@ import api from "../../../../core/api/api";
 import {type UsuariosResponse, type Usuario, type UsuarioDetailResponse } from "../../domain/interfaces/usuario.interface";
 import type { Rol } from '../../../roles/domain/interfaces/rol.interface';
 import type { PaginatedResponse } from '../../../../core/api/interfaces/api-response.interface';
+import type { CambiarPasswordForm } from '../../../perfil/domain/interfaces/perfil.interface';
 
 const URL_MODULO = '/usuarios/';
 
@@ -56,5 +57,10 @@ export const usuarioRepository = {
             params: { limit: 100, offset: 0 }
         });
         return response;
+    },
+
+    restablecerContrasena: async (id: string, data: CambiarPasswordForm) => {
+        const response = await api.patch(`${URL_MODULO}${id}/restablecer-contrasena`, data);
+        return response.data;
     },
 }

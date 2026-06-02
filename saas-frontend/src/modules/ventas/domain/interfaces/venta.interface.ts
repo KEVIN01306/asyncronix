@@ -14,6 +14,23 @@ export interface VentaDetalleSimple {
     subtotal: number;
 }
 
+export interface VentaClienteInfo {
+    id: string;
+    nombre: string;
+    dpi?: string | null;
+}
+
+export interface VentaModeloInfo {
+    id: string;
+    modelo: string;
+}
+
+export interface VentaVehiculoInfo {
+    id: string;
+    placa: string;
+    modelo?: VentaModeloInfo | null;
+}
+
 export interface Venta {
     id: string;
     negocio_id: string;
@@ -29,6 +46,8 @@ export interface Venta {
     updated_at: string;
     vendedor_nombre: string;
     cliente_nombre?: string;
+    cliente?: VentaClienteInfo | null;
+    vehiculo?: VentaVehiculoInfo | null;
     detalles: VentaDetalleSimple[];
 }
 

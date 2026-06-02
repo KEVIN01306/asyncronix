@@ -8,14 +8,16 @@ type Props = {
     onCancel: () => void;
     onConfirm: () => void;
     saving: boolean;
+    title?: string;
+    description?: string;
 };
 
-const SignaturePadModal: React.FC<Props> = ({ open, onSave, onCancel, onConfirm, saving }) => {
+const SignaturePadModal: React.FC<Props> = ({ open, onSave, onCancel, onConfirm, saving, title = 'Firma de Entrada', description = 'Por favor, dibuja tu firma en el canvas siguiente para finalizar la recepción del servicio.' }) => {
     return (
         <Dialog open={open} onClose={() => !saving && onCancel()} fullWidth maxWidth="md">
-            <DialogTitle>Firma de Entrada</DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
             <DialogContent>
-                <DialogContentText sx={{ mb: 2 }}>Por favor, dibuja tu firma en el canvas siguiente para finalizar la recepción del servicio.</DialogContentText>
+                <DialogContentText sx={{ mb: 2 }}>{description}</DialogContentText>
                 <SignaturePad onSave={onSave} />
             </DialogContent>
             <DialogActions>

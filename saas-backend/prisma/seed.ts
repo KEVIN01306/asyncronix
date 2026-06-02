@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 const hashProvider = new Argon2HashProvider();
 
 const permisosData = [
+    { codigo: "ADMIN_USUARIOS" },
     { codigo: "VER_USUARIOS" },
     { codigo: "VER_USUARIOS_DETALLE" },
     { codigo: "CREAR_USUARIOS" },
@@ -96,6 +97,9 @@ const permisosData = [
     { codigo: "EDITAR_SERVICIOS" },
     { codigo: "ELIMINAR_SERVICIOS" },
     { codigo: "ADMIN_SERVICIOS" },
+    { codigo: "CONFIGURACION_SERVICIOS" },
+    { codigo: "SALIDA_SERVICIOS" },
+    { codigo: "PROGRESO_SERVICIOS" },
     { codigo: "EDITAR_SERVICIOS_REPUESTOS" }
 
 ];
@@ -103,7 +107,7 @@ const permisosData = [
 const modulosConPermisos = [
     {
         nombre: "USUARIOS",
-        permisos: ["VER_USUARIOS", "VER_USUARIOS_DETALLE", "CREAR_USUARIOS", "EDITAR_USUARIOS", "ELIMINAR_USUARIOS"]
+        permisos: ["VER_USUARIOS", "VER_USUARIOS_DETALLE", "CREAR_USUARIOS", "EDITAR_USUARIOS", "ELIMINAR_USUARIOS", "ADMIN_USUARIOS"]
     },
     {
         nombre: "ROLES",
@@ -179,7 +183,7 @@ const modulosConPermisos = [
     },
     {
         nombre: "SERVICIOS",
-        permisos: ["VER_SERVICIOS", "VER_SERVICIOS_DETALLE", "CREAR_SERVICIOS", "EDITAR_SERVICIOS", "ELIMINAR_SERVICIOS", "ADMIN_SERVICIOS", "EDITAR_SERVICIOS_REPUESTOS"]
+        permisos: ["VER_SERVICIOS", "VER_SERVICIOS_DETALLE", "CREAR_SERVICIOS", "EDITAR_SERVICIOS", "ELIMINAR_SERVICIOS", "ADMIN_SERVICIOS", "EDITAR_SERVICIOS_REPUESTOS", "SALIDA_SERVICIOS", "PROGRESO_SERVICIOS", "CONFIGURACION_SERVICIOS"]
     }
 ];
 
@@ -206,7 +210,7 @@ async function main() {
     }
 
     const negocio = await prisma.negocio.upsert({
-        where: { wa_id: "50230108703" },
+        where: { wa_id: "50243850410" },
         update: {
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))
