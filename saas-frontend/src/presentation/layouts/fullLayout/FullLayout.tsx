@@ -19,12 +19,12 @@ const FullLayout = () => {
 
     const toggleSidebar = () => setOpen(!open);
 
-    const menuItems = MenuItems.map( item => {
+    const menuItems = MenuItems.map((item: any) => {
         if (item.permiso && !user?.permisos.includes(item.permiso)) {
             return null;
         }
         if (item.children) {
-            const filteredChildren = item.children.filter(child => !child.permiso || user?.permisos.includes(child.permiso));
+            const filteredChildren = item.children.filter((child: any) => !child.permiso || user?.permisos.includes(child.permiso));
             if (filteredChildren.length === 0) {
                 return null;
             }

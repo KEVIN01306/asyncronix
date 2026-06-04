@@ -21,6 +21,7 @@ import {
   PersonOutline,
   Logout,
   CopyAll,
+  Tune,
 } from "@mui/icons-material";
 import { useAuthStore } from "../../../../core/store/authStore";
 import { useState } from "react";
@@ -32,6 +33,7 @@ interface NavbarProps {
   drawerWidth: number;
   isMobile: boolean;
 }
+
 
 const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: NavbarProps) => {
   const lagaout = useAuthStore((state) => state.logout)
@@ -51,6 +53,11 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
   const handleProfileClick = () => {
     handleMenuClose();
     navigate('/perfil');
+  };
+
+  const handleCustomClick = () => {
+    handleMenuClose();
+    navigate('/custom');
   };
 
   const location = useLocation();
@@ -176,6 +183,12 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
               <PersonOutline fontSize="small" />
             </ListItemIcon>
             Perfil
+          </MenuItem>
+          <MenuItem onClick={handleCustomClick}>
+            <ListItemIcon>
+              <Tune fontSize="small" />
+            </ListItemIcon>
+            Personalización
           </MenuItem>
           <MenuItem onClick={() => { handleMenuClose(); lagaout(); }}>
             <ListItemIcon>

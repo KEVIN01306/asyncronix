@@ -11,9 +11,11 @@ import { createAppTheme } from './core/theme/mainTheme'
 
 const App = () => {
   const themeMode = useUiStore((state) => state.themeMode);
+  const borderIntensity = useUiStore((state) => state.borderIntensity);
+  const borderColorIntensity = useUiStore((state) => state.borderColorIntensity);
 
   return (
-    <ThemeProvider theme={createAppTheme(themeMode)}>
+    <ThemeProvider theme={createAppTheme(themeMode, borderIntensity, borderColorIntensity)}>
       <CssBaseline />
       <RouterProvider router={appRouter} />
       <Toaster position="top-right" closeButton />

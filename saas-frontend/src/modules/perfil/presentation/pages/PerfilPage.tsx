@@ -14,8 +14,8 @@ import { EditAvatarModal } from '../components/EditAvatarModal';
 export const PerfilPage = () => {
     const userStore = useAuthStore((state) => state.user);
     const getMeStore = useAuthStore((state) => state.getMe);
-    const themeMode = useUiStore((state) => state.themeMode);
-    const toggleThemeMode = useUiStore((state) => state.toggleTheme);
+    const themeSource = useUiStore((state) => state.themeSource);
+    const setThemeSource = useUiStore((state) => state.setThemeSource);
     const [perfil, setPerfil] = useState<Perfil | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -103,12 +103,14 @@ export const PerfilPage = () => {
                 <FormControlLabel
                     control={
                         <Switch
-                            checked={themeMode === 'dark'}
-                            onChange={toggleThemeMode}
+                            checked={themeSource !== 'light'}
+                            onChange={(event) => {
+                                setThemeSource(event.target.checked ? 'dark' : 'light');
+                            }}
                             color="primary"
                         />
                     }
-                    label={themeMode === 'light' ? 'Claro' : 'Oscuro'}
+                    label={themeSource === 'light' ? 'Claro' : themeSource === 'dark' ? 'Oscuro' : 'Sistema'}
                     labelPlacement="start"
                     sx={{ m: 0 }}
                 />
