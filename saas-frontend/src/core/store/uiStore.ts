@@ -4,8 +4,12 @@ import type { PaletteMode } from '@mui/material';
 const THEME_SOURCE_KEY = 'themeSource';
 const BORDER_INTENSITY_KEY = 'borderIntensity';
 const BORDER_COLOR_INTENSITY_KEY = 'borderColorIntensity';
+const TOASTER_POSITION_KEY = 'toasterPosition';
+const TOASTER_STYLE_KEY = 'toasterStyle';
 
 type ThemeSource = 'system' | 'light' | 'dark';
+type ToasterPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+type ToasterStyle = 'colorful' | 'simple';
 
 const getInitialThemeMode = (): ThemeSource => {
     if (typeof window === 'undefined') {
@@ -32,9 +36,13 @@ interface UiState {
     themeMode: PaletteMode;
     borderIntensity: number;
     borderColorIntensity: number;
+    toasterPosition: ToasterPosition;
+    toasterStyle: ToasterStyle;
     setThemeSource: (source: ThemeSource) => void;
     setBorderIntensity: (intensity: number) => void;
     setBorderColorIntensity: (intensity: number) => void;
+    setToasterPosition: (position: ToasterPosition) => void;
+    setToasterStyle: (style: ToasterStyle) => void;
 }
 
 export const useUiStore = create<UiState>((set) => {
@@ -45,12 +53,20 @@ export const useUiStore = create<UiState>((set) => {
     const initialColorIntensity = typeof window !== 'undefined' 
         ? parseFloat(localStorage.getItem(BORDER_COLOR_INTENSITY_KEY) ?? '0.5') 
         : 0.5;
+    const initialToasterPosition = (typeof window !== 'undefined' 
+        ? localStorage.getItem(TOASTER_POSITION_KEY) 
+        : 'top-right') as ToasterPosition || 'top-right';
+    const initialToasterStyle = (typeof window !== 'undefined' 
+        ? localStorage.getItem(TOASTER_STYLE_KEY) 
+        : 'colorful') as ToasterStyle || 'colorful';
 
     return {
         themeSource: initialSource,
         themeMode: getActualThemeMode(initialSource),
         borderIntensity: initialIntensity,
         borderColorIntensity: initialColorIntensity,
+        toasterPosition: initialToasterPosition,
+        toasterStyle: initialToasterStyle,
         setThemeSource: (source) => {
             localStorage.setItem(THEME_SOURCE_KEY, source);
             const actualMode = getActualThemeMode(source);
@@ -65,6 +81,14 @@ export const useUiStore = create<UiState>((set) => {
             const clamped = Math.max(0, Math.min(1, intensity));
             localStorage.setItem(BORDER_COLOR_INTENSITY_KEY, clamped.toString());
             set({ borderColorIntensity: clamped });
+        },
+        setToasterPosition: (position) => {
+            localStorage.setItem(TOASTER_POSITION_KEY, position);
+            set({ toasterPosition: position });
+        },
+        setToasterStyle: (style) => {
+            localStorage.setItem(TOASTER_STYLE_KEY, style);
+            set({ toasterStyle: style });
         },
     };
 });

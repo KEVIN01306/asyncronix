@@ -13,12 +13,19 @@ const App = () => {
   const themeMode = useUiStore((state) => state.themeMode);
   const borderIntensity = useUiStore((state) => state.borderIntensity);
   const borderColorIntensity = useUiStore((state) => state.borderColorIntensity);
+  const toasterPosition = useUiStore((state) => state.toasterPosition);
+  const toasterStyle = useUiStore((state) => state.toasterStyle);
 
   return (
     <ThemeProvider theme={createAppTheme(themeMode, borderIntensity, borderColorIntensity)}>
       <CssBaseline />
       <RouterProvider router={appRouter} />
-      <Toaster position="top-right" closeButton />
+      <Toaster 
+        position={toasterPosition}
+        closeButton 
+        theme={themeMode}
+        richColors={toasterStyle === 'colorful'}
+      />
     </ThemeProvider>
   );
 };

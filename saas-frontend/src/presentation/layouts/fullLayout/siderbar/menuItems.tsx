@@ -10,7 +10,6 @@ import {
   PrecisionManufacturing,
   ListAlt,
   SettingsSharp,
-  Tune,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -57,7 +56,6 @@ const MenuItems: MenuItem[] = [
       { name: "Negocio", link: "/negocio", icon: AdminPanelSettingsOutlined, permiso: "VER_NEGOCIOS_DETALLE_ME" },
     ]
   },
-  { name: "Personalización", icon: Tune, link: "/custom" },
 ];
 
 export default MenuItems;
