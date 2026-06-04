@@ -1,22 +1,18 @@
 import { createTheme } from '@mui/material/styles';
+import type { PaletteMode } from '@mui/material';
 
-export const mainTheme = createTheme({
-    palette: {
-        mode: 'light',
+const getThemePalette = (mode: PaletteMode) => {
+    const isDark = mode === 'dark';
+
+    return {
+        mode,
         primary: {
             main: '#1E3A8A',
+            
         },
         secondary: {
             main: '#4c72a7',
         },
-        /*
-        primary: {
-            main: '#23395d',
-        },
-        secondary: {    
-            main: '#06B6D4',
-        },
-        */
         warning: {
             main: '#f2ba5a',
         },
@@ -30,51 +26,61 @@ export const mainTheme = createTheme({
             main: '#38bdf8',
         },
         background: {
-            default: '#f8faff',
-            paper: '#ffffff',
+            default: isDark ? '#0F172A' : '#f8faff',
+            paper: isDark ? '#111827' : '#ffffff',
         },
         text: {
-            primary: '#0f172a',
-            secondary: '#64748b',
+            primary: isDark ? '#e2e8f0' : '#0f172a',
+            secondary: isDark ? '#cbd5e1' : '#64748b',
         },
-        divider: '#e3e8ee'
-    },
-    shape: {
-        borderRadius: 2
-    },
-    typography: {
-        fontFamily: '"Inter","Roboto", "Helvetica", Arial, sans-serif',
-        h1: { fontSize: '2.5rem', fontWeight: 700 },
-        button: { textTransform: 'none', fontWeight: 600 }
-    },
-    components: {
-        MuiButton: {
-            defaultProps: {
-                disableElevation: true
-            }
+        divider: isDark ? '#273449' : '#e3e8ee',
+        action: {
+            hover: isDark ? '#1e293b' : '#f8fafc',
         },
-        MuiCard: {
-            styleOverrides: {
-                root: ({ theme }) => ({
-                    border: `1px solid ${theme.palette.divider}`
-                })
-            }
+    };
+};
+
+export const createAppTheme = (mode: PaletteMode) =>
+    createTheme({
+        palette: getThemePalette(mode),
+        shape: {
+            borderRadius: 2,
         },
-        MuiPaper: {
-            styleOverrides: {
-                root: ({ theme }) => ({
-                    border: `1px solid ${theme.palette.divider}`,
-                    boxShadow: 'none'
-                })
-            }
+        typography: {
+            fontFamily: '"Inter","Roboto", "Helvetica", Arial, sans-serif',
+            h1: { fontSize: '2.5rem', fontWeight: 700 },
+            button: { textTransform: 'none', fontWeight: 600 },
         },
-        MuiChip: {
-            styleOverrides: {
-                root: () => ( {
-                    paddingTop: 3,
-                    paddingBottom: 3
-                })
-            }
-        }
-    }
-})
+        components: {
+            MuiButton: {
+                defaultProps: {
+                    disableElevation: true,
+                },
+            },
+            MuiCard: {
+                styleOverrides: {
+                    root: ({ theme }) => ({
+                        border: `1px solid ${theme.palette.divider}`,
+                    }),
+                },
+            },
+            MuiPaper: {
+                styleOverrides: {
+                    root: ({ theme }) => ({
+                        border: `1px solid ${theme.palette.divider}`,
+                        boxShadow: 'none',
+                    }),
+                },
+            },
+            MuiChip: {
+                styleOverrides: {
+                    root: () => ({
+                        paddingTop: 3,
+                        paddingBottom: 3,
+                    }),
+                },
+            },
+        },
+    });
+
+export const mainTheme = createAppTheme('light');

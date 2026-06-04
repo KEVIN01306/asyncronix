@@ -63,6 +63,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
   return (
     <AppBar 
       position="fixed" 
+      elevation={0}
       sx={{ 
         width: (!isMobile && isSidebarOpen) ? `calc(100% - ${drawerWidth}px)` : '100%',
         ml: (!isMobile && isSidebarOpen) ? `${drawerWidth}px` : 0,
@@ -71,10 +72,10 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
             duration: theme.transitions.duration.enteringScreen,
         }),
         bgcolor: "background.paper",
-        backdropFilter: 'blur(12px)',
-        color: 'primary.main',
+        color: 'text.primary',
         boxShadow: 'none',
-        border: (theme) => `1px solid ${theme.palette.divider}`,      }}
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+      }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 } }}>
         <Stack direction="row" alignItems="center" spacing={2}>
@@ -125,7 +126,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
         </Stack>
 
         <Stack direction="row" alignItems="center" spacing={1.5}>
-            <Tooltip followCursor describeChild title="Duplicar página" placement="top-end">
+          <Tooltip followCursor describeChild title="Duplicar página" placement="top-end">
               <ListItemIcon sx={{ borderRadius: 1, padding: 2 }} onClick={handleDuplicate}>
                     <CopyAll fontSize="small" />
               </ListItemIcon>

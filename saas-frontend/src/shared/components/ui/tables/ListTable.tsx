@@ -82,7 +82,7 @@ const ListTable: React.FC<ListTableProps> = ({
                 }}
             >
                 <Table sx={{ width: '100%', minWidth: 650, tableLayout: 'auto' }} aria-label="list table">
-                    <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+                    <TableHead sx={{ backgroundColor: (theme) => theme.palette.action.hover }}>
                         <TableRow sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
                             {columns.map((column) => (
                                 <TableCell
@@ -94,7 +94,7 @@ const ListTable: React.FC<ListTableProps> = ({
                                         textTransform: 'uppercase',
                                         letterSpacing: '0.05rem',
                                         py: 2,
-                                        borderBottom: '1px solid #f1f5f9',
+                                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                                         whiteSpace: 'nowrap',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
@@ -104,7 +104,7 @@ const ListTable: React.FC<ListTableProps> = ({
                                 </TableCell>
                             ))}
                             {actions && actions.length > 0 && (
-                                <TableCell align="right" sx={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <TableCell align="right" sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
                                     <Typography sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>
                                         ACCIÓN
                                     </Typography>
@@ -118,7 +118,7 @@ const ListTable: React.FC<ListTableProps> = ({
                                 key={row.id || index}
                                 sx={{
                                     borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                                    '&:hover': { backgroundColor: '#fdfdff' },
+                                    '&:hover': { backgroundColor: (theme) => theme.palette.action.hover },
                                     transition: 'background-color 0.2s',
 
                                 }}

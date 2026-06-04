@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider, CircularProgress } from '@mui/material';
+import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider, CircularProgress, Switch, FormControlLabel } from '@mui/material';
 import { Edit as EditIcon, VpnKey as VpnKeyIcon, Person as PersonIcon } from '@mui/icons-material';
+import { useUiStore } from '../../../../core/store/uiStore';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { authRepository } from '../../../auth/infrastructure/repositories/auth.repository';
 import { perfilRepository } from '../../infrastructure/perfil.repository';
@@ -13,6 +14,8 @@ import { EditAvatarModal } from '../components/EditAvatarModal';
 export const PerfilPage = () => {
     const userStore = useAuthStore((state) => state.user);
     const getMeStore = useAuthStore((state) => state.getMe);
+    const themeMode = useUiStore((state) => state.themeMode);
+    const toggleThemeMode = useUiStore((state) => state.toggleTheme);
     const [perfil, setPerfil] = useState<Perfil | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -40,7 +43,7 @@ export const PerfilPage = () => {
 
     useEffect(() => {
         cargarPerfil();
-        
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleUpdateProfile = async (data: ActualizarPerfilForm) => {
@@ -93,9 +96,23 @@ export const PerfilPage = () => {
 
     return (
         <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
-            <Typography variant="h4" fontWeight="bold" color="primary.main" mb={3}>
-                Mi Perfil
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h4" fontWeight="bold" color="primary.main">
+                    Mi Perfil
+                </Typography>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={themeMode === 'dark'}
+                            onChange={toggleThemeMode}
+                            color="primary"
+                        />
+                    }
+                    label={themeMode === 'light' ? 'Claro' : 'Oscuro'}
+                    labelPlacement="start"
+                    sx={{ m: 0 }}
+                />
+            </Box>
 
             <Card elevation={3} sx={{ borderRadius: 3, mb: 4 }}>
                 <CardContent>

@@ -75,11 +75,11 @@ const LoginPage = () => {
                     transition={{ duration: 0.5 }}
                 >
                     <Paper
-                        elevation={24}
+                        elevation={0}
                         sx={{
                             p: { xs: 4, md: 6 },
                             textAlign: 'center',
-                            bgcolor: 'rgba(255, 255, 255, 0.95)',
+                            bgcolor: 'background.paper',
                             backdropFilter: 'blur(10px)',
                             border: (theme) => `1px solid ${theme.palette.divider}`,
                             boxShadow: 'none',

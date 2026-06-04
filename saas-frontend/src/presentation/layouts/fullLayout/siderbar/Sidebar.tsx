@@ -29,6 +29,7 @@ const Sidebar = ({ open, onClose, isMobile, drawerWidth, menuItems }: SidebarPro
       anchor="left"
       open={open}
       onClose={onClose}
+      elevation={0}
       ModalProps={{
         keepMounted: true, 
       }}
@@ -40,7 +41,7 @@ const Sidebar = ({ open, onClose, isMobile, drawerWidth, menuItems }: SidebarPro
           boxShadow: 'none',
           width: drawerWidth,
           boxSizing: 'border-box',
-          bgcolor: isMobile ?  "background.paper" : "background.paper",
+          bgcolor: "background.paper",
         },
       }}
     >
