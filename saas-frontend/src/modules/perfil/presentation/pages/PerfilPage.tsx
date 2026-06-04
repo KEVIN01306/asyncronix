@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider, CircularProgress, Switch, FormControlLabel } from '@mui/material';
+import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider, CircularProgress } from '@mui/material';
 import { Edit as EditIcon, VpnKey as VpnKeyIcon, Person as PersonIcon } from '@mui/icons-material';
-import { useUiStore } from '../../../../core/store/uiStore';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { authRepository } from '../../../auth/infrastructure/repositories/auth.repository';
 import { perfilRepository } from '../../infrastructure/perfil.repository';
@@ -14,8 +13,6 @@ import { EditAvatarModal } from '../components/EditAvatarModal';
 export const PerfilPage = () => {
     const userStore = useAuthStore((state) => state.user);
     const getMeStore = useAuthStore((state) => state.getMe);
-    const themeSource = useUiStore((state) => state.themeSource);
-    const setThemeSource = useUiStore((state) => state.setThemeSource);
     const [perfil, setPerfil] = useState<Perfil | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -100,20 +97,6 @@ export const PerfilPage = () => {
                 <Typography variant="h4" fontWeight="bold" color="primary.main">
                     Mi Perfil
                 </Typography>
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={themeSource !== 'light'}
-                            onChange={(event) => {
-                                setThemeSource(event.target.checked ? 'dark' : 'light');
-                            }}
-                            color="primary"
-                        />
-                    }
-                    label={themeSource === 'light' ? 'Claro' : themeSource === 'dark' ? 'Oscuro' : 'Sistema'}
-                    labelPlacement="start"
-                    sx={{ m: 0 }}
-                />
             </Box>
 
             <Card elevation={3} sx={{ borderRadius: 3, mb: 4 }}>
