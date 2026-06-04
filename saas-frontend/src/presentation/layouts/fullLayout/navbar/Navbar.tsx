@@ -24,7 +24,6 @@ import {
   Tune,
 } from "@mui/icons-material";
 import { useAuthStore } from "../../../../core/store/authStore";
-import { useUiStore } from "../../../../core/store/uiStore";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -35,39 +34,9 @@ interface NavbarProps {
   isMobile: boolean;
 }
 
-const getInterpolatedBorderColor = (colorIntensity: number): string => {
-  // Define color points for gradient
-  // 0% = black (0, 0, 0)
-  // 50% = light gray (227, 232, 238) = #e3e8ee
-  // 100% = primary blue (30, 58, 138) = #1E3A8A
-  
-  const blackR = 0, blackG = 0, blackB = 0;
-  const midR = 227, midG = 232, midB = 238;
-  const blueR = 30, blueG = 58, blueB = 138;
-  
-  let r, g, b;
-  
-  if (colorIntensity < 0.5) {
-    // Interpolate between black and mid-gray
-    const t = colorIntensity * 2; // 0 to 1
-    r = Math.round(blackR + (midR - blackR) * t);
-    g = Math.round(blackG + (midG - blackG) * t);
-    b = Math.round(blackB + (midB - blackB) * t);
-  } else {
-    // Interpolate between mid-gray and blue
-    const t = (colorIntensity - 0.5) * 2; // 0 to 1
-    r = Math.round(midR + (blueR - midR) * t);
-    g = Math.round(midG + (blueG - midG) * t);
-    b = Math.round(midB + (blueB - midB) * t);
-  }
-  
-  return `rgba(${r}, ${g}, ${b}, 1)`;
-};
-
 const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: NavbarProps) => {
   const lagaout = useAuthStore((state) => state.logout)
   const user = useAuthStore((state) => state.user);
-  const borderColorIntensity = useUiStore((state) => state.borderColorIntensity);
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
@@ -111,7 +80,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
         bgcolor: "background.paper",
         color: 'text.primary',
         boxShadow: 'none',
-        border: `1px solid ${getInterpolatedBorderColor(borderColorIntensity)}`,
+        border: (theme) => `1px solid ${theme.palette.divider}`,
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 } }}>
