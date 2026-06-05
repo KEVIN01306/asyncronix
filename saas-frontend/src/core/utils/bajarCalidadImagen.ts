@@ -6,7 +6,8 @@
  */
 export const bajarCalidadImagen = (
     archivoOriginal: File,
-    calidad: number = 0.4
+    calidad: number = 0.4,
+    extension: string = 'webp'
 ): Promise<File> => {
     return new Promise((resolve, reject) => {
         if (!archivoOriginal || !archivoOriginal.type.startsWith('image/')) {
@@ -54,12 +55,12 @@ export const bajarCalidadImagen = (
                 canvas.toBlob(
                     (blobComprimido) => {
                         if (blobComprimido) {
-                            const nombreArchivo = archivoOriginal.name.replace(/\.[^/.]+$/, "") + ".webp";
+                            const nombreArchivo = archivoOriginal.name.replace(/\.[^/.]+$/, "") + `.${extension}`;
                             const archivoOptimizado = new File(
                                 [blobComprimido],
                                 nombreArchivo,
                                 {
-                                    type: 'image/webp',
+                                    type: `image/${extension}`,
                                     lastModified: Date.now()
                                 }
                             );
@@ -68,7 +69,7 @@ export const bajarCalidadImagen = (
                             reject(new Error('No se pudo procesar la compresión de la imagen.'));
                         }
                     },
-                    'image/webp',
+                    `image/${extension}`,
                     calidad
                 );
             };

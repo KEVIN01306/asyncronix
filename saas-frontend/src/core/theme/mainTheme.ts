@@ -4,7 +4,6 @@ import type { PaletteMode } from '@mui/material';
 const getThemePalette = (mode: PaletteMode, borderIntensity: number = 1, borderColorIntensity: number = 0.5) => {
     const isDark = mode === 'dark';
     
-    // Apply intensity by adjusting opacity and color strength
     const dividerWithIntensity = adjustColorIntensity(borderIntensity, borderColorIntensity);
 
     return {

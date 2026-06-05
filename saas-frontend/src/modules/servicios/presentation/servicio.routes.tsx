@@ -3,6 +3,7 @@ import { ServiciosListPage, ServicioFormPage, ServicioDetailPage, ServicioCustom
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 import { ServicioStateGuard } from './components/ServicioStateGuard';
 import { ESTADO_SERVICIO } from '../domain/servicio.constants';
+import ServicioHojaPage from './pages/ServicioHojaPage';
 
 export const servicioRoutes: RouteObject[] = [
     {
@@ -29,6 +30,19 @@ export const servicioRoutes: RouteObject[] = [
                 element: (
                     <RouteProtector requiredPermission="VER_SERVICIOS_DETALLE">
                         <ServicioDetailPage />
+                    </RouteProtector>
+                )
+            },
+            {
+                path: ':id/hoja',
+                element: (
+                    <RouteProtector requiredPermission="VER_SERVICIOS_DETALLE">
+                            <ServicioStateGuard
+                                requiredPermission="VER_SERVICIOS_DETALLE"
+                                validStates={[ESTADO_SERVICIO.FINALIZADO]}
+                            >
+                            <ServicioHojaPage />
+                        </ServicioStateGuard>
                     </RouteProtector>
                 )
             },

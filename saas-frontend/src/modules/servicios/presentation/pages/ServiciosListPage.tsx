@@ -1,5 +1,5 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { Add, Edit, Visibility } from '@mui/icons-material';
+import { Add, Article, Edit, Visibility } from '@mui/icons-material';
 import { Autocomplete, Box, Button, Chip, CircularProgress, Paper, TextField, TableContainer, useTheme, AlertTitle, Alert } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -142,6 +142,13 @@ const ServiciosListPage = () => {
             icon: <Visibility fontSize="small" />, 
             color: 'gray',
             onClick: (row: any) => navigate(`/servicios/${row.id}`)
+        },
+        {
+            name: 'Hoja de servicio',
+            icon: <Article fontSize="small" />, 
+            color: 'gray',
+            onClick: (row: any) => navigate(`/servicios/${row.id}/hoja`),
+            visible: (row: any) => row.estado === ESTADO_SERVICIO.FINALIZADO
         },
         {
             name: 'Ver configuración',

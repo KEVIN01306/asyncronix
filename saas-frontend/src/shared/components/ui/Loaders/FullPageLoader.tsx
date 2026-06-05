@@ -18,7 +18,7 @@ export const FullPageLoader = ({ message = 'Cargando...' }: Props) => {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                    bgcolor: 'background.paper',
                     backdropFilter: 'blur(4px)',
                     zIndex: 9999,
                 }}

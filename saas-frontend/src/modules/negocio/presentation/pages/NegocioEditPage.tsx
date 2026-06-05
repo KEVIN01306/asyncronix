@@ -87,7 +87,7 @@ const NegocioEditPage = () => {
             formData.append('instagram_id', data.instagram_id ?? '');
             formData.append('facebook_id', data.facebook_id ?? '');
             if (logoFile) {
-                const compressedLogo = await bajarCalidadImagen(logoFile);
+                const compressedLogo = await bajarCalidadImagen(logoFile, 0.4, 'png');
                 formData.append('logo', compressedLogo);
             }
 
