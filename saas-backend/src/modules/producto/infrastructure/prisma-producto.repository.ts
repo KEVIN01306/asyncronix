@@ -17,8 +17,8 @@ export class PrismaProductoRepository implements ProductoRepository {
         categoria: true,
         variantes: {
             where: { activo: true },
-            take: 1,
-            orderBy: { created_at: 'desc' as const }
+            orderBy: { created_at: 'asc' as const },
+            include: { valores: { include: { atributo: true } } }
         }
     };
 
@@ -26,7 +26,8 @@ export class PrismaProductoRepository implements ProductoRepository {
         categoria: true,
         variantes: {
             where: { activo: true },
-            orderBy: { created_at: 'desc' as const }
+            orderBy: { created_at: 'asc' as const },
+            include: { valores: { include: { atributo: true } } }
         }
     };
 
@@ -39,6 +40,25 @@ export class PrismaProductoRepository implements ProductoRepository {
         });
 
         if (!producto) return null;
+
+        // Calcular stock_total por variante (suma de cantidad_actual en lotes activos)
+        const varianteIds = (producto.variantes ?? []).map((v: any) => v.id).filter(Boolean);
+        if (varianteIds.length > 0) {
+            const grupos = await this.prisma.lote.groupBy({
+                by: ['variante_id'],
+                where: { variante_id: { in: varianteIds }, activo: true },
+                _sum: { cantidad_actual: true }
+            });
+
+            const sumaPorVariante: Record<string, number> = {};
+            for (const g of grupos) {
+                sumaPorVariante[g.variante_id] = (g._sum.cantidad_actual ?? 0) as number;
+            }
+
+            for (const v of producto.variantes ?? []) {
+                (v as any).stock_total = sumaPorVariante[v.id] ?? 0;
+            }
+        }
 
         return ProductoMapper.mapDetalle(producto as any);
     }
@@ -61,6 +81,31 @@ export class PrismaProductoRepository implements ProductoRepository {
             })
         ]);
 
+        // Agregar stock_total por variante para cada producto
+        const varianteIds: string[] = [];
+        for (const p of productos) {
+            const vars = (p.variantes ?? []).map((v: any) => v.id).filter(Boolean);
+            varianteIds.push(...vars);
+        }
+
+        if (varianteIds.length > 0) {
+            const grupos = await this.prisma.lote.groupBy({
+                by: ['variante_id'],
+                where: { variante_id: { in: varianteIds }, activo: true },
+                _sum: { cantidad_actual: true }
+            });
+
+            const sumaPorVariante: Record<string, number> = {};
+            for (const g of grupos) {
+                sumaPorVariante[g.variante_id] = (g._sum.cantidad_actual ?? 0) as number;
+            }
+
+            for (const p of productos) {
+                for (const v of (p.variantes ?? [])) {
+                    (v as any).stock_total = sumaPorVariante[v.id] ?? 0;
+                }
+            }
+        }
         return {
             data: productos.map(producto => ProductoMapper.mapSimple(producto as any)),
             total,
@@ -86,16 +131,33 @@ export class PrismaProductoRepository implements ProductoRepository {
                 }
             });
 
-            const sku = GenerarSku.ejecutar({
+            // Generate product code (codigo) if not provided
+            let productoCodigo = createdProduct.codigo?.trim();
+            if (!productoCodigo) {
+                productoCodigo = GenerarSku.ejecutar({
+                    negocioCodigo: createdProduct.negocio.slug,
+                    categoriaCodigo: createdProduct.categoria?.codigo ?? createdProduct.categoria?.categoria ?? '',
+                    productoCodigo: createdProduct.nombre
+                });
+
+                // Update product with generated codigo
+                await this.prisma.producto.update({
+                    where: { id: createdProduct.id },
+                    data: { codigo: productoCodigo }
+                });
+            }
+
+            // Generate variant SKU independently from product codigo
+            const varianteSku = GenerarSku.ejecutar({
                 negocioCodigo: createdProduct.negocio.slug,
                 categoriaCodigo: createdProduct.categoria?.codigo ?? createdProduct.categoria?.categoria ?? '',
-                productoCodigo: createdProduct.codigo?.trim() || createdProduct.nombre
+                productoCodigo: productoCodigo
             });
 
             await this.prisma.varianteProducto.create({
                 data: {
                     producto_id: createdProduct.id,
-                    sku,
+                    sku: varianteSku,
                     codigo_barras: null,
                     qr_codigo: null,
                     precio_sugerido: 0,
@@ -120,6 +182,8 @@ export class PrismaProductoRepository implements ProductoRepository {
 
     async actualizar(id: string, producto: ProductoActualizar, negocio_id: string): Promise<ProductoDetalle> {
         try {
+            // Excluir sku y precio_sugerido para que no se modifiquen al actualizar el producto
+            // El SKU y precio pertenecen a las variantes, no al producto
             const { sku: _sku, precio_sugerido: _precio_sugerido, ...productoData } = producto as any;
 
             const result = await this.prisma.producto.updateMany({

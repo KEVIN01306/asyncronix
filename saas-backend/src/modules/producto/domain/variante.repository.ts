@@ -7,6 +7,7 @@ export interface VarianteRepository {
     obtener(id: string, negocio_id: string): Promise<VarianteDetalle | null>;
     obtenerPorSku(sku: string, negocio_id: string): Promise<VarianteDetalle | null>;
     listarPorProducto(producto_id: string, negocio_id: string): Promise<VarianteDetalle[]>;
+    listarPorNegocio(negocio_id: string, sucursal_id?: string): Promise<VarianteDetalle[]>;
     actualizarCodigoBarras(id: string, codigo_barras: string | null, negocio_id: string): Promise<VarianteDetalle>;
     generarQr(id: string, negocio_id: string): Promise<VarianteDetalle>;
     subirImagen(id: string, url_imagen: string, negocio_id: string): Promise<VarianteDetalle>;

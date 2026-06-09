@@ -11,6 +11,7 @@ import type { CrearVarianteUseCase } from "../application/crear-variante.usecase
 import type { ActualizarVarianteUseCase } from "../application/actualizar-variante.usecase.js";
 import type { EliminarVarianteUseCase } from "../application/eliminar-variante.usecase.js";
 import type { ListarVariantesProductoUseCase } from "../application/listar-variantes-producto.usecase.js";
+import type { ListarVariantesNegocioUseCase } from "../application/listar-variantes-negocio.usecase.js";
 import type { ObtenerVarianteUseCase } from "../application/obtener-variante.usecase.js";
 import type { SubirImagenVarianteUseCase } from "../application/subir-imagen-variante.usecase.js";
 import type { ActualizarCodigoBarrasVarianteUseCase } from "../application/actualizar-codigo-barras-variante.usecase.js";
@@ -29,6 +30,7 @@ export class ProductoController extends BaseController {
         private readonly actualizarVarianteUseCase: ActualizarVarianteUseCase,
         private readonly eliminarVarianteUseCase: EliminarVarianteUseCase,
         private readonly listarVariantesProductoUseCase: ListarVariantesProductoUseCase,
+        private readonly listarVariantesNegocioUseCase: ListarVariantesNegocioUseCase,
         private readonly obtenerVarianteUseCase: ObtenerVarianteUseCase,
         private readonly subirImagenVarianteUseCase: SubirImagenVarianteUseCase,
         private readonly actualizarCodigoBarrasVarianteUseCase: ActualizarCodigoBarrasVarianteUseCase,
@@ -79,6 +81,16 @@ export class ProductoController extends BaseController {
             const { producto_id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             const variantes = await this.listarVariantesProductoUseCase.execute(producto_id, negocio_id);
+            res.status(200).json(Respuesta.exito('Variantes obtenidas con exito', variantes));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listarVariantesNegocio = async (_req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const variantes = await this.listarVariantesNegocioUseCase.execute(negocio_id, sucursal_id);
             res.status(200).json(Respuesta.exito('Variantes obtenidas con exito', variantes));
         } catch (error) {
             next(error);

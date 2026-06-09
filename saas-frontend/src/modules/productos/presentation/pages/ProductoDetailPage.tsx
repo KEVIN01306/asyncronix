@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Box, Grid, Alert, Paper } from '@mui/material';
 import { toast } from 'sonner';
 import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
@@ -21,6 +21,7 @@ import { Tabs, Tab } from '@mui/material';
 const ProductoDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [producto, setProducto] = useState<Producto | null>(null);
     const [loading, setLoading] = useState(true);
     const [openDelete, setOpenDelete] = useState(false);
@@ -31,7 +32,25 @@ const ProductoDetailPage = () => {
     const ImageSource = producto?.url_imagen ? `${import.meta.env.VITE_API_URL}/${producto.url_imagen}` : undefined;
     const QrImageSource = producto?.qr_imagen ? `${import.meta.env.VITE_API_URL}/${producto.qr_imagen}` : undefined;
 
-    const [tab, setTab] = useState(0);
+    // Read tab from URL query params, default to 0
+    const [tab, setTabState] = useState(() => {
+        const tabParam = searchParams.get('tab');
+        return tabParam ? parseInt(tabParam, 10) : 0;
+    });
+
+    // Update tab state when query param changes
+    useEffect(() => {
+        const tabParam = searchParams.get('tab');
+        if (tabParam) {
+            setTabState(parseInt(tabParam, 10));
+        }
+    }, [searchParams]);
+
+    // Handle tab change - update both state and URL
+    const handleTabChange = (_e: any, newValue: number) => {
+        setTabState(newValue);
+        setSearchParams({ tab: newValue.toString() });
+    };
 
     const fetchProducto = useCallback(async () => {
         if (!id) return;
@@ -187,7 +206,7 @@ const ProductoDetailPage = () => {
                 onDelete={() => setOpenDelete(true)}
             />
 
-            <Tabs value={tab} onChange={(_e, v) => setTab(v)} sx={{ mb: 2 }}>
+            <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 2 }}>
                 <Tab label="Detalles" />
                 <Tab label="Variantes" />
                 <Tab label="Lotes" />

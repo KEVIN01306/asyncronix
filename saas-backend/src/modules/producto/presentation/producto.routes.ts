@@ -37,6 +37,11 @@ routes.get("/:producto_id/variantes",
     productoController.listarVariantes
 );
 
+routes.get("/variantes",
+    authMiddleware.verificarPermiso(['VER_PRODUCTOS_DETALLE']),
+    productoController.listarVariantesNegocio
+);
+
 routes.post("/:producto_id/variantes",
     authMiddleware.verificarPermiso(['CREAR_PRODUCTOS']),
     validarMiddleware.validarBody(varianteCrearSchema),

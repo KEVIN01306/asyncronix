@@ -7,6 +7,7 @@ import type { VentaRepository } from "../domain/venta.repository.js";
 import type { VentaCrear, VentaSimple } from "../domain/venta.entity.js";
 import type { LoteRepository } from "../../lote/domain/lote.repository.js";
 import type { VarianteRepository } from "modules/producto/domain/variante.repository.js";
+import { construirDetallesVentaPorVariante } from "./venta-detalles.builder.js";
 
 export class RegistrarVentaUseCase {
     constructor(
@@ -32,39 +33,10 @@ export class RegistrarVentaUseCase {
                 }
 
                 const res = await this.loteRepository.listarPorVariante(prodInput.variante_id, negocio_id, { page: 1, perPage: 1000 }, sucursal_id);
-                const lotes = res.data.filter((l: any) => l.activo && (l.cantidad_actual ?? 0) > 0);
-                if (!lotes || lotes.length === 0) {
-                    throw new AppError(`INSUFICIENTE_STOCK_${prodInput.variante_id}`, "INSUFFICIENT_STOCK", 400);
-                }
-
-                let restante = prodInput.cantidad;
-                const precioUnitario = variante.precio_sugerido ?? 0;
-
-                for (const lote of lotes) {
-                    if (restante <= 0) break;
-                    const disponible = lote.cantidad_actual ?? 0;
-                    if (disponible <= 0) continue;
-
-                    const take = Math.min(restante, disponible);
-                    const costoUnitario = lote.costo_compra ?? 0;
-
-                    detallesToPersist.push({
-                        lote_id: lote.id,
-                        descripcion: variante.producto?.nombre ?? lote.variante?.producto_nombre ?? variante.sku ?? '',
-                        cantidad: take,
-                        precio_unitario: precioUnitario,
-                        costo_unitario: costoUnitario
-                    });
-
-                    totalVenta += take * precioUnitario;
-                    totalCosto += take * costoUnitario;
-
-                    restante -= take;
-                }
-
-                if (restante > 0) {
-                    throw new AppError(`INSUFICIENTE_STOCK_${prodInput.variante_id}`, "INSUFFICIENT_STOCK", 400);
-                }
+                const detalles = construirDetallesVentaPorVariante(variante, res.data, prodInput.cantidad);
+                detallesToPersist.push(...detalles);
+                totalVenta += detalles.reduce((sum, d) => sum + (d.precio_unitario * d.cantidad), 0);
+                totalCosto += detalles.reduce((sum, d) => sum + (d.costo_unitario * d.cantidad), 0);
             }
 
             const dataToPersist = {

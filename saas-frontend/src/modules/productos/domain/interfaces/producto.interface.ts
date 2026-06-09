@@ -24,6 +24,10 @@ export interface Variante {
     precio_sugerido?: number;
     stock_total?: number;
     valores?: VarianteValor[];
+    producto?: {
+        id: string;
+        nombre: string;
+    };
 }
 
 export interface Producto {

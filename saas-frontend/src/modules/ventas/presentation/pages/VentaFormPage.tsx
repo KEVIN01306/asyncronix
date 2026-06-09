@@ -8,9 +8,9 @@ import { useAuthStore } from '../../../../core/store/authStore';
 import { ventaRepository } from '../../infrastructure/venta.repository';
 import SaleClientModal from '../components/SaleClientModal';
 import SalePaymentModal from '../components/SalePaymentModal';
-import { ProductoRepository } from '../../../productos/infrastructure/repositories/producto.repository';
+import { VarianteRepository } from '../../../productos/infrastructure/repositories/variante.repository';
 import type { EstadoVenta, MetodoPago, VentaProductoInput, VentaDetalleSimple } from '../../domain/interfaces/venta.interface';
-import type { Producto } from '../../../productos/domain/interfaces/producto.interface';
+import type { Variante } from '../../../productos/domain/interfaces/producto.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import SaleProductsTable from '../components/SaleProductsTable';
 import SaleSummary from '../components/SaleSummary';
@@ -50,10 +50,10 @@ export default function VentaFormPage() {
         }
     });
 
-    const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([]);
+    const [variantesDisponibles, setVariantesDisponibles] = useState<any[]>([]);
     const [searchProductoLoading, setSearchProductoLoading] = useState(false);
 
-    const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+    const [productoSeleccionado, setProductoSeleccionado] = useState<any | null>(null);
     const [cantidadAgregar, setCantidadAgregar] = useState<number>(1);
 
     const estado = watch('estado') as EstadoVenta;
@@ -62,10 +62,21 @@ export default function VentaFormPage() {
     const cargarProductosDisponibles = useCallback(async () => {
         try {
             setSearchProductoLoading(true);
-            const res = await ProductoRepository.listar(100, 0);
-            setProductosDisponibles(res.data);
+            const res = await VarianteRepository.listarPorNegocio();
+            const variantes: any[] = res.data.map((v: Variante) => {
+                const atributos = (v.valores ?? []).map((valor) => valor.atributo ? `${valor.atributo.nombre}: ${valor.valor}` : valor.valor).join(', ');
+                const productoNombre = v.producto?.nombre ?? 'Variante';
+                return {
+                    ...v,
+                    nombre: atributos ? `${productoNombre} (${atributos})` : productoNombre,
+                    producto_nombre: productoNombre,
+                    valores: v.valores ?? []
+                };
+            });
+
+            setVariantesDisponibles(variantes);
         } catch {
-            toast.error("Error al cargar productos disponibles");
+            toast.error('Error al cargar variantes disponibles');
         } finally {
             setSearchProductoLoading(false);
         }
@@ -234,7 +245,7 @@ export default function VentaFormPage() {
                 return;
             }
 
-            await ventaRepository.crearDetallePorCodigo(ventaId, codigo, user.sucursal_id, 1);
+            await ventaRepository.agregarProducto(ventaId, codigo, user.sucursal_id, 1);
             const res = await ventaRepository.obtener(ventaId);
             setProductosSeleccionados(agruparDetalles(res.data.detalles));
             toast.success('Detalle agregado por código');
@@ -291,13 +302,15 @@ export default function VentaFormPage() {
 
         try {
             setSaving(true);
-            await ventaRepository.crearDetalle(ventaId, { producto_id: prodInput.producto_id, cantidad: prodInput.cantidad }, user!.sucursal_id!);
+            const codigo = productoSeleccionado?.sku ?? productoSeleccionado?.codigo ?? productoSeleccionado?.id;
+            if (!codigo) throw new Error('Código de variante no disponible');
+            await ventaRepository.agregarProducto(ventaId, codigo, user!.sucursal_id!, prodInput.cantidad);
             const res = await ventaRepository.obtener(ventaId);
             const venta = res.data;
             setProductosSeleccionados(agruparDetalles(venta.detalles));
             toast.success('Producto agregado a la venta');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Error al agregar producto');
+            toast.error(error.response?.data?.message || error.message || 'Error al agregar producto');
         } finally {
             setSaving(false);
             setProductoSeleccionado(null);
@@ -467,13 +480,31 @@ export default function VentaFormPage() {
                                     </Grid>
                                     <Grid size={{ xs: 12, md: 10 }}>
                                         <Autocomplete
-                                            options={productosDisponibles}
-                                            getOptionLabel={(option) => `${option.nombre} (Stock: ${option.stock_total}) - ${formatMoney(option.precio_sugerido)}`}
+                                            options={variantesDisponibles}
+                                            getOptionLabel={(option) => option?.nombre ?? ''}
                                             value={productoSeleccionado}
                                             onChange={(_e, newValue) => setProductoSeleccionado(newValue)}
                                             loading={searchProductoLoading}
+                                            renderOption={(props, option: any) => (
+                                                <li {...props}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                                        <Box>
+                                                            <Typography fontWeight={600}>{option.producto_nombre}</Typography>
+                                                            {option.valores && option.valores.length > 0 && (
+                                                                <Typography variant="caption" color="textSecondary">
+                                                                    {option.valores.map((v: any) => v.atributo ? `${v.atributo.nombre}: ${v.valor}` : v.valor).join(', ')}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
+                                                        <Box sx={{ textAlign: 'right' }}>
+                                                            <Typography>{formatMoney(option.precio_sugerido)}</Typography>
+                                                            <Typography variant="caption">Stock: {option.stock_total}</Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </li>
+                                            )}
                                             renderInput={(params) => (
-                                                <TextField {...params} label="Buscar Producto" variant="outlined" />
+                                                <TextField {...params} label="Buscar Variante" variant="outlined" />
                                             )}
                                             disabled={!isEditable}
                                         />

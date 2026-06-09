@@ -13,7 +13,7 @@ const mapVariantFields = (producto: ProductoConVariantes) => {
     const variant = producto.variantes?.[0];
 
     return {
-        sku: variant?.sku ?? '',
+        sku: producto.codigo ?? '',
         precio_sugerido: variant?.precio_sugerido ?? producto.precio_sugerido ?? 0,
         stock_total: variant?.stock_total ?? producto.stock_total ?? 0
     };
@@ -28,7 +28,7 @@ export class ProductoMapper {
             categoria_id: producto.categoria_id,
             nombre: producto.nombre,
             codigo: producto.codigo ?? null,
-            sku: variant.sku,
+            sku: variant.sku, // Product SKU is its codigo
             descripcion: producto.descripcion ?? null,
             precio_sugerido: variant.precio_sugerido,
             stock_total: variant.stock_total,
@@ -49,7 +49,7 @@ export class ProductoMapper {
             categoria_id: producto.categoria_id,
             nombre: producto.nombre,
             codigo: producto.codigo ?? null,
-            sku: variant.sku,
+            sku: variant.sku, // Product SKU is its codigo
             descripcion: producto.descripcion ?? null,
             precio_sugerido: variant.precio_sugerido,
             stock_total: variant.stock_total,
@@ -66,7 +66,8 @@ export class ProductoMapper {
                 precio_sugerido: v?.precio_sugerido ?? undefined,
                 stock_total: v?.stock_total ?? undefined,
                 codigo_barras: (v as any)?.codigo_barras ?? null,
-                qr_codigo: (v as any)?.qr_codigo ?? null
+                qr_codigo: (v as any)?.qr_codigo ?? null,
+                valores: (v as any)?.valores?.map((val: any) => ({ id: val.id, valor: val.valor, atributo: val.atributo ? { id: val.atributo.id, nombre: val.atributo.nombre } : undefined })) ?? []
             })) ?? []
         };
     }

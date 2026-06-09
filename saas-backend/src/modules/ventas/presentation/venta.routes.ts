@@ -3,7 +3,7 @@ import { z } from "zod";
 import { AuthMiddleware } from "../../../app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "../../../app/middlewares/ValidarMiddleware.js";
 import { ventaController } from "../venta.module.js";
-import { ventaCrearSchema, ventaActualizarSchema, buscarScannerSchema, ventaDetalleCodigoSchema, ventaDetalleSkuSchema } from "./validators/venta.schema.js";
+import { ventaCrearSchema, ventaActualizarSchema, buscarScannerSchema, ventaAgregarProductoSchema } from "./validators/venta.schema.js";
 import { buscarClienteNitVentaSchema, crearClienteVentaSchema } from "./validators/cliente-venta.schema.js";
 import { paginacionQuerySchema } from "../../../shared/presentation/validators/paginacion.query.schema.js";
 
@@ -60,21 +60,10 @@ routes.get("/:id",
 
 // Nota: la edición de ventas se elimina. Solo ver, anular y finalizar.
 
-routes.post("/:ventaId/detalles",
+routes.post("/:ventaId/agregar-producto",
     authMiddleware.verificarPermiso(['CREAR_VENTAS']),
-    ventaController.crearDetalle
-);
-
-routes.post("/:ventaId/detalles/sku",
-    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
-    validarMiddleware.validarBody(ventaDetalleSkuSchema),
-    ventaController.crearDetallePorSku
-);
-
-routes.post("/:ventaId/detalles/codigo",
-    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
-    validarMiddleware.validarBody(ventaDetalleCodigoSchema),
-    ventaController.crearDetallePorCodigo
+    validarMiddleware.validarBody(ventaAgregarProductoSchema),
+    ventaController.agregarProducto
 );
 
 routes.delete("/:ventaId/detalles/:detalleId",

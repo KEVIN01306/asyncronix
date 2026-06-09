@@ -7,8 +7,7 @@ import type { ActualizarVentaUseCase } from "../application/actualizar-venta.use
 import type { AnularVentaUseCase } from "../application/anular-venta.usecase.js";
 import type { ObtenerVentaUseCase } from "../application/obtener-venta.usecase.js";
 import type { ObtenerVentasUseCase } from "../application/obtener-ventas.usecase.js";
-import type { CrearDetalleVentaUseCase } from "../application/crear-detalle-venta.usecase.js";
-import type { CrearDetalleVentaPorSkuUseCase } from "../application/crear-detalle-venta-por-sku.usecase.js";
+import type { AgregarProductoUseCase } from "../application/agregar-producto.usecase.js";
 import type { BuscarProductoPorSkuUseCase } from "../application/buscar-producto-por-sku.usecase.js";
 import type { EliminarDetalleVentaUseCase } from "../application/eliminar-detalle-venta.usecase.js";
 import type { FinalizarVentaUseCase } from "../application/finalizar-venta.usecase.js";
@@ -22,8 +21,7 @@ export class VentaController extends BaseController {
         private readonly anularVentaUseCase: AnularVentaUseCase,
         private readonly obtenerVentaUseCase: ObtenerVentaUseCase,
         private readonly obtenerVentasUseCase: ObtenerVentasUseCase,
-        private readonly crearDetalleVentaUseCase: CrearDetalleVentaUseCase,
-        private readonly crearDetalleVentaPorSkuUseCase: CrearDetalleVentaPorSkuUseCase,
+        private readonly agregarProductoUseCase: AgregarProductoUseCase,
         private readonly buscarProductoPorSkuUseCase: BuscarProductoPorSkuUseCase,
         private readonly eliminarDetalleVentaUseCase: EliminarDetalleVentaUseCase,
         private readonly finalizarVentaUseCase: FinalizarVentaUseCase,
@@ -103,15 +101,16 @@ export class VentaController extends BaseController {
         }
     }
 
-    crearDetalle = async (req: Request<{ ventaId: string }>, res: Response, next: NextFunction) => {
+    agregarProducto = async (req: Request<{ ventaId: string }>, res: Response, next: NextFunction) => {
         try {
             const { ventaId } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
-            const { sucursal_id, variante_id, cantidad } = req.body;
+            const { sucursal_id, codigo, cantidad } = req.body;
             if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+            if (!codigo || typeof codigo !== 'string') throw new Error('CODIGO_REQUERIDO');
 
-            const detalle = await this.crearDetalleVentaUseCase.execute(ventaId, variante_id, cantidad, negocio_id, sucursal_id);
-            res.status(201).json(Respuesta.exito('Detalle creado', detalle));
+            const detalle = await this.agregarProductoUseCase.execute(ventaId, codigo, cantidad, negocio_id, sucursal_id);
+            res.status(201).json(Respuesta.exito('Producto agregado a la venta', detalle));
         } catch (error) {
             next(error);
         }
@@ -130,36 +129,6 @@ export class VentaController extends BaseController {
 
             const variante = await this.buscarProductoPorSkuUseCase.execute(value, negocio_id);
             res.status(200).json(Respuesta.exito('Variante encontrada', variante));
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    crearDetallePorSku = async (req: Request<{ ventaId: string }>, res: Response, next: NextFunction) => {
-        try {
-            const { ventaId } = req.params;
-            const { negocio_id } = this.obtenerEntorno(res);
-            const { sucursal_id, sku, cantidad } = req.body;
-            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
-            if (!sku || typeof sku !== 'string') throw new Error('SKU_REQUERIDO');
-
-            const detalle = await this.crearDetalleVentaPorSkuUseCase.execute(ventaId, sku, cantidad, negocio_id, sucursal_id);
-            res.status(201).json(Respuesta.exito('Detalle por SKU creado', detalle));
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    crearDetallePorCodigo = async (req: Request<{ ventaId: string }>, res: Response, next: NextFunction) => {
-        try {
-            const { ventaId } = req.params;
-            const { negocio_id } = this.obtenerEntorno(res);
-            const { sucursal_id, codigo, cantidad } = req.body;
-            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
-            if (!codigo || typeof codigo !== 'string') throw new Error('CODIGO_REQUERIDO');
-
-            const detalle = await this.crearDetalleVentaPorSkuUseCase.execute(ventaId, codigo, cantidad, negocio_id, sucursal_id);
-            res.status(201).json(Respuesta.exito('Detalle por código creado', detalle));
         } catch (error) {
             next(error);
         }

@@ -281,16 +281,20 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
 
     return (
         <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                    <Inventory2 color="action" />
-                    <Typography variant="h6" fontWeight={700}>Variantes</Typography>
-                    <Chip label={`${variants.length} activas`} size="small" variant="outlined" color="primary" />
-                </Stack>
-                <Button variant="contained" startIcon={<Add />} onClick={handleOpenCreate}>
-                    Crear variante
-                </Button>
-            </Stack>
+            <Grid container direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                <Grid size={{ xs: 12, md: 'auto' }}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        <Inventory2 color="action" />
+                        <Typography variant="h6" fontWeight={700}>Variantes</Typography>
+                        <Chip label={`${variants.length} activas`} size="small" variant="outlined" color="primary" />
+                    </Stack>
+                </Grid>
+                <Grid size={{ xs: 12, md: 'auto' }}>
+                    <Button variant="contained" startIcon={<Add />} onClick={handleOpenCreate}>
+                        Crear variante
+                    </Button>
+                </Grid>
+            </Grid>
 
             {variants.length === 0 ? (
                 <Card variant="outlined" sx={{ borderStyle: 'dashed', textAlign: 'center', py: 6, bgcolor: 'background.default' }}>

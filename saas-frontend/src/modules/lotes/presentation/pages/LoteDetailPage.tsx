@@ -37,7 +37,7 @@ const LoteDetailPage = () => {
     return (
         <Box p={isMobile ? 2 : 4} maxWidth="900px" mx="auto">
             <LoteDetailHeader
-                title={`Lote ${lote.id.slice(0, 8)}`}
+                title={`Lote ${lote.codigo_lote ?? ''}`}
                 subtitle={lote.variante?.producto_nombre ?? ''}
                 onBack={() => navigate('/lotes')}
                 onCreate={() => navigate('/lotes/crear?producto_id=' + (lote.variante?.producto_id || ''))}
@@ -54,7 +54,7 @@ const LoteDetailPage = () => {
                             <Typography><strong>Cantidad actual:</strong> {lote.cantidad_actual}</Typography>
                             <Typography><strong>Código de lote:</strong> {lote.codigo_lote}</Typography>
                             <Typography><strong>Costo compra (Lote):</strong>{formatMoney(lote.costo_compra)}</Typography>
-                            <Typography><strong>Precio venta (Lote):</strong>{formatMoney(lote.precio_venta)}</Typography>
+                            <Typography><strong>Precio venta (U):</strong>{formatMoney(lote.precio_venta)}</Typography>
                             <Typography><strong>Fecha ingreso:</strong> {new Date(lote.fecha_ingreso).toLocaleString()}</Typography>
                             <Typography><strong>Fecha vigencia:</strong> {lote.fecha_vencimiento ? new Date(lote.fecha_vencimiento).toLocaleDateString() : 'No aplica'}</Typography>
                         </Stack>

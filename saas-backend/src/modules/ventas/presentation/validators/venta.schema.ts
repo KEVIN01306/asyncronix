@@ -30,6 +30,12 @@ export const buscarScannerSchema = z.object({
     path: ['q']
 }).transform((data) => ({ q: data.q ?? data.sku! }));
 
+export const ventaAgregarProductoSchema = z.object({
+    sucursal_id: z.string().uuid("Sucursal inválida"),
+    codigo: z.string().min(1, "El código es obligatorio"),
+    cantidad: z.number().int().positive("La cantidad debe ser mayor a 0").optional().default(1)
+});
+
 export const ventaDetalleCodigoSchema = z.object({
     sucursal_id: z.string().uuid("Sucursal inválida"),
     codigo: z.string().min(1, "El código es obligatorio"),

@@ -12,6 +12,7 @@ import { ObtenerVarianteUseCase } from "./application/obtener-variante.usecase.j
 import { SubirImagenVarianteUseCase } from "./application/subir-imagen-variante.usecase.js";
 import { ActualizarCodigoBarrasVarianteUseCase } from "./application/actualizar-codigo-barras-variante.usecase.js";
 import { GenerarQrVarianteUseCase } from "./application/generar-qr-variante.usecase.js";
+import { ListarVariantesNegocioUseCase } from "./application/listar-variantes-negocio.usecase.js";
 import { PrismaProductoRepository } from "./infrastructure/prisma-producto.repository.js";
 import { PrismaVarianteRepository } from "./infrastructure/prisma-variante.repository.js";
 import { ProductoController } from "./presentation/producto.controller.js";
@@ -30,6 +31,7 @@ const crearVarianteUseCase = new CrearVarianteUseCase(varianteRepository);
 const actualizarVarianteUseCase = new ActualizarVarianteUseCase(varianteRepository);
 const eliminarVarianteUseCase = new EliminarVarianteUseCase(varianteRepository);
 const listarVariantesProductoUseCase = new ListarVariantesProductoUseCase(varianteRepository);
+const listarVariantesNegocioUseCase = new ListarVariantesNegocioUseCase(varianteRepository);
 const obtenerVarianteUseCase = new ObtenerVarianteUseCase(varianteRepository);
 const subirImagenVarianteUseCase = new SubirImagenVarianteUseCase(varianteRepository);
 const actualizarCodigoBarrasVarianteUseCase = new ActualizarCodigoBarrasVarianteUseCase(varianteRepository);
@@ -46,6 +48,7 @@ export const productoController = new ProductoController(
     actualizarVarianteUseCase,
     eliminarVarianteUseCase,
     listarVariantesProductoUseCase,
+    listarVariantesNegocioUseCase,
     obtenerVarianteUseCase,
     subirImagenVarianteUseCase,
     actualizarCodigoBarrasVarianteUseCase,

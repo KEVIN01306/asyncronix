@@ -4,8 +4,7 @@ import { ActualizarVentaUseCase } from "./application/actualizar-venta.usecase.j
 import { AnularVentaUseCase } from "./application/anular-venta.usecase.js";
 import { ObtenerVentaUseCase } from "./application/obtener-venta.usecase.js";
 import { ObtenerVentasUseCase } from "./application/obtener-ventas.usecase.js";
-import { CrearDetalleVentaUseCase } from "./application/crear-detalle-venta.usecase.js";
-import { CrearDetalleVentaPorSkuUseCase } from "./application/crear-detalle-venta-por-sku.usecase.js";
+import { AgregarProductoUseCase } from "./application/agregar-producto.usecase.js";
 import { BuscarProductoPorSkuUseCase } from "./application/buscar-producto-por-sku.usecase.js";
 import { EliminarDetalleVentaUseCase } from "./application/eliminar-detalle-venta.usecase.js";
 import { FinalizarVentaUseCase } from "./application/finalizar-venta.usecase.js";
@@ -14,20 +13,17 @@ import { RegistrarClienteParaVentaUseCase } from "./application/registrar-client
 import { VentaController } from "./presentation/venta.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
 import { PrismaLoteRepository } from "../lote/infrastructure/prisma-lote.repository.js";
-import { PrismaProductoRepository } from "../producto/infrastructure/prisma-producto.repository.js";
 import { PrismaVarianteRepository } from "../producto/infrastructure/prisma-variante.repository.js";
 import { PrismaClienteRepository } from "../cliente/infrastructure/prisma-cliente.repository.js";
 
 
 const ventaRepository = new PrismaVentaRepository(prisma);
 const loteRepository = new PrismaLoteRepository(prisma);
-const productoRepository = new PrismaProductoRepository(prisma);
 const varianteRepository = new PrismaVarianteRepository(prisma);
 const clienteRepository = new PrismaClienteRepository(prisma);
 
 const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository, varianteRepository);
-const crearDetalleVentaUseCase = new CrearDetalleVentaUseCase(ventaRepository, loteRepository, varianteRepository);
-const crearDetalleVentaPorSkuUseCase = new CrearDetalleVentaPorSkuUseCase(ventaRepository, loteRepository, varianteRepository);
+const agregarProductoUseCase = new AgregarProductoUseCase(ventaRepository, loteRepository, varianteRepository);
 const buscarProductoPorSkuUseCase = new BuscarProductoPorSkuUseCase(varianteRepository);
 const eliminarDetalleVentaUseCase = new EliminarDetalleVentaUseCase(ventaRepository);
 const finalizarVentaUseCase = new FinalizarVentaUseCase(ventaRepository);
@@ -45,8 +41,7 @@ export const ventaController = new VentaController(
     anularVentaUseCase,
     obtenerVentaUseCase,
     obtenerVentasUseCase,
-    crearDetalleVentaUseCase,
-    crearDetalleVentaPorSkuUseCase,
+    agregarProductoUseCase,
     buscarProductoPorSkuUseCase,
     eliminarDetalleVentaUseCase,
     finalizarVentaUseCase,

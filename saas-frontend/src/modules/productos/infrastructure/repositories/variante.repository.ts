@@ -4,6 +4,11 @@ import type { Variante } from '../../domain/interfaces/producto.interface';
 const URL_MODULE = '/productos/';
 
 export const VarianteRepository = {
+    listarPorNegocio: async (): Promise<{ data: Variante[] }> => {
+        const response = await api.get<{ data: Variante[] }>(`${URL_MODULE}variantes`);
+        return response;
+    },
+
     listarPorProducto: async (producto_id: string): Promise<{ data: Variante[] }> => {
         const response = await api.get<{ data: Variante[] }>(`${URL_MODULE}${producto_id}/variantes`);
         return response;

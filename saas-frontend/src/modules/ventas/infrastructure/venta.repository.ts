@@ -47,17 +47,9 @@ export const ventaRepository = {
     buscarPorSku: async (sku: string): Promise<{ data: VentaVarianteDetalle }> => {
         return ventaRepository.buscarPorCodigo(sku);
     },
-    crearDetallePorCodigo: async (ventaId: string, codigo: string, sucursal_id: string, cantidad = 1): Promise<any> => {
+    agregarProducto: async (ventaId: string, codigo: string, sucursal_id: string, cantidad = 1): Promise<any> => {
         const payload = { codigo, cantidad, sucursal_id };
-        const response = await api.post(`/ventas/${ventaId}/detalles/codigo`, payload);
-        return response as any;
-    },
-    crearDetallePorSku: async (ventaId: string, sku: string, sucursal_id: string, cantidad = 1): Promise<any> => {
-        return ventaRepository.crearDetallePorCodigo(ventaId, sku, sucursal_id, cantidad);
-    },
-    crearDetalle: async (ventaId: string, detalle: { producto_id: string, cantidad: number }, sucursal_id: string): Promise<any> => {
-        const payload = { variante_id: detalle.producto_id, cantidad: detalle.cantidad, sucursal_id };
-        const response = await api.post(`/ventas/${ventaId}/detalles`, payload);
+        const response = await api.post(`/ventas/${ventaId}/agregar-producto`, payload);
         return response as any;
     },
     eliminarDetalle: async (ventaId: string, detalleId: string, sucursal_id: string): Promise<any> => {

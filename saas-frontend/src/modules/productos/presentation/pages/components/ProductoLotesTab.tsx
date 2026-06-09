@@ -34,20 +34,33 @@ const ProductoLotesTab = ({ productoId }: Props) => {
 
     return (
         <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                <Stack direction="row" alignItems="center" spacing={1}>
+            <Grid container direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                <Grid size={{ xs: 12, md: 'auto' }} sx={{ flexGrow: 1 }}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
                     <InventoryIcon color="action" />
-                    <Typography variant="h6" fontWeight={700}>Control de Lotes</Typography>
-                    <Chip label={`${lotes.length} activos`} size="small" variant="outlined" color="primary" />
-                </Stack>
-                <Button 
+                    <Typography variant="h6" fontWeight={700}>
+                        Control de Lotes
+                    </Typography>
+                    <Chip 
+                        label={`${lotes.length} activos`} 
+                        size="small" 
+                        variant="outlined" 
+                        color="primary" 
+                    />
+                    </Stack>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 'auto' }}>
+                    <Button 
                     variant="contained" 
                     href={`/lotes/crear?producto_id=${productoId}`}
                     startIcon={<AddIcon />}
-                >
+                    
+                    >
                     Agregar lote
-                </Button>
-            </Stack>
+                    </Button>
+                </Grid>
+            </Grid>
 
             {lotes.length === 0 ? (
                 <Card variant="outlined" sx={{ borderStyle: 'dashed', textAlign: 'center', py: 6, bgcolor: 'background.default' }}>

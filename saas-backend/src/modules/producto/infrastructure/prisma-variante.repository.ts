@@ -131,6 +131,9 @@ export class PrismaVarianteRepository implements VarianteRepository {
             });
 
             if (!found) return null;
+            // calcular stock_total para la variante consultada
+            const agg = await this.prisma.lote.aggregate({ where: { variante_id: found.id, activo: true }, _sum: { cantidad_actual: true } });
+            (found as any).stock_total = (agg._sum.cantidad_actual ?? 0) as number;
             return this.mapToDetalle(found);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
@@ -156,6 +159,8 @@ export class PrismaVarianteRepository implements VarianteRepository {
             });
 
             if (!found) return null;
+            const agg = await this.prisma.lote.aggregate({ where: { variante_id: found.id, activo: true }, _sum: { cantidad_actual: true } });
+            (found as any).stock_total = (agg._sum.cantidad_actual ?? 0) as number;
             return this.mapToDetalle(found);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
@@ -184,6 +189,49 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 const grupos = await this.prisma.lote.groupBy({
                     by: ['variante_id'],
                     where: { variante_id: { in: varianteIds }, activo: true },
+                    _sum: { cantidad_actual: true }
+                });
+
+                const sumaPorVariante: Record<string, number> = {};
+                for (const g of grupos) {
+                    sumaPorVariante[g.variante_id] = (g._sum.cantidad_actual ?? 0) as number;
+                }
+
+                for (const det of detalles) {
+                    det.stock_total = sumaPorVariante[det.id] ?? 0;
+                }
+            }
+
+            return detalles;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async listarPorNegocio(negocio_id: string, sucursal_id?: string): Promise<VarianteDetalle[]> {
+        try {
+            const variantes = await this.prisma.varianteProducto.findMany({
+                where: {
+                    activo: true,
+                    producto: { negocio_id }
+                },
+                include: {
+                    producto: { select: { id: true, nombre: true } },
+                    valores: { include: { atributo: true } }
+                },
+                orderBy: { created_at: 'desc' }
+            });
+
+            const detalles = variantes.map(this.mapToDetalle);
+            const varianteIds = variantes.map(v => v.id);
+
+            if (varianteIds.length > 0) {
+                const donde: any = { variante_id: { in: varianteIds }, activo: true };
+                if (sucursal_id) donde.sucursal_id = sucursal_id;
+
+                const grupos = await this.prisma.lote.groupBy({
+                    by: ['variante_id'],
+                    where: donde,
                     _sum: { cantidad_actual: true }
                 });
 
