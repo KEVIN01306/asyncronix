@@ -79,8 +79,8 @@ export class ProductoController extends BaseController {
     listarVariantes = async (req: Request<{ producto_id: string }>, res: Response, next: NextFunction) => {
         try {
             const { producto_id } = req.params;
-            const { negocio_id } = this.obtenerEntorno(res);
-            const variantes = await this.listarVariantesProductoUseCase.execute(producto_id, negocio_id);
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const variantes = await this.listarVariantesProductoUseCase.execute(producto_id, negocio_id, sucursal_id);
             res.status(200).json(Respuesta.exito('Variantes obtenidas con exito', variantes));
         } catch (error) {
             next(error);

@@ -167,7 +167,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
         }
     }
 
-    async listarPorProducto(producto_id: string, negocio_id: string): Promise<VarianteDetalle[]> {
+    async listarPorProducto(producto_id: string, negocio_id: string, sucursal_id: string): Promise<VarianteDetalle[]> {
         try {
             const variantes = await this.prisma.varianteProducto.findMany({
                 where: {
@@ -188,7 +188,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
             if (varianteIds.length > 0) {
                 const grupos = await this.prisma.lote.groupBy({
                     by: ['variante_id'],
-                    where: { variante_id: { in: varianteIds }, activo: true },
+                    where: { variante_id: { in: varianteIds }, activo: true, sucursal_id },
                     _sum: { cantidad_actual: true }
                 });
 

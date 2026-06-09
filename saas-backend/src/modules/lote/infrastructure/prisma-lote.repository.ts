@@ -59,12 +59,12 @@ export class PrismaLoteRepository implements LoteRepository {
         }
     }
 
-    async listar(negocio_id: string, pagination: { page: number, perPage: number }): Promise<any> {
+    async listar(negocio_id: string, sucursal_id: string, pagination: { page: number, perPage: number }): Promise<any> {
         try {
             const { page, perPage } = pagination;
             const offset = (page - 1) * perPage;
 
-            const where = { negocio_id, activo: true };
+            const where = { negocio_id, activo: true, sucursal_id };
 
             const [total, data] = await Promise.all([
                 this.prisma.lote.count({ where }),

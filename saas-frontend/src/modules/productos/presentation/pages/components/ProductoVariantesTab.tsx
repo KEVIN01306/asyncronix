@@ -329,7 +329,7 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                                                 component="img"
                                                 src={`${import.meta.env.VITE_API_URL }/${variant.url_imagen}`}
                                                 alt={variant.sku ?? 'Variante'}
-                                                sx={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}
+                                                sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}
                                             />
                                         ) : (
                                             <Box sx={{ width: '100%', height: 180, borderRadius: 2, border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>

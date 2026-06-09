@@ -208,14 +208,18 @@ export class PrismaProductoRepository implements ProductoRepository {
 
     async eliminar(id: string, negocio_id: string): Promise<void> {
         try {
-            const result = await this.prisma.producto.updateMany({
-                where: { id, negocio_id },
-                data: {
-                    activo: false
-                }
-            });
+            const [productResult] = await this.prisma.$transaction([
+                this.prisma.producto.updateMany({
+                    where: { id, negocio_id },
+                    data: { activo: false }
+                }),
+                this.prisma.varianteProducto.updateMany({
+                    where: { producto_id: id, activo: true },
+                    data: { activo: false }
+                })
+            ]);
 
-            if (result.count === 0) throw new Error('Producto no encontrado');
+            if (productResult.count === 0) throw new Error('Producto no encontrado');
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

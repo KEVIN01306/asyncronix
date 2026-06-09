@@ -40,10 +40,10 @@ export class LoteController extends BaseController {
 
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
-            const { negocio_id } = this.obtenerEntorno(res);
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
             const { limit, offset } = res.locals.query;
             const page = Math.floor(offset / limit) + 1;
-            const { total, data } = await this.listarLotesUseCase.execute(negocio_id, { page, perPage: limit });
+            const { total, data } = await this.listarLotesUseCase.execute(negocio_id, sucursal_id, { page, perPage: limit });
             res.status(200).json(Respuesta.paginacion('Lotes obtenidos con exito', data, total, limit, offset));
         } catch (error) {
             next(error);
