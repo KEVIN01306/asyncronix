@@ -2,7 +2,7 @@ import { z } from "zod";
 import { EstadoVenta, MetodoPago } from "@prisma/client";
 
 const productoInputSchema = z.object({
-    producto_id: z.string().min(1, "El id del producto es obligatorio"),
+    variante_id: z.string().min(1, "El id de la variante es obligatorio"),
     cantidad: z.number().int().positive("La cantidad debe ser mayor a 0")
 });
 
@@ -22,8 +22,18 @@ export const ventaActualizarSchema = z.object({
     productos: z.array(productoInputSchema).optional()
 });
 
-export const buscarSkuSchema = z.object({
-    sku: z.string().min(1, "El SKU es obligatorio")
+export const buscarScannerSchema = z.object({
+    q: z.string().min(1, "El valor de búsqueda es obligatorio").optional(),
+    sku: z.string().min(1, "El valor de búsqueda es obligatorio").optional()
+}).refine((data) => !!data.q || !!data.sku, {
+    message: "El valor de búsqueda es obligatorio",
+    path: ['q']
+}).transform((data) => ({ q: data.q ?? data.sku! }));
+
+export const ventaDetalleCodigoSchema = z.object({
+    sucursal_id: z.string().uuid("Sucursal inválida"),
+    codigo: z.string().min(1, "El código es obligatorio"),
+    cantidad: z.number().int().positive("La cantidad debe ser mayor a 0").optional().default(1)
 });
 
 export const ventaDetalleSkuSchema = z.object({

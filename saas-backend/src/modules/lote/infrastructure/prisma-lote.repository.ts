@@ -12,13 +12,26 @@ export class PrismaLoteRepository implements LoteRepository {
 
     async registrar(lote: LoteCrear, negocio_id: string): Promise<LoteDetalle> {
         try {
+            const fecha_vencimiento = lote.fecha_vencimiento
+                ? new Date(lote.fecha_vencimiento)
+                : null;
+
+            const createPayload: any = {
+                ...lote,
+                negocio_id,
+                codigo_lote: lote.codigo_lote!,
+            };
+
+            if (fecha_vencimiento && !Number.isNaN(fecha_vencimiento.getTime())) {
+                createPayload.fecha_vencimiento = fecha_vencimiento;
+            } else {
+                delete createPayload.fecha_vencimiento;
+            }
+
             const created = await this.prisma.lote.create({
-                data: {
-                    ...lote,
-                    negocio_id,
-                },
+                data: createPayload,
                 include: {
-                    producto: { select: { id: true, nombre: true } },
+                    variante: { select: { id: true, sku: true, producto_id: true, producto: { select: { id: true, nombre: true } } } },
                     sucursal: { select: { id: true, nombre: true } },
                 },
             });
@@ -35,7 +48,7 @@ export class PrismaLoteRepository implements LoteRepository {
             const found = await this.prisma.lote.findFirst({
                 where: { id, negocio_id },
                 include: {
-                    producto: { select: { id: true, nombre: true } },
+                    variante: { select: { id: true, sku: true, producto_id: true, producto: { select: { id: true, nombre: true } } } },
                     sucursal: { select: { id: true, nombre: true } },
                 },
             });
@@ -48,23 +61,69 @@ export class PrismaLoteRepository implements LoteRepository {
 
     async listar(negocio_id: string, pagination: { page: number, perPage: number }): Promise<any> {
         try {
-            const [data, total] = await Promise.all([
+            const { page, perPage } = pagination;
+            const offset = (page - 1) * perPage;
+
+            const where = { negocio_id, activo: true };
+
+            const [total, data] = await Promise.all([
+                this.prisma.lote.count({ where }),
                 this.prisma.lote.findMany({
-                    where: { negocio_id, activo: true },
+                    where,
                     orderBy: { fecha_ingreso: 'desc' },
-                    skip: (pagination.page - 1) * pagination.perPage,
-                    take: pagination.perPage,
+                    skip: offset,
+                    take: perPage,
                     include: {
-                        producto: { select: { id: true, nombre: true } },
+                        variante: { select: { id: true, sku: true, producto_id: true, producto: { select: { id: true, nombre: true } } } },
                         sucursal: { select: { id: true, nombre: true } },
                     },
-                }),
-                this.prisma.lote.count({ where: { negocio_id, activo: true } })
+                })
             ]);
 
             return {
                 total,
-                data: data.map((d: any) => LoteMapper.mapDetalle(d))
+                data: data.map((d: any) => LoteMapper.mapDetalle(d)),
+                page,
+                perPage
+            };
+        } catch (error: any) {
+            if (error instanceof PersistenceError) throw error;
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async listarPorVariante(variante_id: string, negocio_id: string, pagination: { page: number, perPage: number }, sucursal_id?: string): Promise<any> {
+        try {
+            const { page, perPage } = pagination;
+            const offset = (page - 1) * perPage;
+            const where: any = { negocio_id, activo: true };
+
+            if (sucursal_id) where.sucursal_id = sucursal_id;
+            if (variante_id) where.variante_id = variante_id;
+
+            const [total, data] = await Promise.all([
+                this.prisma.lote.count({ where }),
+                this.prisma.lote.findMany({
+                    where,
+                    orderBy: { fecha_ingreso: 'asc' },
+                    skip: offset,
+                    take: perPage,
+                    include: {
+                        variante: { select: { id: true, sku: true, producto_id: true, producto: { select: { id: true, nombre: true } } } },
+                        sucursal: { select: { id: true, nombre: true } },
+                    },
+                })
+            ]);
+
+            const mappedData = data.map((d: any) => LoteMapper.mapDetalle(d));
+            const stock = mappedData.reduce((sum, lote) => sum + (lote.cantidad_actual ?? 0), 0);
+
+            return {
+                total,
+                data: mappedData,
+                stock,
+                page,
+                perPage
             };
         } catch (error: any) {
             if (error instanceof PersistenceError) throw error;
@@ -74,22 +133,28 @@ export class PrismaLoteRepository implements LoteRepository {
 
     async listarPorProducto(producto_id: string, negocio_id: string, pagination: { page: number, perPage: number }, sucursal_id?: string): Promise<any> {
         try {
-            const where: any = { producto_id, negocio_id, activo: true };
+            const { page, perPage } = pagination;
+            const offset = (page - 1) * perPage;
+            const where: any = {
+                negocio_id,
+                activo: true,
+                variante: { producto_id },
+            };
+
             if (sucursal_id) where.sucursal_id = sucursal_id;
 
-            const [data, total] = await Promise.all([
+            const [total, data] = await Promise.all([
+                this.prisma.lote.count({ where }),
                 this.prisma.lote.findMany({
                     where,
-                    // FIFO: consumir lotes por fecha de ingreso ascendente (más antiguos primero)
                     orderBy: { fecha_ingreso: 'asc' },
-                    skip: (pagination.page - 1) * pagination.perPage,
-                    take: pagination.perPage,
+                    skip: offset,
+                    take: perPage,
                     include: {
-                        producto: { select: { id: true, nombre: true } },
+                        variante: { select: { id: true, sku: true, producto_id: true, producto: { select: { id: true, nombre: true } } } },
                         sucursal: { select: { id: true, nombre: true } },
                     },
-                }),
-                this.prisma.lote.count({ where })
+                })
             ]);
 
             return {

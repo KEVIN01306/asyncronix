@@ -6,9 +6,9 @@ import type { Pagination } from "@shared/domain/pagination.js";
 export class ObtenerLotesUseCase {
     constructor(private readonly repository: LoteRepository) { }
 
-    async execute(producto_id: string, negocio_id: string, pagination: Pagination): Promise<{ total: number; data: LoteDetalle[] }> {
+    async execute(variante_id: string, negocio_id: string, pagination: Pagination, sucursal_id?: string): Promise<{ total: number; data: LoteDetalle[]; stock?: number }> {
         try {
-            const result = await this.repository.listarPorProducto(producto_id, negocio_id, pagination);
+            const result = await this.repository.listarPorVariante(variante_id, negocio_id, pagination, sucursal_id);
             return result;
         } catch (error) {
             throw error;

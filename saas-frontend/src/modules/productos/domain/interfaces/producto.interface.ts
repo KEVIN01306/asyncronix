@@ -5,6 +5,27 @@ export interface ProductoCategoria {
     categoria: string;
 }
 
+export interface VarianteValor {
+    id: string;
+    atributo_id: string;
+    valor: string;
+    atributo?: {
+        id: string;
+        nombre: string;
+    };
+}
+
+export interface Variante {
+    id: string;
+    url_imagen?: string;
+    sku?: string;
+    codigo_barras?: string | null;
+    qr_codigo?: string | null;
+    precio_sugerido?: number;
+    stock_total?: number;
+    valores?: VarianteValor[];
+}
+
 export interface Producto {
     id: string;
     categoria_id: string;
@@ -17,6 +38,7 @@ export interface Producto {
     qr_imagen?: string | null;
     activo: boolean;
     categoria: ProductoCategoria | null;
+    variantes?: Variante[];
 }
 
 export type ProductoDetailResponse = ApiResponse<Producto>;

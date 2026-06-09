@@ -87,7 +87,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                     tipo_servicio: { include: { opciones: { include: { opcion_servicio: true } } } },
                     mecanico: { select: { id: true, nombre: true, apellido: true, email: true } },
                     ServicioRepuestoCliente: true,
-                    repuestos: { include: { lote: { include: { producto: true } } } }
+                    repuestos: { include: { lote: { include: { variante: { include: { producto: true } } } } } }
                 }
             });
             if (!record) return null;
@@ -569,12 +569,13 @@ export class PrismaServicioRepository implements ServicioRepository {
             const created = await this.db.servicioRepuesto.create({
                 data: {
                     servicio_id,
+                    variante_id: detalle.variante_id ?? undefined,
                     lote_id: detalle.lote_id ?? undefined,
                     cantidad: detalle.cantidad,
                     precio_venta: detalle.precio_venta,
                     costo: detalle.costo_unitario ?? undefined
                 },
-                include: { lote: { include: { producto: true } } }
+                include: { lote: { include: { variante: { include: { producto: true } } } } }
             });
 
             // Recalculate total for servicio based on repuestos
@@ -606,7 +607,7 @@ export class PrismaServicioRepository implements ServicioRepository {
                     const actual = loteRecord.cantidad_actual ?? 0;
                     if (actual < d.cantidad) throw new Error('INSUFICIENTE_STOCK');
 
-                    const c = await tx.servicioRepuesto.create({ data: { servicio_id, lote_id: d.lote_id, cantidad: d.cantidad, precio_venta: d.precio_venta, costo: d.costo_unitario }, include: { lote: { include: { producto: true } } } });
+                    const c = await tx.servicioRepuesto.create({ data: { servicio_id, variante_id: d.variante_id ?? undefined, lote_id: d.lote_id, cantidad: d.cantidad, precio_venta: d.precio_venta, costo: d.costo_unitario }, include: { lote: { include: { variante: { include: { producto: true } } } } } });
                     created.push(c);
                 }
 

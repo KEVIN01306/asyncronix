@@ -38,7 +38,7 @@ export class VentaMapper {
             ...this.mapSimple(venta),
             detalles: (venta.detalles ?? []).map((d: any) => ({
                 id: d.id,
-                producto_id: d.lote?.producto_id ?? null,
+                variante_id: d.variante_id ?? d.lote?.variante_id ?? null,
                 lote_id: d.lote_id,
                 descripcion: d.descripcion,
                 cantidad: d.cantidad,

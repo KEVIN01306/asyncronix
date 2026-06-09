@@ -31,6 +31,7 @@ import { ServicioController } from './presentation/servicio.controller.js';
 import { enviarNotificacionUseCase } from '../notificacion/notificacion.module.js';
 import { PrismaLoteRepository } from '../lote/infrastructure/prisma-lote.repository.js';
 import { PrismaProductoRepository } from '../producto/infrastructure/prisma-producto.repository.js';
+import { PrismaVarianteRepository } from '../producto/infrastructure/prisma-variante.repository.js';
 
 const repository = new PrismaServicioRepository(prisma as any);
 const obtenerServiciosUseCase = new ObtenerServiciosUseCase(repository);
@@ -59,7 +60,8 @@ const registrarRepuestoClienteUseCase = new RegistrarRepuestoClienteUseCase(repo
 const eliminarRepuestoClienteUseCase = new EliminarRepuestoClienteUseCase(repository);
 const loteRepository = new PrismaLoteRepository(prisma as any);
 const productoRepository = new PrismaProductoRepository(prisma as any);
-const crearServicioRepuestoUseCase = new CrearServicioRepuestoUseCase(repository, loteRepository, productoRepository);
+const varianteRepository = new PrismaVarianteRepository(prisma as any);
+const crearServicioRepuestoUseCase = new CrearServicioRepuestoUseCase(repository, loteRepository, varianteRepository);
 const eliminarServicioRepuestoUseCase = new EliminarServicioRepuestoUseCase(repository);
 const actualizarObservacionesServicioUseCase = new ActualizarObservacionesServicioUseCase(repository);
 

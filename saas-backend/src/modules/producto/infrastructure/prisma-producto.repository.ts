@@ -10,10 +10,24 @@ import { ProductoMapper } from "./mappers/producto.mapper.js";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
 import type { Pagination } from "@shared/domain/pagination.js";
 import type { Paginated } from "@shared/domain/paginated.js";
+import { GenerarSku } from "../domain/actions/generarSku.action.js";
 
 export class PrismaProductoRepository implements ProductoRepository {
-    private readonly include = {
-        categoria: true
+    private readonly includeList = {
+        categoria: true,
+        variantes: {
+            where: { activo: true },
+            take: 1,
+            orderBy: { created_at: 'desc' as const }
+        }
+    };
+
+    private readonly includeDetail = {
+        categoria: true,
+        variantes: {
+            where: { activo: true },
+            orderBy: { created_at: 'desc' as const }
+        }
     };
 
     constructor(private readonly prisma: PrismaClient) { }
@@ -21,7 +35,7 @@ export class PrismaProductoRepository implements ProductoRepository {
     async obtener(id: string, negocio_id: string): Promise<ProductoDetalle | null> {
         const producto = await this.prisma.producto.findFirst({
             where: { id, negocio_id, activo: true },
-            include: this.include
+            include: this.includeDetail
         });
 
         if (!producto) return null;
@@ -33,8 +47,8 @@ export class PrismaProductoRepository implements ProductoRepository {
         const { page, perPage } = pagination;
         const offset = (page - 1) * perPage;
 
-            const where: any = { negocio_id, activo: true };
-            if (categoria_id) where.categoria_id = categoria_id;
+        const where: any = { negocio_id, activo: true };
+        if (categoria_id) where.categoria_id = categoria_id;
 
         const [total, productos] = await Promise.all([
             this.prisma.producto.count({ where }),
@@ -42,7 +56,7 @@ export class PrismaProductoRepository implements ProductoRepository {
                 where,
                 take: perPage,
                 skip: offset,
-                include: this.include,
+                include: this.includeList,
                 orderBy: { nombre: 'asc' }
             })
         ]);
@@ -57,15 +71,46 @@ export class PrismaProductoRepository implements ProductoRepository {
 
     async registrar(producto: ProductoCrear, negocio_id: string): Promise<ProductoDetalle> {
         try {
-            const nuevoProducto = await this.prisma.producto.create({
+            const { sku: _sku, precio_sugerido: _precio_sugerido, ...productoData } = producto as any;
+
+            const createdProduct = await this.prisma.producto.create({
                 data: {
-                    ...producto,
+                    ...productoData,
                     negocio_id,
                     activo: true,
-                    url_imagen: producto.url_imagen ?? ''
+                    url_imagen: productoData.url_imagen ?? ''
                 },
-                include: this.include
+                include: {
+                    categoria: true,
+                    negocio: true
+                }
             });
+
+            const sku = GenerarSku.ejecutar({
+                negocioCodigo: createdProduct.negocio.slug,
+                categoriaCodigo: createdProduct.categoria?.codigo ?? createdProduct.categoria?.categoria ?? '',
+                productoCodigo: createdProduct.codigo?.trim() || createdProduct.nombre
+            });
+
+            await this.prisma.varianteProducto.create({
+                data: {
+                    producto_id: createdProduct.id,
+                    sku,
+                    codigo_barras: null,
+                    qr_codigo: null,
+                    precio_sugerido: 0,
+                    stock_total: 0,
+                    activo: true,
+                    url_imagen: createdProduct.url_imagen
+                }
+            });
+
+            const nuevoProducto = await this.prisma.producto.findFirst({
+                where: { id: createdProduct.id, negocio_id },
+                include: this.includeDetail
+            });
+
+            if (!nuevoProducto) throw new Error('Producto no encontrado');
 
             return ProductoMapper.mapDetalle(nuevoProducto as any);
         } catch (error) {
@@ -75,28 +120,21 @@ export class PrismaProductoRepository implements ProductoRepository {
 
     async actualizar(id: string, producto: ProductoActualizar, negocio_id: string): Promise<ProductoDetalle> {
         try {
-            const productoActualizado = await this.prisma.producto.update({
-                where: { id },
-                data: producto,
-                include: this.include
+            const { sku: _sku, precio_sugerido: _precio_sugerido, ...productoData } = producto as any;
+
+            const result = await this.prisma.producto.updateMany({
+                where: { id, negocio_id },
+                data: productoData
             });
 
-            return ProductoMapper.mapDetalle(productoActualizado as any);
-        } catch (error) {
-            throw PrismaErrorMapper.map(error);
-        }
-    }
+            if (result.count === 0) throw new Error('Producto no encontrado');
 
-
-    async actualizarSku(id: string, negocio_id: string, newSku: string): Promise<ProductoDetalle> {
-        try {
-            const productoActualizado = await this.prisma.producto.update({
-                where: { id },
-                data: {
-                    sku: newSku
-                },
-                include: this.include
+            const productoActualizado = await this.prisma.producto.findFirst({
+                where: { id, negocio_id },
+                include: this.includeDetail
             });
+
+            if (!productoActualizado) throw new Error('Producto no encontrado');
 
             return ProductoMapper.mapDetalle(productoActualizado as any);
         } catch (error) {
@@ -106,25 +144,17 @@ export class PrismaProductoRepository implements ProductoRepository {
 
     async eliminar(id: string, negocio_id: string): Promise<void> {
         try {
-            await this.prisma.producto.update({
-                where: { id },
+            const result = await this.prisma.producto.updateMany({
+                where: { id, negocio_id },
                 data: {
                     activo: false
                 }
             });
+
+            if (result.count === 0) throw new Error('Producto no encontrado');
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
-    }
-
-    async obtenerPorSku(sku: string, negocio_id: string): Promise<ProductoDetalle | null> {
-        const producto = await this.prisma.producto.findFirst({
-            where: { sku, negocio_id, activo: true },
-            include: this.include
-        });
-
-        if (!producto) return null;
-        return ProductoMapper.mapDetalle(producto as any);
     }
 
     async registrarImagen(producto_id: string, url_imagen: string, negocio_id: string): Promise<ProductoDetalle> {
@@ -135,31 +165,19 @@ export class PrismaProductoRepository implements ProductoRepository {
 
             if (!existing) throw new Error('Producto no encontrado');
 
-            const productoActualizado = await this.prisma.producto.update({
-                where: { id: producto_id },
-                data: { url_imagen },
-                include: this.include
+            const result = await this.prisma.producto.updateMany({
+                where: { id: producto_id, negocio_id },
+                data: { url_imagen }
             });
 
-            return ProductoMapper.mapDetalle(productoActualizado as any);
-        } catch (error) {
-            throw PrismaErrorMapper.map(error);
-        }
-    }
+            if (result.count === 0) throw new Error('Producto no encontrado');
 
-    async actualizarQrImagen(producto_id: string, qr_imagen: string, negocio_id: string): Promise<ProductoDetalle> {
-        try {
-            const existing = await this.prisma.producto.findFirst({
-                where: { id: producto_id, negocio_id }
+            const productoActualizado = await this.prisma.producto.findFirst({
+                where: { id: producto_id, negocio_id },
+                include: this.includeDetail
             });
 
-            if (!existing) throw new Error('Producto no encontrado');
-
-            const productoActualizado = await this.prisma.producto.update({
-                where: { id: producto_id },
-                data: { qr_imagen },
-                include: this.include
-            });
+            if (!productoActualizado) throw new Error('Producto no encontrado');
 
             return ProductoMapper.mapDetalle(productoActualizado as any);
         } catch (error) {

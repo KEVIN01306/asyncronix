@@ -100,8 +100,19 @@ const permisosData = [
     { codigo: "CONFIGURACION_SERVICIOS" },
     { codigo: "SALIDA_SERVICIOS" },
     { codigo: "PROGRESO_SERVICIOS" },
-    { codigo: "EDITAR_SERVICIOS_REPUESTOS" }
+    { codigo: "EDITAR_SERVICIOS_REPUESTOS" },
 
+    { codigo: "VER_PROVEEDORES" },
+    { codigo: "VER_PROVEEDORES_DETALLE" },
+    { codigo: "CREAR_PROVEEDORES" },
+    { codigo: "EDITAR_PROVEEDORES" },
+    { codigo: "ELIMINAR_PROVEEDORES" },
+
+    { codigo: "VER_ATRIBUTOS" },
+    { codigo: "VER_ATRIBUTOS_DETALLE" },
+    { codigo: "CREAR_ATRIBUTOS" },
+    { codigo: "EDITAR_ATRIBUTOS" },
+    { codigo: "ELIMINAR_ATRIBUTOS" }
 ];
 
 const modulosConPermisos = [
@@ -119,7 +130,7 @@ const modulosConPermisos = [
     },
     {
         nombre: "NEGOCIOS",
-        permisos: ["VER_NEGOCIOS", "VER_NEGOCIOS_DETALLE", "CREAR_NEGOCIOS", "EDITAR_NEGOCIOS"]
+        permisos: [/*"VER_NEGOCIOS", "VER_NEGOCIOS_DETALLE",*/ "VER_NEGOCIOS_DETALLE_ME",/* "CREAR_NEGOCIOS",*/ "EDITAR_NEGOCIOS"]
     },
     {
         nombre: "PERMISOS",
@@ -184,11 +195,19 @@ const modulosConPermisos = [
     {
         nombre: "SERVICIOS",
         permisos: ["VER_SERVICIOS", "VER_SERVICIOS_DETALLE", "CREAR_SERVICIOS", "EDITAR_SERVICIOS", "ELIMINAR_SERVICIOS", "ADMIN_SERVICIOS", "EDITAR_SERVICIOS_REPUESTOS", "SALIDA_SERVICIOS", "PROGRESO_SERVICIOS", "CONFIGURACION_SERVICIOS"]
+    },
+    {
+        nombre: "PROVEEDORES",
+        permisos: ["VER_PROVEEDORES", "VER_PROVEEDORES_DETALLE", "CREAR_PROVEEDORES", "EDITAR_PROVEEDORES", "ELIMINAR_PROVEEDORES"]
+    },
+    {
+        nombre: "ATRIBUTOS",
+        permisos: ["VER_ATRIBUTOS", "VER_ATRIBUTOS_DETALLE", "CREAR_ATRIBUTOS", "EDITAR_ATRIBUTOS", "ELIMINAR_ATRIBUTOS"]
     }
 ];
-
 async function main() {
 
+    // 1. Asegurar la creación de módulos y sus permisos
     for (const m of modulosConPermisos) {
         await prisma.modulo.upsert({
             where: { nombre: m.nombre },
@@ -209,8 +228,37 @@ async function main() {
         });
     }
 
+    // 2. CORRECCIÓN: wa_id idénticos en where y create
+    const whatsappId = "50230108703"; // Asegúrate de que este valor sea único para evitar conflictos en el upsert
+
     const negocio = await prisma.negocio.upsert({
-        where: { wa_id: "50243850410" },
+        where: { wa_id: whatsappId }, 
+        update: {
+            permisos: {
+                connect: permisosData.map(p => ({ codigo: p.codigo }))
+            },
+            modulos: {
+                connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
+            }
+        },
+        create: {
+            nombre: "asyncronix",
+            nombre_comercial: "ASYNCRONIX",
+            slug: "asyncronix",
+            wa_id: whatsappId, // Mismo valor que el where
+            nit_rut: "388577959",
+            slogan: "Todos juntos podemos",
+            permisos: {
+                connect: permisosData.map(p => ({ codigo: p.codigo }))
+            },
+            modulos: {
+                connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
+            }
+        }
+    });
+    /*
+    const negocio = await prisma.negocio.upsert({
+        where: { wa_id: whatsappId }, 
         update: {
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))
@@ -223,7 +271,7 @@ async function main() {
             nombre: "MOTOSERVICIO VM",
             nombre_comercial: "MOTOSERVICIO VELASQUEZ MONZON",
             slug: "motoservicio-vm",
-            wa_id: "50243850410",
+            wa_id: whatsappId, // Mismo valor que el where
             nit_rut: "388577951",
             slogan: "Todos juntos podemos",
             permisos: {
@@ -233,7 +281,7 @@ async function main() {
                 connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
             }
         }
-    });
+    });*/
 
     const rolAdmin = await prisma.rol.upsert({
         where: {
@@ -256,8 +304,32 @@ async function main() {
             }
         }
     });
-    /*
+    
     const passwordHash = await hashProvider.hash("12345678");
+
+    const usuarioAdmin = await prisma.usuario.upsert({
+        where: { 
+            negocio_id_email: { 
+                negocio_id: negocio.id, 
+                email: "kevin@gmail.com" 
+            } 
+        },
+        update: {},
+        create: {
+            nombre: "Kevin Eduardo",
+            email: "kevin@gmail.com",
+            telefono: "30108703",
+            dpi: "3885779590101",
+            password_hash: passwordHash,
+            activo: true,
+            verificado: false,
+            negocio_id: negocio.id,
+            roles: {
+                connect: [{ id: rolAdmin.id }]
+            }
+        },
+    });
+    /*
     const usuarioAdmin = await prisma.usuario.upsert({
         where: { 
             negocio_id_email: { 
@@ -279,10 +351,9 @@ async function main() {
                 connect: [{ id: rolAdmin.id }]
             }
         },
-    });
+    });*/
 
-    */
-
+    console.log("¡Seed ejecutado con éxito!");
 }
 
 main()
@@ -290,5 +361,7 @@ main()
         await prisma.$disconnect();
     })
     .catch(async (e) => {
+        console.error("❌ Error durante la ejecución del seed:", e); // IMPRESCINDIBLE para ver qué falla
         await prisma.$disconnect();
+        //process.exit(1);
     });

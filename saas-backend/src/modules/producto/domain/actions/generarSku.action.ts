@@ -1,23 +1,35 @@
 
 
 interface GenerarSkuParams {
-    negocioId: string;
-    categoriaId: string;
-    productoId: string;
-    inicio: string;
+    negocioCodigo?: string;
+    categoriaCodigo: string;
+    productoCodigo: string;
+    valores?: string[];
 }
 
 export class GenerarSku {
 
     public static ejecutar(params: GenerarSkuParams): string {
-        const extraerBloqueUnico = (uuid: string): string => {
-            return uuid.slice(-12).toUpperCase();
+        const normalizar = (valor: string): string => {
+            return valor
+                .trim()
+                .toUpperCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^A-Z0-9-]/g, '');
         };
 
-        const segmentoNegocio = extraerBloqueUnico(params.negocioId).substring(0, 4);
-        const segmentoCategoria = extraerBloqueUnico(params.categoriaId).substring(0, 4);
-        const segmentoProducto = extraerBloqueUnico(params.productoId);
+        const obtenerPrefijoNegocio = (codigo?: string): string => {
+            const normalizado = normalizar(codigo ?? 'ASC');
+            return normalizado.substring(0, 3) || 'ASC';
+        };
 
-        return `${params.inicio}-${segmentoNegocio}-${segmentoCategoria}-${segmentoProducto}`;
+        const segmentoNegocio = obtenerPrefijoNegocio(params.negocioCodigo);
+        const segmentoCategoria = normalizar(params.categoriaCodigo).substring(0, 4) || 'CAT';
+        const segmentoProducto = normalizar(params.productoCodigo) || 'PROD';
+        const segmentoValores = (params.valores ?? [])
+            .map(normalizar)
+            .filter(Boolean);
+
+        return [segmentoNegocio, segmentoCategoria, segmentoProducto, ...segmentoValores].join('-');
     }
 }

@@ -3,7 +3,7 @@ import type { EstadoVenta, MetodoPago } from "@prisma/client";
 export type { MetodoPago };
 
 export interface VentaProductoInput {
-    producto_id: string;
+    variante_id: string;
     cantidad: number;
 }
 
@@ -29,7 +29,7 @@ export interface VentaActualizar {
 
 export interface VentaDetalleSimple {
     id: string;
-    producto_id?: string | null;
+    variante_id?: string | null;
     lote_id: string | null;
     descripcion: string;
     cantidad: number;

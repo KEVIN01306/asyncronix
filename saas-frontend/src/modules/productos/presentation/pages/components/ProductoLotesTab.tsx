@@ -18,9 +18,11 @@ const ProductoLotesTab = ({ productoId }: Props) => {
         setLoading(true);
         try {
             const resp = await LoteRepository.listarPorProducto(productoId, 20, 0);
-            setLotes(resp.data);
+            const data = (resp && (resp as any).data) ?? resp;
+            setLotes(Array.isArray(data) ? data as any : []);
         } catch (error) {
             console.error(error);
+            setLotes([]);
         } finally {
             setLoading(false);
         }
@@ -82,7 +84,7 @@ const ProductoLotesTab = ({ productoId }: Props) => {
                                                     CÓDIGO DE LOTE
                                                 </Typography>
                                                 <Typography variant="body1" fontWeight={700} color="text.primary">
-                                                    #{l.id.slice(0, 8).toUpperCase()}
+                                                    #{l.codigo_lote.toUpperCase()}
                                                 </Typography>
                                             </Box>
                                             <Chip 

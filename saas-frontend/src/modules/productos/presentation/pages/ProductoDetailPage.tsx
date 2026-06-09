@@ -15,6 +15,7 @@ import ProductoDetailsPanel from './components/ProductoDetailsPanel';
 import ProductoQrCard from './components/ProductoQrCard';
 import ProductoSummaryCard from './components/ProductoSummaryCard';
 import ProductoLotesTab from './components/ProductoLotesTab';
+import ProductoVariantesTab from './components/ProductoVariantesTab';
 import { Tabs, Tab } from '@mui/material';
 
 const ProductoDetailPage = () => {
@@ -188,6 +189,7 @@ const ProductoDetailPage = () => {
 
             <Tabs value={tab} onChange={(_e, v) => setTab(v)} sx={{ mb: 2 }}>
                 <Tab label="Detalles" />
+                <Tab label="Variantes" />
                 <Tab label="Lotes" />
             </Tabs>
 
@@ -231,6 +233,12 @@ const ProductoDetailPage = () => {
                         </Box>
                     </Grid>
                 </Grid>
+            ) : tab === 1 ? (
+                <Box>
+                    <Paper sx={{ p: 2 }}>
+                        <ProductoVariantesTab productoId={id as string} onRefresh={fetchProducto} />
+                    </Paper>
+                </Box>
             ) : (
                 <Box>
                     <Paper sx={{ p: 2 }}>

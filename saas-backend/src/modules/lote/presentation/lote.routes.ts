@@ -27,6 +27,13 @@ routes.get(
 );
 
 routes.get(
+    '/variante/:variante_id',
+    authMiddleware.verificarPermiso(['VER_LOTES']),
+    validarMiddleware.validarQuery(paginacionQuerySchema),
+    loteController.listarPorVariante
+);
+
+routes.get(
     '/producto/:producto_id',
     authMiddleware.verificarPermiso(['VER_LOTES']),
     validarMiddleware.validarQuery(paginacionQuerySchema),

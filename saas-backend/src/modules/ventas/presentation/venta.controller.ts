@@ -107,10 +107,10 @@ export class VentaController extends BaseController {
         try {
             const { ventaId } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
-            const { sucursal_id, producto_id, cantidad } = req.body;
+            const { sucursal_id, variante_id, cantidad } = req.body;
             if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
 
-            const detalle = await this.crearDetalleVentaUseCase.execute(ventaId, producto_id, cantidad, negocio_id, sucursal_id);
+            const detalle = await this.crearDetalleVentaUseCase.execute(ventaId, variante_id, cantidad, negocio_id, sucursal_id);
             res.status(201).json(Respuesta.exito('Detalle creado', detalle));
         } catch (error) {
             next(error);
@@ -120,11 +120,16 @@ export class VentaController extends BaseController {
     buscarPorSku = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res);
-            const { sku } = req.query;
-            if (!sku || typeof sku !== 'string') throw new Error('SKU_REQUERIDO');
+            const value = typeof req.query.q === 'string'
+                ? req.query.q
+                : typeof req.query.sku === 'string'
+                    ? req.query.sku
+                    : '';
 
-            const producto = await this.buscarProductoPorSkuUseCase.execute(sku, negocio_id);
-            res.status(200).json(Respuesta.exito('Producto encontrado', producto));
+            if (!value) throw new Error('VALOR_REQUERIDO');
+
+            const variante = await this.buscarProductoPorSkuUseCase.execute(value, negocio_id);
+            res.status(200).json(Respuesta.exito('Variante encontrada', variante));
         } catch (error) {
             next(error);
         }
@@ -140,6 +145,21 @@ export class VentaController extends BaseController {
 
             const detalle = await this.crearDetalleVentaPorSkuUseCase.execute(ventaId, sku, cantidad, negocio_id, sucursal_id);
             res.status(201).json(Respuesta.exito('Detalle por SKU creado', detalle));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    crearDetallePorCodigo = async (req: Request<{ ventaId: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { ventaId } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { sucursal_id, codigo, cantidad } = req.body;
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+            if (!codigo || typeof codigo !== 'string') throw new Error('CODIGO_REQUERIDO');
+
+            const detalle = await this.crearDetalleVentaPorSkuUseCase.execute(ventaId, codigo, cantidad, negocio_id, sucursal_id);
+            res.status(201).json(Respuesta.exito('Detalle por código creado', detalle));
         } catch (error) {
             next(error);
         }

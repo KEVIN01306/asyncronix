@@ -6,13 +6,13 @@ import { LoteNotFoundPersistenceError } from '../../../shared/database/errors/Lo
 import type { VentaRepository } from "../domain/venta.repository.js";
 import type { VentaCrear, VentaSimple } from "../domain/venta.entity.js";
 import type { LoteRepository } from "../../lote/domain/lote.repository.js";
-import type { ProductoRepository } from "modules/producto/domain/producto.repository.js";
+import type { VarianteRepository } from "modules/producto/domain/variante.repository.js";
 
 export class RegistrarVentaUseCase {
     constructor(
         private readonly ventaRepository: VentaRepository,
         private readonly loteRepository: LoteRepository,
-        private readonly productoRepository: ProductoRepository,        
+        private readonly varianteRepository: VarianteRepository,        
         ) {}
 
     async execute(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string): Promise<VentaSimple> {
@@ -26,19 +26,19 @@ export class RegistrarVentaUseCase {
             let totalCosto = 0;
 
             for (const prodInput of data.productos) {
-                const producto = await this.productoRepository.obtener(prodInput.producto_id, negocio_id);
-                if (!producto) {
-                    throw new AppError(`PRODUCTO_NO_ENCONTRADO_${prodInput.producto_id}`, "PRODUCT_NOT_FOUND", 404);
+                const variante = await this.varianteRepository.obtener(prodInput.variante_id, negocio_id);
+                if (!variante) {
+                    throw new AppError(`VARIANTE_NO_ENCONTRADA_${prodInput.variante_id}`, "VARIANTE_NOT_FOUND", 404);
                 }
 
-                const res = await this.loteRepository.listarPorProducto(prodInput.producto_id, negocio_id, { page: 1, perPage: 1000 }, sucursal_id);
+                const res = await this.loteRepository.listarPorVariante(prodInput.variante_id, negocio_id, { page: 1, perPage: 1000 }, sucursal_id);
                 const lotes = res.data.filter((l: any) => l.activo && (l.cantidad_actual ?? 0) > 0);
                 if (!lotes || lotes.length === 0) {
-                    throw new AppError(`INSUFICIENTE_STOCK_${prodInput.producto_id}`, "INSUFFICIENT_STOCK", 400);
+                    throw new AppError(`INSUFICIENTE_STOCK_${prodInput.variante_id}`, "INSUFFICIENT_STOCK", 400);
                 }
 
                 let restante = prodInput.cantidad;
-                const precioUnitario = producto.precio_sugerido ?? 0;
+                const precioUnitario = variante.precio_sugerido ?? 0;
 
                 for (const lote of lotes) {
                     if (restante <= 0) break;
@@ -50,7 +50,7 @@ export class RegistrarVentaUseCase {
 
                     detallesToPersist.push({
                         lote_id: lote.id,
-                        descripcion: producto.nombre ?? lote.producto?.nombre ?? '',
+                        descripcion: variante.producto?.nombre ?? lote.variante?.producto_nombre ?? variante.sku ?? '',
                         cantidad: take,
                         precio_unitario: precioUnitario,
                         costo_unitario: costoUnitario
@@ -63,7 +63,7 @@ export class RegistrarVentaUseCase {
                 }
 
                 if (restante > 0) {
-                    throw new AppError(`INSUFICIENTE_STOCK_${prodInput.producto_id}`, "INSUFFICIENT_STOCK", 400);
+                    throw new AppError(`INSUFICIENTE_STOCK_${prodInput.variante_id}`, "INSUFFICIENT_STOCK", 400);
                 }
             }
 

@@ -82,11 +82,11 @@ export class ServicioController extends BaseController {
         try {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
-            const { sucursal_id, producto_id, cantidad } = req.body;
+            const { sucursal_id, variante_id, cantidad } = req.body;
             if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
             if (!this.crearServicioRepuestoUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
 
-            const detalle = await this.crearServicioRepuestoUseCase.execute(id, producto_id, cantidad, negocio_id, sucursal_id);
+            const detalle = await this.crearServicioRepuestoUseCase.execute(id, variante_id, cantidad, negocio_id, sucursal_id);
             res.status(201).json(Respuesta.exito('Repuesto creado', detalle));
         } catch (error) {
             next(error);

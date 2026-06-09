@@ -44,6 +44,7 @@ model Permiso {
 model Negocio {
   id                     String    @id @default(uuid()) @db.Char(36)
   nombre                 String
+  codigo                 String?   @db.VarChar(10)
   slug                   String    @unique
   nombre_comercial       String    @db.VarChar(100)
   wa_id                  String    @unique(map: "wa_id") @db.VarChar(20)
@@ -51,8 +52,8 @@ model Negocio {
   logo_url               String?   @db.Text
   slogan                 String?   @db.VarChar(255)
   datos_facturacion_json Json?
-  primary_color            String?   @db.VarChar(7)
-  secondary_color          String?   @db.VarChar(7)
+  primary_color          String?   @db.VarChar(7)
+  secondary_color        String?   @db.VarChar(7)
   instagram_id           String?   @db.VarChar(100)
   facebook_id            String?   @db.VarChar(100)
   activo                 Boolean   @default(true)
@@ -60,23 +61,24 @@ model Negocio {
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
 
-  modulos      Modulo[]
-  permisos     Permiso[]           @relation("NegocioPermisos")
-  sucursales   Sucursal[]
-  usuarios     Usuario[]
-  clientes     Cliente[]
-  roles        Rol[]
-  motos        Vehiculo[]
-  categorias   CategoriaProducto[]
-  productos    Producto[]
-  lotes        Lote[]
-  ventas       Venta[]
-  servicios    Servicio[]
-  citas        Cita[]
-  tipos_serv   TipoServicio[]
+  modulos       Modulo[]
+  permisos      Permiso[]           @relation("NegocioPermisos")
+  sucursales    Sucursal[]
+  usuarios      Usuario[]
+  clientes      Cliente[]
+  roles         Rol[]
+  motos         Vehiculo[]
+  categorias    CategoriaProducto[]
+  productos     Producto[]
+  lotes         Lote[]
+  ventas        Venta[]
+  servicios     Servicio[]
+  citas         Cita[]
+  tipos_serv    TipoServicio[]
   opciones_serv OpcionServicio[]
-  checklist    ChecklistItem[]
-  contabilidad IngresosEgresos[]
+  checklist     ChecklistItem[]
+  contabilidad  IngresosEgresos[]
+  proveedores   Proveedor[]
 
   @@map("negocios")
 }
@@ -105,18 +107,19 @@ model Sucursal {
 }
 
 model Session {
-  id            String   @id @default(uuid()) @db.Char(36)
-  token         String   @unique(map: "token") @db.VarChar(255)
-  fcm_token     String?  @db.VarChar(255)
-  usuario_id    String   @db.Char(36) 
-  fecha_expiracion       DateTime
-  fecha_creacion DateTime @default(now())
-  usuario       Usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid()) @db.Char(36)
+  token            String   @unique(map: "token") @db.VarChar(255)
+  fcm_token        String?  @db.VarChar(255)
+  usuario_id       String   @db.Char(36)
+  fecha_expiracion DateTime
+  fecha_creacion   DateTime @default(now())
+  usuario          Usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
 
-  @@index([usuario_id])
   @@unique([usuario_id])
+  @@index([usuario_id])
   @@map("sessions")
 }
+
 // ==============================================================
 // 2. IDENTIDAD Y ACCESO (IAM)
 // ==============================================================
@@ -138,10 +141,10 @@ model Usuario {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  negocio    Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  negocio  Negocio   @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   sucursal Sucursal? @relation(fields: [sucursal_id], references: [id], onDelete: SetNull)
-  roles      Rol[]      @relation("UsuarioRoles")
-  sessions   Session? 
+  roles    Rol[]     @relation("UsuarioRoles")
+  sessions Session?
 
   // Relaciones inversas corregidas
   servicios_mecanico Servicio[] @relation("ServicioMecanico")
@@ -232,22 +235,22 @@ model Cilindrada {
 }
 
 model Modelo {
-  id            String   @id @default(uuid()) @db.Char(36)
-  modelo        String   @unique
-  anio          Int
-  marca_id      String   @db.Char(36)
-  linea_id      String   @db.Char(36)
-  cilindrada_id String   @db.Char(36)
-  vehiculo_tipo_id String?   @db.Char(36)
-  activo        Boolean  @default(true)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id               String   @id @default(uuid()) @db.Char(36)
+  modelo           String   @unique
+  anio             Int
+  marca_id         String   @db.Char(36)
+  linea_id         String   @db.Char(36)
+  cilindrada_id    String   @db.Char(36)
+  vehiculo_tipo_id String?  @db.Char(36)
+  activo           Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
-  marca      Marca      @relation(fields: [marca_id], references: [id])
-  linea      Linea      @relation(fields: [linea_id], references: [id])
-  cilindrada Cilindrada @relation(fields: [cilindrada_id], references: [id])
+  marca         Marca         @relation(fields: [marca_id], references: [id])
+  linea         Linea         @relation(fields: [linea_id], references: [id])
+  cilindrada    Cilindrada    @relation(fields: [cilindrada_id], references: [id])
   vehiculo_tipo VehiculoTipo? @relation(fields: [vehiculo_tipo_id], references: [id])
-  vehiculos  Vehiculo[]
+  vehiculos     Vehiculo[]
 
   @@map("modelos")
 }
@@ -257,24 +260,24 @@ model Modelo {
 // ==============================================================
 
 model Vehiculo {
-  id         String   @id @default(uuid()) @db.Char(36)
-  negocio_id String   @db.Char(36)
-  placa      String
-  modelo_id  String   @db.Char(36)
-  avatar_url String?
-  calcomania_url String?
+  id               String   @id @default(uuid()) @db.Char(36)
+  negocio_id       String   @db.Char(36)
+  placa            String
+  modelo_id        String   @db.Char(36)
+  avatar_url       String?
+  calcomania_url   String?
   vehiculo_tipo_id String   @db.Char(36)
-  cliente_id String?  @db.Char(36)
-  activo     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  cliente_id       String?  @db.Char(36)
+  activo           Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
-  negocio   Negocio    @relation(fields: [negocio_id], references: [id])
-  modelo    Modelo     @relation(fields: [modelo_id], references: [id])
-  cliente   Cliente?   @relation(fields: [cliente_id], references: [id])
+  negocio       Negocio      @relation(fields: [negocio_id], references: [id])
+  modelo        Modelo       @relation(fields: [modelo_id], references: [id])
+  cliente       Cliente?     @relation(fields: [cliente_id], references: [id])
   vehiculo_tipo VehiculoTipo @relation(fields: [vehiculo_tipo_id], references: [id])
-  servicios Servicio[]
-  citas     Cita[]
+  servicios     Servicio[]
+  citas         Cita[]
 
   @@unique([negocio_id, placa])
   @@map("vehiculos")
@@ -288,7 +291,7 @@ model VehiculoTipo {
   updated_at DateTime @updatedAt
 
   vehiculos Vehiculo[]
-  modelos Modelo[]
+  modelos   Modelo[]
 
   @@map("vehiculo_tipos")
 }
@@ -322,44 +325,44 @@ model Cita {
 }
 
 model Servicio {
-  id               String         @id @default(uuid()) @db.Char(36)
-  negocio_id       String         @db.Char(36)
-  sucursal_id      String         @db.Char(36)
-  vehiculo_id      String         @db.Char(36)
-  mecanico_id      String?         @db.Char(36)
-  cliente_id       String?        @db.Char(36)
-  tipo_servicio_id String?         @db.Char(36)
-  descripcion      String?         @db.Text
-  diagnostico      String?        @db.Text
-  observaciones    String?        @db.Text
-  kilometraje      Int?
-  kilometraje_proximo      Int?
-  firma_entrada    String?        @db.Text
-  firma_salida     String?        @db.Text
-  fecha_entrada    DateTime       @default(now())
-  fecha_salida     DateTime?
-  total            Float          @default(0)
-  documento_extra  String?        @db.VarChar(20)
-  nombre_extra     String?        @db.VarChar(255)
-  numero_extra     String?        @db.VarChar(20)
-  estado           EstadoServicio @default(RECEPCION)
-  activo           Boolean        @default(true)
-  MetodoPago       MetodoPago     @default(EFECTIVO)
-  created_at       DateTime       @default(now())
-  updated_at       DateTime       @updatedAt
+  id                  String         @id @default(uuid()) @db.Char(36)
+  negocio_id          String         @db.Char(36)
+  sucursal_id         String         @db.Char(36)
+  vehiculo_id         String         @db.Char(36)
+  mecanico_id         String?        @db.Char(36)
+  cliente_id          String?        @db.Char(36)
+  tipo_servicio_id    String?        @db.Char(36)
+  descripcion         String?        @db.Text
+  diagnostico         String?        @db.Text
+  observaciones       String?        @db.Text
+  kilometraje         Int?
+  kilometraje_proximo Int?
+  firma_entrada       String?        @db.Text
+  firma_salida        String?        @db.Text
+  fecha_entrada       DateTime       @default(now())
+  fecha_salida        DateTime?
+  total               Float          @default(0)
+  documento_extra     String?        @db.VarChar(20)
+  nombre_extra        String?        @db.VarChar(255)
+  numero_extra        String?        @db.VarChar(20)
+  estado              EstadoServicio @default(RECEPCION)
+  activo              Boolean        @default(true)
+  MetodoPago          MetodoPago     @default(EFECTIVO)
+  created_at          DateTime       @default(now())
+  updated_at          DateTime       @updatedAt
 
-  negocio       Negocio      @relation(fields: [negocio_id], references: [id])
-  sucursal      Sucursal     @relation(fields: [sucursal_id], references: [id])
-  vehiculo      Vehiculo?    @relation(fields: [vehiculo_id], references: [id])
+  negocio       Negocio       @relation(fields: [negocio_id], references: [id])
+  sucursal      Sucursal      @relation(fields: [sucursal_id], references: [id])
+  vehiculo      Vehiculo?     @relation(fields: [vehiculo_id], references: [id])
   mecanico      Usuario?      @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
-  cliente       Cliente?     @relation("ServicioCliente", fields: [cliente_id], references: [id])
+  cliente       Cliente?      @relation("ServicioCliente", fields: [cliente_id], references: [id])
   tipo_servicio TipoServicio? @relation(fields: [tipo_servicio_id], references: [id])
-  
-  imagenes  Imagen[]
-  checklist ChecklistRespuesta[]
-  tareas    ServicioTarea[]
-  repuestos ServicioRepuesto[]
-  venta     Venta?
+
+  imagenes                Imagen[]
+  checklist               ChecklistRespuesta[]
+  tareas                  ServicioTarea[]
+  repuestos               ServicioRepuesto[]
+  venta                   Venta?
   ServicioRepuestoCliente ServicioRepuestoCliente[]
 
   @@map("servicios")
@@ -413,12 +416,12 @@ model TipoServicioOpcion {
 }
 
 model ServicioRepuestoCliente {
-  id           String   @id @default(uuid()) @db.Char(36)
-  servicio_id  String   @db.Char(36)
-  repuesto     String   @db.Text
-  cantidad     Int
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  id          String   @id @default(uuid()) @db.Char(36)
+  servicio_id String   @db.Char(36)
+  repuesto    String   @db.Text
+  cantidad    Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   servicio Servicio @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
 
@@ -439,6 +442,7 @@ model ChecklistItem {
 
   negocio    Negocio              @relation(fields: [negocio_id], references: [id])
   respuestas ChecklistRespuesta[]
+
   @@map("checklist_items")
 }
 
@@ -453,6 +457,7 @@ model ChecklistRespuesta {
 
   servicio       Servicio      @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
   checklist_item ChecklistItem @relation(fields: [checklist_item_id], references: [id], onDelete: Cascade)
+
   @@unique([servicio_id, checklist_item_id])
   @@map("checklist_respuestas")
 }
@@ -476,65 +481,142 @@ model ServicioTarea {
 // 6. INVENTARIO (LOTES)
 // ==============================================================
 
-model CategoriaProducto {
+model Proveedor {
   id         String   @id @default(uuid()) @db.Char(36)
-  negocio_id String?   @db.Char(36)
-  categoria  String
-  default_categoria   Boolean  @default(false)
+  negocio_id String   @db.Char(36)
+  nombre     String
+  contacto   String?  @db.VarChar(100)
+  telefono   String   @db.VarChar(20)
+  email      String?  @db.VarChar(100)
+  nit        String?  @db.VarChar(20)
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  negocio   Negocio?    @relation(fields: [negocio_id], references: [id])
+  negocio Negocio @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  lotes   Lote[]
+
+  @@unique([negocio_id, nombre])
+  @@index([negocio_id])
+  @@map("proveedores")
+}
+
+model CategoriaProducto {
+  id                String   @id @default(uuid()) @db.Char(36)
+  negocio_id        String?  @db.Char(36)
+  categoria         String
+  codigo            String?  @db.VarChar(20)
+  default_categoria Boolean  @default(false)
+  activo            Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  negocio   Negocio?   @relation(fields: [negocio_id], references: [id])
   productos Producto[]
 
   @@unique([negocio_id, categoria])
+  @@unique([negocio_id, codigo])
   @@map("categorias_producto")
 }
 
 model Producto {
-  id              String   @id @default(uuid()) @db.Char(36)
-  negocio_id      String   @db.Char(36)
-  categoria_id    String   @db.Char(36)
-  url_imagen      String   @db.Text
-  qr_imagen       String?   @db.Text
-  nombre          String
-  codigo          String?
-  sku             String?  
-  precio_sugerido Float
-  stock_total     Int      @default(0)
-  activo          Boolean  @default(true)
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id           String   @id @default(uuid()) @db.Char(36)
+  negocio_id   String   @db.Char(36)
+  codigo       String?  @db.VarChar(50)
+  categoria_id String   @db.Char(36)
+  url_imagen   String   @db.Text
+  nombre       String
+  descripcion  String?  @db.Text
+  activo       Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
-  negocio   Negocio           @relation(fields: [negocio_id], references: [id])
-  categoria CategoriaProducto @relation(fields: [categoria_id], references: [id])
-  lotes     Lote[]
+  negocio   Negocio            @relation(fields: [negocio_id], references: [id])
+  categoria CategoriaProducto  @relation(fields: [categoria_id], references: [id])
+  variantes VarianteProducto[]
 
   @@unique([negocio_id, codigo])
-  @@unique([sku])
   @@map("productos")
 }
 
-model Lote {
+model Atributo {
+  id         String   @id @default(uuid()) @db.Char(36)
+  negocio_id String   @db.Char(36)
+  nombre     String // Ej. "Viscosidad", "Talla", "Medida"
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  valores ValorAtributo[]
+
+  @@unique([negocio_id, nombre])
+  @@map("atributos")
+}
+
+model VarianteProducto {
   id              String   @id @default(uuid()) @db.Char(36)
   producto_id     String   @db.Char(36)
-  negocio_id      String   @db.Char(36)
-  sucursal_id     String   @db.Char(36)
-  cantidad_actual Int
-  costo_compra    Float
-  precio_venta    Float
-  fecha_ingreso   DateTime @default(now())
+  url_imagen      String   @db.Text
+  sku             String   @unique // DNI estático de la combinación
+  codigo_barras   String?  @unique
+  qr_codigo       String?  @unique
+  precio_sugerido Float // El precio base de venta para esta variante
+  stock_total     Int      @default(0) // Sumatoria de los lotes activos de esta variante
   activo          Boolean  @default(true)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  producto  Producto           @relation(fields: [producto_id], references: [id])
-  negocio   Negocio            @relation(fields: [negocio_id], references: [id])
-  sucursal  Sucursal           @relation(fields: [sucursal_id], references: [id])
+  producto       Producto           @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  valores        ValorAtributo[] // Relación Many-to-Many implícita para las llaves-valor
+  lotes          Lote[]
+  repuestos      ServicioRepuesto[]
+  venta_detalles VentaDetalle[]
+
+  @@index([producto_id])
+  @@map("variantes_producto")
+}
+
+model ValorAtributo {
+  id          String   @id @default(uuid()) @db.Char(36)
+  atributo_id String   @db.Char(36)
+  valor       String // Ej. "10W-40", "M", "120/70-17"
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  atributo  Atributo           @relation(fields: [atributo_id], references: [id], onDelete: Cascade)
+  variantes VarianteProducto[] // Relación Many-to-Many implícita con variantes
+
+  @@unique([atributo_id, valor])
+  @@map("valores_atributos")
+}
+
+model Lote {
+  id                String    @id @default(uuid()) @db.Char(36)
+  variante_id       String    @db.Char(36) // Cambiado de producto_id a variante_id
+  negocio_id        String    @db.Char(36)
+  sucursal_id       String    @db.Char(36)
+  proveedor_id      String    @db.Char(36) // ¡Obligatorio para la trazabilidad!
+  codigo_lote       String // El código asignado a esta tanda de ingreso
+  cantidad_inicial  Int // Para auditorías
+  cantidad_actual   Int
+  costo_compra      Float
+  precio_venta      Float // Permite cambiar el precio real por lote si suben los costos
+  fecha_ingreso     DateTime  @default(now())
+  fecha_vencimiento DateTime? // Opcional (útil para químicos o aditivos)
+  activo            Boolean   @default(true)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  variante  VarianteProducto @relation(fields: [variante_id], references: [id], onDelete: Cascade)
+  negocio   Negocio          @relation(fields: [negocio_id], references: [id])
+  sucursal  Sucursal         @relation(fields: [sucursal_id], references: [id])
+  proveedor Proveedor        @relation(fields: [proveedor_id], references: [id])
+
   repuestos ServicioRepuesto[]
   detalles  VentaDetalle[]
 
+  @@index([variante_id])
+  @@index([proveedor_id])
   @@map("lotes")
 }
 
@@ -542,6 +624,7 @@ model ServicioRepuesto {
   id           String   @id @default(uuid()) @db.Char(36)
   servicio_id  String   @db.Char(36)
   lote_id      String   @db.Char(36)
+  variante_id  String?  @db.Char(36)
   cantidad     Int
   precio_venta Float
   costo        Float?
@@ -549,9 +632,11 @@ model ServicioRepuesto {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
-  servicio Servicio @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
-  lote     Lote     @relation(fields: [lote_id], references: [id])
+  servicio Servicio          @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
+  lote     Lote              @relation(fields: [lote_id], references: [id])
+  variante VarianteProducto? @relation(fields: [variante_id], references: [id])
 
+  @@index([variante_id])
   @@map("servicio_repuestos")
 }
 
@@ -589,6 +674,7 @@ model VentaDetalle {
   id              String   @id @default(uuid()) @db.Char(36)
   venta_id        String   @db.Char(36)
   lote_id         String?  @db.Char(36)
+  variante_id     String?  @db.Char(36)
   descripcion     String
   cantidad        Int
   precio_unitario Float
@@ -597,9 +683,11 @@ model VentaDetalle {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  venta Venta @relation(fields: [venta_id], references: [id], onDelete: Cascade)
-  lote  Lote? @relation(fields: [lote_id], references: [id])
+  venta    Venta             @relation(fields: [venta_id], references: [id], onDelete: Cascade)
+  lote     Lote?             @relation(fields: [lote_id], references: [id])
+  variante VarianteProducto? @relation(fields: [variante_id], references: [id])
 
+  @@index([variante_id])
   @@map("venta_detalles")
 }
 

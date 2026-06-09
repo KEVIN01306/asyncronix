@@ -6,7 +6,8 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormCon
 type QrProductScannerProps = {
     open: boolean;
     onClose: () => void;
-    onCodigoLeido: (sku: string) => void;
+    onCodigoLeido: (codigo: string) => void;
+    inline?: boolean;
 };
 
 type CameraDevice = {
@@ -14,7 +15,7 @@ type CameraDevice = {
     label: string;
 };
 
-export default function QrProductScanner({ open, onClose, onCodigoLeido }: QrProductScannerProps) {
+export default function QrProductScanner({ open, onClose, onCodigoLeido, inline = false }: QrProductScannerProps) {
     const [cameras, setCameras] = useState<CameraDevice[]>([]);
     const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
 
@@ -40,7 +41,7 @@ export default function QrProductScanner({ open, onClose, onCodigoLeido }: QrPro
             scanner = new Html5QrcodeScanner('qr-reader', config, false);
             scanner.render(
                 (decodedText) => {
-                    toast.success(`Producto escaneado: ${decodedText}`);
+                    toast.success(`Código escaneado: ${decodedText}`);
                     onCodigoLeido(decodedText);
                     scanner?.clear().catch(error => console.error('Error al limpiar el escáner', error));
                     onClose();
@@ -80,31 +81,41 @@ export default function QrProductScanner({ open, onClose, onCodigoLeido }: QrPro
             });
     }, [open, selectedCameraId]);
 
+    const content = (
+        <Box>
+            <Typography sx={{ mb: 2 }}>
+                Acerca la cámara al código QR o de barras del producto para capturar el código.
+            </Typography>
+            {cameras.length > 1 && (
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel id="camera-select-label">Cámara</InputLabel>
+                    <Select
+                        labelId="camera-select-label"
+                        value={selectedCameraId || ''}
+                        label="Cámara"
+                        onChange={(event) => setSelectedCameraId(event.target.value as string)}
+                    >
+                        {cameras.map((camera) => (
+                            <MenuItem key={camera.id} value={camera.id}>
+                                {camera.label}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            )}
+            <Box id="qr-reader" sx={{ width: '100%', minHeight: 320 }} />
+        </Box>
+    );
+
+    if (inline) {
+        return open ? content : null;
+    }
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Escáner de SKU</DialogTitle>
+            <DialogTitle>Escáner de código</DialogTitle>
             <DialogContent>
-                <Typography sx={{ mb: 2 }}>
-                    Acerca la cámara al código QR o de barras del producto para capturar el SKU.
-                </Typography>
-                {cameras.length > 1 && (
-                    <FormControl fullWidth sx={{ mb: 2 }}>
-                        <InputLabel id="camera-select-label">Cámara</InputLabel>
-                        <Select
-                            labelId="camera-select-label"
-                            value={selectedCameraId || ''}
-                            label="Cámara"
-                            onChange={(event) => setSelectedCameraId(event.target.value as string)}
-                        >
-                            {cameras.map((camera) => (
-                                <MenuItem key={camera.id} value={camera.id}>
-                                    {camera.label}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                )}
-                <Box id="qr-reader" sx={{ width: '100%', minHeight: 320 }} />
+                {content}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose} color="secondary">Cancelar</Button>

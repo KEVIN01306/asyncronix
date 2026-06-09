@@ -8,7 +8,10 @@ export class RegistrarLoteUseCase {
 
     async execute(data: LoteCrear, negocio_id: string): Promise<LoteDetalle> {
         try {
-            const creado = await this.repository.registrar(data, negocio_id);
+            const generateCode = () => `LOT-${(data.variante_id || '').slice(0, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+            const codigo_lote = data.codigo_lote || generateCode();
+            const payload = { ...data, codigo_lote };
+            const creado = await this.repository.registrar(payload, negocio_id);
             return creado;
         } catch (error) {
             if (error instanceof DatabaseError) {

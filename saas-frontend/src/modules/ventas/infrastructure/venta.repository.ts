@@ -1,6 +1,5 @@
 import api from "../../../core/api/api";
-import type { Producto } from "../../productos/domain/interfaces/producto.interface";
-import type { Venta, VentaCreateForm, VentaUpdateForm, VentaResponse } from "../domain/interfaces/venta.interface";
+import type { Venta, VentaCreateForm, VentaUpdateForm, VentaResponse, VentaVarianteDetalle } from "../domain/interfaces/venta.interface";
 
 export const ventaRepository = {
     listar: async (limit: number, offset: number, cliente_id?: string | null): Promise<VentaResponse> => {
@@ -17,7 +16,7 @@ export const ventaRepository = {
         const payload = {
             ...data,
             productos: data.productos.map(p => ({
-                producto_id: p.producto_id,
+                variante_id: p.producto_id,
                 cantidad: p.cantidad
             }))
         };
@@ -30,7 +29,7 @@ export const ventaRepository = {
         };
         if (data.productos) {
             payload.productos = data.productos.map(p => ({
-                producto_id: p.producto_id,
+                variante_id: p.producto_id,
                 cantidad: p.cantidad
             }));
         }
@@ -41,17 +40,23 @@ export const ventaRepository = {
         const response = await api.patch<{ data: Venta }>(`/ventas/${id}/anular`, { sucursal_id, comentario });
         return response as any;
     },
-    buscarPorSku: async (sku: string): Promise<{ data: Producto }> => {
-        const response = await api.get<{ data: Producto }>('/ventas/buscar-sku', { params: { sku } });
+    buscarPorCodigo: async (codigo: string): Promise<{ data: VentaVarianteDetalle }> => {
+        const response = await api.get<{ data: VentaVarianteDetalle }>('/ventas/scanner', { params: { q: codigo } });
+        return response as any;
+    },
+    buscarPorSku: async (sku: string): Promise<{ data: VentaVarianteDetalle }> => {
+        return ventaRepository.buscarPorCodigo(sku);
+    },
+    crearDetallePorCodigo: async (ventaId: string, codigo: string, sucursal_id: string, cantidad = 1): Promise<any> => {
+        const payload = { codigo, cantidad, sucursal_id };
+        const response = await api.post(`/ventas/${ventaId}/detalles/codigo`, payload);
         return response as any;
     },
     crearDetallePorSku: async (ventaId: string, sku: string, sucursal_id: string, cantidad = 1): Promise<any> => {
-        const payload = { sku, cantidad, sucursal_id };
-        const response = await api.post(`/ventas/${ventaId}/detalles/sku`, payload);
-        return response as any;
+        return ventaRepository.crearDetallePorCodigo(ventaId, sku, sucursal_id, cantidad);
     },
     crearDetalle: async (ventaId: string, detalle: { producto_id: string, cantidad: number }, sucursal_id: string): Promise<any> => {
-        const payload = { producto_id: detalle.producto_id, cantidad: detalle.cantidad, sucursal_id };
+        const payload = { variante_id: detalle.producto_id, cantidad: detalle.cantidad, sucursal_id };
         const response = await api.post(`/ventas/${ventaId}/detalles`, payload);
         return response as any;
     },

@@ -56,7 +56,7 @@ export const repuestoClienteCrearSchema = z.object({
 });
 
 export const repuestoCrearSchema = z.object({
-    producto_id: z.string().uuid(),
+    variante_id: z.string().uuid(),
     cantidad: z.coerce.number().int().min(1),
     sucursal_id: z.string().uuid()
 });

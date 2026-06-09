@@ -1,15 +1,15 @@
 import AppError from "../../../shared/errors/AppError.js";
-import type { ProductoDetalle } from "../../producto/domain/producto.entity.js";
-import type { ProductoRepository } from "../../producto/domain/producto.repository.js";
+import type { VarianteDetalle } from "../../producto/domain/variante.entity.js";
+import type { VarianteRepository } from "../../producto/domain/variante.repository.js";
 
 export class BuscarProductoPorSkuUseCase {
-    constructor(private readonly productoRepository: ProductoRepository) {}
+    constructor(private readonly varianteRepository: VarianteRepository) {}
 
-    async execute(sku: string, negocio_id: string): Promise<ProductoDetalle> {
-        const producto = await this.productoRepository.obtenerPorSku(sku, negocio_id);
-        if (!producto) {
-            throw new AppError('Producto no encontrado', 'PRODUCTO_NO_ENCONTRADO', 404);
+    async execute(sku: string, negocio_id: string): Promise<VarianteDetalle> {
+        const variante = await this.varianteRepository.obtenerPorSku(sku, negocio_id);
+        if (!variante) {
+            throw new AppError('Variante no encontrada', 'VARIANTE_NO_ENCONTRADA', 404);
         }
-        return producto;
+        return variante;
     }
 }

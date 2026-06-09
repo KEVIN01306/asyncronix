@@ -5,13 +5,15 @@ import type { RegistrarLoteUseCase } from '../application/registrar-lote.usecase
 import type { ObtenerLoteUseCase } from '../application/obtener-lote.usecase.js';
 import type { ObtenerLotesUseCase } from '../application/obtener-lotes.usecase.js';
 import type { ListarLotesUseCase } from '../application/listar-lotes.usecase.js';
+import type { ListarLotesPorProductoUseCase } from '../application/listar-lotes-por-producto.usecase.js';
 
 export class LoteController extends BaseController {
     constructor(
         private readonly registrarLoteUseCase: RegistrarLoteUseCase,
         private readonly obtenerLoteUseCase: ObtenerLoteUseCase,
         private readonly obtenerLotesUseCase: ObtenerLotesUseCase,
-        private readonly listarLotesUseCase: ListarLotesUseCase
+        private readonly listarLotesUseCase: ListarLotesUseCase,
+        private readonly listarPorProductoUseCase: ListarLotesPorProductoUseCase
     ) { super(); }
 
     registrar = async (req: Request, res: Response, next: NextFunction) => {
@@ -48,13 +50,29 @@ export class LoteController extends BaseController {
         }
     }
 
+    listarPorVariante = async (req: Request<{ variante_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { variante_id } = req.params;
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const { limit, offset } = res.locals.query;
+            const page = Math.floor(offset / limit) + 1;
+            const result = await this.obtenerLotesUseCase.execute(variante_id, negocio_id, { page, perPage: limit }, sucursal_id);
+            const { total, data, stock } = result;
+            const response = Respuesta.paginacion('Lotes obtenidos con exito', data, total, limit, offset) as any;
+            if (typeof stock === 'number') response.stock = stock;
+            res.status(200).json(response);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     listarPorProducto = async (req: Request<{ producto_id: string }>, res: Response, next: NextFunction) => {
         try {
             const { producto_id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             const { limit, offset } = res.locals.query;
             const page = Math.floor(offset / limit) + 1;
-            const { total, data } = await this.obtenerLotesUseCase.execute(producto_id, negocio_id, { page, perPage: limit });
+            const { total, data } = await this.listarPorProductoUseCase.execute(producto_id, negocio_id, { page, perPage: limit });
             res.status(200).json(Respuesta.paginacion('Lotes obtenidos con exito', data, total, limit, offset));
         } catch (error) {
             next(error);

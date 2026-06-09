@@ -6,6 +6,7 @@ export interface LoteRepository {
     registrar(lote: LoteCrear, negocio_id: string): Promise<LoteDetalle>;
     obtener(id: string, negocio_id: string): Promise<LoteDetalle | null>;
     listar(negocio_id: string, pagination: Pagination): Promise<Paginated<LoteDetalle>>;
+    listarPorVariante(variante_id: string, negocio_id: string, pagination: Pagination, sucursal_id?: string): Promise<Paginated<LoteDetalle>>;
     listarPorProducto(producto_id: string, negocio_id: string, pagination: Pagination, sucursal_id?: string): Promise<Paginated<LoteDetalle>>;
     disminuirCantidad(id: string, negocio_id: string, cantidad: number): Promise<void>;
 }

@@ -75,7 +75,7 @@ export default function VentaFormPage() {
         const agrupado = new Map<string, VentaProductoInput>();
 
         detalles.forEach((detalle) => {
-            const productoId = detalle.producto_id ?? detalle.lote_id ?? detalle.id;
+            const productoId = detalle.variante_id ?? detalle.lote_id ?? detalle.id;
             const precio = detalle.precio_unitario;
             const cantidad = detalle.cantidad;
             const nombre = detalle.descripcion;
@@ -204,43 +204,42 @@ export default function VentaFormPage() {
         }
     };
 
-    const handleSkuLeido = async (sku: string) => {
+    const handleCodigoLeido = async (codigo: string) => {
         setShowScannerModal(false);
         if (!user?.sucursal_id) return;
 
         try {
             setScanLoading(true);
             if (!ventaId) {
-                const productResponse = await ventaRepository.buscarPorSku(sku);
-                const product = productResponse.data;
-                if (!product) {
-                    toast.error('No se encontró un producto con ese SKU');
+                const productResponse = await ventaRepository.buscarPorCodigo(codigo);
+                const variant = productResponse.data;
+                if (!variant) {
+                    toast.error('No se encontró una variante con ese código');
                     return;
                 }
                 const prodInput: VentaProductoInput = {
-                    producto_id: product.id,
+                    producto_id: variant.id,
                     cantidad: 1,
-                    nombre: product.nombre,
-                    precio_sugerido: product.precio_sugerido,
-                    subtotal: product.precio_sugerido
+                    nombre: variant.producto?.nombre ?? variant.sku,
+                    precio_sugerido: variant.precio_sugerido,
+                    subtotal: variant.precio_sugerido
                 };
 
                 if (clientSelected) {
                     await registrarNuevaVenta(prodInput);
                 } else {
-                    setProductoSeleccionado(product);
                     setPendingProduct(prodInput);
                     setShowClientModal(true);
                 }
                 return;
             }
 
-            await ventaRepository.crearDetallePorSku(ventaId, sku, user.sucursal_id, 1);
+            await ventaRepository.crearDetallePorCodigo(ventaId, codigo, user.sucursal_id, 1);
             const res = await ventaRepository.obtener(ventaId);
             setProductosSeleccionados(agruparDetalles(res.data.detalles));
-            toast.success('Detalle agregado por SKU');
+            toast.success('Detalle agregado por código');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Error al procesar el SKU');
+            toast.error(error.response?.data?.message || 'Error al procesar el código');
         } finally {
             setScanLoading(false);
         }
@@ -319,7 +318,7 @@ export default function VentaFormPage() {
             try {
                 setSaving(true);
                 const res = await ventaRepository.obtener(ventaId);
-                const detalle = res.data.detalles.find((d: any) => (d.producto_id ?? d.lote_id ?? '') === prod.producto_id || d.descripcion === prod.nombre);
+                const detalle = res.data.detalles.find((d: any) => (d.variante_id ?? d.lote_id ?? '') === prod.producto_id || d.descripcion === prod.nombre);
                 if (detalle) {
                     await ventaRepository.eliminarDetalle(ventaId, detalle.id, user!.sucursal_id!);
                     const ventaRef = await ventaRepository.obtener(ventaId);
@@ -517,7 +516,7 @@ export default function VentaFormPage() {
             </Grid>
             <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
             <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={clienteNombre} />
-            <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleSkuLeido} />
+            <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleCodigoLeido} />
         </Grid>
     );
 }

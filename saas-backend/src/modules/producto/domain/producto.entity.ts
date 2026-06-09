@@ -2,13 +2,13 @@ export interface Producto {
     id: string;
     negocio_id: string;
     categoria_id: string;
+    codigo?: string | null;
+    sku?: string;
     nombre: string;
-    codigo: string | null;
-    sku: string;
+    descripcion?: string | null;
     precio_sugerido: number;
     stock_total: number;
     url_imagen: string;
-    qr_imagen: string | null;
     activo: boolean;
 }
 
@@ -17,14 +17,23 @@ export interface ProductoCategoria {
     categoria: string;
 }
 
-export interface ProductoCrear extends Omit<Producto, "id" | "negocio_id" | "qr_imagen"> { }
+export interface ProductoCrear extends Omit<Producto, "id" | "negocio_id" | "sku" | "precio_sugerido" | "stock_total" | "activo" | "url_imagen"> { }
 
-export interface ProductoActualizar extends Partial<Omit<Producto, "id" | "negocio_id" | "sku" | "qr_imagen">> { }
+export interface ProductoActualizar extends Partial<Omit<Producto, "id" | "negocio_id" | "sku" | "precio_sugerido" | "stock_total" | "activo" | "url_imagen">> { }
 
-export interface ProductoSimple extends Omit<Producto, "negocio_id" | "sku"> {
+export interface ProductoSimple extends Omit<Producto, "negocio_id"> {
     categoria: ProductoCategoria | null;
 }
 
-export interface ProductoDetalle extends Omit<Producto, "negocio_id"> {
-    categoria: ProductoCategoria | null;
+export interface VariantePublic {
+    id: string;
+    sku: string | undefined;
+    precio_sugerido: number | undefined;
+    stock_total: number | undefined;
+    codigo_barras: string | null | undefined;
+    qr_codigo: string | null | undefined;
+}
+
+export interface ProductoDetalle extends ProductoSimple {
+    variantes?: VariantePublic[];
 }

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { AuthMiddleware } from "../../../app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "../../../app/middlewares/ValidarMiddleware.js";
 import { ventaController } from "../venta.module.js";
-import { ventaCrearSchema, ventaActualizarSchema, buscarSkuSchema, ventaDetalleSkuSchema } from "./validators/venta.schema.js";
+import { ventaCrearSchema, ventaActualizarSchema, buscarScannerSchema, ventaDetalleCodigoSchema, ventaDetalleSkuSchema } from "./validators/venta.schema.js";
 import { buscarClienteNitVentaSchema, crearClienteVentaSchema } from "./validators/cliente-venta.schema.js";
 import { paginacionQuerySchema } from "../../../shared/presentation/validators/paginacion.query.schema.js";
 
@@ -31,7 +31,13 @@ routes.get("/",
 
 routes.get("/buscar-sku",
     authMiddleware.verificarPermiso(['CREAR_VENTAS']),
-    validarMiddleware.validarQuery(buscarSkuSchema),
+    validarMiddleware.validarQuery(buscarScannerSchema),
+    ventaController.buscarPorSku
+);
+
+routes.get("/scanner",
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarQuery(buscarScannerSchema),
     ventaController.buscarPorSku
 );
 
@@ -63,6 +69,12 @@ routes.post("/:ventaId/detalles/sku",
     authMiddleware.verificarPermiso(['CREAR_VENTAS']),
     validarMiddleware.validarBody(ventaDetalleSkuSchema),
     ventaController.crearDetallePorSku
+);
+
+routes.post("/:ventaId/detalles/codigo",
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarBody(ventaDetalleCodigoSchema),
+    ventaController.crearDetallePorCodigo
 );
 
 routes.delete("/:ventaId/detalles/:detalleId",

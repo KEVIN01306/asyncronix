@@ -6,24 +6,23 @@ import { InsufficientStockPersistenceError } from '../../../shared/database/erro
 import { VentaNotFoundPersistenceError } from '../../../shared/database/errors/VentaNotFoundPersistenceError.js';
 import type { VentaRepository } from "../domain/venta.repository.js";
 import type { LoteRepository } from "../../lote/domain/lote.repository.js";
-import type { ProductoRepository } from "modules/producto/domain/producto.repository.js";
+import type { VarianteRepository } from "modules/producto/domain/variante.repository.js";
 
 export class CrearDetalleVentaUseCase {
     constructor(
         private readonly ventaRepository: VentaRepository,
         private readonly loteRepository: LoteRepository,
-        private readonly productoRepository: ProductoRepository
-        
+        private readonly varianteRepository: VarianteRepository
         ) {}
 
-    async execute(ventaId: string, productoId: string, cantidad: number, negocio_id: string, sucursal_id: string): Promise<any> {
+    async execute(ventaId: string, varianteId: string, cantidad: number, negocio_id: string, sucursal_id: string): Promise<any> {
         try {
-            const producto = await this.productoRepository.obtener(productoId, negocio_id);
-            if (!producto) {
-                throw new AppError('Producto no encontrado', 'PRODUCTO_NO_ENCONTRADO', 404);
+            const variante = await this.varianteRepository.obtener(varianteId, negocio_id);
+            if (!variante) {
+                throw new AppError('Variante no encontrada', 'VARIANTE_NO_ENCONTRADA', 404);
             }
 
-            const res = await this.loteRepository.listarPorProducto(producto.id, negocio_id, { page: 1, perPage: 1000 }, sucursal_id);
+            const res = await this.loteRepository.listarPorVariante(variante.id, negocio_id, { page: 1, perPage: 1000 }, sucursal_id);
             const lotes = res.data.filter((l: any) => l.activo && (l.cantidad_actual ?? 0) > 0);
             if (!lotes || lotes.length === 0) {
                 throw new AppError('No hay lotes activos con stock para el producto', 'NO_LOTE_DISPONIBLE', 400);
@@ -40,10 +39,11 @@ export class CrearDetalleVentaUseCase {
                 const take = Math.min(restante, disponible);
 
                 detallesToCreate.push({
+                    variante_id: variante.id,
                     lote_id: lote.id,
-                    descripcion: lote.producto?.nombre ?? producto.nombre,
+                    descripcion: lote.variante?.producto_nombre ?? variante.producto?.nombre ?? variante.sku ?? '',
                     cantidad: take,
-                    precio_unitario: producto.precio_sugerido ?? 0,
+                    precio_unitario: variante.precio_sugerido ?? 0,
                     costo_unitario: lote.costo_compra ?? 0
                 });
 

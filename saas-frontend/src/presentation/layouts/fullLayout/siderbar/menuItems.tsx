@@ -10,6 +10,7 @@ import {
   PrecisionManufacturing,
   ListAlt,
   SettingsSharp,
+  ViewHeadlineRounded,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -26,6 +27,7 @@ const MenuItems: MenuItem[] = [
   { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/" },
   { name: "Ventas", icon: BusinessCenterOutlined, link: "/ventas", permiso: "VER_VENTAS" },
   { name: "Clientes", icon: AccountCircleOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
+  { name: "Proveedores", icon: ViewHeadlineRounded, link: "/proveedores", permiso: "VER_PROVEEDORES" },
   {
     module: "inventario", name: "Inventario", icon: Inventory2, children: [
       { name: "Categorías", link: "/categorias", icon: AdminPanelSettingsOutlined, permiso: "VER_CATEGORIAS_PRODUCTOS" },

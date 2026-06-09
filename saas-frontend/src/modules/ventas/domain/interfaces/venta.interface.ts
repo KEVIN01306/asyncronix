@@ -6,12 +6,28 @@ export type MetodoPago = 'EFECTIVO' | 'TARJETA_CREDITO' | 'TARJETA_DEBITO' | 'TR
 export interface VentaDetalleSimple {
     id: string;
     lote_id: string | null;
+    variante_id?: string | null;
     producto_id?: string | null;
     descripcion: string;
     cantidad: number;
     precio_unitario: number;
     costo_unitario: number;
     subtotal: number;
+}
+
+export interface VentaVarianteDetalle {
+    id: string;
+    producto_id: string;
+    sku: string;
+    codigo_barras?: string | null;
+    qr_codigo?: string | null;
+    precio_sugerido: number;
+    stock_total: number;
+    activo: boolean;
+    producto?: {
+        id: string;
+        nombre: string;
+    };
 }
 
 export interface VentaClienteInfo {

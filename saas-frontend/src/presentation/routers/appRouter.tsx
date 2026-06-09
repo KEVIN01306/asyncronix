@@ -25,6 +25,7 @@ import { negocioRoutes } from "../../modules/negocio/presentation/negocio.routes
 import { perfilRoutes } from "../../modules/perfil/presentation/perfil.routes";
 import { ventasRoutes } from "../../modules/ventas/presentation/ventas.routes";
 import { clientesRoutes } from "../../modules/clientes/presentation/clientes.routes";
+import { proveedoresRoutes } from "../../modules/proveedores/presentation/proveedores.routes";
 import { customRoutes } from "../../modules/custom/presentation/custom.routes";
 import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
 
@@ -74,6 +75,7 @@ const appRouter = createBrowserRouter([
                     ...perfilRoutes,
                     ventasRoutes,
                     ...clientesRoutes,
+                    ...proveedoresRoutes,
                     ...customRoutes,
                     {
                         path: "acceso-denegado",

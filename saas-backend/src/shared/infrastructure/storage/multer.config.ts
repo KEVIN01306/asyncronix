@@ -21,6 +21,8 @@ export const storageConfig = {
     }),
 
     fileFilter: (_req: Request, file: Express.Multer.File, cb: any) => {
+        console.log('Mimetype recibido:', file.mimetype);
+    console.log('Nombre original:', file.originalname);
         const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp','image/svg+xml','application/pdf'];
         if (allowedMimeTypes.includes(file.mimetype)) {
             cb(null, true);

@@ -20,10 +20,12 @@ const LoteListPage = () => {
     const [loading, setLoading] = useState(true);
 
     const columns = [
-        { id: 'id', name: 'Codigo', format: (value: string) => value.slice(0, 8) },
-        { id: 'producto', name: 'Producto', format: (_value: any, row: Lote) => row.producto?.nombre ?? row.producto_id },
-        { id: 'sucursal', name: 'Sucursal', format: (_value: any, row: Lote) => row.sucursal?.nombre ?? row.sucursal_id },
+        { id: 'codigo_lote', name: 'Código', format: (value: string, row: Lote) => value ?? row.id?.slice(0, 8) },
+        { id: 'producto', name: 'Producto', format: (_value: any, row: Lote) => row.variante?.producto_nombre ?? row.variante?.producto_id ?? row.variante_id },
+        { id: 'sucursal', name: 'Sucursal', format: (_value: any, row: Lote) => <Chip variant='filled' color='primary' label={row.sucursal?.nombre ?? row.sucursal_id} size="small" /> },
+        { id: 'cantidad_inicial', name: 'Cantidad inicial' },
         { id: 'cantidad_actual', name: 'Cantidad actual' },
+        { id: 'fecha_vencimiento', name: 'Fecha vigencia', format: (value: string) => value ? new Date(value).toLocaleDateString() : 'Sin fecha' },
         { id: 'precio_venta', name: 'Precio venta', format: (value: number) => `S/ ${value.toFixed(2)}` },
         { id: 'activo', name: 'Estado', format: (value: boolean) => <Chip variant='outlined' color={value ? 'success' : 'error'} label={value ? 'Activo' : 'Inactivo'} size="small" /> }
     ];
@@ -41,10 +43,12 @@ const LoteListPage = () => {
         setLoading(true);
         try {
             const response = await LoteRepository.listar(limit, offset);
-            setLotes(response.data);
-            setTotal(response.meta?.total ?? 0);
+            // response is PaginatedResponse<Lote>
+            console.log("response:", response);
+            setLotes(response.data ?? []);
+            setTotal(response.meta?.total ?? response.count ?? 0);
         } catch (error) {
-            console.error(error);
+            console.error("Error al obtener lotes:", error);
         } finally {
             setLoading(false);
         }

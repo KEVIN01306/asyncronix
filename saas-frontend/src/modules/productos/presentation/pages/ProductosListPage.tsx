@@ -2,6 +2,9 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { Add, Edit, Visibility } from '@mui/icons-material';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import AtributosTab from './components/AtributosTab';
 import { Alert, Box, Button, Chip, CircularProgress, MenuItem, Paper, TableContainer, TextField, useTheme } from '@mui/material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { ProductoRepository } from '../../infrastructure/repositories/producto.repository';
@@ -19,6 +22,7 @@ const ProductosListPage = () => {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [tabIndex, setTabIndex] = useState(0);
 
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -90,73 +94,84 @@ const ProductosListPage = () => {
 
     return (
         <Box p={isMobile ? 2 : 4}>
-            <Alert severity="info" sx={{ mb: 3, boxShadow: 'none', border: (theme) => `1px solid ${theme.palette.divider}` }}>
-                En este módulo puedes administrar tus productos, crear nuevas referencias y subir imágenes para que tu inventario esté siempre actualizado.
-            </Alert>
+            <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)} sx={{ mb: 2 }}>
+                <Tab label="Productos" />
+                <Tab label="Atributos" />
+            </Tabs>
 
-            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems="center" gap={2} mb={1}
-                sx={{ bgcolor: 'background.paper', p: 2 }}
-                component={Paper}
-            >
-                <TextField
-                    select
-                    fullWidth
-                    label="Filtrar por categoría"
-                    value={selectedCategoria}
-                    onChange={(event) => {
-                        const value = event.target.value;
-                        setSearchParams({ limit: limit.toString(), offset: '0', categoria_id: value });
-                    }}
-                    SelectProps={{
-                        MenuProps: {
-                            PaperProps: {
-                                sx: { maxHeight: 320 }
-                            }
-                        }
-                    }}
-                >
-                    <MenuItem value="">Todas</MenuItem>
-                    {categorias.map((categoria) => (
-                        <MenuItem key={categoria.id} value={categoria.id}>
-                            {categoria.categoria}
-                        </MenuItem>
-                    ))}
-                </TextField>
-                <Button
-                    variant="contained"
-                    fullWidth={isMobile}
-                    startIcon={<Add />}
-                    onClick={() => navigate('/productos/nuevo')}
-                >
-                    Nuevo producto
-                </Button>
-            </Box>
+            {tabIndex === 1 ? (
+                <AtributosTab />
+            ) : (
+                <>
+                    <Alert severity="info" sx={{ mb: 3, boxShadow: 'none', border: (theme) => `1px solid ${theme.palette.divider}` }}>
+                        En este módulo puedes administrar tus productos, crear nuevas referencias y subir imágenes para que tu inventario esté siempre actualizado.
+                    </Alert>
 
-            <TableContainer>
-                {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}>
-                        <CircularProgress />
+                    <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems="center" gap={2} mb={1}
+                        sx={{ bgcolor: 'background.paper', p: 2 }}
+                        component={Paper}
+                    >
+                        <TextField
+                            select
+                            fullWidth
+                            label="Filtrar por categoría"
+                            value={selectedCategoria}
+                            onChange={(event) => {
+                                const value = event.target.value;
+                                setSearchParams({ limit: limit.toString(), offset: '0', categoria_id: value });
+                            }}
+                            SelectProps={{
+                                MenuProps: {
+                                    PaperProps: {
+                                        sx: { maxHeight: 320 }
+                                    }
+                                }
+                            }}
+                        >
+                            <MenuItem value="">Todas</MenuItem>
+                            {categorias.map((categoria) => (
+                                <MenuItem key={categoria.id} value={categoria.id}>
+                                    {categoria.categoria}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                        <Button
+                            variant="contained"
+                            fullWidth={isMobile}
+                            startIcon={<Add />}
+                            onClick={() => navigate('/productos/nuevo')}
+                        >
+                            Nuevo producto
+                        </Button>
                     </Box>
-                ) : (
-                    <ListTable
-                        data={productos}
-                        columns={columns}
-                        actions={actions}
-                        pagination={{
-                            total,
-                            limit,
-                            offset,
-                            onPageChange: (newPage) => {
-                                const newOffset = newPage * limit;
-                                setSearchParams({ limit: limit.toString(), offset: newOffset.toString(), categoria_id: selectedCategoria });
-                            },
-                            onRowsPerPageChange: (newLimit) => {
-                                setSearchParams({ limit: newLimit.toString(), offset: '0', categoria_id: selectedCategoria });
-                            }
-                        }}
-                    />
-                )}
-            </TableContainer>
+
+                    <TableContainer>
+                        {loading ? (
+                            <Box display="flex" justifyContent="center" p={5}>
+                                <CircularProgress />
+                            </Box>
+                        ) : (
+                            <ListTable
+                                data={productos}
+                                columns={columns}
+                                actions={actions}
+                                pagination={{
+                                    total,
+                                    limit,
+                                    offset,
+                                    onPageChange: (newPage) => {
+                                        const newOffset = newPage * limit;
+                                        setSearchParams({ limit: limit.toString(), offset: newOffset.toString(), categoria_id: selectedCategoria });
+                                    },
+                                    onRowsPerPageChange: (newLimit) => {
+                                        setSearchParams({ limit: newLimit.toString(), offset: '0', categoria_id: selectedCategoria });
+                                    }
+                                }}
+                            />
+                        )}
+                    </TableContainer>
+                </>
+            )}
         </Box>
     );
 };

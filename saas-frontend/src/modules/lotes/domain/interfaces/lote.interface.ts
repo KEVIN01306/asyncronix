@@ -2,17 +2,23 @@ import type { PaginatedResponse } from '../../../../core/api/interfaces/api-resp
 
 export interface Lote {
     id: string;
-    producto_id: string;
+    variante_id: string;
     negocio_id: string;
     sucursal_id: string;
+    proveedor_id: string;
+    codigo_lote: string;
+    cantidad_inicial: number;
     cantidad_actual: number;
     costo_compra: number;
     precio_venta: number;
     fecha_ingreso: string;
+    fecha_vencimiento?: string | null;
     activo: boolean;
-    producto: {
+    variante?: {
         id: string;
-        nombre: string;
+        sku?: string;
+        producto_id?: string;
+        producto_nombre?: string;
     };
     sucursal: {
         id: string;

@@ -15,18 +15,20 @@ import { VentaController } from "./presentation/venta.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
 import { PrismaLoteRepository } from "../lote/infrastructure/prisma-lote.repository.js";
 import { PrismaProductoRepository } from "../producto/infrastructure/prisma-producto.repository.js";
+import { PrismaVarianteRepository } from "../producto/infrastructure/prisma-variante.repository.js";
 import { PrismaClienteRepository } from "../cliente/infrastructure/prisma-cliente.repository.js";
 
 
 const ventaRepository = new PrismaVentaRepository(prisma);
 const loteRepository = new PrismaLoteRepository(prisma);
 const productoRepository = new PrismaProductoRepository(prisma);
+const varianteRepository = new PrismaVarianteRepository(prisma);
 const clienteRepository = new PrismaClienteRepository(prisma);
 
-const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository, productoRepository);
-const crearDetalleVentaUseCase = new CrearDetalleVentaUseCase(ventaRepository, loteRepository, productoRepository);
-const crearDetalleVentaPorSkuUseCase = new CrearDetalleVentaPorSkuUseCase(ventaRepository, loteRepository, productoRepository);
-const buscarProductoPorSkuUseCase = new BuscarProductoPorSkuUseCase(productoRepository);
+const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository, varianteRepository);
+const crearDetalleVentaUseCase = new CrearDetalleVentaUseCase(ventaRepository, loteRepository, varianteRepository);
+const crearDetalleVentaPorSkuUseCase = new CrearDetalleVentaPorSkuUseCase(ventaRepository, loteRepository, varianteRepository);
+const buscarProductoPorSkuUseCase = new BuscarProductoPorSkuUseCase(varianteRepository);
 const eliminarDetalleVentaUseCase = new EliminarDetalleVentaUseCase(ventaRepository);
 const finalizarVentaUseCase = new FinalizarVentaUseCase(ventaRepository);
 const actualizarVentaUseCase = new ActualizarVentaUseCase(ventaRepository);

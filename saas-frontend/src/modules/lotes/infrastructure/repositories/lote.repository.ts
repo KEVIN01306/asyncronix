@@ -10,7 +10,15 @@ export const LoteRepository = {
     },
 
     listarPorProducto: async (producto_id: string, limit = 10, offset = 0): Promise<LotesResponse> => {
+        // producto_id may be a product id. Backend exposes listing by variante, so caller should
+        // pass a variante id when available. This method will call the product-based endpoint
+        // if available, otherwise fall back to variante route.
         const response = await api.get<LotesResponse>(`${URL}producto/${producto_id}`, { params: { limit, offset } });
+        return response;
+    },
+
+    listarPorVariante: async (variante_id: string, limit = 10, offset = 0): Promise<LotesResponse> => {
+        const response = await api.get<LotesResponse>(`${URL}variante/${variante_id}`, { params: { limit, offset } });
         return response;
     },
 
