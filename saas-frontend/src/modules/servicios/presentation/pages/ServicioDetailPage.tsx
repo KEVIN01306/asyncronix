@@ -12,6 +12,7 @@ import ServiceImages from '../components/ServiceImages';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 import { LinkStyle } from '../../../../shared/components/ui/Links/LinkStyle';
+import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
 
 const ServicioDetailPage = () => {
     const { id } = useParams();
@@ -296,7 +297,7 @@ const ServicioDetailPage = () => {
                             columns={[
                                 { id: 'variante', name: 'Repuesto', format: (variante) => {
                                     if (!variante) return '-';
-                                    const atributos = (variante.valores ?? []).map(v => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                    const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
                                     return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
                                 }},
                                 { id: 'cantidad', name: 'Cantidad' },

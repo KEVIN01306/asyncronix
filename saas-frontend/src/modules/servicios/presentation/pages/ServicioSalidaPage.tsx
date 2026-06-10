@@ -15,6 +15,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import SignaturePadModal from '../components/modals/SignaturePadModal';
+import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
 
 const salidaSchema = z.object({
     metodo_pago: z.enum(Object.values(METODO_PAGO) as [string, ...string[]], 'El método de pago es requerido')
@@ -350,7 +351,7 @@ const ServicioSalidaPage = () => {
                             columns={[
                                 { id: 'variante', name: 'Repuesto', format: (variante) => {
                                     if (!variante) return '-';
-                                    const atributos = (variante.valores ?? []).map(v => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                    const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
                                     return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
                                 }},
                                 { id: 'cantidad', name: 'Cantidad' },

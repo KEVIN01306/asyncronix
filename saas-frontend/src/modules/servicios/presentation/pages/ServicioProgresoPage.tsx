@@ -13,6 +13,7 @@ import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { ListTableSimple } from '../../../../shared/components/ui/tables/ListTableSimple';
 import { useAuthStore } from '../../../../core/store/authStore';
 import ServiceProgressTasks from '../components/ServiceProgressTasks';
+import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
 
 const allowedStates: EstadoServicio[] = [
     ESTADO_SERVICIO.EN_SERVICIO,
@@ -207,7 +208,7 @@ const ServicioProgresoPage = () => {
                             columns={[
                                 { id: 'variante', name: 'Repuesto', format: (variante) => {
                                     if (!variante) return '-';
-                                    const atributos = (variante.valores ?? []).map(v => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                    const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
                                     return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
                                 }},
                                 { id: 'cantidad', name: 'Cantidad' },

@@ -11,6 +11,7 @@ import { ListTableSimple } from '../../../../shared/components/ui/tables/ListTab
 import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 import { HojaServicioPdf } from '../../infrastructure/repositories/HojaServicioPdf';
 import { PdfDownloader } from '../../../../shared/components/download/PdfDownloader';
+import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
 
 const ServicioHojaPage = () => {
     const { id } = useParams();
@@ -255,7 +256,7 @@ const ServicioHojaPage = () => {
                             columns={[
                                 { id: 'variante', name: 'Repuesto', format: (variante) => {
                                     if (!variante) return '-';
-                                    const atributos = (variante.valores ?? []).map(v => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                    const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
                                     return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
                                 }},
                                 { id: 'cantidad', name: 'Cantidad' },
