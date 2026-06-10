@@ -15,9 +15,9 @@ export class CrearDetalleVentaPorSkuUseCase {
         private readonly varianteRepository: VarianteRepository
     ) {}
 
-    async execute(ventaId: string, sku: string, cantidad: number, negocio_id: string, sucursal_id: string): Promise<any> {
+    async execute(ventaId: string, codigo: string, cantidad: number, negocio_id: string, sucursal_id: string): Promise<any> {
         try {
-            const variante = await this.varianteRepository.obtenerPorSku(sku, negocio_id);
+            const variante = await this.varianteRepository.obtenerPorCodigo(codigo, negocio_id);
             if (!variante) {
                 throw new AppError('Variante no encontrada', 'VARIANTE_NO_ENCONTRADA', 404);
             }

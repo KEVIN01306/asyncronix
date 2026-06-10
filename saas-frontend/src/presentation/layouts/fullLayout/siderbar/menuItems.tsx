@@ -27,9 +27,9 @@ const MenuItems: MenuItem[] = [
   { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/" },
   { name: "Ventas", icon: BusinessCenterOutlined, link: "/ventas", permiso: "VER_VENTAS" },
   { name: "Clientes", icon: AccountCircleOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
-  { name: "Proveedores", icon: ViewHeadlineRounded, link: "/proveedores", permiso: "VER_PROVEEDORES" },
   {
     module: "inventario", name: "Inventario", icon: Inventory2, children: [
+      { name: "Proveedores", icon: ViewHeadlineRounded, link: "/proveedores", permiso: "VER_PROVEEDORES" },
       { name: "Categorías", link: "/categorias", icon: AdminPanelSettingsOutlined, permiso: "VER_CATEGORIAS_PRODUCTOS" },
       { name: "Productos", link: "/productos", icon: AdminPanelSettingsOutlined, permiso: "VER_PRODUCTOS" },
       { name: "Lotes", link: "/lotes", icon: AdminPanelSettingsOutlined, permiso: "VER_LOTES" },

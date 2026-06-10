@@ -8,7 +8,7 @@ import type { AnularVentaUseCase } from "../application/anular-venta.usecase.js"
 import type { ObtenerVentaUseCase } from "../application/obtener-venta.usecase.js";
 import type { ObtenerVentasUseCase } from "../application/obtener-ventas.usecase.js";
 import type { AgregarProductoUseCase } from "../application/agregar-producto.usecase.js";
-import type { BuscarProductoPorSkuUseCase } from "../application/buscar-producto-por-sku.usecase.js";
+import type { BuscarProductoPorCodigoUseCase } from "../application/buscar-producto-por-sku.usecase.js";
 import type { EliminarDetalleVentaUseCase } from "../application/eliminar-detalle-venta.usecase.js";
 import type { FinalizarVentaUseCase } from "../application/finalizar-venta.usecase.js";
 import type { BuscarClientePorNitVentaUseCase } from "../application/buscar-cliente-por-nit.usecase.js";
@@ -22,7 +22,7 @@ export class VentaController extends BaseController {
         private readonly obtenerVentaUseCase: ObtenerVentaUseCase,
         private readonly obtenerVentasUseCase: ObtenerVentasUseCase,
         private readonly agregarProductoUseCase: AgregarProductoUseCase,
-        private readonly buscarProductoPorSkuUseCase: BuscarProductoPorSkuUseCase,
+        private readonly buscarProductoPorCodigoUseCase: BuscarProductoPorCodigoUseCase,
         private readonly eliminarDetalleVentaUseCase: EliminarDetalleVentaUseCase,
         private readonly finalizarVentaUseCase: FinalizarVentaUseCase,
         private readonly buscarClientePorNitVentaUseCase: BuscarClientePorNitVentaUseCase,
@@ -116,18 +116,20 @@ export class VentaController extends BaseController {
         }
     }
 
-    buscarPorSku = async (req: Request, res: Response, next: NextFunction) => {
+    buscarPorCodigo = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res);
             const value = typeof req.query.q === 'string'
                 ? req.query.q
-                : typeof req.query.sku === 'string'
-                    ? req.query.sku
-                    : '';
+                : typeof req.query.codigo === 'string'
+                    ? req.query.codigo
+                    : typeof req.query.sku === 'string'
+                        ? req.query.sku
+                        : '';
 
             if (!value) throw new Error('VALOR_REQUERIDO');
 
-            const variante = await this.buscarProductoPorSkuUseCase.execute(value, negocio_id);
+            const variante = await this.buscarProductoPorCodigoUseCase.execute(value, negocio_id);
             res.status(200).json(Respuesta.exito('Variante encontrada', variante));
         } catch (error) {
             next(error);

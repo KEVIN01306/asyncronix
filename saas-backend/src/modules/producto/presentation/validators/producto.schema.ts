@@ -2,12 +2,13 @@ import { z } from "zod";
 
 const productoBaseSchema = z.object({
     categoria_id: z.string().uuid({ message: 'Selecciona una categoría válida' }),
+    marca_id: z.string().uuid({ message: 'Selecciona una marca válida' }),
     nombre: z.string().min(3, 'El nombre del producto es obligatorio').max(150),
     codigo: z.string().max(100).optional().nullable(),
 });
 
 export const productoCrearSchema = productoBaseSchema;
-export const productoActualizarSchema = productoBaseSchema.partial();
+export const productoActualizarSchema = productoBaseSchema;
 
 export const productoListarQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).optional().default(10),

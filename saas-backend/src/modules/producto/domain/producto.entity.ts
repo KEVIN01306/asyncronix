@@ -2,6 +2,7 @@ export interface Producto {
     id: string;
     negocio_id: string;
     categoria_id: string;
+    marca_id: string;
     codigo?: string | null;
     sku?: string;
     nombre: string;
@@ -10,6 +11,11 @@ export interface Producto {
     stock_total: number;
     url_imagen: string;
     activo: boolean;
+}
+
+export interface ProductoMarca {
+    id: string;
+    marca: string;
 }
 
 export interface ProductoCategoria {
@@ -23,6 +29,7 @@ export interface ProductoActualizar extends Partial<Omit<Producto, "id" | "negoc
 
 export interface ProductoSimple extends Omit<Producto, "negocio_id"> {
     categoria: ProductoCategoria | null;
+    marca: ProductoMarca | null;
 }
 
 export interface VariantePublic {

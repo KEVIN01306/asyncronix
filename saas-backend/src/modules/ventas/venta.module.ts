@@ -5,7 +5,7 @@ import { AnularVentaUseCase } from "./application/anular-venta.usecase.js";
 import { ObtenerVentaUseCase } from "./application/obtener-venta.usecase.js";
 import { ObtenerVentasUseCase } from "./application/obtener-ventas.usecase.js";
 import { AgregarProductoUseCase } from "./application/agregar-producto.usecase.js";
-import { BuscarProductoPorSkuUseCase } from "./application/buscar-producto-por-sku.usecase.js";
+import { BuscarProductoPorCodigoUseCase } from "./application/buscar-producto-por-sku.usecase.js";
 import { EliminarDetalleVentaUseCase } from "./application/eliminar-detalle-venta.usecase.js";
 import { FinalizarVentaUseCase } from "./application/finalizar-venta.usecase.js";
 import { BuscarClientePorNitVentaUseCase } from "./application/buscar-cliente-por-nit.usecase.js";
@@ -24,7 +24,7 @@ const clienteRepository = new PrismaClienteRepository(prisma);
 
 const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository, varianteRepository);
 const agregarProductoUseCase = new AgregarProductoUseCase(ventaRepository, loteRepository, varianteRepository);
-const buscarProductoPorSkuUseCase = new BuscarProductoPorSkuUseCase(varianteRepository);
+const buscarProductoPorCodigoUseCase = new BuscarProductoPorCodigoUseCase(varianteRepository);
 const eliminarDetalleVentaUseCase = new EliminarDetalleVentaUseCase(ventaRepository);
 const finalizarVentaUseCase = new FinalizarVentaUseCase(ventaRepository);
 const actualizarVentaUseCase = new ActualizarVentaUseCase(ventaRepository);
@@ -42,7 +42,7 @@ export const ventaController = new VentaController(
     obtenerVentaUseCase,
     obtenerVentasUseCase,
     agregarProductoUseCase,
-    buscarProductoPorSkuUseCase,
+    buscarProductoPorCodigoUseCase,
     eliminarDetalleVentaUseCase,
     finalizarVentaUseCase,
     buscarClientePorNitVentaUseCase,

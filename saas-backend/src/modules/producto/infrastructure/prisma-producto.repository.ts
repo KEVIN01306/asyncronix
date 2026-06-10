@@ -15,6 +15,7 @@ import { GenerarSku } from "../domain/actions/generarSku.action.js";
 export class PrismaProductoRepository implements ProductoRepository {
     private readonly includeList = {
         categoria: true,
+        marca: true,
         variantes: {
             where: { activo: true },
             orderBy: { created_at: 'asc' as const },
@@ -24,6 +25,7 @@ export class PrismaProductoRepository implements ProductoRepository {
 
     private readonly includeDetail = {
         categoria: true,
+        marca: true,
         variantes: {
             where: { activo: true },
             orderBy: { created_at: 'asc' as const },
@@ -127,6 +129,7 @@ export class PrismaProductoRepository implements ProductoRepository {
                 },
                 include: {
                     categoria: true,
+                    marca: true,
                     negocio: true
                 }
             });
@@ -136,7 +139,8 @@ export class PrismaProductoRepository implements ProductoRepository {
             if (!productoCodigo) {
                 productoCodigo = GenerarSku.ejecutar({
                     negocioCodigo: createdProduct.negocio.slug,
-                    categoriaCodigo: createdProduct.categoria?.codigo ?? createdProduct.categoria?.categoria ?? '',
+                    marcaCodigo: createdProduct.marca?.marca ?? '',
+                    categoriaCodigo: createdProduct.categoria?.categoria ?? '',
                     productoCodigo: createdProduct.nombre
                 });
 
@@ -150,7 +154,8 @@ export class PrismaProductoRepository implements ProductoRepository {
             // Generate variant SKU independently from product codigo
             const varianteSku = GenerarSku.ejecutar({
                 negocioCodigo: createdProduct.negocio.slug,
-                categoriaCodigo: createdProduct.categoria?.codigo ?? createdProduct.categoria?.categoria ?? '',
+                marcaCodigo: createdProduct.marca?.marca ?? '',
+                categoriaCodigo: createdProduct.categoria?.categoria ?? '',
                 productoCodigo: productoCodigo
             });
 
@@ -193,17 +198,69 @@ export class PrismaProductoRepository implements ProductoRepository {
 
             if (result.count === 0) throw new Error('Producto no encontrado');
 
-            const productoActualizado = await this.prisma.producto.findFirst({
+            let productoActualizado = await this.prisma.producto.findFirst({
                 where: { id, negocio_id },
-                include: this.includeDetail
+                include: {
+                    ...this.includeDetail,
+                    negocio: true
+                }
             });
 
             if (!productoActualizado) throw new Error('Producto no encontrado');
+
+            let productoCodigo = productoActualizado.codigo?.trim();
+            if (!productoCodigo) {
+                productoCodigo = GenerarSku.ejecutar({
+                    negocioCodigo: productoActualizado.negocio.slug,
+                    marcaCodigo: productoActualizado.marca?.marca ?? '',
+                    categoriaCodigo: productoActualizado.categoria?.codigo ?? productoActualizado.categoria?.categoria ?? '',
+                    productoCodigo: productoActualizado.nombre
+                });
+
+                await this.prisma.producto.update({
+                    where: { id: productoActualizado.id },
+                    data: { codigo: productoCodigo }
+                });
+
+                productoActualizado = await this.prisma.producto.findFirst({
+                    where: { id, negocio_id },
+                    include: {
+                        ...this.includeDetail,
+                        negocio: true
+                    }
+                });
+
+                if (!productoActualizado) throw new Error('Producto no encontrado');
+            }
+
+            await this.actualizarSkusDeVariantes(productoActualizado);
 
             return ProductoMapper.mapDetalle(productoActualizado as any);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
+    }
+
+    private async actualizarSkusDeVariantes(producto: any): Promise<void> {
+        const variantes = await this.prisma.varianteProducto.findMany({
+            where: { producto_id: producto.id, activo: true },
+            include: { valores: true }
+        });
+
+        await Promise.all(variantes.map((variante) => {
+            const sku = GenerarSku.ejecutar({
+                negocioCodigo: producto.negocio.slug,
+                marcaCodigo: producto.marca?.marca ?? '',
+                categoriaCodigo: producto.categoria?.codigo ?? producto.categoria?.categoria ?? '',
+                productoCodigo: producto.codigo?.trim() || producto.nombre,
+                valores: variante.valores?.map((valor: any) => valor.valor) ?? []
+            });
+
+            return this.prisma.varianteProducto.update({
+                where: { id: variante.id },
+                data: { sku }
+            });
+        }));
     }
 
     async eliminar(id: string, negocio_id: string): Promise<void> {

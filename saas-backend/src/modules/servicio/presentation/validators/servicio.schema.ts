@@ -56,9 +56,13 @@ export const repuestoClienteCrearSchema = z.object({
 });
 
 export const repuestoCrearSchema = z.object({
-    variante_id: z.string().uuid(),
+    variante_id: z.string().uuid().optional(),
+    codigo: z.string().trim().optional(),
     cantidad: z.coerce.number().int().min(1),
     sucursal_id: z.string().uuid()
+}).refine((data) => Boolean(data.variante_id || data.codigo), {
+    message: 'Se requiere variante_id o codigo',
+    path: ['variante_id']
 });
 
 export const asociarMecanicoSchema = z.object({

@@ -13,6 +13,7 @@ export interface VarianteDetalle {
     producto_id: string;
     sku: string;
     codigo_barras?: string | null;
+    codigo_secuencial?: string | null;
     qr_codigo?: string | null;
     precio_sugerido: number;
     stock_total: number;

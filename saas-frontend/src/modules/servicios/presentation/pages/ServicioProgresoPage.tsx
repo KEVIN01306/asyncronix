@@ -205,7 +205,11 @@ const ServicioProgresoPage = () => {
                         </Typography>
                         <ListTableSimple 
                             columns={[
-                                { id: 'producto', name: 'Repuesto', format: (value) => value.nombre || '-' },
+                                { id: 'variante', name: 'Repuesto', format: (variante) => {
+                                    if (!variante) return '-';
+                                    const atributos = (variante.valores ?? []).map(v => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                    return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
+                                }},
                                 { id: 'cantidad', name: 'Cantidad' },
                             ]}
                             data={servicio.repuestos_inventario || []}

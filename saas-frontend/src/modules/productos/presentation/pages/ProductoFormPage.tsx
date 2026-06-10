@@ -10,7 +10,9 @@ import { SubmitButton } from '../../../../shared/components/button/SubmitButton'
 import { productoSchema, type ProductoFormValues } from '../../domain/schemas/producto.schema';
 import { ProductoRepository } from '../../infrastructure/repositories/producto.repository';
 import { CategoriaRepository } from '../../../categorias/infrastructure/repositories/categoria.repository';
+import { marcasRepository } from '../../../marcas/infrastructure/marcas.repository';
 import type { Categoria } from '../../../categorias/domain/interfaces/categoria.interface';
+import type { Marca } from '../../../marcas/domain/interface/marca.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ProductoFormPage = () => {
@@ -19,11 +21,13 @@ const ProductoFormPage = () => {
     const isEdit = Boolean(id);
     const [loading, setLoading] = useState(isEdit);
     const [categorias, setCategorias] = useState<Categoria[]>([]);
+    const [marcas, setMarcas] = useState<Marca[]>([]);
 
     const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<ProductoFormValues>({
         resolver: zodResolver(productoSchema),
         defaultValues: {
             categoria_id: '',
+            marca_id: '',
             nombre: '',
             precio_sugerido: 0,
         }
@@ -32,10 +36,14 @@ const ProductoFormPage = () => {
     useEffect(() => {
         const cargarDatos = async () => {
             try {
-                const response = await CategoriaRepository.listar(100, 0);
-                setCategorias(response.data);
+                const [categoriaResponse, marcaResponse] = await Promise.all([
+                    CategoriaRepository.listar(100, 0),
+                    marcasRepository.listar(100, 0)
+                ]);
+                setCategorias(categoriaResponse.data);
+                setMarcas(marcaResponse.data);
             } catch (error) {
-                console.error("Error al listar categorías:", error);
+                console.error("Error al listar categorías o marcas:", error);
             }
 
             if (isEdit && id) {
@@ -43,6 +51,7 @@ const ProductoFormPage = () => {
                     const product = await ProductoRepository.obtener(id);
                     console.log(product)
                     setValue('categoria_id', product.categoria_id);
+                    setValue('marca_id', product.marca_id);
                     setValue('nombre', product.nombre);
                     setValue('precio_sugerido', product.precio_sugerido);
                 } catch (error) {
@@ -107,6 +116,22 @@ const ProductoFormPage = () => {
                             {categorias.map((categoria) => (
                                 <MenuItem key={categoria.id} value={categoria.id}>
                                     {categoria.categoria}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        <TextField
+                            select
+                            label="Marca"
+                            fullWidth
+                            {...register('marca_id')}
+                            error={!!errors.marca_id}
+                            helperText={errors.marca_id?.message}
+                        >
+                            <MenuItem value="">Selecciona una marca</MenuItem>
+                            {marcas.map((marca) => (
+                                <MenuItem key={marca.id} value={marca.id}>
+                                    {marca.marca}
                                 </MenuItem>
                             ))}
                         </TextField>

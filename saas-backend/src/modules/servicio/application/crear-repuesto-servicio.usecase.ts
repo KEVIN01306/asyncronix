@@ -14,9 +14,16 @@ export class CrearServicioRepuestoUseCase {
         private readonly varianteRepository: VarianteRepository
     ) { }
 
-    async execute(servicioId: string, varianteId: string, cantidad: number, negocio_id: string, sucursal_id: string): Promise<any> {
+    async execute(servicioId: string, varianteId: string | undefined, codigo: string | undefined, cantidad: number, negocio_id: string, sucursal_id: string): Promise<any> {
         try {
-            const variante = await this.varianteRepository.obtener(varianteId, negocio_id);
+            if (!varianteId && !codigo) {
+                throw new AppError('Se requiere variante_id o codigo para crear el repuesto', 'VARIANTE_O_CODIGO_REQUERIDO', 400);
+            }
+
+            const variante = varianteId
+                ? await this.varianteRepository.obtener(varianteId, negocio_id)
+                : await this.varianteRepository.obtenerPorCodigo(codigo as string, negocio_id);
+
             if (!variante) throw new AppError('Variante no encontrada', 'VARIANTE_NO_ENCONTRADA', 404);
 
             const res = await this.loteRepository.listarPorVariante(variante.id, negocio_id, { page: 1, perPage: 1000 }, sucursal_id);

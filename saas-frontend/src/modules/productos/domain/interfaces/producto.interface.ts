@@ -20,6 +20,7 @@ export interface Variante {
     url_imagen?: string;
     sku?: string;
     codigo_barras?: string | null;
+    codigo_secuencial?: string | null;
     qr_codigo?: string | null;
     precio_sugerido?: number;
     stock_total?: number;
@@ -33,6 +34,7 @@ export interface Variante {
 export interface Producto {
     id: string;
     categoria_id: string;
+    marca_id: string;
     nombre: string;
     codigo?: string | null;
     sku: string;
@@ -42,6 +44,10 @@ export interface Producto {
     qr_imagen?: string | null;
     activo: boolean;
     categoria: ProductoCategoria | null;
+    marca: {
+        id: string;
+        marca: string;
+    } | null;
     variantes?: Variante[];
 }
 

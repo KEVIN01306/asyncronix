@@ -154,8 +154,23 @@ export type ServicioRepuestoClienteCrear = {
 export interface ServicioRepuesto {
     id: string;
     servicio_id: string;
+    variante_id: string;
     lote_id?: string | null;
-    producto?: { id: string; nombre: string } | null;
+    variante?: {
+        id: string;
+        sku: string;
+        codigo_barras?: string | null;
+        codigo_secuencial?: string | null;
+        qr_codigo?: string | null;
+        precio_sugerido?: number | null;
+        stock_total?: number | null;
+        producto?: { id: string; nombre: string } | null;
+        valores?: Array<{
+            id: string;
+            atributo?: { id: string; nombre: string } | null;
+            valor: string;
+        }>;
+    } | null;
     cantidad: number;
     precio_venta: number;
     costo?: number | null;

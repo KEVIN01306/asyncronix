@@ -13,7 +13,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
         try {
             const producto = await this.prisma.producto.findFirst({
                 where: { id: variante.producto_id, negocio_id },
-                include: { categoria: true, negocio: true }
+                include: { categoria: true, marca: true, negocio: true }
             });
 
             if (!producto) throw new AppError('Producto no encontrado', 'PRODUCTO_NOT_FOUND', 404);
@@ -24,8 +24,9 @@ export class PrismaVarianteRepository implements VarianteRepository {
 
             const sku = GenerarSku.ejecutar({
                 negocioCodigo: producto.negocio.slug,
+                marcaCodigo: producto.marca?.marca ?? '',
                 categoriaCodigo: producto.categoria?.codigo ?? producto.categoria?.categoria ?? '',
-                productoCodigo: producto.codigo?.trim() || producto.nombre,
+                productoCodigo: producto.nombre,
                 valores: valores.map((valor) => valor.valor)
             });
 
@@ -63,7 +64,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
             const existing = await this.prisma.varianteProducto.findFirst({
                 where: { id, producto: { negocio_id }, activo: true },
                 include: {
-                    producto: { include: { categoria: true, negocio: true } },
+                    producto: { include: { categoria: true, marca: true, negocio: true } },
                     valores: { include: { atributo: true } }
                 }
             });
@@ -77,6 +78,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
 
             const sku = GenerarSku.ejecutar({
                 negocioCodigo: existing.producto.negocio.slug,
+                marcaCodigo: existing.producto.marca?.marca ?? '',
                 categoriaCodigo: existing.producto.categoria?.codigo ?? existing.producto.categoria?.categoria ?? '',
                 productoCodigo: existing.producto.codigo?.trim() || existing.producto.nombre,
                 valores: valores.map((valor) => valor.valor)
@@ -140,16 +142,16 @@ export class PrismaVarianteRepository implements VarianteRepository {
         }
     }
 
-    async obtenerPorSku(sku: string, negocio_id: string): Promise<VarianteDetalle | null> {
+    async obtenerPorCodigo(codigo: string, negocio_id: string): Promise<VarianteDetalle | null> {
         try {
             const found = await this.prisma.varianteProducto.findFirst({
                 where: {
                     producto: { negocio_id },
                     activo: true,
                     OR: [
-                        { sku },
-                        { qr_codigo: sku },
-                        { codigo_barras: sku }
+                        { codigo_barras: codigo },
+                        { codigo_secuencial: codigo },
+                        { qr_codigo: codigo }
                     ]
                 },
                 include: {
@@ -272,6 +274,27 @@ export class PrismaVarianteRepository implements VarianteRepository {
         }
     }
 
+    async actualizarCodigoSecuencial(id: string, codigo_secuencial: string, negocio_id: string): Promise<VarianteDetalle> {
+        try {
+            const existing = await this.prisma.varianteProducto.findFirst({
+                where: { id, producto: { negocio_id }, activo: true },
+                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
+            });
+
+            if (!existing) throw new AppError('Variante no encontrada', 'VARIANTE_NOT_FOUND', 404);
+
+            const updated = await this.prisma.varianteProducto.update({
+                where: { id },
+                data: { codigo_secuencial },
+                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
+            });
+
+            return this.mapToDetalle(updated);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
     async generarQr(id: string, negocio_id: string): Promise<VarianteDetalle> {
         try {
             const existing = await this.prisma.varianteProducto.findFirst({
@@ -280,11 +303,11 @@ export class PrismaVarianteRepository implements VarianteRepository {
             });
 
             if (!existing) throw new AppError('Variante no encontrada', 'VARIANTE_NOT_FOUND', 404);
-            if (!existing.sku) throw new AppError('No existe SKU para generar el código QR', 'SKU_REQUIRED', 400);
+            if (!existing.codigo_secuencial) throw new AppError('No existe código secuencial para generar el código QR', 'CODIGO_SECUENCIAL_REQUIRED', 400);
 
             const updated = await this.prisma.varianteProducto.update({
                 where: { id },
-                data: { qr_codigo: existing.sku },
+                data: { qr_codigo: existing.codigo_secuencial },
                 include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
             });
 
@@ -322,6 +345,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
             producto_id: found.producto_id,
             sku: found.sku,
             codigo_barras: found.codigo_barras,
+            codigo_secuencial: found.codigo_secuencial,
             qr_codigo: found.qr_codigo,
             precio_sugerido: found.precio_sugerido,
             stock_total: found.stock_total,

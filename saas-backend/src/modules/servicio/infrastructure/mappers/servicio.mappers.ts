@@ -130,8 +130,26 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
     repuestos_inventario: (record.repuestos ?? []).map((r: any) => ({
         id: r.id,
         servicio_id: r.servicio_id,
-        lote_id: r.lote_id,
-        producto: r.lote && r.lote.producto ? { id: r.lote.producto.id, nombre: r.lote.producto.nombre } : null,
+        variante_id: r.variante_id,
+        lote_id: r.lote_id ?? null,
+        variante: r.variante ? {
+            id: r.variante.id,
+            sku: r.variante.sku,
+            codigo_barras: r.variante.codigo_barras,
+            codigo_secuencial: r.variante.codigo_secuencial,
+            qr_codigo: r.variante.qr_codigo,
+            precio_sugerido: r.variante.precio_sugerido,
+            stock_total: r.variante.stock_total,
+            producto: r.variante.producto ? {
+                id: r.variante.producto.id,
+                nombre: r.variante.producto.nombre
+            } : null,
+            valores: (r.variante.valores ?? []).map((v: any) => ({
+                id: v.id,
+                atributo: v.atributo ? { id: v.atributo.id, nombre: v.atributo.nombre } : null,
+                valor: v.valor
+            }))
+        } : null,
         cantidad: r.cantidad,
         precio_venta: r.precio_venta,
         costo: r.costo,

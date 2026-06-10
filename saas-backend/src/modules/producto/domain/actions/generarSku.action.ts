@@ -2,6 +2,7 @@
 
 interface GenerarSkuParams {
     negocioCodigo?: string;
+    marcaCodigo?: string;
     categoriaCodigo: string;
     productoCodigo: string;
     valores?: string[];
@@ -24,12 +25,15 @@ export class GenerarSku {
         };
 
         const segmentoNegocio = obtenerPrefijoNegocio(params.negocioCodigo);
+        const segmentoMarca = params.marcaCodigo ? normalizar(params.marcaCodigo).substring(0, 4) : undefined;
         const segmentoCategoria = normalizar(params.categoriaCodigo).substring(0, 4) || 'CAT';
         const segmentoProducto = normalizar(params.productoCodigo) || 'PROD';
         const segmentoValores = (params.valores ?? [])
             .map(normalizar)
             .filter(Boolean);
 
-        return [segmentoNegocio, segmentoCategoria, segmentoProducto, ...segmentoValores].join('-');
+        return [segmentoNegocio, segmentoMarca, segmentoCategoria, segmentoProducto, ...segmentoValores]
+            .filter(Boolean)
+            .join('-');
     }
 }

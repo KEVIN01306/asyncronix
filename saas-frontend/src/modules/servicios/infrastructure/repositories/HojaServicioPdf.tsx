@@ -248,12 +248,27 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                                 <Text style={[styles.tableHeaderCell, { width: '30%' }]}>Cant.</Text>
                             </View>
                             {servicio.repuestos_inventario && servicio.repuestos_inventario.length > 0 ? (
-                                servicio.repuestos_inventario.map((row: any, index: number) => (
-                                    <View key={index} style={styles.tableRow}>
-                                        <Text style={[styles.tableCell, { width: '70%' }]}>{row.producto?.nombre || '-'}</Text>
-                                        <Text style={[styles.tableCell, { width: '30%' }]}>{row.cantidad ?? '0'}</Text>
-                                    </View>
-                                ))
+                                servicio.repuestos_inventario.map((row: any, index: number) => {
+                                    const variante = row.variante;
+                                    
+                                    const atributos = variante 
+                                        ? (variante.valores ?? []).map((v: any) => `${v.atributo?.nombre}: ${v.valor}`).join(', ')
+                                        : '';
+                                    const textoRepuesto = variante
+                                        ? `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`
+                                        : '-';
+
+                                    return (
+                                        <View key={index} style={styles.tableRow}>
+                                            <Text style={[styles.tableCell, { width: '70%' }]}>
+                                                {textoRepuesto}
+                                            </Text>
+                                            <Text style={[styles.tableCell, { width: '30%' }]}>
+                                                {row.cantidad ?? '0'}
+                                            </Text>
+                                        </View>
+                                    );
+                                })
                             ) : (
                                 <Text style={styles.noDataCell}>No hay registros.</Text>
                             )}

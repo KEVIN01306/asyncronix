@@ -44,9 +44,6 @@ export const ventaRepository = {
         const response = await api.get<{ data: VentaVarianteDetalle }>('/ventas/scanner', { params: { q: codigo } });
         return response as any;
     },
-    buscarPorSku: async (sku: string): Promise<{ data: VentaVarianteDetalle }> => {
-        return ventaRepository.buscarPorCodigo(sku);
-    },
     agregarProducto: async (ventaId: string, codigo: string, sucursal_id: string, cantidad = 1): Promise<any> => {
         const payload = { codigo, cantidad, sucursal_id };
         const response = await api.post(`/ventas/${ventaId}/agregar-producto`, payload);

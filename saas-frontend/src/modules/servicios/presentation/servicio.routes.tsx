@@ -1,9 +1,8 @@
 import type { RouteObject } from 'react-router-dom';
-import { ServiciosListPage, ServicioFormPage, ServicioDetailPage, ServicioCustomPage, ServicioProgresoPage, ServicioSalidaPage, ServicioRepuestosPage } from './servicio-lazy';
+import { ServiciosListPage, ServicioFormPage, ServicioDetailPage, ServicioCustomPage, ServicioProgresoPage, ServicioSalidaPage, ServicioRepuestosPage, ServicioHojaPage } from './servicio-lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 import { ServicioStateGuard } from './components/ServicioStateGuard';
 import { ESTADO_SERVICIO } from '../domain/servicio.constants';
-import ServicioHojaPage from './pages/ServicioHojaPage';
 
 export const servicioRoutes: RouteObject[] = [
     {

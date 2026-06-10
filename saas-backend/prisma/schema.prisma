@@ -208,6 +208,7 @@ model Marca {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   modelos    Modelo[]
+  Productos   Producto[]
 
   @@map("marcas")
 }
@@ -522,8 +523,9 @@ model CategoriaProducto {
 model Producto {
   id           String   @id @default(uuid()) @db.Char(36)
   negocio_id   String   @db.Char(36)
-  codigo       String?  @db.VarChar(50)
+  codigo       String?  @db.VarChar(100)
   categoria_id String   @db.Char(36)
+  marca_id     String?  @db.Char(36)
   url_imagen   String   @db.Text
   nombre       String
   descripcion  String?  @db.Text
@@ -533,6 +535,7 @@ model Producto {
 
   negocio   Negocio            @relation(fields: [negocio_id], references: [id])
   categoria CategoriaProducto  @relation(fields: [categoria_id], references: [id])
+  marca     Marca?              @relation(fields: [marca_id], references: [id])
   variantes VarianteProducto[]
 
   @@unique([negocio_id, codigo])
@@ -557,17 +560,18 @@ model VarianteProducto {
   id              String   @id @default(uuid()) @db.Char(36)
   producto_id     String   @db.Char(36)
   url_imagen      String   @db.Text
-  sku             String   @unique // DNI estático de la combinación
+  sku             String   @unique
+  codigo_secuencial String? @unique @db.VarChar(20)
   codigo_barras   String?  @unique
   qr_codigo       String?  @unique
-  precio_sugerido Float // El precio base de venta para esta variante
-  stock_total     Int      @default(0) // Sumatoria de los lotes activos de esta variante
+  precio_sugerido Float
+  stock_total     Int      @default(0)
   activo          Boolean  @default(true)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
   producto       Producto           @relation(fields: [producto_id], references: [id], onDelete: Cascade)
-  valores        ValorAtributo[] // Relación Many-to-Many implícita para las llaves-valor
+  valores        ValorAtributo[]
   lotes          Lote[]
   repuestos      ServicioRepuesto[]
   venta_detalles VentaDetalle[]
@@ -623,8 +627,8 @@ model Lote {
 model ServicioRepuesto {
   id           String   @id @default(uuid()) @db.Char(36)
   servicio_id  String   @db.Char(36)
-  lote_id      String   @db.Char(36)
-  variante_id  String?  @db.Char(36)
+  lote_id      String?  @db.Char(36)
+  variante_id  String   @db.Char(36)
   cantidad     Int
   precio_venta Float
   costo        Float?
@@ -633,8 +637,8 @@ model ServicioRepuesto {
   updated_at   DateTime @updatedAt
 
   servicio Servicio          @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
-  lote     Lote              @relation(fields: [lote_id], references: [id])
-  variante VarianteProducto? @relation(fields: [variante_id], references: [id])
+  lote     Lote?             @relation(fields: [lote_id], references: [id])
+  variante VarianteProducto  @relation(fields: [variante_id], references: [id])
 
   @@index([variante_id])
   @@map("servicio_repuestos")
@@ -732,6 +736,14 @@ model IngresosEgresos {
   tipo     TipoContabilidad @relation(fields: [tipo_id], references: [id])
 
   @@map("ingresos_egresos")
+}
+
+
+model BarcodeSequence {
+  id         BigInt   @id @default(autoincrement())
+  created_at DateTime @default(now())
+
+  @@map("barcode_sequences")
 }
 
 // ==============================================================

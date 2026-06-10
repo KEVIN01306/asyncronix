@@ -6,7 +6,9 @@ import type { MenuItem } from "../Sidebar";
 export const SidebarItem: React.FC<{ item: MenuItem }> = ({ item }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const isActive = pathname === item.link;
+  const isActive = item.link
+  ? pathname === item.link || pathname.startsWith(`${item.link}/`)
+  : false;
 
   return (
     <ListItemButton onClick={() => item.link && navigate(item.link)} sx={getItemStyle(isActive)}>

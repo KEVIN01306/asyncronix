@@ -153,7 +153,7 @@ export const servicioRepository = {
         const response = await api.delete(`${URL_MODULE}/${servicioId}/repuestos-cliente/${id}`);
         return response.data;
     },
-    crearRepuesto: async (servicioId: string, data: { producto_id: string; cantidad: number; sucursal_id: string }) => {
+    crearRepuesto: async (servicioId: string, data: { variante_id?: string; codigo?: string; cantidad: number; sucursal_id: string }) => {
         const response = await api.post(`${URL_MODULE}/${servicioId}/repuestos`, data);
         return response.data;
     },

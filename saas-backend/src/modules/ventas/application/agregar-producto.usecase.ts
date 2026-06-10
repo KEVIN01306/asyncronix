@@ -18,7 +18,7 @@ export class AgregarProductoUseCase {
 
     async execute(ventaId: string, codigo: string, cantidad: number, negocio_id: string, sucursal_id: string): Promise<any> {
         try {
-            const variante = await this.varianteRepository.obtenerPorSku(codigo, negocio_id);
+            const variante = await this.varianteRepository.obtenerPorCodigo(codigo, negocio_id);
             if (!variante) {
                 throw new AppError('Variante no encontrada', 'VARIANTE_NO_ENCONTRADA', 404);
             }

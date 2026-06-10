@@ -26,6 +26,7 @@ export class ProductoMapper {
         return {
             id: producto.id,
             categoria_id: producto.categoria_id,
+            marca_id: producto.marca?.id ?? producto.marca_id,
             nombre: producto.nombre,
             codigo: producto.codigo ?? null,
             sku: variant.sku, // Product SKU is its codigo
@@ -37,7 +38,8 @@ export class ProductoMapper {
             categoria: producto.categoria ? {
                 id: producto.categoria.id,
                 categoria: producto.categoria.categoria
-            } : null
+            } : null,
+            marca: producto.marca ? { id: producto.marca.id, marca: producto.marca.marca } : null
         };
     }
 
@@ -47,6 +49,7 @@ export class ProductoMapper {
         return {
             id: producto.id,
             categoria_id: producto.categoria_id,
+            marca_id: producto.marca?.id ?? producto.marca_id,
             nombre: producto.nombre,
             codigo: producto.codigo ?? null,
             sku: variant.sku, // Product SKU is its codigo
@@ -58,8 +61,8 @@ export class ProductoMapper {
             categoria: producto.categoria ? {
                 id: producto.categoria.id,
                 categoria: producto.categoria.categoria
-            } : null
-            ,
+            } : null,
+            marca: producto.marca ? { id: producto.marca.id, marca: producto.marca.marca } : null,
             variantes: producto.variantes?.map(v => ({
                 id: v?.id ?? '',
                 sku: v?.sku ?? undefined,

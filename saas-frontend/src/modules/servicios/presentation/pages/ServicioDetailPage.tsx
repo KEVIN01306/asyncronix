@@ -294,7 +294,11 @@ const ServicioDetailPage = () => {
                         </Typography>
                         <ListTableSimple 
                             columns={[
-                                { id: 'producto', name: 'Repuesto', format: (value) => value.nombre || '-' },
+                                { id: 'variante', name: 'Repuesto', format: (variante) => {
+                                    if (!variante) return '-';
+                                    const atributos = (variante.valores ?? []).map(v => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                    return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
+                                }},
                                 { id: 'cantidad', name: 'Cantidad' },
                                 { id: 'precio_venta', name: 'Precio', format: (value) => value ? formatMoney(value) : '-' },
                                 { id: 'total', name: 'Total', format: (_value, row) => {

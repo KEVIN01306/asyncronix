@@ -32,13 +32,13 @@ routes.get("/",
 routes.get("/buscar-sku",
     authMiddleware.verificarPermiso(['CREAR_VENTAS']),
     validarMiddleware.validarQuery(buscarScannerSchema),
-    ventaController.buscarPorSku
+    ventaController.buscarPorCodigo
 );
 
 routes.get("/scanner",
     authMiddleware.verificarPermiso(['CREAR_VENTAS']),
     validarMiddleware.validarQuery(buscarScannerSchema),
-    ventaController.buscarPorSku
+    ventaController.buscarPorCodigo
 );
 
 routes.get("/clientes/buscar-por-nit",
