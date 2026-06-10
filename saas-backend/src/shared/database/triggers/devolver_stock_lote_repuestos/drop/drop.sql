@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS devolver_stock_lote_repuestos;

@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS descontar_stock_lote_repuestos;

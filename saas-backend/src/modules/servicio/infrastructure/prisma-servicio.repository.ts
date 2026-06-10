@@ -617,7 +617,7 @@ export class PrismaServicioRepository implements ServicioRepository {
 
                 return created;
             }, {
-                timeout: 10000,
+                timeout: 20000,
             } );
         } catch (error) {
             throw PrismaErrorMapper.map(error);
