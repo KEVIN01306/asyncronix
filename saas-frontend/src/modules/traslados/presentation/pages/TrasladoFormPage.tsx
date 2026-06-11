@@ -19,6 +19,7 @@ import {
     CircularProgress,
     Stack,
     Alert,
+    FormHelperText, // 👈 Añadido para el mensaje de error
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
@@ -49,16 +50,12 @@ export const TrasladoFormPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [loadingLotes, ] = useState(false);
     const [openLoteModal, setOpenLoteModal] = useState(false);
-    const sucursalDestino = useForm<TrasladoFormData>({
-        resolver: zodResolver(trasladoSchema),
-        defaultValues: {
-            sucursal_destino_id: '',
-        },
-    }).watch('sucursal_destino_id');
 
+    // ✅ SOLUCIÓN: Una sola instancia de useForm controlando todo
     const {
         control,
         handleSubmit,
+        watch,
         formState: { errors, isSubmitting },
     } = useForm<TrasladoFormData>({
         resolver: zodResolver(trasladoSchema),
@@ -67,23 +64,20 @@ export const TrasladoFormPage: React.FC = () => {
         },
     });
 
-    useEffect(() => {
-        cargarDatos();
-    }, [cargarDatos]);
+    // Escuchamos los cambios del sucursal_destino_id desde la misma instancia
+    const sucursalDestino = watch('sucursal_destino_id');
 
-    const cargarDatos = useCallback(async () => {
+     const cargarDatos = useCallback(async () => {
         if (!user?.sucursal_id || !user?.negocio_id) return;
 
         setLoading(true);
         try {
-            // Cargar lotes de la sucursal actual
             const lotesResponse = await LoteRepository.listar(100, 0);
             const lotesFiltrados = lotesResponse.data.filter(
                 lote => lote.sucursal_id === user.sucursal_id && lote.cantidad_actual > 0
             );
             setLotes(lotesFiltrados);
 
-            // Cargar sucursales del negocio
             const sucursalesResponse = await sucursalRepository.listar(100, 0);
             const sucursalesFiltradas = sucursalesResponse.data.filter(
                 s => s.id !== user.sucursal_id
@@ -95,7 +89,11 @@ export const TrasladoFormPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [usuario?.sucursal_id, usuario?.negocio_id]);
+    }, [user?.sucursal_id, user?.negocio_id]);
+
+    useEffect(() => {
+        cargarDatos();
+    }, [cargarDatos]);
 
     const onSubmit = async (data: TrasladoFormData) => {
         setLoading(true);
@@ -176,16 +174,17 @@ export const TrasladoFormPage: React.FC = () => {
             <Card>
                 <CardContent>
                     <Stack spacing={3}>
-                        <FormControl fullWidth>
-                            <InputLabel>Sucursal Destino</InputLabel>
+                        {/* ✅ CORRECCIÓN: Manejo correcto de errores con FormHelperText */}
+                        <FormControl fullWidth error={!!errors.sucursal_destino_id}>
+                            <InputLabel id="sucursal-destino-label">Sucursal Destino</InputLabel>
                             <Controller
                                 name="sucursal_destino_id"
                                 control={control}
                                 render={({ field }) => (
                                     <Select
                                         {...field}
+                                        labelId="sucursal-destino-label"
                                         label="Sucursal Destino"
-                                        error={!!errors.sucursal_destino_id}
                                     >
                                         {sucursales.map(sucursal => (
                                             <MenuItem key={sucursal.id} value={sucursal.id}>
@@ -195,6 +194,9 @@ export const TrasladoFormPage: React.FC = () => {
                                     </Select>
                                 )}
                             />
+                            {errors.sucursal_destino_id && (
+                                <FormHelperText>{errors.sucursal_destino_id.message}</FormHelperText>
+                            )}
                         </FormControl>
 
                         <Box>
@@ -203,7 +205,7 @@ export const TrasladoFormPage: React.FC = () => {
                                     Lotes a Trasladar ({selectedLotes.size})
                                 </Typography>
                                 <Button
-                                    variant="outlined"
+                                    variant="contained"
                                     size="small"
                                     onClick={() => setOpenLoteModal(true)}
                                     disabled={!sucursalDestino}

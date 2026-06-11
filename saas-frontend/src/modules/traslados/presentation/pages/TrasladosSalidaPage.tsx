@@ -68,6 +68,7 @@ export const TrasladosSalidaPage = () => {
             name: 'Estado', 
             format: (value: EstadoTraslado) => (
                 <Chip 
+                    variant='outlined'
                     label={value} 
                     color={ESTADO_COLORS[value]} 
                     size="small" 
@@ -131,7 +132,7 @@ export const TrasladosSalidaPage = () => {
                     setOpenCancelDialog(true);
                 }
             },
-            hidden: (row: any) => row.estado !== 'PENDIENTE',
+            visible: (row: any) => row.estado == 'PENDIENTE',
         },
     ];
 

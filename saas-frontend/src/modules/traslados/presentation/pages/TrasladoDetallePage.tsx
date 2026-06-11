@@ -19,6 +19,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { trasladoRepository } from '../../infrastructure/traslado.repository';
 import type { TrasladoDetalle, EstadoTraslado } from '../../domain/interfaces/traslado.interface';
+import { ArrowBack } from '@mui/icons-material';
 
 const ESTADO_COLORS: Record<EstadoTraslado, 'default' | 'warning' | 'success' | 'error'> = {
     PENDIENTE: 'warning',
@@ -33,13 +34,7 @@ export const TrasladoDetallePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        if (id) {
-            cargarTraslado();
-        }
-    }, [id, cargarTraslado]);
-
-    const cargarTraslado = useCallback(async () => {
+        const cargarTraslado = useCallback(async () => {
         if (!id) return;
         setLoading(true);
         setError('');
@@ -52,6 +47,14 @@ export const TrasladoDetallePage: React.FC = () => {
             setLoading(false);
         }
     }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            cargarTraslado();
+        }
+    }, [id, cargarTraslado]);
+
+
 
     if (loading) {
         return (
@@ -82,8 +85,18 @@ export const TrasladoDetallePage: React.FC = () => {
                     <Typography color="textSecondary">
                         {new Date(traslado.created_at).toLocaleString()}
                     </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                    <Button
+                        startIcon={<ArrowBack />}
+                        onClick={() => navigate(-1)}
+                        sx={{ mb: 2, textTransform: 'none' }}
+                    >
+                        Volver
+                    </Button>
+                    </Box>
                 </Box>
                 <Chip
+                    variant='outlined'
                     label={traslado.estado}
                     color={ESTADO_COLORS[traslado.estado]}
                     size="medium"
@@ -114,6 +127,7 @@ export const TrasladoDetallePage: React.FC = () => {
                                 <Box>
                                     <Typography color="textSecondary" variant="caption">Estado</Typography>
                                     <Chip
+                                        variant='outlined'
                                         label={traslado.estado}
                                         color={ESTADO_COLORS[traslado.estado]}
                                         size="small"
@@ -156,12 +170,6 @@ export const TrasladoDetallePage: React.FC = () => {
                         </TableContainer>
                     </CardContent>
                 </Card>
-
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                    <Button onClick={() => navigate('/traslados/salidas')}>
-                        Volver
-                    </Button>
-                </Box>
             </Stack>
         </Box>
     );

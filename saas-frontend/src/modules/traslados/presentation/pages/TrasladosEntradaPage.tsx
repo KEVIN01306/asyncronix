@@ -68,6 +68,7 @@ export const TrasladosEntradaPage = () => {
             name: 'Estado', 
             format: (value: EstadoTraslado) => (
                 <Chip 
+                    variant='outlined'
                     label={value} 
                     color={ESTADO_COLORS[value]} 
                     size="small" 
@@ -131,7 +132,7 @@ export const TrasladosEntradaPage = () => {
                     setOpenReceiveDialog(true);
                 }
             },
-            hidden: (row: any) => row.estado !== 'PENDIENTE',
+            visible: (row: any) => row.estado == 'PENDIENTE',
         },
     ];
 
@@ -202,7 +203,7 @@ export const TrasladosEntradaPage = () => {
                     <Button
                         onClick={handleRecibir}
                         color="success"
-                        variant="contained"
+                        variant="outlined"
                         disabled={receiveLoading}
                     >
                         {receiveLoading ? <CircularProgress size={24} /> : 'Sí, Recibir'}

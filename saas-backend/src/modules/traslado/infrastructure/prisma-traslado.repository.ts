@@ -90,6 +90,8 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                 }
 
                 return created;
+            },{
+                timeout: 10000
             });
 
             return TrasladoMapper.mapDetalle(traslado as any);
@@ -351,6 +353,8 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                     where: { id },
                     data: { estado: 'COMPLETADO' },
                 });
+            },{
+                timeout: 10000
             });
         } catch (error: any) {
             if (error instanceof PersistenceError) throw error;
