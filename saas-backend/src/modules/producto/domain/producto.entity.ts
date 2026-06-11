@@ -41,6 +41,16 @@ export interface VariantePublic {
     qr_codigo: string | null | undefined;
 }
 
+export interface ProductoAtributo {
+    id: string;
+    nombre: string;
+}
+
 export interface ProductoDetalle extends ProductoSimple {
     variantes?: VariantePublic[];
+    negocio?: {
+        id: string;
+        slug: string;
+    } | undefined;
+    atributos?: ProductoAtributo[];
 }

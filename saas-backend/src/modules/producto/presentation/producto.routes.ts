@@ -6,6 +6,7 @@ import { productoController } from "../producto.module.js";
 import {
     productoCrearSchema,
     productoActualizarSchema,
+    productoAtributosSchema,
     productoListarQuerySchema
 } from "./validators/producto.schema.js";
 import {
@@ -46,6 +47,17 @@ routes.post("/:producto_id/variantes",
     authMiddleware.verificarPermiso(['CREAR_PRODUCTOS']),
     validarMiddleware.validarBody(varianteCrearSchema),
     productoController.crearVariante
+);
+
+routes.get("/:producto_id/atributos",
+    authMiddleware.verificarPermiso(['VER_PRODUCTOS_DETALLE']),
+    productoController.listarAtributos
+);
+
+routes.put("/:producto_id/atributos",
+    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
+    validarMiddleware.validarBody(productoAtributosSchema),
+    productoController.actualizarAtributos
 );
 
 routes.get("/variantes/:id",

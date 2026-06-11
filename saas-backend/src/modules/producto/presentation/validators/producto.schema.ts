@@ -10,6 +10,10 @@ const productoBaseSchema = z.object({
 export const productoCrearSchema = productoBaseSchema;
 export const productoActualizarSchema = productoBaseSchema;
 
+export const productoAtributosSchema = z.object({
+    atributos: z.array(z.string().uuid({ message: 'Selecciona atributos válidos' })).optional().default([])
+});
+
 export const productoListarQuerySchema = z.object({
     limit: z.coerce.number().min(1).max(100).optional().default(10),
     offset: z.coerce.number().min(0).optional().default(0),

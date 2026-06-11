@@ -31,6 +31,8 @@ export interface VarianteCrear {
     precio_sugerido: number;
     codigo_barras?: string | null;
     valor_atributo_ids?: string[];
+    sku?: string;
+    codigo_secuencial?: string | null;
 }
 
 export interface VarianteActualizar {

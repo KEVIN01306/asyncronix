@@ -31,6 +31,11 @@ export interface Variante {
     };
 }
 
+export interface ProductoAtributo {
+    id: string;
+    nombre: string;
+}
+
 export interface Producto {
     id: string;
     categoria_id: string;
@@ -49,6 +54,7 @@ export interface Producto {
         marca: string;
     } | null;
     variantes?: Variante[];
+    atributos?: ProductoAtributo[];
 }
 
 export type ProductoDetailResponse = ApiResponse<Producto>;

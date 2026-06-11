@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import type {
     ProductoActualizar,
+    ProductoAtributo,
     ProductoCrear,
     ProductoSimple,
     ProductoDetalle
@@ -8,6 +9,7 @@ import type {
 import type { ProductoRepository } from "../domain/producto.repository.js";
 import { ProductoMapper } from "./mappers/producto.mapper.js";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
+import AppError from "@shared/errors/AppError.js";
 import type { Pagination } from "@shared/domain/pagination.js";
 import type { Paginated } from "@shared/domain/paginated.js";
 import { GenerarSku } from "../domain/actions/generarSku.action.js";
@@ -26,6 +28,9 @@ export class PrismaProductoRepository implements ProductoRepository {
     private readonly includeDetail = {
         categoria: true,
         marca: true,
+        atributos: {
+            where: { activo: true }
+        },
         variantes: {
             where: { activo: true },
             orderBy: { created_at: 'asc' as const },
@@ -38,7 +43,10 @@ export class PrismaProductoRepository implements ProductoRepository {
     async obtener(id: string, negocio_id: string): Promise<ProductoDetalle | null> {
         const producto = await this.prisma.producto.findFirst({
             where: { id, negocio_id, activo: true },
-            include: this.includeDetail
+            include: {
+                ...this.includeDetail,
+                negocio: true
+            }
         });
 
         if (!producto) return null;
@@ -116,6 +124,60 @@ export class PrismaProductoRepository implements ProductoRepository {
         };
     }
 
+    async listarAtributosProducto(producto_id: string, negocio_id: string): Promise<ProductoAtributo[] | null> {
+        const producto = await this.prisma.producto.findFirst({
+            where: { id: producto_id, negocio_id, activo: true },
+            include: { atributos: { where: { activo: true }, include: { valores: true } } }
+        });
+
+        if (!producto) return null;
+
+        return producto.atributos.map((atributo: any) => ({
+            id: atributo.id,
+            nombre: atributo.nombre,
+            valores: (atributo.valores || []).map((v: any) => ({ id: v.id, valor: v.valor, atributo_id: v.atributo_id }))
+        }));
+    }
+
+    async actualizarAtributosProducto(producto_id: string, negocio_id: string, atributo_ids: string[]): Promise<ProductoAtributo[] | null> {
+        const producto = await this.prisma.producto.findFirst({
+            where: { id: producto_id, negocio_id, activo: true },
+            include: { atributos: true }
+        });
+
+        if (!producto) return null;
+
+        const currentAtributoIds = (producto.atributos ?? []).map((atributo: any) => atributo.id);
+        const removedAtributoIds = currentAtributoIds.filter((id: string) => !atributo_ids.includes(id));
+
+        if (removedAtributoIds.length > 0) {
+            const variantInUse = await this.prisma.varianteProducto.findFirst({
+                where: {
+                    producto_id,
+                    activo: true,
+                    valores: { some: { atributo_id: { in: removedAtributoIds } } }
+                }
+            });
+
+            if (variantInUse) {
+                throw new AppError('No se puede eliminar un atributo que está siendo usado por una variante', 'ATRIBUTO_EN_USO', 400);
+            }
+        }
+
+        const updatedProducto = await this.prisma.producto.update({
+            where: { id: producto_id },
+            data: {
+                atributos: { set: atributo_ids.map((id) => ({ id })) }
+            },
+            include: { atributos: { where: { activo: true } } }
+        });
+
+        return updatedProducto.atributos.map((atributo: any) => ({
+            id: atributo.id,
+            nombre: atributo.nombre
+        }));
+    }
+
     async registrar(producto: ProductoCrear, negocio_id: string): Promise<ProductoDetalle> {
         try {
             const { sku: _sku, precio_sugerido: _precio_sugerido, ...productoData } = producto as any;
@@ -134,52 +196,7 @@ export class PrismaProductoRepository implements ProductoRepository {
                 }
             });
 
-            // Generate product code (codigo) if not provided
-            let productoCodigo = createdProduct.codigo?.trim();
-            if (!productoCodigo) {
-                productoCodigo = GenerarSku.ejecutar({
-                    negocioCodigo: createdProduct.negocio.slug,
-                    marcaCodigo: createdProduct.marca?.marca ?? '',
-                    categoriaCodigo: createdProduct.categoria?.categoria ?? '',
-                    productoCodigo: createdProduct.nombre
-                });
-
-                // Update product with generated codigo
-                await this.prisma.producto.update({
-                    where: { id: createdProduct.id },
-                    data: { codigo: productoCodigo }
-                });
-            }
-
-            // Generate variant SKU independently from product codigo
-            const varianteSku = GenerarSku.ejecutar({
-                negocioCodigo: createdProduct.negocio.slug,
-                marcaCodigo: createdProduct.marca?.marca ?? '',
-                categoriaCodigo: createdProduct.categoria?.categoria ?? '',
-                productoCodigo: productoCodigo
-            });
-
-            await this.prisma.varianteProducto.create({
-                data: {
-                    producto_id: createdProduct.id,
-                    sku: varianteSku,
-                    codigo_barras: null,
-                    qr_codigo: null,
-                    precio_sugerido: 0,
-                    stock_total: 0,
-                    activo: true,
-                    url_imagen: createdProduct.url_imagen
-                }
-            });
-
-            const nuevoProducto = await this.prisma.producto.findFirst({
-                where: { id: createdProduct.id, negocio_id },
-                include: this.includeDetail
-            });
-
-            if (!nuevoProducto) throw new Error('Producto no encontrado');
-
-            return ProductoMapper.mapDetalle(nuevoProducto as any);
+            return ProductoMapper.mapDetalle(createdProduct as any);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

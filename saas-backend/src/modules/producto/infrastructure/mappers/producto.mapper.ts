@@ -63,6 +63,10 @@ export class ProductoMapper {
                 categoria: producto.categoria.categoria
             } : null,
             marca: producto.marca ? { id: producto.marca.id, marca: producto.marca.marca } : null,
+            negocio: (producto as any).negocio ? { id: (producto as any).negocio.id, slug: (producto as any).negocio.slug } : undefined,
+            ...(producto.atributos ? {
+                atributos: producto.atributos.map((atributo: any) => ({ id: atributo.id, nombre: atributo.nombre }))
+            } : {}),
             variantes: producto.variantes?.map(v => ({
                 id: v?.id ?? '',
                 sku: v?.sku ?? undefined,

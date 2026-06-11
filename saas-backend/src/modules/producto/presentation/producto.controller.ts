@@ -16,6 +16,8 @@ import type { ObtenerVarianteUseCase } from "../application/obtener-variante.use
 import type { SubirImagenVarianteUseCase } from "../application/subir-imagen-variante.usecase.js";
 import type { ActualizarCodigoBarrasVarianteUseCase } from "../application/actualizar-codigo-barras-variante.usecase.js";
 import type { GenerarQrVarianteUseCase } from "../application/generar-qr-variante.usecase.js";
+import type { ListarAtributosProductoUseCase } from "../application/listar-atributos-producto.usecase.js";
+import type { ActualizarAtributosProductoUseCase } from "../application/actualizar-atributos-producto.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ProductoController extends BaseController {
@@ -34,7 +36,9 @@ export class ProductoController extends BaseController {
         private readonly obtenerVarianteUseCase: ObtenerVarianteUseCase,
         private readonly subirImagenVarianteUseCase: SubirImagenVarianteUseCase,
         private readonly actualizarCodigoBarrasVarianteUseCase: ActualizarCodigoBarrasVarianteUseCase,
-        private readonly generarQrVarianteUseCase: GenerarQrVarianteUseCase
+        private readonly generarQrVarianteUseCase: GenerarQrVarianteUseCase,
+        private readonly listarAtributosProductoUseCase: ListarAtributosProductoUseCase,
+        private readonly actualizarAtributosProductoUseCase: ActualizarAtributosProductoUseCase
     ) {
         super();
     }
@@ -82,6 +86,29 @@ export class ProductoController extends BaseController {
             const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
             const variantes = await this.listarVariantesProductoUseCase.execute(producto_id, negocio_id, sucursal_id);
             res.status(200).json(Respuesta.exito('Variantes obtenidas con exito', variantes));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listarAtributos = async (req: Request<{ producto_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { producto_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const atributos = await this.listarAtributosProductoUseCase.execute(producto_id, negocio_id);
+            res.status(200).json(Respuesta.exito('Atributos del producto obtenidos con exito', atributos));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    actualizarAtributos = async (req: Request<{ producto_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { producto_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { atributos } = req.body;
+            const updatedAtributos = await this.actualizarAtributosProductoUseCase.execute(producto_id, negocio_id, atributos);
+            res.status(200).json(Respuesta.exito('Atributos del producto actualizados con exito', updatedAtributos));
         } catch (error) {
             next(error);
         }

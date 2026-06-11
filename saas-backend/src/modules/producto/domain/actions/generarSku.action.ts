@@ -25,9 +25,10 @@ export class GenerarSku {
         };
 
         const segmentoNegocio = obtenerPrefijoNegocio(params.negocioCodigo);
-        const segmentoMarca = params.marcaCodigo ? normalizar(params.marcaCodigo).substring(0, 4) : undefined;
+        const segmentoMarca = params.marcaCodigo ? normalizar(params.marcaCodigo).substring(0, 5) : undefined;
         const segmentoCategoria = normalizar(params.categoriaCodigo).substring(0, 4) || 'CAT';
-        const segmentoProducto = normalizar(params.productoCodigo) || 'PROD';
+        const primerProducto = params.productoCodigo.trim().split(/\s+/)[0] ?? '';
+        const segmentoProducto = normalizar(primerProducto) || 'PROD';
         const segmentoValores = (params.valores ?? [])
             .map(normalizar)
             .filter(Boolean);

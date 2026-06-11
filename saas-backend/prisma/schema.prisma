@@ -536,7 +536,8 @@ model Producto {
   negocio   Negocio            @relation(fields: [negocio_id], references: [id])
   categoria CategoriaProducto  @relation(fields: [categoria_id], references: [id])
   marca     Marca?              @relation(fields: [marca_id], references: [id])
-  variantes VarianteProducto[]
+  variantes VarianteProducto[] 
+  atributos  Atributo[]         @relation("ProductoAtributos")
 
   @@unique([negocio_id, codigo])
   @@map("productos")
@@ -551,6 +552,7 @@ model Atributo {
   updated_at DateTime @updatedAt
 
   valores ValorAtributo[]
+  productos Producto[] @relation("ProductoAtributos")
 
   @@unique([negocio_id, nombre])
   @@map("atributos")

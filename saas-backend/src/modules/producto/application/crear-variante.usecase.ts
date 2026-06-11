@@ -1,6 +1,7 @@
 import type { VarianteCrear, VarianteDetalle } from "../domain/variante.entity.js";
 import type { VarianteRepository } from "../domain/variante.repository.js";
 import type { ObtenerSecuenciaUseCase } from "./obtener-secuencia.usecase.js";
+import { crearCodigoSecuencial } from "@shared/infrastructure/codigo-secuencial.util.js";
 
 export class CrearVarianteUseCase {
     constructor(private readonly repository: VarianteRepository, private readonly obtenerSecuencia?: ObtenerSecuenciaUseCase) { }
@@ -10,16 +11,11 @@ export class CrearVarianteUseCase {
 
         if (this.obtenerSecuencia) {
             const sequence = await this.obtenerSecuencia.execute();
-            const ean = this.crearCodigoEan(sequence);
+            const ean = crearCodigoSecuencial(sequence);
             const updated = await this.repository.actualizarCodigoSecuencial(created.id, ean, negocio_id);
             return updated;
         }
 
         return created;
-    }
-
-    private crearCodigoEan(sequence: number): string {
-        const padded = String(sequence).padStart(10, '0');
-        return `714${padded}`;
     }
 }

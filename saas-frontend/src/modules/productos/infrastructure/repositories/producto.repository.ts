@@ -1,6 +1,6 @@
 import api from "../../../../core/api/api";
 import type { ApiResponse } from "../../../../core/api/interfaces/api-response.interface";
-import type { Producto, ProductosResponse, ProductoDetailResponse } from "../../domain/interfaces/producto.interface";
+import type { Producto, ProductosResponse, ProductoDetailResponse, ProductoAtributo } from "../../domain/interfaces/producto.interface";
 
 const URL_MODULE = '/productos/';
 
@@ -46,6 +46,16 @@ export const ProductoRepository = {
             }
         });
 
+        return response.data;
+    },
+
+    obtenerAtributos: async (id: string): Promise<ProductoAtributo[]> => {
+        const response = await api.get<ApiResponse<ProductoAtributo[]>>(`${URL_MODULE}${id}/atributos`);
+        return response.data;
+    },
+
+    actualizarAtributos: async (id: string, atributo_ids: string[]): Promise<ProductoAtributo[]> => {
+        const response = await api.put<ApiResponse<ProductoAtributo[]>>(`${URL_MODULE}${id}/atributos`, { atributos: atributo_ids });
         return response.data;
     },
 

@@ -151,7 +151,7 @@ export default function AtributosTab() {
                 actions={actions}
             />
 
-            <Dialog open={open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+            <Dialog open={open} fullWidth onClose={handleCloseDialog} maxWidth="sm">
                 <DialogTitle>{editingId ? 'Editar atributo' : 'Crear atributo'}</DialogTitle>
                 <DialogContent sx={{ py: 2 }}>
                     <TextField

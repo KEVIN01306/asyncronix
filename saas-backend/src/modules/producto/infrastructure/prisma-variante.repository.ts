@@ -22,7 +22,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 ? await this.prisma.valorAtributo.findMany({ where: { id: { in: variante.valor_atributo_ids } } })
                 : [];
 
-            const sku = GenerarSku.ejecutar({
+            const sku = variante.sku ?? GenerarSku.ejecutar({
                 negocioCodigo: producto.negocio.slug,
                 marcaCodigo: producto.marca?.marca ?? '',
                 categoriaCodigo: producto.categoria?.codigo ?? producto.categoria?.categoria ?? '',
@@ -34,6 +34,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 producto_id: variante.producto_id,
                 sku,
                 codigo_barras: variante.codigo_barras ?? null,
+                codigo_secuencial: variante.codigo_secuencial ?? null,
                 qr_codigo: null,
                 precio_sugerido: variante.precio_sugerido,
                 stock_total: 0,

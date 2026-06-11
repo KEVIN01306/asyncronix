@@ -11,7 +11,7 @@ import BarcodeRenderer from '../../../../../shared/components/BarcodeRenderer';
 import ConfirmDialog from '../../../../../shared/components/ui/dialog/ConfirmDialog';
 import Loading from '../../../../../shared/components/ui/Loaders/Loading';
 import { VarianteRepository } from '../../../infrastructure/repositories/variante.repository';
-import { AtributoRepository } from '../../../../atributos/infrastructure/atributo.repository';
+import { ProductoRepository } from '../../../infrastructure/repositories/producto.repository';
 import type { Variante } from '../../../domain/interfaces/producto.interface';
 import { bajarCalidadImagen } from '../../../../../core/utils/bajarCalidadImagen';
 
@@ -74,8 +74,9 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
     useEffect(() => {
         const fetchAtributos = async () => {
             try {
-                const resp = await AtributoRepository.listar();
-                const data = (resp as any)?.data?.data ?? (resp as any)?.data ?? [];
+                // Obtener sólo los atributos asociados al producto (incluye valores)
+                const resp = await ProductoRepository.obtenerAtributos(productoId);
+                const data = Array.isArray(resp) ? resp : (resp as any)?.data ?? [];
                 setAtributos(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error(error);
@@ -83,7 +84,7 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
         };
 
         fetchAtributos();
-    }, []);
+    }, [productoId]);
 
     const handleOpenCreate = () => {
         setEditingVariant(null);
@@ -172,7 +173,8 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
             const valor_atributo_ids = attributeSelections
                 .map((row) => row.valor_id)
                 .filter(Boolean);
-            if (valor_atributo_ids.length) payload.valor_atributo_ids = valor_atributo_ids;
+            // Siempre enviar el array (vacío si no hay selecciones) para permitir borrar asociaciones
+            payload.valor_atributo_ids = valor_atributo_ids;
 
             if (editingVariant) {
                 await VarianteRepository.actualizar(editingVariant.id, payload);
@@ -310,7 +312,7 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
             ) : (
                 <Grid container spacing={2}>
                     {variants.map((variant) => (
-                        <Grid key={variant.id} size={{ xs: 12, sm: 6 }}>
+                        <Grid key={variant.id} size={{ xs: 12, sm: 4 }}>
                             <Card variant="outlined" sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                                 <CardContent sx={{ flexGrow: 1 }}>
                                     <Stack spacing={2}>
@@ -386,9 +388,11 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                                     <Button size="small" startIcon={<PhotoCamera />} onClick={() => handleOpenImageUpload(variant.id)} disabled={uploadingImage && uploadingVariantId === variant.id}>
                                         {uploadingImage && uploadingVariantId === variant.id ? 'Subiendo...' : 'Subir imagen'}
                                     </Button>
-                                    <Button size="small" startIcon={<QrCode />} onClick={() => handleGenerateQr(variant)}>
-                                        {variant.qr_codigo ? 'Regenerar QR' : 'Generar QR'}
-                                    </Button>
+                                    {!variant.qr_codigo && (
+                                        <Button size="small" startIcon={<QrCode />} onClick={() => handleGenerateQr(variant)}>
+                                            Generar QR
+                                        </Button>
+                                    )}
                                     <Button size="small" startIcon={<Edit />} onClick={() => handleOpenEdit(variant)}>
                                         Editar
                                     </Button>
