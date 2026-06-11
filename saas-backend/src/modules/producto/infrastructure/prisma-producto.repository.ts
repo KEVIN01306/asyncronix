@@ -269,7 +269,7 @@ export class PrismaProductoRepository implements ProductoRepository {
                 negocioCodigo: producto.negocio.slug,
                 marcaCodigo: producto.marca?.marca ?? '',
                 categoriaCodigo: producto.categoria?.codigo ?? producto.categoria?.categoria ?? '',
-                productoCodigo: producto.codigo?.trim() || producto.nombre,
+                productoCodigo: producto.nombre,
                 valores: variante.valores?.map((valor: any) => valor.valor) ?? []
             });
 

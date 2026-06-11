@@ -11,6 +11,7 @@ import {
   ListAlt,
   SettingsSharp,
   ViewHeadlineRounded,
+  MoveDownRounded,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -27,6 +28,12 @@ const MenuItems: MenuItem[] = [
   { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/" },
   { name: "Ventas", icon: BusinessCenterOutlined, link: "/ventas", permiso: "VER_VENTAS" },
   { name: "Clientes", icon: AccountCircleOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
+  { 
+    module: "traslados", name: "Traslados", icon: MoveDownRounded, children: [
+      { name: "Salidas", link: "/traslados/salidas", icon: ViewHeadlineRounded, permiso: "VER_TRASLADO" },
+      { name: "Entradas", link: "/traslados/entradas", icon: ViewHeadlineRounded, permiso: "VER_TRASLADO" },
+    ]
+  },
   {
     module: "inventario", name: "Inventario", icon: Inventory2, children: [
       { name: "Proveedores", icon: ViewHeadlineRounded, link: "/proveedores", permiso: "VER_PROVEEDORES" },

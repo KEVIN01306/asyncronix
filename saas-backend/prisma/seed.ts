@@ -112,7 +112,13 @@ const permisosData = [
     { codigo: "VER_ATRIBUTOS_DETALLE" },
     { codigo: "CREAR_ATRIBUTOS" },
     { codigo: "EDITAR_ATRIBUTOS" },
-    { codigo: "ELIMINAR_ATRIBUTOS" }
+    { codigo: "ELIMINAR_ATRIBUTOS" },
+
+    { codigo: "VER_TRASLADO" },
+    { codigo: "VER_TRASLADO_DETALLE" },
+    { codigo: "CREAR_TRASLADO" },
+    { codigo: "CANCELAR_TRASLADO" },
+    { codigo: "RECIBIR_TRASLADO" }
 ];
 
 const modulosConPermisos = [
@@ -203,6 +209,10 @@ const modulosConPermisos = [
     {
         nombre: "ATRIBUTOS",
         permisos: ["VER_ATRIBUTOS", "VER_ATRIBUTOS_DETALLE", "CREAR_ATRIBUTOS", "EDITAR_ATRIBUTOS", "ELIMINAR_ATRIBUTOS"]
+    },
+    {
+        nombre: "TRASLADOS",
+        permisos: ["VER_TRASLADO", "VER_TRASLADO_DETALLE", "CREAR_TRASLADO", "CANCELAR_TRASLADO", "RECIBIR_TRASLADO"]
     }
 ];
 async function main() {

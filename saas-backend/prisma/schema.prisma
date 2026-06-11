@@ -101,6 +101,8 @@ model Sucursal {
   citas            Cita[]
   ingresos_egresos IngresosEgresos[]
   lotes            Lote[]
+  trasladosOrigen  Traslado[]        @relation("SucursalOrigen")
+  trasladosDestino Traslado[]        @relation("SucursalDestino")
 
   @@index([negocio_id])
   @@map("sucursales")
@@ -149,6 +151,7 @@ model Usuario {
   // Relaciones inversas corregidas
   servicios_mecanico Servicio[] @relation("ServicioMecanico")
   ventas_vendedor    Venta[]    @relation("VentaVendedor")
+  traslados          Traslado[]
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -620,6 +623,7 @@ model Lote {
 
   repuestos ServicioRepuesto[]
   detalles  VentaDetalle[]
+  detallesTraslado DetalleTraslado[]
 
   @@index([variante_id])
   @@index([proveedor_id])
@@ -644,6 +648,34 @@ model ServicioRepuesto {
 
   @@index([variante_id])
   @@map("servicio_repuestos")
+}
+
+
+model Traslado {
+  id               String             @id @default(uuid()) @db.Char(36)
+  consecutivo      Int               @unique @default(autoincrement()) // Número de guía/traslado
+  origen_id         String  @db.Char(36)
+  destino_id        String  @db.Char(36)
+  creador_id        String   @db.Char(36)
+  estado           EstadoTraslado    @default(PENDIENTE) // PENDIENTE, COMPLETADO, CANCELADO
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  creador           Usuario          @relation(fields: [creador_id], references: [id])
+
+  origen           Sucursal          @relation("SucursalOrigen", fields: [origen_id], references: [id])
+  destino          Sucursal          @relation("SucursalDestino", fields: [destino_id], references: [id])
+  detalles         DetalleTraslado[]
+}
+
+model DetalleTraslado {
+  id               String            @id @default(uuid()) @db.Char(36)
+  traslado_id       String  @db.Char(36)
+  lote_id           String  @db.Char(36)            // Lote de ORIGEN
+  cantidad         Int               // Cantidad que se va a mover
+
+  traslado         Traslado          @relation(fields: [traslado_id], references: [id], onDelete: Cascade)
+  lote             Lote              @relation(fields: [lote_id], references: [id])
 }
 
 // ==============================================================
@@ -790,4 +822,11 @@ enum EstadoChecklist {
   REGULAR
   REQUIERE_CAMBIO
   NO_APLICA
+}
+
+
+enum EstadoTraslado {
+  PENDIENTE
+  COMPLETADO
+  CANCELADO
 }

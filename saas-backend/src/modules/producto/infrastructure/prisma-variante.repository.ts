@@ -81,7 +81,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 negocioCodigo: existing.producto.negocio.slug,
                 marcaCodigo: existing.producto.marca?.marca ?? '',
                 categoriaCodigo: existing.producto.categoria?.codigo ?? existing.producto.categoria?.categoria ?? '',
-                productoCodigo: existing.producto.codigo?.trim() || existing.producto.nombre,
+                productoCodigo: existing.producto.nombre,
                 valores: valores.map((valor) => valor.valor)
             });
 

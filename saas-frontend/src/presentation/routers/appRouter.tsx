@@ -24,6 +24,7 @@ import { rolesRoutes } from "../../modules/roles/presentation/roles.routes";
 import { negocioRoutes } from "../../modules/negocio/presentation/negocio.routes";
 import { perfilRoutes } from "../../modules/perfil/presentation/perfil.routes";
 import { ventasRoutes } from "../../modules/ventas/presentation/ventas.routes";
+import { trasladosRoutes } from "../../modules/traslados/presentation/traslado.routes";
 import { clientesRoutes } from "../../modules/clientes/presentation/clientes.routes";
 import { proveedoresRoutes } from "../../modules/proveedores/presentation/proveedores.routes";
 import { customRoutes } from "../../modules/custom/presentation/custom.routes";
@@ -74,6 +75,7 @@ const appRouter = createBrowserRouter([
                     ...negocioRoutes,
                     ...perfilRoutes,
                     ventasRoutes,
+                    trasladosRoutes,
                     ...clientesRoutes,
                     ...proveedoresRoutes,
                     ...customRoutes,

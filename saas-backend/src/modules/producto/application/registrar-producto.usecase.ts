@@ -21,12 +21,13 @@ export class RegistrarProductoUseCase {
             const productoConNegocio = await this.repository.obtener(createdProduct.id, negocio_id);
             if (!productoConNegocio) throw new AppError('Producto no encontrado', 'PRODUCTO_NOT_FOUND', 404);
 
-            const productoCodigo = data.codigo?.trim() || this.generarCodigoProducto(
-                productoConNegocio.negocio?.slug ?? '',
-                productoConNegocio.marca?.marca ?? '',
-                productoConNegocio.nombre,
-                []
-            );
+            const productoCodigo = data.codigo?.trim() || GenerarSku.ejecutar({
+                negocioCodigo: productoConNegocio.negocio?.slug ?? '',
+                marcaCodigo: productoConNegocio.marca?.marca ?? '',
+                categoriaCodigo: productoConNegocio.categoria?.categoria ?? '',
+                productoCodigo: productoConNegocio.nombre,
+                valores: []
+            });
 
             if (!data.codigo?.trim()) {
                 await this.repository.actualizar(createdProduct.id, { codigo: productoCodigo }, negocio_id);
@@ -69,21 +70,4 @@ export class RegistrarProductoUseCase {
         }
     }
 
-    private generarCodigoProducto(negocioCodigo: string, marcaCodigo: string, productoNombre: string, tributos: string[]): string {
-        const normalizar = (valor: string): string => valor
-            .trim()
-            .toUpperCase()
-            .replace(/\s+/g, '-')
-            .replace(/[^A-Z0-9-]/g, '');
-
-        const segmentoNegocio = normalizar(negocioCodigo).substring(0, 3) || 'NEG';
-        const segmentoMarca = normalizar(marcaCodigo).substring(0, 5) || 'MARCA';
-        const primerPalabraProducto = productoNombre.trim().split(/\s+/)[0] ?? '';
-        const segmentoProducto = normalizar(primerPalabraProducto) || 'PROD';
-        const segmentosTributos = (tributos ?? []).map(normalizar).filter(Boolean);
-
-        return [segmentoNegocio, segmentoMarca, segmentoProducto, ...segmentosTributos]
-            .filter(Boolean)
-            .join('-');
-    }
 }
