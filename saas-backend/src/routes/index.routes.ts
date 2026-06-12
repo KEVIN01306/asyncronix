@@ -30,6 +30,7 @@ router.use('/tipos-servicio', (await import('../modules/tipo-servicio/presentati
 router.use('/checklist-items', (await import('../modules/checklist-item/presentation/checklist-item.routes.js')).default)
 router.use('/servicios', (await import('../modules/servicio/presentation/servicio.routes.js')).default)
 router.use('/notifications', (await import('../modules/notificacion/presentation/notificacion.routes.js')).default)
+router.use('/proveedores', (await import('../modules/proveedor/presentation/proveedor.routes.js')).default)
 
 router.use(errorMiddleware)
 
