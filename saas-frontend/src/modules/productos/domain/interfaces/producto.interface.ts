@@ -31,6 +31,12 @@ export interface Variante {
     };
 }
 
+export interface ProductoBusquedaDetalle {
+    producto: Producto;
+    varianteSeleccionada: Variante;
+    variantes: Variante[];
+}
+
 export interface ProductoAtributo {
     id: string;
     nombre: string;

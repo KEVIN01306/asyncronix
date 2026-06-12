@@ -1,6 +1,6 @@
 import api from "../../../../core/api/api";
 import type { ApiResponse } from "../../../../core/api/interfaces/api-response.interface";
-import type { Producto, ProductosResponse, ProductoDetailResponse, ProductoAtributo } from "../../domain/interfaces/producto.interface";
+import type { Producto, ProductosResponse, ProductoDetailResponse, ProductoAtributo, Variante } from "../../domain/interfaces/producto.interface";
 
 const URL_MODULE = '/productos/';
 
@@ -20,6 +20,11 @@ export const ProductoRepository = {
     obtener: async (id: string): Promise<Producto> => {
         const response = await api.get<ProductoDetailResponse>(`${URL_MODULE}${id}`);
         return response.data;
+    },
+
+    buscarPorCodigo: async (codigo: string): Promise<{ data: Variante | null }> => {
+        const response = await api.get<{ data: Variante | null }>(`${URL_MODULE}scanner`, { params: { q: codigo } });
+        return response;
     },
 
     registrar: async (data: any): Promise<Producto> => {

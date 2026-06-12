@@ -19,7 +19,7 @@ import {
     CircularProgress,
     Stack,
     Alert,
-    FormHelperText, // 👈 Añadido para el mensaje de error
+    FormHelperText,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
@@ -217,7 +217,7 @@ export const TrasladoFormPage: React.FC = () => {
                             <TableContainer component={Card} variant="outlined">
                                 <Table size="small">
                                     <TableHead>
-                                        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                                        <TableRow sx={{ backgroundColor: 'background.paper' }}>
                                             <TableCell><strong>SKU</strong></TableCell>
                                             <TableCell><strong>Producto</strong></TableCell>
                                             <TableCell><strong>Lote</strong></TableCell>

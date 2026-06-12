@@ -16,6 +16,7 @@ import type { ObtenerVarianteUseCase } from "../application/obtener-variante.use
 import type { SubirImagenVarianteUseCase } from "../application/subir-imagen-variante.usecase.js";
 import type { ActualizarCodigoBarrasVarianteUseCase } from "../application/actualizar-codigo-barras-variante.usecase.js";
 import type { GenerarQrVarianteUseCase } from "../application/generar-qr-variante.usecase.js";
+import type { BuscarVariantePorCodigoUseCase } from "../application/buscar-variante-por-codigo.usecase.js";
 import type { ListarAtributosProductoUseCase } from "../application/listar-atributos-producto.usecase.js";
 import type { ActualizarAtributosProductoUseCase } from "../application/actualizar-atributos-producto.usecase.js";
 import AppError from "@shared/errors/AppError.js";
@@ -37,6 +38,7 @@ export class ProductoController extends BaseController {
         private readonly subirImagenVarianteUseCase: SubirImagenVarianteUseCase,
         private readonly actualizarCodigoBarrasVarianteUseCase: ActualizarCodigoBarrasVarianteUseCase,
         private readonly generarQrVarianteUseCase: GenerarQrVarianteUseCase,
+        private readonly buscarVariantePorCodigoUseCase: BuscarVariantePorCodigoUseCase,
         private readonly listarAtributosProductoUseCase: ListarAtributosProductoUseCase,
         private readonly actualizarAtributosProductoUseCase: ActualizarAtributosProductoUseCase
     ) {
@@ -185,6 +187,17 @@ export class ProductoController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             const variant = await this.generarQrVarianteUseCase.execute(id, negocio_id);
             res.status(200).json(Respuesta.exito('QR generado con exito', variant));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    buscarPorCodigo = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { q } = res.locals.query;
+            const variant = await this.buscarVariantePorCodigoUseCase.execute(q, negocio_id);
+            res.status(200).json(Respuesta.exito('Variante encontrada', variant));
         } catch (error) {
             next(error);
         }

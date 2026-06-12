@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Lote } from '../../../../modules/lotes/domain/interfaces/lote.interface';
 import {
     Dialog,
     DialogTitle,
@@ -14,18 +15,6 @@ import {
     Box,
     CircularProgress,
 } from '@mui/material';
-
-interface Lote {
-    id: string;
-    codigo_lote: string;
-    cantidad_actual: number;
-    variante?: {
-        sku: string;
-        producto?: {
-            nombre: string;
-        };
-    };
-}
 
 interface LoteSelectionModalProps {
     open: boolean;
@@ -47,8 +36,8 @@ export const LoteSelectionModal: React.FC<LoteSelectionModalProps> = ({
 
     const filteredLotes = lotes.filter(lote =>
         lote.codigo_lote.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lote.variante?.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lote.variante?.producto?.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+        lote.variante?.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lote.variante?.producto_nombre?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleSelect = (lote: Lote) => {
@@ -85,7 +74,7 @@ export const LoteSelectionModal: React.FC<LoteSelectionModalProps> = ({
                     <TableContainer>
                         <Table size="small">
                             <TableHead>
-                                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                                <TableRow sx={{ backgroundColor: 'background.paper' }}>
                                     <TableCell><strong>SKU</strong></TableCell>
                                     <TableCell><strong>Producto</strong></TableCell>
                                     <TableCell><strong>Lote</strong></TableCell>
@@ -105,7 +94,7 @@ export const LoteSelectionModal: React.FC<LoteSelectionModalProps> = ({
                                     filteredLotes.map(lote => (
                                         <TableRow key={lote.id}>
                                             <TableCell>{lote.variante?.sku || '-'}</TableCell>
-                                            <TableCell>{lote.variante?.producto?.nombre || '-'}</TableCell>
+                                            <TableCell>{lote.variante?.producto_nombre || '-'}</TableCell>
                                             <TableCell>{lote.codigo_lote}</TableCell>
                                             <TableCell align="right">{lote.cantidad_actual}</TableCell>
                                             <TableCell align="center">

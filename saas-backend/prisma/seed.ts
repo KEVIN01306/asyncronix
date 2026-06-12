@@ -41,6 +41,7 @@ const permisosData = [
     { codigo: "CREAR_PRODUCTOS" },
     { codigo: "EDITAR_PRODUCTOS" },
     { codigo: "ELIMINAR_PRODUCTOS" },
+    { codigo: "BUSCAR_PRODUCTOS" },
 
     { codigo: "VER_LOTES" },
     { codigo: "VER_LOTES_DETALLE" },
@@ -148,7 +149,7 @@ const modulosConPermisos = [
     },
     {
         nombre: "PRODUCTOS",
-        permisos: ["VER_PRODUCTOS", "VER_PRODUCTOS_DETALLE", "CREAR_PRODUCTOS", "EDITAR_PRODUCTOS", "ELIMINAR_PRODUCTOS"]
+        permisos: ["VER_PRODUCTOS", "VER_PRODUCTOS_DETALLE", "CREAR_PRODUCTOS", "EDITAR_PRODUCTOS", "ELIMINAR_PRODUCTOS", "BUSCAR_PRODUCTOS"]
     },
     {
         nombre: "LOTES",

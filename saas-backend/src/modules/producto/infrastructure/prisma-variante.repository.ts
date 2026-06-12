@@ -152,7 +152,6 @@ export class PrismaVarianteRepository implements VarianteRepository {
                     OR: [
                         { codigo_barras: codigo },
                         { codigo_secuencial: codigo },
-                        { qr_codigo: codigo }
                     ]
                 },
                 include: {

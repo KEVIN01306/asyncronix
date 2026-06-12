@@ -145,7 +145,7 @@ export const TrasladoDetallePage: React.FC = () => {
                         <TableContainer>
                             <Table size="small">
                                 <TableHead>
-                                    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                                    <TableRow sx={{ backgroundColor: 'background.paper' }}>
                                         <TableCell><strong>SKU</strong></TableCell>
                                         <TableCell><strong>Producto</strong></TableCell>
                                         <TableCell><strong>Lote</strong></TableCell>
@@ -155,14 +155,18 @@ export const TrasladoDetallePage: React.FC = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {traslado.detalles.map((detalle: any) => (
+                                    {traslado.detalles.map(detalle => (
                                         <TableRow key={detalle.id}>
                                             <TableCell>{detalle.lote?.variante?.sku || '-'}</TableCell>
                                             <TableCell>{detalle.lote?.variante?.producto?.nombre || '-'}</TableCell>
-                                            <TableCell>{detalle.lote?.codigo_lote}</TableCell>
+                                            <TableCell>{detalle.lote?.codigo_lote || '-'}</TableCell>
                                             <TableCell align="right">{detalle.cantidad}</TableCell>
-                                            <TableCell align="right">Q{detalle.lote?.costo_compra.toFixed(2)}</TableCell>
-                                            <TableCell align="right">Q{detalle.lote?.precio_venta.toFixed(2)}</TableCell>
+                                            <TableCell align="right">
+                                                {detalle.lote?.costo_compra != null ? `Q${detalle.lote.costo_compra.toFixed(2)}` : '-'}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                {detalle.lote?.precio_venta != null ? `Q${detalle.lote.precio_venta.toFixed(2)}` : '-'}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

@@ -21,6 +21,7 @@ import { PrismaVarianteRepository } from "./infrastructure/prisma-variante.repos
 import { PrismaBarcodeSequenceRepository } from "./infrastructure/prisma-barcode-sequence.repository.js";
 import { ProductoController } from "./presentation/producto.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
+import { BuscarVariantePorCodigoUseCase } from "./application/buscar-variante-por-codigo.usecase.js";
 
 const productoRepository = new PrismaProductoRepository(prisma);
 const varianteRepository = new PrismaVarianteRepository(prisma);
@@ -44,6 +45,7 @@ const obtenerVarianteUseCase = new ObtenerVarianteUseCase(varianteRepository);
 const subirImagenVarianteUseCase = new SubirImagenVarianteUseCase(varianteRepository);
 const actualizarCodigoBarrasVarianteUseCase = new ActualizarCodigoBarrasVarianteUseCase(varianteRepository);
 const generarQrVarianteUseCase = new GenerarQrVarianteUseCase(varianteRepository);
+const buscarVariantePorCodigoUseCase = new BuscarVariantePorCodigoUseCase(varianteRepository);
 
 export const productoController = new ProductoController(
     obtenerProductoUseCase,
@@ -61,6 +63,7 @@ export const productoController = new ProductoController(
     subirImagenVarianteUseCase,
     actualizarCodigoBarrasVarianteUseCase,
     generarQrVarianteUseCase,
+    buscarVariantePorCodigoUseCase,
     listarAtributosProductoUseCase,
     actualizarAtributosProductoUseCase
 );

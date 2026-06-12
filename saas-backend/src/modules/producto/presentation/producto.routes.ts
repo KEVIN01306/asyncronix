@@ -14,6 +14,7 @@ import {
     varianteActualizarSchema,
     varianteCodigoBarrasSchema
 } from "./validators/variante.schema.js";
+import { buscarScannerSchema } from "./validators/buscar-scanner.schema.js";
 
 const routes = Router();
 const authMiddleware = new AuthMiddleware();
@@ -86,6 +87,12 @@ routes.post("/variantes/:id/codigo-barras",
 routes.post("/variantes/:id/generar-qr",
     authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
     productoController.generarQrVariante
+);
+
+routes.get("/scanner",
+    authMiddleware.verificarPermiso(['BUSCAR_PRODUCTOS']),
+    validarMiddleware.validarQuery(buscarScannerSchema),
+    productoController.buscarPorCodigo
 );
 
 routes.delete("/variantes/:id",

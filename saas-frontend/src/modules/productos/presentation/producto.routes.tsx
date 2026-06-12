@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
-import { ProductoDetailPage, ProductoFormPage, ProductosListPage } from './producto-lazy';
+import { BuscarProductosPage, ProductoDetailPage, ProductoFormPage, ProductosListPage } from './producto-lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 
 export const productoRoutes: RouteObject[] = [
@@ -19,6 +19,14 @@ export const productoRoutes: RouteObject[] = [
                 element: (
                     <RouteProtector requiredPermission="CREAR_PRODUCTOS">
                         <ProductoFormPage />
+                    </RouteProtector>
+                )
+            },
+            {
+                path: 'scanner',
+                element: (
+                    <RouteProtector requiredPermission="BUSCAR_PRODUCTOS">
+                        <BuscarProductosPage />
                     </RouteProtector>
                 )
             },

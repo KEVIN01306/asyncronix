@@ -12,6 +12,7 @@ import {
   SettingsSharp,
   ViewHeadlineRounded,
   MoveDownRounded,
+  QrCodeScanner,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -36,6 +37,7 @@ const MenuItems: MenuItem[] = [
   },
   {
     module: "inventario", name: "Inventario", icon: Inventory2, children: [
+      { name: "Buscar productos", link: "/productos/scanner", icon: QrCodeScanner, permiso: "BUSCAR_PRODUCTOS" },
       { name: "Proveedores", icon: ViewHeadlineRounded, link: "/proveedores", permiso: "VER_PROVEEDORES" },
       { name: "Categorías", link: "/categorias", icon: AdminPanelSettingsOutlined, permiso: "VER_CATEGORIAS_PRODUCTOS" },
       { name: "Productos", link: "/productos", icon: AdminPanelSettingsOutlined, permiso: "VER_PRODUCTOS" },
