@@ -7,6 +7,7 @@ import {
     CircularProgress,
     Divider,
     FormControl,
+    IconButton,
     InputLabel,
     MenuItem,
     Select,
@@ -14,6 +15,7 @@ import {
     Stack,
     Typography
 } from '@mui/material';
+import { ArrowDownward, ArrowUpward, Delete } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { AtributoRepository } from '../../../../atributos/infrastructure/atributo.repository';
 import { ProductoRepository } from '../../../infrastructure/repositories/producto.repository';
@@ -94,13 +96,27 @@ export default function ProductoAtributosTab({ productoId, onRefresh }: Producto
         setAtributosProducto((prev) => prev.filter((item) => item.id !== id));
     };
 
+    const handleMoveAtributo = (id: string, direction: number) => {
+        setAtributosProducto((prev) => {
+            const index = prev.findIndex((item) => item.id === id);
+            if (index === -1) return prev;
+
+            const nextIndex = index + direction;
+            if (nextIndex < 0 || nextIndex >= prev.length) return prev;
+
+            const next = [...prev];
+            [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+            return next;
+        });
+    };
+
     const handleSave = async () => {
         setSaving(true);
         try {
             const atributoIds = atributosProducto.map((atributo) => atributo.id);
-            await ProductoRepository.actualizarAtributos(productoId, atributoIds);
+            const updatedAtributos = await ProductoRepository.actualizarAtributos(productoId, atributoIds);
             toast.success('Atributos del producto actualizados');
-            await fetchAtributos();
+            setAtributosProducto(updatedAtributos ?? atributosProducto);
             if (onRefresh) await onRefresh();
         } catch (error: any) {
             console.error(error);
@@ -123,22 +139,50 @@ export default function ProductoAtributosTab({ productoId, onRefresh }: Producto
                 <Typography variant="subtitle1" gutterBottom>
                     Atributos asociados al producto
                 </Typography>
-                <Stack direction="row" flexWrap="wrap" gap={1}>
-                    {atributosProducto.length > 0 ? (
-                        atributosProducto.map((atributo) => (
-                            <Chip
+                {atributosProducto.length > 0 ? (
+                    <Stack spacing={1}>
+                        {atributosProducto.map((atributo, index) => (
+                            <Stack
                                 key={atributo.id}
-                                label={atributo.nombre}
-                                onDelete={() => handleRemoveAtributo(atributo.id)}
-                                color="primary"
-                            />
-                        ))
-                    ) : (
-                        <Typography variant="body2" color="text.secondary">
-                            Este producto no tiene atributos asociados.
-                        </Typography>
-                    )}
-                </Stack>
+                                direction="row"
+                                flexWrap="wrap"
+                                alignItems="center"
+                                spacing={1}
+                                sx={{ py: 0.5 }}
+                            >
+                                <Chip
+                                    label={`${index + 1}. ${atributo.nombre}`}
+                                    color="primary"
+                                    sx={{ minWidth: 0, flexGrow: 1 }}
+                                />
+                                <IconButton
+                                    size="small"
+                                    onClick={() => handleMoveAtributo(atributo.id, -1)}
+                                    disabled={index === 0}
+                                >
+                                    <ArrowUpward fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                    size="small"
+                                    onClick={() => handleMoveAtributo(atributo.id, 1)}
+                                    disabled={index === atributosProducto.length - 1}
+                                >
+                                    <ArrowDownward fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                    size="small"
+                                    onClick={() => handleRemoveAtributo(atributo.id)}
+                                >
+                                    <Delete fontSize="small" />
+                                </IconButton>
+                            </Stack>
+                        ))}
+                    </Stack>
+                ) : (
+                    <Typography variant="body2" color="text.secondary">
+                        Este producto no tiene atributos asociados.
+                    </Typography>
+                )}
             </Box>
 
             <Divider sx={{ mb: 3 }} />

@@ -44,6 +44,7 @@ export interface VariantePublic {
 export interface ProductoAtributo {
     id: string;
     nombre: string;
+    orden?: number;
 }
 
 export interface ProductoDetalle extends ProductoSimple {

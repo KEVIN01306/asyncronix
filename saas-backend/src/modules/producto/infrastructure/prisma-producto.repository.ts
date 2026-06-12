@@ -28,8 +28,11 @@ export class PrismaProductoRepository implements ProductoRepository {
     private readonly includeDetail = {
         categoria: true,
         marca: true,
-        atributos: {
-            where: { activo: true }
+        productoAtributos: {
+            orderBy: { orden: 'asc' as const },
+            include: {
+                atributo: true
+            }
         },
         variantes: {
             where: { activo: true },
@@ -127,27 +130,36 @@ export class PrismaProductoRepository implements ProductoRepository {
     async listarAtributosProducto(producto_id: string, negocio_id: string): Promise<ProductoAtributo[] | null> {
         const producto = await this.prisma.producto.findFirst({
             where: { id: producto_id, negocio_id, activo: true },
-            include: { atributos: { where: { activo: true }, include: { valores: true } } }
+            include: {
+                productoAtributos: {
+                    orderBy: { orden: 'asc' as const },
+                    where: { atributo: { activo: true } },
+                    include: {
+                        atributo: { include: { valores: true } }
+                    }
+                }
+            }
         });
 
         if (!producto) return null;
 
-        return producto.atributos.map((atributo: any) => ({
-            id: atributo.id,
-            nombre: atributo.nombre,
-            valores: (atributo.valores || []).map((v: any) => ({ id: v.id, valor: v.valor, atributo_id: v.atributo_id }))
+        return producto.productoAtributos.map((item: any) => ({
+            id: item.atributo.id,
+            nombre: item.atributo.nombre,
+            orden: item.orden,
+            valores: (item.atributo.valores || []).map((v: any) => ({ id: v.id, valor: v.valor }))
         }));
     }
 
     async actualizarAtributosProducto(producto_id: string, negocio_id: string, atributo_ids: string[]): Promise<ProductoAtributo[] | null> {
         const producto = await this.prisma.producto.findFirst({
             where: { id: producto_id, negocio_id, activo: true },
-            include: { atributos: true }
+            include: { productoAtributos: { include: { atributo: true } } }
         });
 
         if (!producto) return null;
 
-        const currentAtributoIds = (producto.atributos ?? []).map((atributo: any) => atributo.id);
+        const currentAtributoIds = (producto.productoAtributos ?? []).map((item: any) => item.atributo_id);
         const removedAtributoIds = currentAtributoIds.filter((id: string) => !atributo_ids.includes(id));
 
         if (removedAtributoIds.length > 0) {
@@ -164,17 +176,42 @@ export class PrismaProductoRepository implements ProductoRepository {
             }
         }
 
-        const updatedProducto = await this.prisma.producto.update({
-            where: { id: producto_id },
-            data: {
-                atributos: { set: atributo_ids.map((id) => ({ id })) }
-            },
-            include: { atributos: { where: { activo: true } } }
+        const transactionActions = [];
+
+        if (removedAtributoIds.length > 0) {
+            transactionActions.push(this.prisma.productoAtributo.deleteMany({
+                where: { producto_id, atributo_id: { in: removedAtributoIds } }
+            }));
+        }
+
+        for (const [orden, atributo_id] of atributo_ids.map((id, index) => [index, id] as const)) {
+            transactionActions.push(this.prisma.productoAtributo.upsert({
+                where: { producto_id_atributo_id: { producto_id, atributo_id } },
+                update: { orden },
+                create: { producto_id, atributo_id, orden }
+            }));
+        }
+
+        await this.prisma.$transaction(transactionActions);
+
+        const updatedProducto = await this.prisma.producto.findFirst({
+            where: { id: producto_id, negocio_id, activo: true },
+            include: {
+                productoAtributos: {
+                    orderBy: { orden: 'asc' as const },
+                    where: { atributo: { activo: true } },
+                    include: { atributo: true }
+                }
+            }
         });
 
-        return updatedProducto.atributos.map((atributo: any) => ({
-            id: atributo.id,
-            nombre: atributo.nombre
+        if (!updatedProducto) return null;
+
+        return updatedProducto.productoAtributos.map((item: any) => ({
+            id: item.atributo.id,
+            nombre: item.atributo.nombre,
+            orden: item.orden,
+            valores: (item.atributo.valores || []).map((v: any) => ({ id: v.id, valor: v.valor }))
         }));
     }
 

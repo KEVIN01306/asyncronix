@@ -43,7 +43,7 @@ export class ProductoMapper {
         };
     }
 
-    static mapDetalle(producto: ProductoDetalle): ProductoDetalle {
+    static mapDetalle(producto: any): ProductoDetalle {
         const variant = mapVariantFields(producto as ProductoConVariantes);
 
         return {
@@ -64,10 +64,14 @@ export class ProductoMapper {
             } : null,
             marca: producto.marca ? { id: producto.marca.id, marca: producto.marca.marca } : null,
             negocio: (producto as any).negocio ? { id: (producto as any).negocio.id, slug: (producto as any).negocio.slug } : undefined,
-            ...(producto.atributos ? {
-                atributos: producto.atributos.map((atributo: any) => ({ id: atributo.id, nombre: atributo.nombre }))
+            ...(producto.productoAtributos ? {
+                atributos: producto.productoAtributos.map((item: any) => ({
+                    id: item.atributo.id,
+                    nombre: item.atributo.nombre,
+                    orden: item.orden
+                }))
             } : {}),
-            variantes: producto.variantes?.map(v => ({
+            variantes: producto.variantes?.map((v: any) => ({
                 id: v?.id ?? '',
                 sku: v?.sku ?? undefined,
                 precio_sugerido: v?.precio_sugerido ?? undefined,

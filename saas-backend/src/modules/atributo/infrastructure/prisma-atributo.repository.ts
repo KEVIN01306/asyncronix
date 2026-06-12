@@ -35,9 +35,61 @@ export class PrismaAtributoRepository {
 
     async actualizar(id: string, payload: AtributoActualizar, negocio_id: string): Promise<Atributo> {
         try {
-            const updated = await this.prisma.atributo.updateMany({ where: { id, negocio_id }, data: payload });
-            if (updated.count === 0) throw new Error('Atributo no encontrado');
-            const found = await this.prisma.atributo.findFirst({ where: { id, negocio_id }, include: { valores: true } });
+            // Ensure the attribute belongs to the negocio
+            const existing = await this.prisma.atributo.findFirst({ where: { id, negocio_id } });
+            if (!existing) throw new Error('Atributo no encontrado');
+
+            // Handle valores (array of strings) if provided in payload
+            const anyPayload: any = payload as any;
+            const data: any = {};
+            if (typeof anyPayload.nombre !== 'undefined') data.nombre = anyPayload.nombre;
+            if (typeof anyPayload.activo !== 'undefined') data.activo = anyPayload.activo;
+
+            // If valores provided, reconcile: add new ones, remove omitted, keep existing
+            if (Array.isArray(anyPayload.valores)) {
+                const desiredValues: string[] = Array.from(new Set(anyPayload.valores.map((v: string) => String(v).trim()).filter(Boolean)));
+
+                // load existing valores for this atributo
+                const existingValores = await this.prisma.valorAtributo.findMany({ where: { atributo_id: existing.id } });
+                const existingSet = new Set(existingValores.map(v => v.valor));
+                const desiredSet = new Set(desiredValues);
+
+                const toCreate = desiredValues.filter(v => !existingSet.has(v));
+                const toDelete = existingValores.filter(v => !desiredSet.has(v.valor)).map(v => v.valor);
+
+                // Prepare operations
+                const ops: any[] = [];
+
+                // Update atributo fields if any
+                if (Object.keys(data).length > 0) {
+                    ops.push(this.prisma.atributo.update({ where: { id: existing.id }, data: { nombre: data.nombre, activo: data.activo } }));
+                }
+
+                if (toCreate.length > 0) {
+                    ops.push(this.prisma.valorAtributo.createMany({ data: toCreate.map(v => ({ atributo_id: existing.id, valor: v })), skipDuplicates: true }));
+                }
+
+                if (toDelete.length > 0) {
+                    ops.push(this.prisma.valorAtributo.deleteMany({ where: { atributo_id: existing.id, valor: { in: toDelete } } }));
+                }
+
+                // Run in transaction
+                await this.prisma.$transaction(ops);
+
+                // Reload atributo with valores
+                const updated = await this.prisma.atributo.findFirst({ where: { id: existing.id }, include: { valores: true } });
+                if (!updated) throw new Error('Atributo no encontrado');
+                return { id: updated.id, nombre: updated.nombre, activo: updated.activo, negocio_id: updated.negocio_id, valores: updated.valores.map(v => ({ id: v.id, valor: v.valor })) } as Atributo;
+            }
+
+            // No valores in payload: simple update
+            if (Object.keys(data).length > 0) {
+                const updated = await this.prisma.atributo.update({ where: { id: existing.id }, data, include: { valores: true } });
+                return { id: updated.id, nombre: updated.nombre, activo: updated.activo, negocio_id: updated.negocio_id, valores: updated.valores.map(v => ({ id: v.id, valor: v.valor })) } as Atributo;
+            }
+
+            // If nothing to update, return existing
+            const found = await this.prisma.atributo.findFirst({ where: { id: existing.id }, include: { valores: true } });
             if (!found) throw new Error('Atributo no encontrado');
             return { id: found.id, nombre: found.nombre, activo: found.activo, negocio_id: found.negocio_id, valores: found.valores.map(v => ({ id: v.id, valor: v.valor })) } as Atributo;
         } catch (error) {

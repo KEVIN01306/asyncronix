@@ -530,35 +530,49 @@ model Producto {
   categoria_id String   @db.Char(36)
   marca_id     String?  @db.Char(36)
   url_imagen   String   @db.Text
-  nombre       String
+  nombre       String   @db.VarChar(100)
   descripcion  String?  @db.Text
   activo       Boolean  @default(true)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
-  negocio   Negocio            @relation(fields: [negocio_id], references: [id])
-  categoria CategoriaProducto  @relation(fields: [categoria_id], references: [id])
-  marca     Marca?              @relation(fields: [marca_id], references: [id])
-  variantes VarianteProducto[] 
-  atributos  Atributo[]         @relation("ProductoAtributos")
+  negocio           Negocio            @relation(fields: [negocio_id], references: [id])
+  categoria         CategoriaProducto  @relation(fields: [categoria_id], references: [id])
+  marca             Marca?              @relation(fields: [marca_id], references: [id])
+  variantes         VarianteProducto[]
+  productoAtributos ProductoAtributo[]
 
   @@unique([negocio_id, codigo])
   @@map("productos")
 }
 
 model Atributo {
-  id         String   @id @default(uuid()) @db.Char(36)
-  negocio_id String   @db.Char(36)
-  nombre     String // Ej. "Viscosidad", "Talla", "Medida"
-  activo     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id                String              @id @default(uuid()) @db.Char(36)
+  negocio_id        String              @db.Char(36)
+  nombre            String              // Ej. "Viscosidad", "Talla", "Medida"
+  activo            Boolean             @default(true)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
 
-  valores ValorAtributo[]
-  productos Producto[] @relation("ProductoAtributos")
+  valores           ValorAtributo[]
+  productoAtributos ProductoAtributo[]
 
   @@unique([negocio_id, nombre])
   @@map("atributos")
+}
+
+model ProductoAtributo {
+  producto_id String   @db.Char(36)
+  atributo_id String   @db.Char(36)
+  orden       Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  producto Producto @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  atributo Atributo @relation(fields: [atributo_id], references: [id], onDelete: Cascade)
+
+  @@id([producto_id, atributo_id])
+  @@map("producto_atributos")
 }
 
 model VarianteProducto {

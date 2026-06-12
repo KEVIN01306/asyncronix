@@ -58,18 +58,26 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                 precio_sugerido: editingVariant.precio_sugerido ?? 0,
                 codigo_barras: editingVariant.codigo_barras ?? null
             });
-
-            const rows = ((editingVariant as any)?.valores ?? []).map((valor: any) => ({
-                id: `${valor.atributo_id}-${valor.id}`,
-                atributo_id: valor.atributo_id,
-                valor_id: valor.id
-            }));
-            setAttributeSelections(Array.isArray(rows) ? rows : []);
         } else {
             reset(defaultForm);
+        }
+
+        // Build attribute rows based on producto atributos (always show product attributes)
+        if (atributos && atributos.length > 0) {
+            if (editingVariant) {
+                const rows = atributos.map((attr) => {
+                    const found = ((editingVariant as any)?.valores || []).find((v: any) => v.atributo_id === attr.id);
+                    return { id: `attr-${attr.id}`, atributo_id: attr.id, valor_id: found ? found.id : '' };
+                });
+                setAttributeSelections(rows);
+            } else {
+                const rows = atributos.map((attr) => ({ id: `attr-${attr.id}`, atributo_id: attr.id, valor_id: '' }));
+                setAttributeSelections(rows);
+            }
+        } else {
             setAttributeSelections([]);
         }
-    }, [editingVariant, reset]);
+    }, [editingVariant, reset, atributos]);
 
     useEffect(() => {
         const fetchAtributos = async () => {
@@ -101,16 +109,7 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
         setEditingVariant(null);
     };
 
-    const handleAddAttributeRow = () => {
-        setAttributeSelections((prev) => [
-            ...prev,
-            { id: `row-${Date.now()}-${prev.length}`, atributo_id: '', valor_id: '' }
-        ]);
-    };
-
-    const handleRemoveAttributeRow = (rowId: string) => {
-        setAttributeSelections((prev) => prev.filter((row) => row.id !== rowId));
-    };
+    // attribute rows are now fixed to product atributos; no dynamic add/remove
 
     const handleAttributeChange = (rowId: string, atributoId: string) => {
         setAttributeSelections((prev) => prev.map((row) => row.id === rowId ? { ...row, atributo_id: atributoId, valor_id: '' } : row));
@@ -447,16 +446,13 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                             </Button>
                         </Stack>
 
-                        <Box>
+                            <Box>
                             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                                 <Typography variant="subtitle2" color="text.secondary">Atributos</Typography>
-                                <Button size="small" startIcon={<Add />} onClick={handleAddAttributeRow}>
-                                    Agregar atributo
-                                </Button>
                             </Stack>
 
                             {attributeSelections.length === 0 ? (
-                                <Typography variant="body2" color="text.secondary">Agrega atributos a la variante para caracterizarla.</Typography>
+                                <Typography variant="body2" color="text.secondary">Este producto no tiene atributos configurados.</Typography>
                             ) : null}
 
                             <Stack spacing={2}>
@@ -497,9 +493,7 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                                                 </Select>
                                             </FormControl>
 
-                                            <Button color="error" variant="outlined" onClick={() => handleRemoveAttributeRow(row.id)}>
-                                                Eliminar
-                                            </Button>
+                                            {/* No permitir eliminar atributos; fields fixed to producto atributos */}
                                         </Stack>
                                     );
                                 })}
