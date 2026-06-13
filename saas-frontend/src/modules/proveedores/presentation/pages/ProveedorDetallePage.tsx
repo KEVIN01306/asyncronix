@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Paper, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography, Button } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { proveedoresRepository } from '../../infrastructure/proveedores.repository';
 import type { Proveedor } from '../../domain/interfaces/proveedor.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
 export default function ProveedorDetallePage() {
     const { id } = useParams();
@@ -20,8 +22,8 @@ export default function ProveedorDetallePage() {
         }
     }, [id, navigate]);
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
-    if (!proveedor) return <Box p={4}>Proveedor no encontrado</Box>;
+    if (loading) return <Loading />
+    if (!proveedor) return <ErrorPageLoading text="No se pudo cargar el proveedor" navigate={() => navigate(-1)} />;
 
     return (
         <Box p={4}>

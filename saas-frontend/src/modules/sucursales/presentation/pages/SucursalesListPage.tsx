@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
+import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
 import { Add, Edit, Visibility,Search } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Sucursal } from '../../domain/interfaces/sucursal.interface';
 import { sucursalRepository } from '../../infrastructure/repositories/sucursal.repository';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 
 const SucursalesListPage = () => {
@@ -91,7 +92,7 @@ const SucursalesListPage = () => {
 
             <TableContainer >
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                        <Loading/>                
                 ) : (
                     <>
                         <ListTable

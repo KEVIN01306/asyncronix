@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { OpcionServicioRepository } from '../../infrastructure/repositories/opcion-servicio.repository';
 import type { OpcionServicio } from '../../domain/interfaces/opcion-servicio.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
 const OpcionServicioDetailPage = () => {
     const { id } = useParams();
@@ -19,9 +21,9 @@ const OpcionServicioDetailPage = () => {
             .finally(() => setLoading(false));
     }, [id]);
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) return <Loading />;
 
-    if (!opcion) return <Box p={4}><Typography>No se encontró la opción de servicio.</Typography></Box>;
+    if (!opcion) return <ErrorPageLoading text="Opción de servicio no encontrada" navigate={() => navigate(-1)} />;
 
     return (
         <Box p={4} maxWidth="760px" mx="auto">

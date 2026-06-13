@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, Alert, AlertTitle, Chip, InputAdornment, TextField } from '@mui/material';
+import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, Alert, AlertTitle, Chip, InputAdornment, TextField } from '@mui/material';
 import { Add, Visibility, Search } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Lote } from '../../domain/interfaces/lote.interface';
 import { LoteRepository } from '../../infrastructure/repositories/lote.repository';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const LoteListPage = () => {
     const navigate = useNavigate();
@@ -93,7 +94,7 @@ const LoteListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Loading />
                 ) : (
                     <ListTable
                         data={lotes}

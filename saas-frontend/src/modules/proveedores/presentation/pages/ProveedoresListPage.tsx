@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Dialog, DialogTitle, DialogContent, DialogActions, Stack } from '@mui/material';
+import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Dialog, DialogTitle, DialogContent, DialogActions, Stack } from '@mui/material';
 import { Add, Edit, Info, Search, FilterList } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Proveedor } from '../../domain/interfaces/proveedor.interface';
 import { proveedoresRepository } from '../../infrastructure/proveedores.repository';
 import { useDebounce } from '../../../../core/hooks/useDebounce';
 import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ProveedoresListPage = () => {
     const navigate = useNavigate();
@@ -170,7 +171,7 @@ const ProveedoresListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Loading />
                 ) : (
                     <ListTable
                         data={proveedores}

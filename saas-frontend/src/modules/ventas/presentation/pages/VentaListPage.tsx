@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Select, MenuItem, Stack } from '@mui/material';
+import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Select, MenuItem, Stack } from '@mui/material';
 import { Add, Visibility, Search, FilterList } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Venta } from '../../domain/interfaces/venta.interface';
@@ -10,6 +10,7 @@ import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbort
 import { useDebounce } from '../../../../core/hooks/useDebounce';
 import { toast } from 'sonner';
 import { formatMoney } from '../../../../core/utils/formatMoney';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const VentasListPage = () => {
     const navigate = useNavigate();
@@ -183,7 +184,7 @@ const VentasListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Loading/>                
                 ) : (
                     <ListTable
                         data={ventas}

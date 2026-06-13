@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Paper, TableContainer, useTheme, useMediaQuery } from '@mui/material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { cilindradasRepository } from '../../infrastructure/cilindradas.repository';
 import { Visibility } from '@mui/icons-material';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const CilindradasListPage = () => {
     const navigate = useNavigate();
@@ -51,7 +52,7 @@ const CilindradasListPage = () => {
             </Box>
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Loading />
                 ) : (
                     <ListTable
                         data={items}

@@ -19,7 +19,7 @@ const getThemePalette = (
 
         primary: {
             // Verde estilo ChatGPT
-            main: '#10A37F',
+            main: isDark ?  '#1BBF95' :'#0e349c',
             dark: '#0D8B6C',
             light: '#1BBF95',
             contrastText: '#FFFFFF',

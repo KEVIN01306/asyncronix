@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Autocomplete, Box, Button, CardMedia, Chip, CircularProgress, Divider, Grid, Paper, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Autocomplete, Box, Button, CardMedia, Chip, Divider, Grid, Paper, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { toast } from 'sonner';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
@@ -16,6 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import SignaturePadModal from '../components/modals/SignaturePadModal';
 import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const salidaSchema = z.object({
     metodo_pago: z.enum(Object.values(METODO_PAGO) as [string, ...string[]], 'El método de pago es requerido')
@@ -140,9 +141,7 @@ const ServicioSalidaPage = () => {
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%" p={4}>
-                <CircularProgress />
-            </Box>
+            <Loading/>
         );
     }
 

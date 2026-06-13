@@ -8,7 +8,6 @@ import {
     Paper,
     TextField,
     Button,
-    CircularProgress,
     FormControl,
     InputLabel,
     Select,
@@ -26,6 +25,7 @@ import { usuarioRepository } from '../../infrastructure/repositories/usuario.rep
 import { sucursalRepository } from '../../../sucursales/infrastructure/repositories/sucursal.repository';
 import type { Sucursal } from '../../../sucursales/domain/interfaces/sucursal.interface';
 import type { Rol } from '../../../roles/domain/interfaces/rol.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const UsuarioEditPage = () => {
     const { id } = useParams();
@@ -96,7 +96,7 @@ const UsuarioEditPage = () => {
         }
     };
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) return <Loading/>;
 
     return (
         <Box p={2} maxWidth="800px" mx="auto">

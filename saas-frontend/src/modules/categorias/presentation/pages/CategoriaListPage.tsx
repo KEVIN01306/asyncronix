@@ -3,11 +3,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Categoria } from "../../domain/interfaces/categoria.interface";
 import { useCallback, useEffect, useState } from "react";
 import { Add, Edit, Search, Visibility } from "@mui/icons-material";
-import { Alert, AlertTitle, Box, Button, CircularProgress, InputAdornment, Paper, TableContainer, TextField, useTheme } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, InputAdornment, Paper, TableContainer, TextField, useTheme } from "@mui/material";
 import ListTable from "../../../../shared/components/ui/tables/ListTable";
 import { CategoriaRepository } from "../../infrastructure/repositories/categoria.repository";
 import { isAbortError, useAbortableFetch } from "../../../../core/hooks/useAbortableFetch";
 import { useDebounce } from "../../../../core/hooks/useDebounce";
+import Loading from "../../../../shared/components/ui/Loaders/Loading";
 
 
 
@@ -118,7 +119,7 @@ const CategoriaListPage = () => {
 
             <TableContainer >
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Loading />
                 ) : (
                     <>
                         <ListTable

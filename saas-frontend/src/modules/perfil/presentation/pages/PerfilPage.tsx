@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider, CircularProgress } from '@mui/material';
+import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider } from '@mui/material';
 import { Edit as EditIcon, VpnKey as VpnKeyIcon, Person as PersonIcon } from '@mui/icons-material';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { authRepository } from '../../../auth/infrastructure/repositories/auth.repository';
@@ -9,6 +9,7 @@ import type { ActualizarPerfilForm, CambiarPasswordForm, Perfil } from '../../do
 import { EditProfileModal } from '../components/EditProfileModal';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { EditAvatarModal } from '../components/EditAvatarModal';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 export const PerfilPage = () => {
     const userStore = useAuthStore((state) => state.user);
@@ -89,8 +90,8 @@ export const PerfilPage = () => {
         }
     };
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={4}><CircularProgress /></Box>;
-
+    if (loading) return <Loading />;
+    
     return (
         <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>

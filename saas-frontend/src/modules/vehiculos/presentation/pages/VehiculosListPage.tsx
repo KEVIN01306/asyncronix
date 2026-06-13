@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, Autocomplete, TextField, Button, Stack, Avatar, Alert } from '@mui/material';
+import { Box, Paper, TableContainer, useTheme, useMediaQuery, Autocomplete, TextField, Button, Stack, Avatar, Alert } from '@mui/material';
 import { Add, Visibility, Edit } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { vehiculoRepository } from '../../infrastructure/vehiculo.repository';
@@ -9,6 +9,7 @@ import { modelosRepository } from '../../../modelos/infrastructure/modelos.repos
 import type { Vehiculo } from '../../domain/interfaces/vehiculo.interface';
 import type { VehiculoTipo } from '../../domain/interfaces/vehiculo-tipo.interface';
 import type { Modelo } from '../../../modelos/domain/interface/modelo.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const VehiculosListPage = () => {
     const navigate = useNavigate();
@@ -156,9 +157,7 @@ const VehiculosListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}>
-                        <CircularProgress />
-                    </Box>
+                    <Loading/>
                 ) : (
                     <ListTable
                         data={filteredVehiculos}

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Paper, Typography, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { modelosRepository } from '../../infrastructure/modelos.repository';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ModeloDetailPage = () => {
     const { id } = useParams();
@@ -19,7 +20,7 @@ const ModeloDetailPage = () => {
     }, [id]);
 
     return (
-        <Box p={4}><Paper sx={{ p: 3 }}>{loading ? <CircularProgress /> : (
+        <Box p={4}><Paper sx={{ p: 3 }}>{loading ? <Loading /> : (
             <>
                 <Typography variant="h6">Modelo</Typography>
                 <Typography variant="body1">{item?.modelo} ({item?.anio})</Typography>

@@ -5,7 +5,6 @@ import {
     Card,
     CardContent,
     Chip,
-    CircularProgress,
     Divider,
     Stack,
     Table,
@@ -20,6 +19,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { trasladoRepository } from '../../infrastructure/traslado.repository';
 import type { TrasladoDetalle, EstadoTraslado } from '../../domain/interfaces/traslado.interface';
 import { ArrowBack } from '@mui/icons-material';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
 const ESTADO_COLORS: Record<EstadoTraslado, 'default' | 'warning' | 'success' | 'error'> = {
     PENDIENTE: 'warning',
@@ -58,20 +59,16 @@ export const TrasladoDetallePage: React.FC = () => {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-                <CircularProgress />
-            </Box>
+            <Loading />
         );
     }
 
     if (error || !traslado) {
         return (
-            <Box sx={{ p: 3 }}>
-                <Typography color="error">{error || 'Traslado no encontrado'}</Typography>
-                <Button onClick={() => navigate('/traslados')} sx={{ mt: 2 }}>
-                    Volver
-                </Button>
-            </Box>
+            <ErrorPageLoading
+                text={error || 'No se pudo cargar el traslado'}
+                navigate={() => navigate(-1)}
+            />
         );
     }
 

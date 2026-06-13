@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
     Button,
-    CircularProgress,
     Grid,
     Paper,
     Stack,
@@ -23,6 +22,7 @@ import { toast } from 'sonner';
 import { RolesRepository } from '../../infrastructure/repositories/rol.repository';
 import type { Modulo, Permiso } from '../../domain/interfaces/rol.interface';
 import { useAuthStore } from '../../../../core/store/authStore';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const RolePermissionsPage = () => {
     const { id } = useParams();
@@ -120,9 +120,7 @@ const RolePermissionsPage = () => {
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%" mt={10}>
-                <CircularProgress />
-            </Box>
+            <Loading/>
         );
     }
 
@@ -203,7 +201,7 @@ const RolePermissionsPage = () => {
                         {!selectedModulo ? (
                             <Alert severity="info">Selecciona un módulo para ver los permisos asociados.</Alert>
                         ) : permissionsLoading ? (
-                            <Box display="flex" justifyContent="center" py={4}><CircularProgress /></Box>
+                            <Loading/>
                         ) : modulePermissions.length === 0 ? (
                             <Alert severity="info">No hay permisos disponibles para este módulo.</Alert>
                         ) : (

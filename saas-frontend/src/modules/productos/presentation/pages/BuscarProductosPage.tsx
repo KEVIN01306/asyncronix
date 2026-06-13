@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, CircularProgress, Grid, InputAdornment, Paper, Stack, TextField, Typography, useMediaQuery, useTheme, Divider, Tooltip } from '@mui/material';
+import { Box, Button, Grid, InputAdornment, Paper, Stack, TextField, Typography, useMediaQuery, useTheme, Divider, Tooltip } from '@mui/material';
 import { QrCodeScanner as QrCodeScannerIcon, Search as SearchIcon, QrCode2 } from '@mui/icons-material';
 import { toast } from 'sonner';
 import QrProductScanner from '../../../ventas/presentation/components/lectorSkuQr';
@@ -8,6 +8,7 @@ import { ProductoRepository } from '../../infrastructure/repositories/producto.r
 import { VarianteRepository } from '../../infrastructure/repositories/variante.repository';
 import type { ProductoBusquedaDetalle, Variante } from '../../domain/interfaces/producto.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 type AttributeOptions = Record<string, string[]>;
 
@@ -475,7 +476,6 @@ const BuscarProductosPage = () => {
                 Buscar productos por código
             </Typography>
 
-            {/* Barra de Búsqueda Minimalista */}
             <Paper elevation={0} sx={{ p: 2, mb: 4, border: `1px solid ${theme.palette.divider}` }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid size={{ xs: 12, md: 7 }}>
@@ -521,7 +521,7 @@ const BuscarProductosPage = () => {
 
             {loading && (
                 <Box display="flex" justifyContent="center" py={8}>
-                    <CircularProgress sx={{ color: theme.palette.primary.main }} />
+                    <Loading />
                 </Box>
             )}
 

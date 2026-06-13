@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Button, CircularProgress, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
 import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
 import { checklistItemSchema, type ChecklistItemFormValues } from '../../domain/schemas/checklist-item.schema';
 import { ChecklistItemRepository } from '../../infrastructure/repositories/checklist-item.repository';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ChecklistItemFormPage = () => {
     const { id } = useParams();
@@ -47,7 +48,8 @@ const ChecklistItemFormPage = () => {
         }
     };
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) return <Loading />
+
 
     return (
         <Box p={4} maxWidth="640px" mx="auto">

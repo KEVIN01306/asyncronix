@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Breadcrumbs, CardMedia, Chip, CircularProgress, Divider, Grid, Paper, Typography, useTheme,Link } from '@mui/material';
+import { Box, Breadcrumbs, CardMedia, Chip, Divider, Grid, Paper, Typography, useTheme,Link } from '@mui/material';
 import { toast } from 'sonner';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
@@ -12,6 +12,7 @@ import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 import { HojaServicioPdf } from '../../infrastructure/repositories/HojaServicioPdf';
 import { PdfDownloader } from '../../../../shared/components/download/PdfDownloader';
 import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ServicioHojaPage = () => {
     const { id } = useParams();
@@ -71,9 +72,7 @@ const ServicioHojaPage = () => {
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%" p={4}>
-                <CircularProgress />
-            </Box>
+            <Loading/>
         );
     }
 

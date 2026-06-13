@@ -2,11 +2,12 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { Add, Edit, Visibility, Delete } from "@mui/icons-material";
-import { Alert, AlertTitle, Box, Button, CircularProgress, InputAdornment, Paper, TableContainer, TextField, useTheme } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, InputAdornment, Paper, TableContainer, TextField, useTheme } from "@mui/material";
 import ListTable from "../../../../shared/components/ui/tables/ListTable";
 import { OpcionServicioRepository } from "../../infrastructure/repositories/opcion-servicio.repository";
 import type { OpcionServicio } from "../../domain/interfaces/opcion-servicio.interface";
 import { toast } from "sonner";
+import Loading from "../../../../shared/components/ui/Loaders/Loading";
 
 const OpcionesServicioListPage = () => {
     const navigate = useNavigate();
@@ -97,7 +98,7 @@ const OpcionesServicioListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Loading />                
                 ) : (
                     <ListTable
                         data={opciones}

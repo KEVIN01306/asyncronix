@@ -1,6 +1,6 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { Add, Article, Edit, Visibility } from '@mui/icons-material';
-import { Autocomplete, Box, Button, Chip, CircularProgress, Paper, TextField, TableContainer, useTheme, AlertTitle, Alert } from '@mui/material';
+import { Autocomplete, Box, Button, Chip, Paper, TextField, TableContainer, useTheme, AlertTitle, Alert } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
@@ -11,6 +11,7 @@ import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 import type { Servicio } from '../../domain/interfaces/servicio.interface';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ServiciosListPage = () => {
     const navigate = useNavigate();
@@ -262,7 +263,7 @@ const ServiciosListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" alignItems="center" p={5}><CircularProgress /></Box>
+                    <Loading/>
                 ) : (
                     <ListTable
                         data={servicios}

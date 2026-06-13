@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
-import { Box, Breadcrumbs, Button, CircularProgress, Stack, Typography, useMediaQuery, useTheme, Link, Grid, Paper } from '@mui/material';
+import { Box, Breadcrumbs, Button, Stack, Typography, useMediaQuery, useTheme, Link, Grid, Paper } from '@mui/material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
@@ -16,6 +16,7 @@ import ServiceDetailManualTasks from '../components/ServiceDetailManualTasks';
 import { TipoServicioRepository } from '../../../tipos-servicio/infrastructure/repositories/tipo-servicio.repository';
 import { ESTADO_SERVICIO } from '../../domain/servicio.constants';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ServicioCustomPage = () => {
     const { id } = useParams();
@@ -58,9 +59,7 @@ const ServicioCustomPage = () => {
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%" p={4}>
-                <CircularProgress />
-            </Box>
+            <Loading/>
         );
     }
 

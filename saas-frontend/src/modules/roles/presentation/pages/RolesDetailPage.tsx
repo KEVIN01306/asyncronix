@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { RolesRepository } from '../../infrastructure/repositories/rol.repository';
 import type { Rol } from '../../domain/interfaces/rol.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
 const RolesDetailPage = () => {
     const { id } = useParams();
@@ -36,7 +37,7 @@ const RolesDetailPage = () => {
     }
 
     if (!role) {
-        return <Box p={4}><Typography>Rol no encontrado</Typography></Box>;
+        return <ErrorPageLoading text="No se pudo cargar el rol" navigate={() => navigate(-1)} />;
     }
 
     return (

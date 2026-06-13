@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Paper, Typography, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { cilindradasRepository } from '../../infrastructure/cilindradas.repository';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const CilindradaDetailPage = () => {
     const { id } = useParams();
@@ -23,7 +24,7 @@ const CilindradaDetailPage = () => {
     return (
         <Box p={4}>
             <Paper sx={{ p: 3 }}>
-                {loading ? <CircularProgress /> : (
+                {loading ?   <Loading /> : (
                     <>
                         <Typography variant="h6">Cilindrada</Typography>
                         <Typography variant="body1">{item?.cilindrada} cc</Typography>

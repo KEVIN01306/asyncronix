@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, CircularProgress, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { TipoServicioRepository } from '../../infrastructure/repositories/tipo-servicio.repository';
 import type { TipoServicio } from '../../domain/interfaces/tipo-servicio.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
 const TipoServicioDetailPage = () => {
     const { id } = useParams();
@@ -19,9 +21,9 @@ const TipoServicioDetailPage = () => {
             .finally(() => setLoading(false));
     }, [id]);
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) return <Loading/>;
 
-    if (!tipoServicio) return <Box p={4}><Typography>No se encontró el tipo de servicio.</Typography></Box>;
+    if (!tipoServicio) return <ErrorPageLoading text="No se pudo cargar el tipo de servicio" navigate={() => navigate(-1)} />;
 
     return (
         <Box p={4} maxWidth="800px" mx="auto">

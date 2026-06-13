@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { ChecklistItemRepository } from '../../infrastructure/repositories/checklist-item.repository';
 import type { ChecklistItem } from '../../domain/interfaces/checklist-item.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
 const ChecklistItemDetailPage = () => {
     const { id } = useParams();
@@ -19,9 +21,10 @@ const ChecklistItemDetailPage = () => {
             .finally(() => setLoading(false));
     }, [id]);
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) return <Loading />
 
-    if (!item) return <Box p={4}><Typography>No se encontró el checklist item.</Typography></Box>;
+
+    if (!item) return <ErrorPageLoading text="No se pudo cargar el checklist item" textReturn='Volver a Checklist' navigate={() => navigate('/checklist')} />;
 
     return (
         <Box p={4} maxWidth="720px" mx="auto">

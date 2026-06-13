@@ -33,6 +33,7 @@ import { LoteSelectionModal } from '../components/LoteSelectionModal';
 import type { TrasladoCrearForm } from '../../domain/interfaces/traslado.interface';
 import type { Lote } from '../../../../modules/lotes/domain/interfaces/lote.interface';
 import type { Sucursal } from '../../../../modules/sucursales/domain/interfaces/sucursal.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const trasladoSchema = z.object({
     sucursal_destino_id: z.string().uuid('Debe seleccionar una sucursal destino'),
@@ -157,9 +158,7 @@ export const TrasladoFormPage: React.FC = () => {
 
     if (loading && lotes.length === 0) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-                <CircularProgress />
-            </Box>
+            <Loading/>
         );
     }
 

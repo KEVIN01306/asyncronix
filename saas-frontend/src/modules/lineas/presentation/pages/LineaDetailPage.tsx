@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Paper, Typography, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { lineasRepository } from '../../infrastructure/lineas.repository';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const LineaDetailPage = () => {
     const { id } = useParams();
@@ -19,7 +20,7 @@ const LineaDetailPage = () => {
     }, [id]);
 
     return (
-        <Box p={4}><Paper sx={{ p: 3 }}>{loading ? <CircularProgress /> : (
+        <Box p={4}><Paper sx={{ p: 3 }}>{loading ? <Loading />: (
             <>
                 <Typography variant="h6">Línea</Typography>
                 <Typography variant="body1">{item?.linea}</Typography>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, TextField, Stack, Button } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
@@ -10,6 +10,7 @@ import { SubmitButton } from '../../../../shared/components/button/SubmitButton'
 import { clienteFormSchema, type ClienteFormInput } from '../../domain/cliente.schema';
 import { clienteRepository } from '../../infrastructure/clientes.repository';
 import type { ClienteCreateFormValues } from '../../domain/interfaces/cliente.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ClienteFormPage = () => {
     const { id } = useParams();
@@ -80,7 +81,8 @@ const ClienteFormPage = () => {
         }
     };
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) return <Loading />
+
 
     return (
         <Box p={2} maxWidth="800px" mx="auto">

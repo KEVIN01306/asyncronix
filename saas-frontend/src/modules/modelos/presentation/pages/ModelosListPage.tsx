@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, Autocomplete, TextField, Chip } from '@mui/material';
+import { Box, Paper, TableContainer, useTheme, useMediaQuery, Autocomplete, TextField, Chip } from '@mui/material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { modelosRepository } from '../../infrastructure/modelos.repository';
 import { marcasRepository } from '../../../marcas/infrastructure/marcas.repository';
 import { lineasRepository } from '../../../lineas/infrastructure/lineas.repository';
 import { cilindradasRepository } from '../../../cilindradas/infrastructure/cilindradas.repository';
 import { Visibility } from '@mui/icons-material';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ModelosListPage = () => {
     const navigate = useNavigate();
@@ -144,7 +145,9 @@ const ModelosListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Box display="flex" justifyContent="center" p={5}>
+                        <Loading />
+                    </Box>
                 ) : (
                     <ListTable
                         data={items}

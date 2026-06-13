@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Paper, TextField, Stack, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, TextField, Stack, Button } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
@@ -10,6 +10,7 @@ import { SubmitButton } from '../../../../shared/components/button/SubmitButton'
 import { rolSchema, type RolFormValues } from '../../domain/schemas/rol.schema';
 import { RolesRepository } from '../../infrastructure/repositories/rol.repository';
 import type { Rol } from '../../domain/interfaces/rol.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const RolesEditPage = () => {
     const { id } = useParams();
@@ -51,7 +52,8 @@ const RolesEditPage = () => {
         }
     };
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) return <Loading/>
+
 
     return (
         <Box p={4} maxWidth="600px" mx="auto">

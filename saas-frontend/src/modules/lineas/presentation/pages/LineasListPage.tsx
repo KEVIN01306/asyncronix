@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Paper, TableContainer, useTheme, useMediaQuery } from '@mui/material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { lineasRepository } from '../../infrastructure/lineas.repository';
 import { Visibility } from '@mui/icons-material';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const LineasListPage = () => {
     const navigate = useNavigate();
@@ -37,7 +38,7 @@ const LineasListPage = () => {
             <Box component={Paper} sx={{ p: 2, mb: 2 }}>Catálogo global de líneas</Box>
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Loading />
                 ) : (
                     <ListTable
                         data={items}

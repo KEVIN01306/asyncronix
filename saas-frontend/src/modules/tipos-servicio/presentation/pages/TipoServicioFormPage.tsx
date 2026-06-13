@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Autocomplete, Box, Button, CircularProgress, FormControlLabel, Paper, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, FormControlLabel, Paper, Stack, Switch, TextField, Typography } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
@@ -11,6 +11,7 @@ import { tipoServicioSchema, type TipoServicioFormValues } from '../../domain/sc
 import { TipoServicioRepository } from '../../infrastructure/repositories/tipo-servicio.repository';
 import { OpcionServicioRepository } from '../../../opciones-servicio/infrastructure/repositories/opcion-servicio.repository';
 import type { OpcionServicio } from '../../../opciones-servicio/domain/interfaces/opcion-servicio.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const TipoServicioFormPage = () => {
     const { id } = useParams();
@@ -62,7 +63,7 @@ const TipoServicioFormPage = () => {
         }
     };
 
-    if (loading) return <Box display="flex" justifyContent="center" mt={10}><CircularProgress /></Box>;
+    if (loading) return <Loading/>;
 
     return (
         <Box p={4} maxWidth="720px" mx="auto">

@@ -5,7 +5,7 @@ import { Add, Edit, Visibility, FilterList, Search } from '@mui/icons-material';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import AtributosTab from './components/AtributosTab';
-import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogContent, DialogTitle, MenuItem, Paper, TableContainer, TextField, useTheme, DialogActions, InputAdornment } from '@mui/material';
+import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, MenuItem, Paper, TableContainer, TextField, useTheme, DialogActions, InputAdornment } from '@mui/material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { ProductoRepository } from '../../infrastructure/repositories/producto.repository';
 import { CategoriaRepository } from '../../../categorias/infrastructure/repositories/categoria.repository';
@@ -14,6 +14,7 @@ import type { Categoria } from '../../../categorias/domain/interfaces/categoria.
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
 import { useDebounce } from '../../../../core/hooks/useDebounce';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ProductosListPage = () => {
     const navigate = useNavigate();
@@ -235,7 +236,7 @@ const ProductosListPage = () => {
                     <TableContainer>
                         {loading ? (
                             <Box display="flex" justifyContent="center" p={5}>
-                                <CircularProgress />
+                                <Loading />                            
                             </Box>
                         ) : (
                             <ListTable

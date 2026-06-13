@@ -28,6 +28,7 @@ import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbort
 import { useDebounce } from '../../../../core/hooks/useDebounce';
 import { trasladoRepository } from '../../infrastructure/traslado.repository';
 import type { TrasladoDetalle, EstadoTraslado } from '../../domain/interfaces/traslado.interface';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ESTADO_COLORS: Record<EstadoTraslado, 'default' | 'warning' | 'success' | 'error'> = {
     PENDIENTE: 'warning',
@@ -270,7 +271,7 @@ export const TrasladosSalidaPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>
+                    <Loading />
                 ) : (
                     <>
                         <ListTable

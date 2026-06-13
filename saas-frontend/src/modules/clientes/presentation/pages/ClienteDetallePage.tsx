@@ -10,6 +10,7 @@ import type { Cliente } from '../../domain/interfaces/cliente.interface';
 import type { Venta } from '../../../ventas/domain/interfaces/venta.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 
 export default function ClienteDetallePage() {
     const { id } = useParams();
@@ -67,7 +68,7 @@ export default function ClienteDetallePage() {
     };
 
     if (loadingCliente) return <Loading />;
-    if (!cliente) return <Loading />;
+    if (!cliente) return <ErrorPageLoading text="Cliente no encontrado" textReturn='Volver al listado' navigate={() => navigate('/clientes')} />;
 
     const getEstadoColor = (estado: string) => {
         switch (estado) {
