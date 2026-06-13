@@ -49,3 +49,10 @@ export const clienteActualizarSchema = clienteCrearShape.partial().refine(
 export const clienteBuscarSchema = z.object({
     nit: z.string().min(1, "El NIT es obligatorio").max(50, "El NIT no puede exceder 50 caracteres")
 })
+
+export const clienteListQuerySchema = z.object({
+    limit: z.coerce.number().min(1).max(100).optional().default(10),
+    offset: z.coerce.number().min(0).optional().default(0),
+    q: z.string().trim().optional(),
+    documento: z.string().trim().optional()
+});

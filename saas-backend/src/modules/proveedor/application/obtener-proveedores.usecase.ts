@@ -5,7 +5,7 @@ import type { ProveedorRepository } from '../domain/proveedor.repository.js';
 export class ObtenerProveedoresUseCase {
     constructor(private readonly repo: ProveedorRepository) { }
 
-    async execute(params: { negocio_id: string; page: number; perPage: number }): Promise<Paginated<ProveedorSimple>> {
+    async execute(params: { negocio_id: string; page: number; perPage: number; q?: string | null }): Promise<Paginated<ProveedorSimple>> {
         return this.repo.listar(params);
     }
 }

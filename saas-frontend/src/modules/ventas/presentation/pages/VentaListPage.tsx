@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
-import { Add, Visibility, Search } from '@mui/icons-material';
+import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Select, MenuItem, Stack } from '@mui/material';
+import { Add, Visibility, Search, FilterList } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Venta } from '../../domain/interfaces/venta.interface';
 import { ventaRepository } from '../../infrastructure/venta.repository';
 import { useAuthStore } from '../../../../core/store/authStore';
+import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
+import { useDebounce } from '../../../../core/hooks/useDebounce';
 import { toast } from 'sonner';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 
@@ -26,6 +28,18 @@ const VentasListPage = () => {
     const [comentarioAnular, setComentarioAnular] = useState('');
     const [anularSaving, setAnularSaving] = useState(false);
 
+    // filters
+    const [filtroQ, setFiltroQ] = useState<string | null>(() => searchParams.get('q'));
+    const debouncedFiltroQ = useDebounce(filtroQ, 300);
+    const abortableFetch = useAbortableFetch();
+    const [filtroMetodo, setFiltroMetodo] = useState<string | null>(() => searchParams.get('metodo_pago'));
+    const [fechaInicio, setFechaInicio] = useState<string | null>(() => searchParams.get('fecha_inicio'));
+    const [fechaFin, setFechaFin] = useState<string | null>(() => searchParams.get('fecha_fin'));
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
+    const [tempFiltroMetodo, setTempFiltroMetodo] = useState(filtroMetodo);
+    const [tempFechaInicio, setTempFechaInicio] = useState(fechaInicio);
+    const [tempFechaFin, setTempFechaFin] = useState(fechaFin);
+
     const user = useAuthStore(state => state.user);
 
     const columns = [
@@ -36,28 +50,65 @@ const VentasListPage = () => {
         { id: 'estado', name: 'Estado', format: (value: any) => <Chip variant='outlined' label={value} color={value === 'COMPLETADA' ? 'success' : value === 'PENDIENTE' ? 'warning' : 'error'} size="small" /> },
     ];
 
-    const fetchVentas = useCallback(async () => {
+    const fetchVentas = useCallback(async (signal: AbortSignal) => {
         setLoading(true);
         try {
-            const response = await ventaRepository.listar(limit, offset);
+            const q = debouncedFiltroQ || null;
+            const metodo = filtroMetodo || null;
+            const fi = fechaInicio || null;
+            const ff = fechaFin || null;
+            const cliente_id = undefined;
+            const response = await ventaRepository.listar(limit, offset, cliente_id, metodo, q, fi, ff, signal);
             setVentas(response.data);
-            setTotal(response.meta?.total ??  0);
+            setTotal(response.meta?.total ?? 0);
         } catch (error) {
+            if (isAbortError(error)) return;
             console.error(error);
             toast.error('Error al cargar las ventas');
         } finally {
             setLoading(false);
         }
-    }, [limit, offset]);
+    }, [limit, offset, debouncedFiltroQ, filtroMetodo, fechaInicio, fechaFin]);
 
     useEffect(() => {
-        fetchVentas();
-    }, [fetchVentas]);
+        abortableFetch(fetchVentas);
+    }, [abortableFetch, fetchVentas]);
 
     const handleAnular = (row: Venta) => {
         setVentaToAnular(row);
         setComentarioAnular('');
         setShowAnularModal(true);
+    };
+
+    const applyFiltersToSearchParams = (overrides: { q?: string | null; metodo_pago?: string | null; fecha_inicio?: string | null; fecha_fin?: string | null } = {}) => {
+        const params: any = { limit: limit.toString(), offset: '0' };
+        const q = overrides.q !== undefined ? overrides.q : filtroQ;
+        const metodo = overrides.metodo_pago !== undefined ? overrides.metodo_pago : filtroMetodo;
+        const fi = overrides.fecha_inicio !== undefined ? overrides.fecha_inicio : fechaInicio;
+        const ff = overrides.fecha_fin !== undefined ? overrides.fecha_fin : fechaFin;
+        if (q) params.q = q;
+        if (metodo) params.metodo_pago = metodo;
+        if (fi) params.fecha_inicio = fi;
+        if (ff) params.fecha_fin = ff;
+        setSearchParams(params);
+    };
+
+    const handleClearFilters = () => {
+        setTempFiltroMetodo(null);
+        setTempFechaInicio(null);
+        setTempFechaFin(null);
+        setFiltroMetodo(null);
+        setFechaInicio(null);
+        setFechaFin(null);
+        applyFiltersToSearchParams({ metodo_pago: null, fecha_inicio: null, fecha_fin: null });
+    };
+
+    const handleApplyFilters = () => {
+        setFiltroMetodo(tempFiltroMetodo);
+        setFechaInicio(tempFechaInicio);
+        setFechaFin(tempFechaFin);
+        applyFiltersToSearchParams({ metodo_pago: tempFiltroMetodo, fecha_inicio: tempFechaInicio, fecha_fin: tempFechaFin });
+        setFilterModalOpen(false);
     };
 
     const confirmAnular = async () => {
@@ -78,7 +129,7 @@ const VentasListPage = () => {
             setShowAnularModal(false);
             setVentaToAnular(null);
             setComentarioAnular('');
-            fetchVentas();
+            await abortableFetch(fetchVentas);
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Error al anular la venta');
         } finally {
@@ -103,8 +154,29 @@ const VentasListPage = () => {
                 sx={{ bgcolor: 'background.paper', p: 2 }}
                 component={Paper}
             >
-                <TextField fullWidth label="Buscar Venta" placeholder="Ej: Cliente o fecha" InputProps={{ startAdornment: (<InputAdornment position="start"><Search color="primary" /></InputAdornment>) }} />
-                <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/ventas/nuevo')}>
+                <Stack direction={isMobile ? 'column' : 'row'} spacing={1} sx={{ flex: 1, width: isMobile ? '100%' : 'auto' }}>
+                    {/* Agregamos sx={{ flex: 1 }} aquí */}
+                    <TextField 
+                        value={filtroQ ?? ''} 
+                        onChange={(e) => {
+                            const v = e.target.value || null;
+                            setFiltroQ(v);
+                            applyFiltersToSearchParams({ q: v });
+                        }} 
+                        label="Buscar" 
+                        placeholder="Ej: Cliente, producto o id" 
+                        InputProps={{ startAdornment: (<InputAdornment position="start"><Search color="primary" /></InputAdornment>) }} 
+                        sx={{ flex: 1 }} 
+                    />
+                    <Button
+                        variant="outlined"
+                        startIcon={<FilterList />}
+                        onClick={() => setFilterModalOpen(true)}
+                    >
+                        Más filtros
+                    </Button>
+                </Stack>
+                <Button variant="contained" sx={{ minWidth: 160, width: isMobile ? '100%' : 'auto' }} startIcon={<Add />} onClick={() => navigate('/ventas/nuevo')}>
                     Nueva Venta
                 </Button>
             </Box>
@@ -151,6 +223,38 @@ const VentasListPage = () => {
                     <Button onClick={confirmAnular} variant="contained" color="error" disabled={anularSaving || comentarioAnular.trim().length === 0}>
                         {anularSaving ? 'Anulando...' : 'Confirmar anulación'}
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={filterModalOpen} onClose={() => setFilterModalOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Filtros</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1}>
+                        <Select value={tempFiltroMetodo ?? ''} displayEmpty onChange={(e) => {
+                            const v = e.target.value || null;
+                            setTempFiltroMetodo(v);
+                        }}>
+                            <MenuItem value="">Todos los métodos</MenuItem>
+                            <MenuItem value="EFECTIVO">Efectivo</MenuItem>
+                            <MenuItem value="TARJETA">Tarjeta</MenuItem>
+                            <MenuItem value="TRANSFERENCIA">Transferencia</MenuItem>
+                            <MenuItem value="OTRO">Otro</MenuItem>
+                        </Select>
+
+                        <TextField type="date" label="Desde" InputLabelProps={{ shrink: true }} value={tempFechaInicio ?? ''} onChange={(e) => {
+                            const v = e.target.value || null;
+                            setTempFechaInicio(v);
+                        }} />
+                        <TextField type="date" label="Hasta" InputLabelProps={{ shrink: true }} value={tempFechaFin ?? ''} onChange={(e) => {
+                            const v = e.target.value || null;
+                            setTempFechaFin(v);
+                        }} />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setFilterModalOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleClearFilters} variant="outlined">Limpiar</Button>
+                    <Button onClick={handleApplyFilters} variant="contained">Aplicar</Button>
                 </DialogActions>
             </Dialog>
         </Box>

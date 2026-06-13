@@ -171,7 +171,7 @@ const NegocioEditPage = () => {
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 gap: 4,
-                                bgcolor: 'grey.50'
+                                bgcolor: 'background.paper'
                             }}>
                                 <Grid sx={{ position: 'relative' }} size={{ xs: 12, md: 3 }}>
                                     {logoPreview ? (

@@ -19,9 +19,9 @@ export class ProveedorController extends BaseController {
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res);
-            const { limit, offset } = res.locals.query;
+            const { limit, offset, q } = res.locals.query;
             const page = Math.floor(offset / limit) + 1;
-            const { total, data } = await this.obtenerProveedoresUseCase.execute({ negocio_id, page, perPage: limit });
+            const { total, data } = await this.obtenerProveedoresUseCase.execute({ negocio_id, page, perPage: limit, q });
             res.status(200).json(Respuesta.paginacion('Proveedores obtenidos', data, total, limit, offset));
         } catch (error) { next(error); }
     }

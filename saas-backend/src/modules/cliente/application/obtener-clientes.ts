@@ -9,7 +9,7 @@ export class ObtenerClientesUseCase {
         private readonly clienteRepository: ClienteRepository
     ) { }
 
-    async execute(params: { negocio_id: string; page: number; perPage: number }): Promise<Paginated<ClienteSimple>> {
+    async execute(params: { negocio_id: string; page: number; perPage: number; q?: string | null; documento?: string | null }): Promise<Paginated<ClienteSimple>> {
         try {
             return await this.clienteRepository.listar(params);
         } catch (error) {

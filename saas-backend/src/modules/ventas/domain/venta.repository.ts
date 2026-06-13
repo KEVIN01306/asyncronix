@@ -7,7 +7,7 @@ export interface VentaRepository {
     actualizar(id: string, data: VentaActualizar, negocio_id: string, sucursal_id: string): Promise<VentaSimple>;
     anular(id: string, negocio_id: string, sucursal_id: string, comentario: string): Promise<VentaSimple>;
     obtener(id: string, negocio_id: string, sucursal_id: string): Promise<VentaObtenerDetalle | null>;
-    listar(negocio_id: string, sucursal_id: string, pagination: Pagination, cliente_id?: string | null): Promise<Paginated<VentaSimple>>;
+    listar(negocio_id: string, sucursal_id: string, pagination: Pagination, cliente_id?: string | null, metodo_pago?: MetodoPago, q?: string, fecha_inicio?: string | null, fecha_fin?: string | null): Promise<Paginated<VentaSimple>>;
     crearDetalle(ventaId: string, detalle: any, negocio_id: string, sucursal_id: string): Promise<any>;
     eliminarDetalle(ventaId: string, detalleId: string, negocio_id: string, sucursal_id: string): Promise<void>;
     finalizarVenta(ventaId: string, negocio_id: string, sucursal_id: string, metodo_pago?: MetodoPago): Promise<VentaSimple>;

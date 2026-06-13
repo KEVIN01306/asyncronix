@@ -89,6 +89,10 @@ api.interceptors.response.use(
             });
         }
 
+        if (error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError' || (typeof DOMException !== 'undefined' && error instanceof DOMException && error.name === 'AbortError')) {
+            return Promise.reject(error);
+        }
+
         handleApiError(error);
         return Promise.reject(error);
     }

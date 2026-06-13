@@ -1,10 +1,14 @@
 import { Router } from "express";
+import { z } from "zod";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { categoriaController } from "../categoria.module.js";
 import { categoriaCrearSchema, categoriaActualizarSchema } from "./validators/categoria.schema.js";
 import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
 
+const categoriaListQuerySchema = paginacionQuerySchema.extend({
+    q: z.string().trim().optional()
+});
 
 const router = Router();
 const validarMiddleware = new ValidarMiddleware();
@@ -20,7 +24,7 @@ router.post("/",
 
 router.get("/", 
     authMiddleware.verificarPermiso(['VER_CATEGORIAS_PRODUCTOS']),
-    validarMiddleware.validarQuery(paginacionQuerySchema), 
+    validarMiddleware.validarQuery(categoriaListQuerySchema), 
     categoriaController.listar
 );
 

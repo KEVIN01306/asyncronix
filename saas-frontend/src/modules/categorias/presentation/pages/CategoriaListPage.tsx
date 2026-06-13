@@ -6,6 +6,8 @@ import { Add, Edit, Search, Visibility } from "@mui/icons-material";
 import { Alert, AlertTitle, Box, Button, CircularProgress, InputAdornment, Paper, TableContainer, TextField, useTheme } from "@mui/material";
 import ListTable from "../../../../shared/components/ui/tables/ListTable";
 import { CategoriaRepository } from "../../infrastructure/repositories/categoria.repository";
+import { isAbortError, useAbortableFetch } from "../../../../core/hooks/useAbortableFetch";
+import { useDebounce } from "../../../../core/hooks/useDebounce";
 
 
 
@@ -22,6 +24,9 @@ const CategoriaListPage = () => {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('q') || '');
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
+    const abortableFetch = useAbortableFetch();
 
     const columns = [
         { id: 'categoria', name: 'Categoría', format: (value: any) => value.toString().toUpperCase() },
@@ -43,22 +48,32 @@ const CategoriaListPage = () => {
         },
     ];
 
-    const fetchCategorias = useCallback(async () => {
+    const fetchCategorias = useCallback(async (signal: AbortSignal) => {
         setLoading(true);
         try {
-            const response = await CategoriaRepository.listar(limit, offset);
+            const response = await CategoriaRepository.listar(limit, offset, debouncedSearchQuery || undefined, signal);
             setCategorias(response.data);
             setTotal(response.meta.total);
         } catch (error) {
+            if (isAbortError(error)) {
+                return;
+            }
             console.error(error);
         } finally {
             setLoading(false);
         }
-    }, [limit, offset]);
+    }, [limit, offset, debouncedSearchQuery]);
 
     useEffect(() => {
-        fetchCategorias();
-    }, [fetchCategorias]);
+        abortableFetch(fetchCategorias);
+    }, [abortableFetch, fetchCategorias]);
+
+    useEffect(() => {
+        const q = searchParams.get('q') || '';
+        if (q !== searchQuery) {
+            setSearchQuery(q);
+        }
+    }, [searchParams, searchQuery]);
 
     return (
         <Box p={isMobile ? 2 : 4}>
@@ -76,8 +91,18 @@ const CategoriaListPage = () => {
             >
                 <TextField
                     fullWidth
+                    value={searchQuery}
                     label="Buscar categorias"
                     placeholder="Ej: Electronica, Ropa, etc."
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        setSearchQuery(value);
+                        const params: any = { limit: limit.toString(), offset: '0' };
+                        if (value.trim().length > 0) {
+                            params.q = value;
+                        }
+                        setSearchParams(params);
+                    }}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">

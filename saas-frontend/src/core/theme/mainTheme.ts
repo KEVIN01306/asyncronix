@@ -1,119 +1,274 @@
 import { createTheme } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
 
-const getThemePalette = (mode: PaletteMode, borderIntensity: number = 1, borderColorIntensity: number = 0.5) => {
+const getThemePalette = (
+    mode: PaletteMode,
+    borderIntensity: number = 1,
+    borderColorIntensity: number = 0.5
+) => {
     const isDark = mode === 'dark';
-    
-    const dividerWithIntensity = adjustColorIntensity(borderIntensity, borderColorIntensity);
+
+    const dividerWithIntensity = adjustColorIntensity(
+        borderIntensity,
+        borderColorIntensity,
+        isDark
+    );
 
     return {
         mode,
+
         primary: {
-            main: '#1E3A8A',
-            
+            // Verde estilo ChatGPT
+            main: '#10A37F',
+            dark: '#0D8B6C',
+            light: '#1BBF95',
+            contrastText: '#FFFFFF',
         },
+        //0e349c
+
         secondary: {
-            main: '#4c72a7',
+            main: isDark ? '#9CA3AF' : '#6B7280',
         },
-        warning: {
-            main: '#f2ba5a',
-        },
-        error: {
-            main: '#d84e47',
-        },
+
         success: {
-            main: '#10b981',
+            main: '#10A37F',
         },
+
+        warning: {
+            main: '#F59E0B',
+        },
+
+        error: {
+            main: '#EF4444',
+        },
+
         info: {
-            main: '#38bdf8',
+            main: '#3B82F6',
         },
+
         background: {
-            default: isDark ? '#0F172A' : '#f8faff',
-            paper: isDark ? '#111827' : '#ffffff',
+            // Fondos muy similares entre sí
+            default: isDark ? '#212121' : '#F7F7F8',
+            paper: isDark ? '#2F2F2F' : '#FFFFFF',
         },
+
         text: {
-            primary: isDark ? '#e2e8f0' : '#0f172a',
-            secondary: isDark ? '#cbd5e1' : '#64748b',
+            primary: isDark ? '#ECECEC' : '#111827',
+            secondary: isDark ? '#B4B4B4' : '#6B7280',
         },
+
         divider: dividerWithIntensity,
+
         action: {
-            hover: isDark ? '#1e293b' : '#f8fafc',
+            hover: isDark
+                ? 'rgba(255,255,255,0.05)'
+                : 'rgba(0,0,0,0.04)',
+
+            selected: isDark
+                ? 'rgba(255,255,255,0.08)'
+                : 'rgba(0,0,0,0.06)',
         },
     };
 };
 
-const adjustColorIntensity = (opacityIntensity: number, colorIntensity: number): string => {
-    // Define color points for gradient
-    // 0% = black (0, 0, 0)
-    // 50% = light gray (227, 232, 238) = #e3e8ee
-    // 100% = primary blue (30, 58, 138) = #1E3A8A
-    
-    const blackR = 0, blackG = 0, blackB = 0;
-    const midR = 227, midG = 232, midB = 238;
-    const blueR = 30, blueG = 58, blueB = 138;
-    
-    let r, g, b;
-    
-    if (colorIntensity < 0.5) {
-        // Interpolate between black and mid-gray
-        const t = colorIntensity * 2; // 0 to 1
-        r = Math.round(blackR + (midR - blackR) * t);
-        g = Math.round(blackG + (midG - blackG) * t);
-        b = Math.round(blackB + (midB - blackB) * t);
-    } else {
-        // Interpolate between mid-gray and blue
-        const t = (colorIntensity - 0.5) * 2; // 0 to 1
-        r = Math.round(midR + (blueR - midR) * t);
-        g = Math.round(midG + (blueG - midG) * t);
-        b = Math.round(midB + (blueB - midB) * t);
+const adjustColorIntensity = (
+    opacityIntensity: number,
+    colorIntensity: number,
+    isDark: boolean
+): string => {
+    if (isDark) {
+        return `rgba(255,255,255,${0.08 * opacityIntensity})`;
     }
-    
-    // Apply opacity intensity
-    const alpha = opacityIntensity;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+
+    return `rgba(0,0,0,${0.08 * opacityIntensity})`;
 };
 
-export const createAppTheme = (mode: PaletteMode, borderIntensity: number = 1, borderColorIntensity: number = 0.5) =>
+export const createAppTheme = (
+    mode: PaletteMode,
+    borderIntensity: number = 1,
+    borderColorIntensity: number = 0.5
+) =>
     createTheme({
-        palette: getThemePalette(mode, borderIntensity, borderColorIntensity),
+        palette: getThemePalette(
+            mode,
+            borderIntensity,
+            borderColorIntensity
+        ),
+
         shape: {
-            borderRadius: 2,
+            // ChatGPT utiliza radios suaves
+            borderRadius: 12,
         },
+
         typography: {
-            fontFamily: '"Inter","Roboto", "Helvetica", Arial, sans-serif',
-            h1: { fontSize: '2.5rem', fontWeight: 700 },
-            button: { textTransform: 'none', fontWeight: 600 },
+            fontFamily:
+                '"Inter","Segoe UI","Roboto","Helvetica","Arial",sans-serif',
+
+            h1: {
+                fontSize: '2.25rem',
+                fontWeight: 700,
+                letterSpacing: '-0.03em',
+            },
+
+            h2: {
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+            },
+
+            h3: {
+                fontWeight: 600,
+            },
+
+            body1: {
+                fontSize: '0.95rem',
+                lineHeight: 1.6,
+            },
+
+            body2: {
+                lineHeight: 1.5,
+            },
+
+            button: {
+                textTransform: 'none',
+                fontWeight: 500,
+                letterSpacing: 0,
+            },
         },
+
         components: {
+            MuiCssBaseline: {
+                styleOverrides: {
+                    body: {
+                        fontFeatureSettings: '"cv02","cv03","cv04","cv11"',
+                    },
+                },
+            },
+
             MuiButton: {
                 defaultProps: {
                     disableElevation: true,
                 },
+
+                styleOverrides: {
+                    root: {
+                        borderRadius: 10,
+                        paddingInline: 16,
+                        paddingBlock: 8,
+                        fontWeight: 500,
+                    },
+
+                    contained: {
+                        boxShadow: 'none',
+
+                        '&:hover': {
+                            boxShadow: 'none',
+                        },
+                    },
+                },
             },
+
             MuiCard: {
                 styleOverrides: {
                     root: ({ theme }) => ({
                         border: `1px solid ${theme.palette.divider}`,
+
+                        boxShadow:
+                            theme.palette.mode === 'dark'
+                                ? '0 1px 2px rgba(0,0,0,0.20)'
+                                : '0 1px 2px rgba(0,0,0,0.04)',
+
+                        backgroundImage: 'none',
                     }),
                 },
             },
+
             MuiPaper: {
                 styleOverrides: {
                     root: ({ theme }) => ({
                         border: `1px solid ${theme.palette.divider}`,
-                        boxShadow: 'none',
+
+                        boxShadow:
+                            theme.palette.mode === 'dark'
+                                ? '0 1px 2px rgba(0,0,0,0.20)'
+                                : '0 1px 2px rgba(0,0,0,0.04)',
+
+                        backgroundImage: 'none',
                     }),
                 },
             },
+
+            MuiOutlinedInput: {
+                styleOverrides: {
+                    root: ({ theme }) => ({
+                        borderRadius: 12,
+
+                        '& fieldset': {
+                            borderColor: theme.palette.divider,
+                        },
+
+                        '&:hover fieldset': {
+                            borderColor: theme.palette.text.secondary,
+                        },
+
+                        '&.Mui-focused fieldset': {
+                            borderColor: theme.palette.primary.main,
+                            borderWidth: 1,
+                        },
+                    }),
+                },
+            },
+
+            MuiTextField: {
+                defaultProps: {
+                    variant: 'outlined',
+                },
+            },
+
             MuiChip: {
                 styleOverrides: {
-                    root: () => ({
-                        paddingTop: 3,
-                        paddingBottom: 3,
+                    root: {
+                        borderRadius: 8,
+                        fontWeight: 500,
+                    },
+                },
+            },
+
+            MuiListItemButton: {
+                styleOverrides: {
+                    root: {
+                        borderRadius: 10,
+
+                        '&.Mui-selected': {
+                            fontWeight: 500,
+                        },
+                    },
+                },
+            },
+
+            MuiDialog: {
+                styleOverrides: {
+                    paper: {
+                        borderRadius: 16,
+                    },
+                },
+            },
+
+            MuiDrawer: {
+                styleOverrides: {
+                    paper: ({ theme }) => ({
+                        borderRight: `1px solid ${theme.palette.divider}`,
                     }),
+                },
+            },
+
+            MuiTableCell: {
+                styleOverrides: {
+                    root: {
+                        borderBottom: '1px solid rgba(0,0,0,0.06)',
+                    },
                 },
             },
         },
     });
 
-export const mainTheme = createAppTheme('light', 1);
+export const mainTheme = createAppTheme('light');

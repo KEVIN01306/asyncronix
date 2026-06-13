@@ -2,10 +2,14 @@ import api from "../../../core/api/api";
 import type { Venta, VentaCreateForm, VentaUpdateForm, VentaResponse, VentaVarianteDetalle } from "../domain/interfaces/venta.interface";
 
 export const ventaRepository = {
-    listar: async (limit: number, offset: number, cliente_id?: string | null): Promise<VentaResponse> => {
+    listar: async (limit: number, offset: number, cliente_id?: string | null, metodo_pago?: string | null, q?: string | null, fecha_inicio?: string | null, fecha_fin?: string | null, signal?: AbortSignal): Promise<VentaResponse> => {
         const params: any = { offset, limit };
         if (cliente_id) params.cliente_id = cliente_id;
-        const response = await api.get<VentaResponse>('/ventas', { params });
+        if (metodo_pago) params.metodo_pago = metodo_pago;
+        if (q) params.q = q;
+        if (fecha_inicio) params.fecha_inicio = fecha_inicio;
+        if (fecha_fin) params.fecha_fin = fecha_fin;
+        const response = await api.get<VentaResponse>('/ventas', { params, signal });
         return response as any;
     },
     obtener: async (id: string): Promise<{ data: Venta }> => {

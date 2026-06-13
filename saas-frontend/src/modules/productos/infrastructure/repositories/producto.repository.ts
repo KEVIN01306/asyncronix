@@ -5,13 +5,15 @@ import type { Producto, ProductosResponse, ProductoDetailResponse, ProductoAtrib
 const URL_MODULE = '/productos/';
 
 export const ProductoRepository = {
-    listar: async (limit: number = 10, offset: number = 0, categoria_id?: string): Promise<ProductosResponse> => {
+    listar: async (limit: number = 10, offset: number = 0, categoria_id?: string, q?: string | null, codigo?: string | null, signal?: AbortSignal): Promise<ProductosResponse> => {
+        const params: any = { limit, offset };
+        if (categoria_id) params.categoria_id = categoria_id;
+        if (q) params.q = q;
+        if (codigo) params.codigo = codigo;
+
         const response = await api.get<ProductosResponse>(URL_MODULE, {
-            params: {
-                limit,
-                offset,
-                categoria_id,
-            }
+            params,
+            signal,
         });
 
         return response;

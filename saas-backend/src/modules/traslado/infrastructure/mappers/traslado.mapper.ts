@@ -24,6 +24,14 @@ export class TrasladoMapper {
                 nombre: traslado.creador.nombre,
                 apellido: traslado.creador.apellido ?? null,
             },
+            recibidor: traslado.recibidor ? {
+                id: traslado.recibidor.id,
+                nombre: traslado.recibidor.nombre,
+                apellido: traslado.recibidor.apellido ?? null,
+            } : null,
+            recibidor_id: traslado.recibidor_id ?? null,
+            fecha_recibido: traslado.fecha_recibido ? traslado.fecha_recibido.toISOString() : null,
+            comentarios: traslado.comentarios ?? null,
             detalles: (traslado.detalles ?? []).map((detalle: any) => ({
                 id: detalle.id,
                 traslado_id: detalle.traslado_id,

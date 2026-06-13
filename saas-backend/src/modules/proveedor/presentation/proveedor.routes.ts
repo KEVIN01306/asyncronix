@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { ValidarMiddleware } from '@app/middlewares/ValidarMiddleware.js';
 import { AuthMiddleware } from '@app/middlewares/AuthMiddleware.js';
 import { proveedorController } from '../proveedor.module.js';
@@ -12,9 +13,13 @@ const validarMiddleware = new ValidarMiddleware();
 
 router.use(authMiddleware.protegerRuta);
 
+const proveedorListQuerySchema = paginacionQuerySchema.extend({
+    q: z.string().trim().optional()
+});
+
 router.get('/',
     authMiddleware.verificarPermiso(['VER_PROVEEDORES']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(proveedorListQuerySchema),
     proveedorController.listar
 );
 

@@ -5,8 +5,8 @@ import type { Proveedor, ProveedorCreateFormValues, ProveedorUpdateFormValues } 
 const URL_MODULE = '/proveedores';
 
 export const proveedoresRepository = {
-    listar: async (limit: number, offset: number): Promise<PaginatedResponse<Proveedor>> => {
-        const response = await api.get<PaginatedResponse<Proveedor>>(URL_MODULE, { params: { limit, offset } });
+    listar: async (limit: number, offset: number, q?: string, signal?: AbortSignal): Promise<PaginatedResponse<Proveedor>> => {
+        const response = await api.get<PaginatedResponse<Proveedor>>(URL_MODULE, { params: { limit, offset, q }, signal });
         return response as any;
     },
     obtener: async (id: string): Promise<ApiResponse<Proveedor>> => {

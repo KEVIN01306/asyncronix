@@ -7,12 +7,14 @@ interface Params {
     negocio_id: string;
     pagination: Pagination;
     categoria_id?: string;
+    q?: string | null;
+    codigo?: string | null;
 }
 
 export class ObtenerProductosUseCase {
     constructor(private readonly repository: ProductoRepository) { }
 
-    async execute({ negocio_id, pagination, categoria_id }: Params): Promise<Paginated<ProductoSimple>> {
-        return await this.repository.listar(negocio_id, pagination, categoria_id);
+    async execute({ negocio_id, pagination, categoria_id, q, codigo }: Params): Promise<Paginated<ProductoSimple>> {
+        return await this.repository.listar(negocio_id, pagination, categoria_id, q, codigo);
     }
 }

@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle } from '@mui/material';
-import { Add, Edit, Info, Search } from '@mui/icons-material';
+import { Box, Button, Paper, TableContainer, CircularProgress, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Dialog, DialogTitle, DialogContent, DialogActions, Stack } from '@mui/material';
+import { Add, Edit, Info, Search, FilterList } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Cliente } from '../../domain/interfaces/cliente.interface';
 import { clienteRepository } from '../../infrastructure/clientes.repository';
+import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
+import { useDebounce } from '../../../../core/hooks/useDebounce';
 
 const ClientesListPage = () => {
     const navigate = useNavigate();
@@ -17,6 +19,12 @@ const ClientesListPage = () => {
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [filtroQ, setFiltroQ] = useState<string | null>(() => searchParams.get('q'));
+    const debouncedFiltroQ = useDebounce(filtroQ, 300);
+    const abortableFetch = useAbortableFetch();
+    const [filtroDocumento, setFiltroDocumento] = useState<string | null>(() => searchParams.get('documento'));
+    const [tempFiltroDocumento, setTempFiltroDocumento] = useState(filtroDocumento);
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
 
     const columns = [
         { id: 'nombre', name: 'Nombre' },
@@ -41,22 +49,42 @@ const ClientesListPage = () => {
         },
     ];
 
-    const fetchClientes = useCallback(async () => {
+    const fetchClientes = useCallback(async (signal: AbortSignal) => {
         setLoading(true);
         try {
-            const response = await clienteRepository.listar(limit, offset);
+            const q = debouncedFiltroQ || null;
+            const documento = filtroDocumento || null;
+            const response = await clienteRepository.listar(limit, offset, q, documento, signal);
             setClientes(response.data);
-            setTotal(response.meta.total);
+            setTotal(response.meta.total ?? 0);
         } catch (error) {
+            if (isAbortError(error)) return;
             console.error(error);
         } finally {
             setLoading(false);
         }
-    }, [limit, offset]);
+    }, [limit, offset, debouncedFiltroQ, filtroDocumento]);
 
     useEffect(() => {
-        fetchClientes();
-    }, [fetchClientes]);
+        abortableFetch(fetchClientes);
+    }, [abortableFetch, fetchClientes]);
+
+    const handleClearFilters = () => {
+        setTempFiltroDocumento(null);
+        setFiltroDocumento(null);
+        const params: any = { limit: limit.toString(), offset: '0' };
+        if (filtroQ) params.q = filtroQ;
+        setSearchParams(params);
+    };
+
+    const handleApplyFilters = () => {
+        setFiltroDocumento(tempFiltroDocumento);
+        const params: any = { limit: limit.toString(), offset: '0' };
+        if (filtroQ) params.q = filtroQ;
+        if (tempFiltroDocumento) params.documento = tempFiltroDocumento;
+        setSearchParams(params);
+        setFilterModalOpen(false);
+    };
 
     return (
         <Box p={isMobile ? 2 : 4}>
@@ -72,23 +100,34 @@ const ClientesListPage = () => {
                 }}
                 component={Paper}
             >
-                <TextField
-                    fullWidth
-                    label="Buscar cliente"
-                    placeholder="Ej: Nombre, NIT o DPI"
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <Search color="primary" />
-                            </InputAdornment>
-                        ),
-                    }}
-                    disabled
-                />
+                <Stack direction={isMobile ? 'column' : 'row'} spacing={1} sx={{ flex: 1, width: isMobile ? '100%' : 'auto' }}>
+                    <TextField value={filtroQ ?? ''} onChange={(e) => { const v = e.target.value || null; setFiltroQ(v); const params: any = { limit: limit.toString(), offset: '0' }; if (v) params.q = v; if (filtroDocumento) params.documento = filtroDocumento; setSearchParams(params); }} fullWidth label="Buscar cliente" placeholder="Ej: Nombre, email o teléfono" InputProps={{ startAdornment: (<InputAdornment position="start"><Search color="primary" /></InputAdornment>) }} />
+                    <Button
+                        variant="outlined"
+                        startIcon={<FilterList />}
+                        onClick={() => setFilterModalOpen(true)}
+                    >
+                        Más filtros
+                    </Button>
+                </Stack>
                 <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/clientes/nuevo')}>
                     Nuevo cliente
                 </Button>
             </Box>
+
+            <Dialog open={filterModalOpen} onClose={() => setFilterModalOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Filtros</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1}>
+                        <TextField label="DPI o NIT" value={tempFiltroDocumento ?? ''} onChange={(e) => { const v = e.target.value || null; setTempFiltroDocumento(v); }} placeholder="Ingrese DPI o NIT" />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setFilterModalOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleClearFilters} variant="outlined">Limpiar</Button>
+                    <Button onClick={handleApplyFilters} variant="contained">Aplicar</Button>
+                </DialogActions>
+            </Dialog>
 
             <TableContainer>
                 {loading ? (

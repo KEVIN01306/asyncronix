@@ -5,8 +5,11 @@ import type { Cliente, ClienteCreateFormValues, ClienteUpdateFormValues } from "
 const URL_MODULE = '/clientes';
 
 export const clienteRepository = {
-    listar: async (limit: number, offset: number): Promise<PaginatedResponse<Cliente>> => {
-        const response = await api.get<PaginatedResponse<Cliente>>(URL_MODULE, { params: { limit, offset } });
+    listar: async (limit: number, offset: number, q?: string | null, documento?: string | null, signal?: AbortSignal): Promise<PaginatedResponse<Cliente>> => {
+        const params: any = { limit, offset };
+        if (q) params.q = q;
+        if (documento) params.documento = documento;
+        const response = await api.get<PaginatedResponse<Cliente>>(URL_MODULE, { params, signal });
         return response as any;
     },
     obtener: async (id: string): Promise<ApiResponse<Cliente>> => {

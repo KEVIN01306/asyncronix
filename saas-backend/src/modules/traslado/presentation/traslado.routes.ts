@@ -2,8 +2,7 @@ import { Router } from 'express';
 import { AuthMiddleware } from '@app/middlewares/AuthMiddleware.js';
 import { ValidarMiddleware } from '@app/middlewares/ValidarMiddleware.js';
 import { trasladoController } from '../traslado.module.js';
-import { trasladoCrearSchema } from './validators/traslado.schema.js';
-import { paginacionQuerySchema } from '@shared/presentation/validators/paginacion.query.schema.js';
+import { trasladoCrearSchema, trasladoListQuerySchema, trasladoAccionSchema } from './validators/traslado.schema.js';
 
 const router = Router();
 const auth = new AuthMiddleware();
@@ -21,14 +20,14 @@ router.post(
 router.get(
     '/origen/:origen_id',
     auth.verificarPermiso(['VER_TRASLADO']),
-    validar.validarQuery(paginacionQuerySchema),
+    validar.validarQuery(trasladoListQuerySchema),
     trasladoController.listarPorOrigen
 );
 
 router.get(
     '/destino/:destino_id',
     auth.verificarPermiso(['VER_TRASLADO']),
-    validar.validarQuery(paginacionQuerySchema),
+    validar.validarQuery(trasladoListQuerySchema),
     trasladoController.listarPorDestino
 );
 
@@ -41,12 +40,14 @@ router.get(
 router.put(
     '/:id/cancelar',
     auth.verificarPermiso(['CANCELAR_TRASLADO']),
+    validar.validarBody(trasladoAccionSchema),
     trasladoController.cancelar
 );
 
 router.put(
     '/:id/recibir',
     auth.verificarPermiso(['RECIBIR_TRASLADO']),
+    validar.validarBody(trasladoAccionSchema),
     trasladoController.recibir
 );
 

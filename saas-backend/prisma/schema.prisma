@@ -151,7 +151,8 @@ model Usuario {
   // Relaciones inversas corregidas
   servicios_mecanico Servicio[] @relation("ServicioMecanico")
   ventas_vendedor    Venta[]    @relation("VentaVendedor")
-  traslados          Traslado[]
+  trasladosCreados  Traslado[] @relation("TrasladosCreados")
+  trasladosRecibidos Traslado[] @relation("TrasladosRecibidos")
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -671,12 +672,15 @@ model Traslado {
   origen_id         String  @db.Char(36)
   destino_id        String  @db.Char(36)
   creador_id        String   @db.Char(36)
+  recibidor_id      String?  @db.Char(36) // Usuario que recibe el traslado (puede ser null hasta que se reciba)
   estado           EstadoTraslado    @default(PENDIENTE) // PENDIENTE, COMPLETADO, CANCELADO
+  fecha_recibido    DateTime?
+  comentarios       String?            @db.Text
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  creador           Usuario          @relation(fields: [creador_id], references: [id])
-
+  creador          Usuario            @relation("TrasladosCreados", fields: [creador_id], references: [id])
+  recibidor        Usuario?           @relation("TrasladosRecibidos", fields: [recibidor_id], references: [id])
   origen           Sucursal          @relation("SucursalOrigen", fields: [origen_id], references: [id])
   destino          Sucursal          @relation("SucursalDestino", fields: [destino_id], references: [id])
   detalles         DetalleTraslado[]

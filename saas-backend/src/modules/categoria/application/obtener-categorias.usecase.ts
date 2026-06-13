@@ -6,7 +6,7 @@ import type { Paginated } from "@shared/domain/paginated.js";
 export class ObtenerCategoriasUseCase {
     constructor(private readonly repository: CategoriaRepository) { }
 
-    async execute(negocio_id: string, pagination: Pagination): Promise<Paginated<CategoriaSimple>> {
-        return await this.repository.listar(negocio_id, pagination);
+    async execute(negocio_id: string, pagination: Pagination, q?: string | null): Promise<Paginated<CategoriaSimple>> {
+        return await this.repository.listar(negocio_id, pagination, q);
     }
 }

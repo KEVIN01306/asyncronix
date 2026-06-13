@@ -476,7 +476,7 @@ const BuscarProductosPage = () => {
             </Typography>
 
             {/* Barra de Búsqueda Minimalista */}
-            <Paper elevation={0} sx={{ p: 2, mb: 4, border: `1px solid ${theme.palette.divider}`, borderRadius: 0 }}>
+            <Paper elevation={0} sx={{ p: 2, mb: 4, border: `1px solid ${theme.palette.divider}` }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid size={{ xs: 12, md: 7 }}>
                         <TextField
@@ -491,7 +491,6 @@ const BuscarProductosPage = () => {
                                         <SearchIcon sx={{ color: theme.palette.text.primary }} />
                                     </InputAdornment>
                                 ),
-                                sx: { borderRadius: 0 }
                             }}
                             placeholder="Escanea o escribe un código para buscar"
                         />
@@ -502,7 +501,7 @@ const BuscarProductosPage = () => {
                                 fullWidth 
                                 variant="contained" 
                                 onClick={handleSearch}
-                                sx={{ bgcolor: theme.palette.primary.main, color: theme.palette.primary.contrastText, borderRadius: 0, fontWeight: 700, '&:hover': { bgcolor: theme.palette.primary.dark } }}
+                                sx={{ bgcolor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 700, '&:hover': { bgcolor: theme.palette.primary.dark } }}
                             >
                                 Buscar
                             </Button>
@@ -511,7 +510,7 @@ const BuscarProductosPage = () => {
                                 variant="outlined" 
                                 startIcon={<QrCodeScannerIcon />} 
                                 onClick={() => setOpenScanner(true)}
-                                sx={{ borderColor: theme.palette.primary.main, color: theme.palette.primary.main, borderRadius: 0, fontWeight: 700, '&:hover': { borderColor: theme.palette.primary.main, bgcolor: theme.palette.action.hover } }}
+                                sx={{ borderColor: theme.palette.primary.main, color: theme.palette.primary.main, fontWeight: 700, '&:hover': { borderColor: theme.palette.primary.main, bgcolor: theme.palette.action.hover } }}
                             >
                                 Escanear
                             </Button>

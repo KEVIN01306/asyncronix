@@ -1,7 +1,19 @@
 import { toast } from "sonner";
 import { useAuthStore } from "../store/authStore";
 
+const isAbortError = (error: any) => {
+    if (!error) return false;
+    if (typeof error === 'object') {
+        return error.name === 'CanceledError' || error.code === 'ERR_CANCELED' || (error instanceof DOMException && error.name === 'AbortError');
+    }
+    return false;
+};
+
 export const handleApiError = (error: any) => {
+    if (isAbortError(error)) {
+        return;
+    }
+
     const status = error.response?.status;
     const data = error.response?.data;
     const backendMessage = error.response?.data?.message || "Error inesperado";

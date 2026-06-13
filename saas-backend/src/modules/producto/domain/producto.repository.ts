@@ -13,7 +13,7 @@ export interface ProductoRepository {
     actualizar(id: string, producto: ProductoActualizar, negocio_id: string): Promise<ProductoDetalle>;
     eliminar(id: string, negocio_id: string): Promise<void>;
     obtener(id: string, negocio_id: string): Promise<ProductoDetalle | null>;
-    listar(negocio_id: string, pagination: Pagination, categoria_id?: string): Promise<Paginated<ProductoSimple>>;
+    listar(negocio_id: string, pagination: Pagination, categoria_id?: string, q?: string | null, codigo?: string | null): Promise<Paginated<ProductoSimple>>;
     registrarImagen(producto_id: string, url_imagen: string, negocio_id: string): Promise<ProductoDetalle>;
     listarAtributosProducto(producto_id: string, negocio_id: string): Promise<ProductoAtributo[] | null>;
     actualizarAtributosProducto(producto_id: string, negocio_id: string, atributo_ids: string[]): Promise<ProductoAtributo[] | null>;

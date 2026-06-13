@@ -3,7 +3,7 @@ import { PrismaErrorMapper } from '@shared/database/prisma/PrismaErrorMapper.js'
 import type { Paginated } from '@shared/domain/paginated.js';
 import type { Pagination } from '@shared/domain/pagination.js';
 import type { TrasladoCrear, TrasladoDetalle } from '../domain/traslado.entity.js';
-import type { TrasladoRepository } from '../domain/traslado.repository.js';
+import type { ListarTrasladosQuery, TrasladoRepository } from '../domain/traslado.repository.js';
 import { TrasladoMapper } from './mappers/traslado.mapper.js';
 import { LoteNotFoundPersistenceError } from '@shared/database/errors/LoteNotFoundPersistenceError.js';
 import { InsufficientStockPersistenceError } from '@shared/database/errors/InsufficientStockPersistenceError.js';
@@ -111,6 +111,7 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                 },
                 include: {
                     creador: { select: { id: true, nombre: true, apellido: true } },
+                    recibidor: { select: { id: true, nombre: true, apellido: true } },
                     origen: { select: { id: true, nombre: true } },
                     destino: { select: { id: true, nombre: true } },
                     detalles: {
@@ -133,15 +134,58 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
         }
     }
 
-    async listarPorOrigen(negocio_id: string, origen_id: string, pagination: Pagination): Promise<Paginated<TrasladoDetalle>> {
+    async listarPorOrigen(negocio_id: string, origen_id: string, pagination: Pagination, query: ListarTrasladosQuery): Promise<Paginated<TrasladoDetalle>> {
         try {
             const { page, perPage } = pagination;
             const offset = (page - 1) * perPage;
-            const where = {
-                origen_id,
-                origen: { negocio_id },
-                destino: { negocio_id },
-            };
+            const filters: any[] = [
+                { origen_id },
+                { origen: { negocio_id } },
+                { destino: { negocio_id } },
+            ];
+
+            if (query.estado) filters.push({ estado: query.estado });
+            if (query.guia) {
+                const guiaNumero = Number(query.guia);
+                if (!Number.isNaN(guiaNumero)) {
+                    filters.push({ consecutivo: guiaNumero });
+                }
+            }
+            if (query.creador) filters.push({ creador: { nombre: { contains: query.creador } } });
+            if (query.recibidor) filters.push({ recibidor: { nombre: { contains: query.recibidor } } });
+            if (query.fecha_inicio) {
+                const inicio = new Date(query.fecha_inicio);
+                if (!Number.isNaN(inicio.getTime())) filters.push({ created_at: { gte: inicio } });
+            }
+            if (query.fecha_fin) {
+                const fin = new Date(query.fecha_fin);
+                if (!Number.isNaN(fin.getTime())) filters.push({ created_at: { lte: fin } });
+            }
+            if (query.fecha_recibido_inicio) {
+                const inicioRecibido = new Date(query.fecha_recibido_inicio);
+                if (!Number.isNaN(inicioRecibido.getTime())) filters.push({ fecha_recibido: { gte: inicioRecibido } });
+            }
+            if (query.fecha_recibido_fin) {
+                const finRecibido = new Date(query.fecha_recibido_fin);
+                if (!Number.isNaN(finRecibido.getTime())) filters.push({ fecha_recibido: { lte: finRecibido } });
+            }
+
+            const orConditions: any[] = [];
+            if (query.q) {
+                orConditions.push(
+                    { id: { contains: query.q } },
+                    { comentarios: { contains: query.q } },
+                    { creador: { nombre: { contains: query.q } } },
+                    { creador: { apellido: { contains: query.q } } },
+                    { recibidor: { nombre: { contains: query.q } } },
+                    { recibidor: { apellido: { contains: query.q } } },
+                    { origen: { nombre: { contains: query.q } } },
+                    { destino: { nombre: { contains: query.q } } }
+                );
+            }
+
+            const where: any = { AND: filters };
+            if (orConditions.length > 0) where.AND.push({ OR: orConditions });
 
             const [total, traslados] = await Promise.all([
                 this.prisma.traslado.count({ where }),
@@ -152,6 +196,7 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                     take: perPage,
                     include: {
                         creador: { select: { id: true, nombre: true, apellido: true } },
+                        recibidor: { select: { id: true, nombre: true, apellido: true } },
                         origen: { select: { id: true, nombre: true } },
                         destino: { select: { id: true, nombre: true } },
                         detalles: {
@@ -180,15 +225,58 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
         }
     }
 
-    async listarPorDestino(negocio_id: string, destino_id: string, pagination: Pagination): Promise<Paginated<TrasladoDetalle>> {
+    async listarPorDestino(negocio_id: string, destino_id: string, pagination: Pagination, query: ListarTrasladosQuery): Promise<Paginated<TrasladoDetalle>> {
         try {
             const { page, perPage } = pagination;
             const offset = (page - 1) * perPage;
-            const where = {
-                destino_id,
-                origen: { negocio_id },
-                destino: { negocio_id },
-            };
+            const filters: any[] = [
+                { destino_id },
+                { origen: { negocio_id } },
+                { destino: { negocio_id } },
+            ];
+
+            if (query.estado) filters.push({ estado: query.estado });
+            if (query.guia) {
+                const guiaNumero = Number(query.guia);
+                if (!Number.isNaN(guiaNumero)) {
+                    filters.push({ consecutivo: guiaNumero });
+                }
+            }
+            if (query.creador) filters.push({ creador: { nombre: { contains: query.creador } } });
+            if (query.recibidor) filters.push({ recibidor: { nombre: { contains: query.recibidor } } });
+            if (query.fecha_inicio) {
+                const inicio = new Date(query.fecha_inicio);
+                if (!Number.isNaN(inicio.getTime())) filters.push({ created_at: { gte: inicio } });
+            }
+            if (query.fecha_fin) {
+                const fin = new Date(query.fecha_fin);
+                if (!Number.isNaN(fin.getTime())) filters.push({ created_at: { lte: fin } });
+            }
+            if (query.fecha_recibido_inicio) {
+                const inicioRecibido = new Date(query.fecha_recibido_inicio);
+                if (!Number.isNaN(inicioRecibido.getTime())) filters.push({ fecha_recibido: { gte: inicioRecibido } });
+            }
+            if (query.fecha_recibido_fin) {
+                const finRecibido = new Date(query.fecha_recibido_fin);
+                if (!Number.isNaN(finRecibido.getTime())) filters.push({ fecha_recibido: { lte: finRecibido } });
+            }
+
+            const orConditions: any[] = [];
+            if (query.q) {
+                orConditions.push(
+                    { id: { contains: query.q } },
+                    { comentarios: { contains: query.q } },
+                    { creador: { nombre: { contains: query.q } } },
+                    { creador: { apellido: { contains: query.q } } },
+                    { recibidor: { nombre: { contains: query.q } } },
+                    { recibidor: { apellido: { contains: query.q } } },
+                    { origen: { nombre: { contains: query.q } } },
+                    { destino: { nombre: { contains: query.q } } }
+                );
+            }
+
+            const where: any = { AND: filters };
+            if (orConditions.length > 0) where.AND.push({ OR: orConditions });
 
             const [total, traslados] = await Promise.all([
                 this.prisma.traslado.count({ where }),
@@ -199,6 +287,7 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                     take: perPage,
                     include: {
                         creador: { select: { id: true, nombre: true, apellido: true } },
+                        recibidor: { select: { id: true, nombre: true, apellido: true } },
                         origen: { select: { id: true, nombre: true } },
                         destino: { select: { id: true, nombre: true } },
                         detalles: {
@@ -227,7 +316,7 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
         }
     }
 
-    async cancelar(id: string, negocio_id: string, origen_id: string): Promise<void> {
+    async cancelar(id: string, negocio_id: string, origen_id: string, comentario: string): Promise<void> {
         try {
             await this.prisma.$transaction(async (tx) => {
                 const traslado = await tx.traslado.findFirst({
@@ -263,7 +352,7 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
 
                 await tx.traslado.update({
                     where: { id },
-                    data: { estado: 'CANCELADO' },
+                    data: { estado: 'CANCELADO', comentarios: comentario },
                 });
             });
         } catch (error: any) {
@@ -272,7 +361,7 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
         }
     }
 
-    async recibir(id: string, negocio_id: string, destino_id: string): Promise<void> {
+    async recibir(id: string, negocio_id: string, destino_id: string, recibidor_id: string, comentario: string): Promise<void> {
         try {
             await this.prisma.$transaction(async (tx) => {
                 const traslado = await tx.traslado.findFirst({
@@ -351,7 +440,12 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
 
                 await tx.traslado.update({
                     where: { id },
-                    data: { estado: 'COMPLETADO' },
+                    data: {
+                        estado: 'COMPLETADO',
+                        recibidor_id,
+                        fecha_recibido: new Date(),
+                        comentarios: comentario,
+                    },
                 });
             },{
                 timeout: 10000

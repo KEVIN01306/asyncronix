@@ -7,9 +7,9 @@ import type { TrasladoRepository } from '../domain/traslado.repository.js';
 export class CancelarTrasladoUseCase {
     constructor(private readonly repository: TrasladoRepository) { }
 
-    async execute(id: string, negocio_id: string, origen_id: string): Promise<void> {
+    async execute(id: string, negocio_id: string, origen_id: string, comentario: string): Promise<void> {
         try {
-            await this.repository.cancelar(id, negocio_id, origen_id);
+            await this.repository.cancelar(id, negocio_id, origen_id, comentario);
         } catch (error: any) {
             if (error instanceof PersistenceError) {
                 if (error instanceof NotFoundPersistenceError) {

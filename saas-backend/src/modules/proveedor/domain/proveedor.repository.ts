@@ -6,5 +6,5 @@ export interface ProveedorRepository {
     actualizar(id: string, negocio_id: string, data: ProveedorActualizar): Promise<ProveedorObtenidoDetalle>;
     eliminar(id: string, negocio_id: string): Promise<void>;
     obtener(id: string, negocio_id: string): Promise<ProveedorObtenidoDetalle | null>;
-    listar(params: { negocio_id: string; page: number; perPage: number }): Promise<Paginated<ProveedorSimple>>;
+    listar(params: { negocio_id: string; page: number; perPage: number; q?: string | null }): Promise<Paginated<ProveedorSimple>>;
 }

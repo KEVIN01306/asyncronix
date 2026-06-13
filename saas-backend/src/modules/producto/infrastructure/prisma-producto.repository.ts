@@ -76,12 +76,29 @@ export class PrismaProductoRepository implements ProductoRepository {
         return ProductoMapper.mapDetalle(producto as any);
     }
 
-    async listar(negocio_id: string, pagination: Pagination, categoria_id?: string): Promise<Paginated<ProductoSimple>> {
+    async listar(negocio_id: string, pagination: Pagination, categoria_id?: string, q?: string | null, codigo?: string | null): Promise<Paginated<ProductoSimple>> {
         const { page, perPage } = pagination;
         const offset = (page - 1) * perPage;
 
         const where: any = { negocio_id, activo: true };
         if (categoria_id) where.categoria_id = categoria_id;
+
+        if (q) {
+            where.OR = [
+                { nombre: { contains: q } },
+                { variantes: { some: { codigo_barras: { contains: q } } } },
+                { codigo: { contains: q } }
+            ];
+        }
+
+        if (codigo) {
+            if (where.OR) {
+                where.AND = [{ OR: where.OR }, { codigo: { contains: codigo } }];
+                delete where.OR;
+            } else {
+                where.codigo = { contains: codigo };
+            }
+        }
 
         const [total, productos] = await Promise.all([
             this.prisma.producto.count({ where }),

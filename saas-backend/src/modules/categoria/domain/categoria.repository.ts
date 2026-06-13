@@ -8,5 +8,5 @@ export interface CategoriaRepository {
     eliminar(id: string, negocio_id: string): Promise<void>;
     obtener(id: string, negocio_id: string): Promise<CategoriaSimple | null>;
     obtenerDefaultPorCategoria(categoria: Categoria['categoria']): Promise<CategoriaSimple | null>;
-    listar(negocio_id: string, pagination: Pagination): Promise<Paginated<CategoriaSimple>>;
+    listar(negocio_id: string, pagination: Pagination, q?: string | null): Promise<Paginated<CategoriaSimple>>;
 }

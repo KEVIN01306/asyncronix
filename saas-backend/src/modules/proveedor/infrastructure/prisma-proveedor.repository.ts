@@ -48,13 +48,25 @@ export class PrismaProveedorRepository implements ProveedorRepository {
         }
     }
 
-    async listar(params: { negocio_id: string; page: number; perPage: number }): Promise<Paginated<ProveedorSimple>> {
+    async listar(params: { negocio_id: string; page: number; perPage: number; q?: string | null }): Promise<Paginated<ProveedorSimple>> {
         try {
-            const { negocio_id, page, perPage } = params;
+            const { negocio_id, page, perPage, q } = params;
             const skip = (page - 1) * perPage;
+            const where: any = { negocio_id };
+
+            if (q) {
+                where.OR = [
+                    { nombre: { contains: q } },
+                    { contacto: { contains: q } },
+                    { telefono: { contains: q } },
+                    { email: { contains: q } },
+                    { nit: { contains: q } },
+                ];
+            }
+
             const [total, data] = await Promise.all([
-                this.prisma.proveedor.count({ where: { negocio_id } }),
-                this.prisma.proveedor.findMany({ where: { negocio_id }, skip, take: perPage, orderBy: { created_at: 'desc' } })
+                this.prisma.proveedor.count({ where }),
+                this.prisma.proveedor.findMany({ where, skip, take: perPage, orderBy: { created_at: 'desc' } })
             ]);
 
             return { total, data: data.map(d => ProveedorMapper.mapSimple(d as any)), page, perPage };

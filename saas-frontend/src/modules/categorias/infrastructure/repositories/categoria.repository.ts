@@ -7,10 +7,13 @@ const URL_MODULE = '/categorias/'
 
 
 export const  CategoriaRepository = {
-    listar: async (limit: number = 10, offset: number = 0): Promise<CategoriasResponse> => {
+    listar: async (limit: number = 10, offset: number = 0, q?: string | null, signal?: AbortSignal): Promise<CategoriasResponse> => {
+        const params: any = { limit, offset };
+        if (q) params.q = q;
 
         const response = await api.get<CategoriasResponse>(URL_MODULE, {
-            params: { limit, offset }
+            params,
+            signal,
         });
 
         return response;

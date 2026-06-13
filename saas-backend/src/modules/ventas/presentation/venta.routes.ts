@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { MetodoPago } from "@prisma/client";
 import { AuthMiddleware } from "../../../app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "../../../app/middlewares/ValidarMiddleware.js";
 import { ventaController } from "../venta.module.js";
@@ -12,7 +13,11 @@ const authMiddleware = new AuthMiddleware();
 const validarMiddleware = new ValidarMiddleware();
 
 const ventaListQuerySchema = paginacionQuerySchema.extend({
-    cliente_id: z.string().uuid("Cliente inválido").optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v)
+    cliente_id: z.string().uuid("Cliente inválido").optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v),
+    metodo_pago: z.nativeEnum(MetodoPago).optional(),
+    q: z.string().trim().optional(),
+    fecha_inicio: z.string().optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v),
+    fecha_fin: z.string().optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v)
 });
 
 routes.use(authMiddleware.protegerRuta);

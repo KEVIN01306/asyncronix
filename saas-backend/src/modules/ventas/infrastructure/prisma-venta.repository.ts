@@ -246,16 +246,39 @@ export class PrismaVentaRepository implements VentaRepository {
         return VentaMapper.mapDetalle(venta);
     }
 
-    async listar(negocio_id: string, sucursal_id: string, pagination: Pagination, cliente_id?: string | null): Promise<Paginated<VentaSimple>> {
+    async listar(negocio_id: string, sucursal_id: string, pagination: Pagination, cliente_id?: string | null, metodo_pago?: MetodoPago, q?: string, fecha_inicio?: string | null, fecha_fin?: string | null): Promise<Paginated<VentaSimple>> {
         const { page, perPage } = pagination;
         const offset = (page - 1) * perPage;
+        const filters: any[] = [{ negocio_id, sucursal_id, activo: true }];
 
-        const where = {
-            negocio_id,
-            sucursal_id,
-            activo: true,
-            ...(cliente_id ? { cliente_id } : {})
-        };
+        if (cliente_id) filters.push({ cliente_id });
+        if (metodo_pago) filters.push({ metodo_pago });
+        if (fecha_inicio) {
+            const inicio = new Date(fecha_inicio);
+            if (!isNaN(inicio.getTime())) filters.push({ created_at: { gte: inicio } });
+        }
+        if (fecha_fin) {
+            const fin = new Date(fecha_fin);
+            if (!isNaN(fin.getTime())) filters.push({ created_at: { lte: fin } });
+        }
+
+        const orConditions: any[] = [];
+        if (q) {
+            orConditions.push(
+                { id: { contains: q } },
+                { comentarios: { contains: q } },
+                { usuario: { nombre: { contains: q } } },
+                { usuario: { apellido: { contains: q } } },
+                { cliente: { nombre: { contains: q } } },
+                { cliente: { apellido: { contains: q } } },
+                { servicio: { vehiculo: { placa: { contains: q } } } },
+                { detalles: { some: { lote: { variante: { producto: { nombre: { contains: q } } } } } } },
+                { detalles: { some: { variante: { producto: { nombre: { contains: q } } } } } }
+            );
+        }
+
+        const where: any = { AND: filters };
+        if (orConditions.length > 0) where.AND.push({ OR: orConditions });
 
         const [total, ventas] = await Promise.all([
             this.db.venta.count({ where }),

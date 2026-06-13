@@ -2,7 +2,7 @@ import { Router } from "express";
 import { clienteController } from "../cliente.module.js";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
-import { clienteActualizarSchema, clienteBuscarSchema, clienteCrearSchema } from "./validators/cliente.validator.js";
+import { clienteActualizarSchema, clienteBuscarSchema, clienteCrearSchema, clienteListQuerySchema } from "./validators/cliente.validator.js";
 import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
 
 const router = Router()
@@ -25,7 +25,7 @@ router.get('/nit/:nit',
 
 router.get('/',
     authMiddleware.verificarPermiso(['VER_CLIENTES']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(clienteListQuerySchema),
     clienteController.listar
 );
 

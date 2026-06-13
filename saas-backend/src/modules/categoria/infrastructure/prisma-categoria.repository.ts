@@ -40,17 +40,23 @@ export class PrismaCategoriaRepository implements CategoriaRepository {
         return CategoriaMapper.mapSimple(categoria);
     }
 
-    async listar(negocio_id: string, pagination: Pagination): Promise<Paginated<CategoriaSimple>> {
+    async listar(negocio_id: string, pagination: Pagination, q?: string | null): Promise<Paginated<CategoriaSimple>> {
         const { page, perPage } = pagination;
         const offset = (page - 1) * perPage;
 
-        const where = {
+        const where: any = {
             activo: true,
             OR: [
                 { negocio_id },
                 { default_categoria: true }
             ]
         };
+
+        if (q) {
+            where.AND = [{
+                categoria: { contains: q }
+            }];
+        }
 
         const [total, categorias] = await Promise.all([
             this.prisma.categoriaProducto.count({ where }),

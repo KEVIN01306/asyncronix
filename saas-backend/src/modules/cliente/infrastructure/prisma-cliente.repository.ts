@@ -101,15 +101,33 @@ export class PrismaClienteRepository implements ClienteRepository {
         }
     }
 
-    async listar(params: { negocio_id: string; page: number; perPage: number }): Promise<Paginated<ClienteSimple>> {
+    async listar(params: { negocio_id: string; page: number; perPage: number; q?: string | null; documento?: string | null }): Promise<Paginated<ClienteSimple>> {
         try {
-            const { negocio_id, page, perPage } = params;
+            const { negocio_id, page, perPage, q, documento } = params;
             const skip = (page - 1) * perPage;
 
+            const filters: any[] = [{ negocio_id }];
+
+            const or: any[] = [];
+            if (q) {
+                or.push({ nombre: { contains: q } });
+                or.push({ apellido: { contains: q } });
+                or.push({ email: { contains: q } });
+                or.push({ telefono: { contains: q } });
+            }
+
+            if (documento) {
+                or.push({ nit: { contains: documento } });
+                or.push({ dpi: { contains: documento } });
+            }
+
+            const where: any = { AND: filters };
+            if (or.length > 0) where.AND.push({ OR: or });
+
             const [total, clientes] = await Promise.all([
-                this.prisma.cliente.count({ where: { negocio_id } }),
+                this.prisma.cliente.count({ where }),
                 this.prisma.cliente.findMany({
-                    where: { negocio_id },
+                    where,
                     include: { negocio: true },
                     skip,
                     take: perPage,
