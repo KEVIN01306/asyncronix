@@ -73,7 +73,7 @@ const getThemePalette = (
 
 const adjustColorIntensity = (
     opacityIntensity: number,
-    colorIntensity: number,
+    _colorIntensity: number,
     isDark: boolean
 ): string => {
     if (isDark) {
