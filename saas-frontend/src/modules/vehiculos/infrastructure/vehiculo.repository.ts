@@ -5,13 +5,17 @@ import type { Vehiculo, VehiculosResponse } from '../domain/interfaces/vehiculo.
 const URL_MODULE = '/vehiculos';
 
 export const vehiculoRepository = {
-    listar: async (limit: number = 10, offset: number = 0): Promise<VehiculosResponse> => {
-        const response = await api.get<VehiculosResponse>(URL_MODULE, {
-            params: {
-                limit,
-                offset,
-            }
-        });
+    listar: async (limit: number = 10, offset: number = 0, filters?: Record<string, any>): Promise<VehiculosResponse> => {
+        const params: any = { limit, offset };
+        if (filters?.q) params.q = filters.q;
+        if (filters?.placa) params.placa = filters.placa;
+        if (filters?.vehiculo_tipo_id) params.vehiculo_tipo_id = filters.vehiculo_tipo_id;
+        if (filters?.modelo_id) params.modelo_id = filters.modelo_id;
+        if (filters?.marca_id) params.marca_id = filters.marca_id;
+        if (filters?.linea_id) params.linea_id = filters.linea_id;
+        if (filters?.cliente_dpi) params.cliente_dpi = filters.cliente_dpi;
+
+        const response = await api.get<VehiculosResponse>(URL_MODULE, { params });
         return response as any;
     },
 

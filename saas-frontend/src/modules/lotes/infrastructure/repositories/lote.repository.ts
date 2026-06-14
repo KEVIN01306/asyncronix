@@ -4,8 +4,9 @@ import type { Lote, LotesResponse } from '../../domain/interfaces/lote.interface
 const URL = '/lotes/';
 
 export const LoteRepository = {
-    listar: async (limit = 10, offset = 0): Promise<LotesResponse> => {
-        const response = await api.get<LotesResponse>(`${URL}`, { params: { limit, offset } });
+    listar: async (limit = 10, offset = 0, filters: Record<string, any> = {}): Promise<LotesResponse> => {
+        const params = { limit, offset, ...filters };
+        const response = await api.get<LotesResponse>(`${URL}`, { params });
         return response;
     },
 

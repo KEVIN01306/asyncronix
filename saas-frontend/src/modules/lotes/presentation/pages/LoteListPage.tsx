@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, Alert, AlertTitle, Chip, InputAdornment, TextField } from '@mui/material';
-import { Add, Visibility, Search } from '@mui/icons-material';
+import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, Alert, AlertTitle, Chip, InputAdornment, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Add, Visibility, Search, FilterList } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Lote } from '../../domain/interfaces/lote.interface';
 import { LoteRepository } from '../../infrastructure/repositories/lote.repository';
@@ -16,6 +16,16 @@ const LoteListPage = () => {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const [searchText, setSearchText] = useState('');
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
+
+    // Temp staged filters for modal
+    const [tempCodigoLote, setTempCodigoLote] = useState('');
+    const [tempProductoCodigo, setTempProductoCodigo] = useState('');
+    const [tempCodigoSecuencial, setTempCodigoSecuencial] = useState('');
+    const [tempFechaVencimientoDesde, setTempFechaVencimientoDesde] = useState('');
+    const [tempFechaVencimientoHasta, setTempFechaVencimientoHasta] = useState('');
+    const [tempCreatedAtDesde, setTempCreatedAtDesde] = useState('');
+    const [tempCreatedAtHasta, setTempCreatedAtHasta] = useState('');
     const [lotes, setLotes] = useState<Lote[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -43,9 +53,19 @@ const LoteListPage = () => {
     const fetchLotes = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await LoteRepository.listar(limit, offset);
+            const paramsObj = Object.fromEntries(searchParams.entries());
+            const filters: Record<string, any> = {};
+            if (paramsObj.q) filters.q = paramsObj.q;
+            if (paramsObj.codigo_lote) filters.codigo_lote = paramsObj.codigo_lote;
+            if (paramsObj.producto_codigo) filters.producto_codigo = paramsObj.producto_codigo;
+            if (paramsObj.codigo_secuencial) filters.codigo_secuencial = paramsObj.codigo_secuencial;
+            if (paramsObj.fecha_vencimiento_from) filters.fecha_vencimiento_from = paramsObj.fecha_vencimiento_from;
+            if (paramsObj.fecha_vencimiento_to) filters.fecha_vencimiento_to = paramsObj.fecha_vencimiento_to;
+            if (paramsObj.created_at_from) filters.created_at_from = paramsObj.created_at_from;
+            if (paramsObj.created_at_to) filters.created_at_to = paramsObj.created_at_to;
+
+            const response = await LoteRepository.listar(limit, offset, filters);
             // response is PaginatedResponse<Lote>
-            console.log("response:", response);
             setLotes(response.data ?? []);
             setTotal(response.meta?.total ?? response.count ?? 0);
         } catch (error) {
@@ -53,11 +73,14 @@ const LoteListPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [limit, offset]);
+    }, [limit, offset, searchParams]);
 
     useEffect(() => {
+        // initialize searchText from params
+        const q = searchParams.get('q') || '';
+        setSearchText(q);
         fetchLotes();
-    }, [fetchLotes]);
+    }, [fetchLotes, searchParams]);
 
     return (
         <Box p={isMobile ? 2 : 4}>
@@ -78,7 +101,14 @@ const LoteListPage = () => {
                     label="Buscar lotes"
                     placeholder="Ej: Producto, ID, sucursal"
                     value={searchText}
-                    onChange={(event) => setSearchText(event.target.value)}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        setSearchText(value);
+                        const current = Object.fromEntries(searchParams.entries());
+                        const newParams: Record<string, string> = { ...current, limit: limit.toString(), offset: '0' };
+                        if (value) newParams.q = value; else delete newParams.q;
+                        setSearchParams(newParams);
+                    }}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -87,9 +117,24 @@ const LoteListPage = () => {
                         ),
                     }}
                 />
-                <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/lotes/crear')}>
-                    Agregar lote
-                </Button>
+                <Box display="flex" gap={1} width={isMobile ? '100%' : 'auto'}>
+                    <Button variant="outlined" startIcon={<FilterList />} onClick={() => {
+                        const params = Object.fromEntries(searchParams.entries());
+                        setTempCodigoLote(params.codigo_lote || '');
+                        setTempProductoCodigo(params.producto_codigo || '');
+                        setTempCodigoSecuencial(params.codigo_secuencial || '');
+                        setTempFechaVencimientoDesde(params.fecha_vencimiento_from || '');
+                        setTempFechaVencimientoHasta(params.fecha_vencimiento_to || '');
+                        setTempCreatedAtDesde(params.created_at_from || '');
+                        setTempCreatedAtHasta(params.created_at_to || '');
+                        setFilterModalOpen(true);
+                    }}>
+                        Más filtros
+                    </Button>
+                    <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/lotes/crear')}>
+                        Agregar lote
+                    </Button>
+                </Box>
             </Box>
 
             <TableContainer>
@@ -106,15 +151,73 @@ const LoteListPage = () => {
                             offset,
                             onPageChange: (newPage) => {
                                 const newOffset = newPage * limit;
-                                setSearchParams({ limit: limit.toString(), offset: newOffset.toString() });
+                                const current = Object.fromEntries(searchParams.entries());
+                                const params = { ...current, limit: limit.toString(), offset: newOffset.toString() } as Record<string,string>;
+                                setSearchParams(params);
                             },
                             onRowsPerPageChange: (newLimit) => {
-                                setSearchParams({ limit: newLimit.toString(), offset: '0' });
+                                const current = Object.fromEntries(searchParams.entries());
+                                const params = { ...current, limit: newLimit.toString(), offset: '0' } as Record<string,string>;
+                                setSearchParams(params);
                             },
                         }}
                     />
                 )}
             </TableContainer>
+
+            <Dialog open={filterModalOpen} onClose={() => setFilterModalOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Filtros</DialogTitle>
+                <DialogContent>
+                    <Box display="flex" flexDirection="column" gap={2} mt={1}>
+                        <TextField label="Código lote" value={tempCodigoLote} onChange={(e) => setTempCodigoLote(e.target.value)} />
+                        <TextField label="Código producto" value={tempProductoCodigo} onChange={(e) => setTempProductoCodigo(e.target.value)} />
+                        <TextField label="Código secuencial (variante)" value={tempCodigoSecuencial} onChange={(e) => setTempCodigoSecuencial(e.target.value)} />
+
+                        <Box display="flex" gap={2}>
+                            <TextField label="Vencimiento desde" type="date" value={tempFechaVencimientoDesde} onChange={(e) => setTempFechaVencimientoDesde(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
+                            <TextField label="Vencimiento hasta" type="date" value={tempFechaVencimientoHasta} onChange={(e) => setTempFechaVencimientoHasta(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
+                        </Box>
+
+                        <Box display="flex" gap={2}>
+                            <TextField label="Creado desde" type="date" value={tempCreatedAtDesde} onChange={(e) => setTempCreatedAtDesde(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
+                            <TextField label="Creado hasta" type="date" value={tempCreatedAtHasta} onChange={(e) => setTempCreatedAtHasta(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
+                        </Box>
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setFilterModalOpen(false)}>Cancelar</Button>
+                    <Button onClick={() => {
+                        // clear temp and applied filters
+                        setTempCodigoLote('');
+                        setTempProductoCodigo('');
+                        setTempCodigoSecuencial('');
+                        setTempFechaVencimientoDesde('');
+                        setTempFechaVencimientoHasta('');
+                        setTempCreatedAtDesde('');
+                        setTempCreatedAtHasta('');
+                        // also remove from search params but keep q
+                        const current = Object.fromEntries(searchParams.entries());
+                        const preserved: Record<string, string> = { limit: limit.toString(), offset: '0' };
+                        if (current.q) preserved.q = current.q;
+                        setSearchParams(preserved);
+                        setFilterModalOpen(false);
+                    }}>Limpiar</Button>
+                    <Button variant="contained" onClick={() => {
+                        const current = Object.fromEntries(searchParams.entries());
+                        const params: Record<string, string> = { limit: limit.toString(), offset: '0' };
+                        if (current.q) params.q = current.q;
+                        if (tempCodigoLote) params.codigo_lote = tempCodigoLote;
+                        if (tempProductoCodigo) params.producto_codigo = tempProductoCodigo;
+                        if (tempCodigoSecuencial) params.codigo_secuencial = tempCodigoSecuencial;
+                        if (tempFechaVencimientoDesde) params.fecha_vencimiento_from = tempFechaVencimientoDesde;
+                        if (tempFechaVencimientoHasta) params.fecha_vencimiento_to = tempFechaVencimientoHasta;
+                        if (tempCreatedAtDesde) params.created_at_from = tempCreatedAtDesde;
+                        if (tempCreatedAtHasta) params.created_at_to = tempCreatedAtHasta;
+                        setSearchParams(params);
+                        setFilterModalOpen(false);
+                    }}>Aplicar</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

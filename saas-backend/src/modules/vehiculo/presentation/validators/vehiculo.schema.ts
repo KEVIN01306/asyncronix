@@ -10,7 +10,15 @@ export const vehiculoCrearSchema = z.object({
 
 export const vehiculoActualizarSchema = vehiculoCrearSchema.partial();
 
-export const vehiculoListQuerySchema = paginacionQuerySchema;
+export const vehiculoListQuerySchema = paginacionQuerySchema.extend({
+    q: z.string().trim().optional(),
+    placa: z.string().trim().optional(),
+    vehiculo_tipo_id: z.string().uuid().optional(),
+    modelo_id: z.string().uuid().optional(),
+    marca_id: z.string().uuid().optional(),
+    linea_id: z.string().uuid().optional(),
+    cliente_dpi: z.string().trim().optional()
+});
 
 export const vehiculoAsociarClienteSchema = z.object({
     nit: z.string()

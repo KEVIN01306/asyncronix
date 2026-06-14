@@ -28,9 +28,19 @@ export class VehiculoController extends BaseController {
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res);
-            const { limit, offset } = res.locals.query;
+            const query = res.locals.query as any;
+            const { limit, offset } = query;
             const page = Math.floor(offset / limit) + 1;
-            const result = await this.obtenerVehiculosUseCase.execute(negocio_id, page, limit as number) as any;
+            const filters = {
+                q: query.q,
+                placa: query.placa,
+                vehiculo_tipo_id: query.vehiculo_tipo_id,
+                modelo_id: query.modelo_id,
+                marca_id: query.marca_id,
+                linea_id: query.linea_id,
+                cliente_dpi: query.cliente_dpi
+            };
+            const result = await this.obtenerVehiculosUseCase.execute(negocio_id, page, limit as number, filters) as any;
             res.status(200).json(Respuesta.paginacion('Vehículos obtenidos', result.data, result.total, limit as number, offset as number));
         } catch (error) { next(error); }
     }

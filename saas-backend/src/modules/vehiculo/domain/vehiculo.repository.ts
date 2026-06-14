@@ -2,8 +2,18 @@ import type { Paginated } from "@shared/domain/paginated.js";
 import type { VehiculoSimple, VehiculoDetalle, VehiculoCrear, VehiculoActualizar } from "./vehiculo.entity.js";
 import type { Pagination } from "@shared/domain/pagination.js";
 
+export interface VehiculoFilters {
+    q?: string;
+    placa?: string;
+    vehiculo_tipo_id?: string;
+    modelo_id?: string;
+    marca_id?: string;
+    linea_id?: string;
+    cliente_dpi?: string;
+}
+
 export interface VehiculoRepository {
-    listar(negocio_id: string, pagination: Pagination): Promise<Paginated<VehiculoSimple>>;
+    listar(negocio_id: string, pagination: Pagination, filters?: VehiculoFilters): Promise<Paginated<VehiculoSimple>>;
     obtener(id: string, negocio_id: string): Promise<VehiculoDetalle | null>;
     obtenerPorPlaca(placa: string, negocio_id: string): Promise<VehiculoDetalle | null>;
     crear(data: VehiculoCrear, negocio_id: string): Promise<VehiculoDetalle>;

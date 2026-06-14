@@ -3,6 +3,7 @@ import { ValidarMiddleware } from '@app/middlewares/ValidarMiddleware.js';
 import { AuthMiddleware } from '@app/middlewares/AuthMiddleware.js';
 import { loteController } from '../lote.module.js';
 import { loteCrearSchema } from './validators/lote.schema.js';
+import { loteQuerySchema } from './validators/lote.query.schema.js';
 import { paginacionQuerySchema } from '@shared/presentation/validators/paginacion.query.schema.js';
 
 const routes = Router();
@@ -22,7 +23,7 @@ routes.post(
 routes.get(
     '/',
     authMiddleware.verificarPermiso(['VER_LOTES']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(loteQuerySchema),
     loteController.listar
 );
 

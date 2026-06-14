@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { VehiculoRepository } from "../domain/vehiculo.repository.js";
+import type { VehiculoRepository, VehiculoFilters } from "../domain/vehiculo.repository.js";
 import { VehiculoMapper } from "./mappers/vehiculo.mapper.js";
 import type { VehiculoCrear, VehiculoActualizar } from "../domain/vehiculo.entity.js";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
@@ -7,13 +7,56 @@ import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js"
 export class PrismaVehiculoRepository implements VehiculoRepository {
     constructor(private readonly db: PrismaClient) { }
 
-    async listar(negocio_id: string, pagination: any) {
+    async listar(negocio_id: string, pagination: any, filters?: VehiculoFilters) {
         const { page, perPage } = pagination;
         const skip = (page - 1) * perPage;
+        const where: any = { negocio_id, activo: true };
+        const andConditions: any[] = [];
+
+        if (filters?.placa) {
+            where.placa = { contains: filters.placa };
+        }
+
+        if (filters?.vehiculo_tipo_id) {
+            where.vehiculo_tipo_id = filters.vehiculo_tipo_id;
+        }
+
+        if (filters?.modelo_id) {
+            where.modelo_id = filters.modelo_id;
+        }
+
+        if (filters?.marca_id) {
+            andConditions.push({ modelo: { marca_id: filters.marca_id } });
+        }
+
+        if (filters?.linea_id) {
+            andConditions.push({ modelo: { linea_id: filters.linea_id } });
+        }
+
+        if (filters?.cliente_dpi) {
+            where.cliente = { dpi: { contains: filters.cliente_dpi } };
+        }
+
+        if (filters?.q) {
+            where.OR = [
+                { placa: { contains: filters.q } },
+                { modelo: { modelo: { contains: filters.q } } },
+                { modelo: { marca: { marca: { contains: filters.q } } } },
+                { modelo: { linea: { linea: { contains: filters.q } } } },
+                { vehiculo_tipo: { tipo: { contains: filters.q } } },
+                { cliente: { nombre: { contains: filters.q } } },
+                { cliente: { dpi: { contains: filters.q } } }
+            ];
+        }
+
+        if (andConditions.length) {
+            where.AND = andConditions;
+        }
+
         try {
             const [total, items] = await Promise.all([
-                this.db.vehiculo.count({ where: { negocio_id, activo: true } }),
-                this.db.vehiculo.findMany({ where: { negocio_id, activo: true }, skip, take: perPage, orderBy: { created_at: 'desc' } })
+                this.db.vehiculo.count({ where }),
+                this.db.vehiculo.findMany({ where, skip, take: perPage, orderBy: { created_at: 'desc' } })
             ]);
 
             return { total, data: items.map(i => VehiculoMapper.mapSimple(i)), page, perPage };

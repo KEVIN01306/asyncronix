@@ -59,12 +59,46 @@ export class PrismaLoteRepository implements LoteRepository {
         }
     }
 
-    async listar(negocio_id: string, sucursal_id: string, pagination: { page: number, perPage: number }): Promise<any> {
+    async listar(negocio_id: string, sucursal_id: string, pagination: { page: number, perPage: number }, filters: Record<string, any> = {}): Promise<any> {
         try {
             const { page, perPage } = pagination;
             const offset = (page - 1) * perPage;
 
-            const where = { negocio_id, activo: true, sucursal_id };
+            const where: any = { negocio_id, activo: true };
+            if (sucursal_id) where.sucursal_id = sucursal_id;
+
+            // Apply filters
+            if (filters.q) {
+                where.OR = [
+                    { codigo_lote: { contains: filters.q } },
+                    { variante: { producto: { nombre: { contains: filters.q } } } },
+                    { variante: { sku: { contains: filters.q } } }
+                ];
+            }
+
+            if (filters.codigo_lote) {
+                where.codigo_lote = { contains: filters.codigo_lote };
+            }
+
+            if (filters.producto_codigo) {
+                where.variante = { ...(where.variante ?? {}), producto: { codigo: { contains: filters.producto_codigo } } };
+            }
+
+            if (filters.codigo_secuencial) {
+                where.variante = { ...(where.variante ?? {}), codigo_secuencial: { contains: filters.codigo_secuencial } };
+            }
+
+            if (filters.fecha_vencimiento_from || filters.fecha_vencimiento_to) {
+                where.fecha_vencimiento = {} as any;
+                if (filters.fecha_vencimiento_from) where.fecha_vencimiento.gte = new Date(filters.fecha_vencimiento_from);
+                if (filters.fecha_vencimiento_to) where.fecha_vencimiento.lte = new Date(filters.fecha_vencimiento_to);
+            }
+
+            if (filters.created_at_from || filters.created_at_to) {
+                where.created_at = {} as any;
+                if (filters.created_at_from) where.created_at.gte = new Date(filters.created_at_from);
+                if (filters.created_at_to) where.created_at.lte = new Date(filters.created_at_to);
+            }
 
             const [total, data] = await Promise.all([
                 this.prisma.lote.count({ where }),
@@ -74,7 +108,7 @@ export class PrismaLoteRepository implements LoteRepository {
                     skip: offset,
                     take: perPage,
                     include: {
-                        variante: { select: { id: true, sku: true, producto_id: true, producto: { select: { id: true, nombre: true } } } },
+                        variante: { select: { id: true, sku: true, codigo_secuencial: true, producto_id: true, producto: { select: { id: true, nombre: true, codigo: true } } } },
                         sucursal: { select: { id: true, nombre: true } },
                     },
                 })
