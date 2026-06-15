@@ -4,7 +4,9 @@ import type { ModeloSimple } from "./modelo.entity.js";
 export interface ModeloFilters {
     marca_id?: string[];
     linea_id?: string[];
+    q?: string;
     cilindrada_id?: string[];
+    anio?: number;
 }
 
 export interface ModeloRepository {

@@ -7,13 +7,19 @@ import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js"
 export class PrismaMarcaRepository implements MarcaRepository {
     constructor(private readonly prisma: PrismaClient) { }
 
-    async listar(params: { page: number; perPage: number }) {
-        const { page, perPage } = params;
+    async listar(params: { page: number; perPage: number; filters?: { q?: string } }) {
+        const { page, perPage, filters } = params;
         const skip = (page - 1) * perPage;
+
+        const where: any = { activo: true };
+        if (filters?.q) {
+            where.marca = { contains: filters.q };
+        }
+
         try {
             const [total, items] = await Promise.all([
-                this.prisma.marca.count({ where: { activo: true } }),
-                this.prisma.marca.findMany({ where: { activo: true }, skip, take: perPage, orderBy: { marca: 'asc' } })
+                this.prisma.marca.count({ where }),
+                this.prisma.marca.findMany({ where, skip, take: perPage, orderBy: { marca: 'asc' } })
             ]);
 
             return { total, data: items.map(i => MarcaMapper.mapSimple(i as any)), page, perPage };

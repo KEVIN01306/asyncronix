@@ -13,6 +13,8 @@ export const modeloListQuerySchema = paginacionQuerySchema.extend({
     marca_id: optionalUuidArray,
     linea_id: optionalUuidArray,
     cilindrada_id: optionalUuidArray,
+    q: z.string().trim().optional(),
+    anio: z.coerce.number().int().positive().optional(),
 });
 
 export const modeloIdParamSchema = z.object({ id: z.string().uuid('Modelo inválido') });

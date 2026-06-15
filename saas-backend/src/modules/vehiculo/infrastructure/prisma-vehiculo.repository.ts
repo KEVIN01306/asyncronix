@@ -56,7 +56,17 @@ export class PrismaVehiculoRepository implements VehiculoRepository {
         try {
             const [total, items] = await Promise.all([
                 this.db.vehiculo.count({ where }),
-                this.db.vehiculo.findMany({ where, skip, take: perPage, orderBy: { created_at: 'desc' } })
+                this.db.vehiculo.findMany({
+                    where,
+                    skip,
+                    take: perPage,
+                    orderBy: { created_at: 'desc' },
+                    include: {
+                        modelo: { include: { marca: true, linea: true, cilindrada: true } },
+                        vehiculo_tipo: true,
+                        cliente: true
+                    }
+                })
             ]);
 
             return { total, data: items.map(i => VehiculoMapper.mapSimple(i)), page, perPage };

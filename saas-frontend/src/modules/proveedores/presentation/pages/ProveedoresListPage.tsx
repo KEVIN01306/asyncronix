@@ -141,7 +141,7 @@ const ProveedoresListPage = () => {
                 >
                     Más filtros
                 </Button>
-                <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/proveedores/nuevo')}>
+                <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/proveedores/nuevo')}>
                     Nuevo proveedor
                 </Button>
             </Box>

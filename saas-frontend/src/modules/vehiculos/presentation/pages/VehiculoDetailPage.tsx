@@ -163,9 +163,9 @@ const VehiculoDetailPage = () => {
                             <Typography variant="body2"><strong>Placa:</strong> {vehiculo.placa}</Typography>
                             <Typography variant="body2"><strong>Tipo de vehículo:</strong> {tipo?.tipo ?? '-'}</Typography>
                             <Typography variant="body2"><strong>Modelo:</strong> {modelo?.modelo ?? '-'}</Typography>
-                            <Typography variant="body2"><strong>Marca:</strong> {modelo?.marca ?? '-'}</Typography>
-                            <Typography variant="body2"><strong>Línea:</strong> {modelo?.linea ?? '-'}</Typography>
-                            <Typography variant="body2"><strong>Cilindrada:</strong> {modelo?.cilindrada ?? '-'}</Typography>
+                            <Typography variant="body2"><strong>Marca:</strong> {modelo?.marca?.marca ?? '-'}</Typography>
+                            <Typography variant="body2"><strong>Línea:</strong> {modelo?.linea?.linea ?? '-'}</Typography>
+                            <Typography variant="body2"><strong>Cilindrada:</strong> {modelo?.cilindrada?.cilindrada ?? '-'}</Typography>
                             <Typography variant="body2"><strong>Cliente:</strong></Typography>
                             {vehiculo.cliente ? (
                                 <Box>

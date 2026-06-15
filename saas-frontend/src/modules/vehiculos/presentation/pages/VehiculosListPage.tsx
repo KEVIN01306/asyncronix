@@ -14,6 +14,8 @@ import type { Modelo } from '../../../modelos/domain/interface/modelo.interface'
 import type { Marca } from '../../../marcas/domain/interface/marca.interface';
 import type { Linea } from '../../../lineas/domain/interface/linea.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
+import { useDebounce } from '../../../../core/hooks/useDebounce';
 
 const VehiculosListPage = () => {
     const navigate = useNavigate();
@@ -25,6 +27,9 @@ const VehiculosListPage = () => {
     const [modelos, setModelos] = useState<Modelo[]>([]);
     const [marcas, setMarcas] = useState<Marca[]>([]);
     const [lineas, setLineas] = useState<Linea[]>([]);
+    const [marcaInput, setMarcaInput] = useState('');
+    const [modeloInput, setModeloInput] = useState('');
+    const [lineaInput, setLineaInput] = useState('');
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -70,16 +75,8 @@ const VehiculosListPage = () => {
 
     const fetchOptions = useCallback(async () => {
         try {
-            const [tiposRes, modelosRes, marcasRes, lineasRes] = await Promise.all([
-                vehiculoTipoRepository.listar(100, 0),
-                modelosRepository.listar(100, 0),
-                marcasRepository.listar(100, 0),
-                lineasRepository.listar(100, 0),
-            ]);
+            const tiposRes = await vehiculoTipoRepository.listar(100, 0);
             setTipos(tiposRes.data);
-            setModelos(modelosRes.data);
-            setMarcas(marcasRes.data);
-            setLineas(lineasRes.data);
         } catch (error) {
             console.error(error);
         }
@@ -88,6 +85,44 @@ const VehiculosListPage = () => {
     useEffect(() => {
         fetchOptions();
     }, [fetchOptions]);
+
+    const abortableFetch = useAbortableFetch();
+    const debouncedMarca = useDebounce(marcaInput, 300);
+    const debouncedModelo = useDebounce(modeloInput, 300);
+    const debouncedLinea = useDebounce(lineaInput, 300);
+
+    useEffect(() => {
+        abortableFetch(async (signal) => {
+            try {
+                const res = await marcasRepository.listar(10, 0, debouncedMarca, signal);
+                if (res) setMarcas(res.data);
+            } catch (error) {
+                if (!isAbortError(error)) console.error(error);
+            }
+        });
+    }, [debouncedMarca, abortableFetch]);
+
+    useEffect(() => {
+        abortableFetch(async (signal) => {
+            try {
+                const res = await modelosRepository.listar(10, 0, { q: debouncedModelo }, signal);
+                if (res) setModelos(res.data);
+            } catch (error) {
+                if (!isAbortError(error)) console.error(error);
+            }
+        });
+    }, [debouncedModelo, abortableFetch]);
+
+    useEffect(() => {
+        abortableFetch(async (signal) => {
+            try {
+                const res = await lineasRepository.listar(10, 0, debouncedLinea, signal);
+                if (res) setLineas(res.data);
+            } catch (error) {
+                if (!isAbortError(error)) console.error(error);
+            }
+        });
+    }, [debouncedLinea, abortableFetch]);
 
     useEffect(() => {
         setSearchQuery(q);
@@ -113,24 +148,24 @@ const VehiculosListPage = () => {
         },
         { id: 'placa', name: 'Placa' },
         {
-            id: 'vehiculo_tipo_id',
+            id: 'vehiculo_tipo',
             name: 'Tipo de vehículo',
-            format: (_value: string, row: Vehiculo) => tipos.find((tipo) => tipo.id === row.vehiculo_tipo_id)?.tipo ?? '-'
+            format: (_value: string, row: Vehiculo) => row.vehiculo_tipo?.tipo ?? '-'
         },
         {
-            id: 'modelo_id',
+            id: 'modelo',
             name: 'Modelo',
-            format: (_value: string, row: Vehiculo) => modelos.find((modelo) => modelo.id === row.modelo_id)?.modelo ?? '-'
+            format: (_value: string, row: Vehiculo) => row.modelo?.modelo ?? '-'
         },
         {
             id: 'marca',
             name: 'Marca',
-            format: (_value: string, row: Vehiculo) => modelos.find((modelo) => modelo.id === row.modelo_id)?.marca ?? '-'
+            format: (_value: string, row: Vehiculo) => row.modelo?.marca?.marca ?? '-'
         },
         {
             id: 'linea',
             name: 'Línea',
-            format: (_value: string, row: Vehiculo) => modelos.find((modelo) => modelo.id === row.modelo_id)?.linea ?? '-'
+            format: (_value: string, row: Vehiculo) => row.modelo?.linea?.linea ?? '-'
         },
     ];
 
@@ -268,6 +303,8 @@ const VehiculosListPage = () => {
                         <Autocomplete
                             fullWidth
                             options={marcas}
+                            inputValue={marcaInput}
+                            onInputChange={(_, value) => setMarcaInput(value)}
                             getOptionLabel={(option) => option.marca}
                             value={tempMarca}
                             onChange={(_, value) => setTempMarca(value)}
@@ -277,6 +314,8 @@ const VehiculosListPage = () => {
                         <Autocomplete
                             fullWidth
                             options={modelos}
+                            inputValue={modeloInput}
+                            onInputChange={(_, value) => setModeloInput(value)}
                             getOptionLabel={(option) => option.modelo}
                             value={tempModelo}
                             onChange={(_, value) => setTempModelo(value)}
@@ -286,6 +325,8 @@ const VehiculosListPage = () => {
                         <Autocomplete
                             fullWidth
                             options={lineas}
+                            inputValue={lineaInput}
+                            onInputChange={(_, value) => setLineaInput(value)}
                             getOptionLabel={(option) => option.linea}
                             value={tempLinea}
                             onChange={(_, value) => setTempLinea(value)}

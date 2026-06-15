@@ -5,12 +5,14 @@ import type { Modelo } from '../domain/interface/modelo.interface';
 const URL = '/modelos';
 
 export const modelosRepository = {
-    listar: async (limit: number, offset: number, filters?: { marca_id?: string[]; linea_id?: string[]; cilindrada_id?: string[] }): Promise<PaginatedResponse<Modelo>> => {
+    listar: async (limit: number, offset: number, filters?: { marca_id?: string[]; linea_id?: string[]; cilindrada_id?: string[]; q?: string; anio?: number }, signal?: AbortSignal): Promise<PaginatedResponse<Modelo>> => {
         const params: any = { limit, offset };
         if (filters?.marca_id?.length) params.marca_id = filters.marca_id;
         if (filters?.linea_id?.length) params.linea_id = filters.linea_id;
         if (filters?.cilindrada_id?.length) params.cilindrada_id = filters.cilindrada_id;
-        const response = await api.get<PaginatedResponse<Modelo>>(URL, { params });
+        if (filters?.q) params.q = filters.q;
+        if (filters?.anio) params.anio = filters.anio;
+        const response = await api.get<PaginatedResponse<Modelo>>(URL, { params, signal });
         return response as any;
     },
     obtener: async (id: string): Promise<ApiResponse<Modelo>> => {

@@ -10,12 +10,15 @@ export class MarcaController extends BaseController {
         private readonly obtenerMarcasUseCase: ObtenerMarcasUseCase
     ) { super(); }
 
-    listar = async (_req: Request, res: Response, next: NextFunction) => {
+    listar = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { limit, offset } = res.locals.query;
-            const page = Math.floor(offset / limit) + 1;
-            const { total, data } = await this.obtenerMarcasUseCase.execute(page, limit as number) as any;
-            res.status(200).json(Respuesta.paginacion('Marcas obtenidas con éxito', data, total, limit as number, offset as number));
+            const { offset } = res.locals.query;
+            const q = (req.query.q as string | undefined)?.trim();
+            const perPage = 10; // enforce small result set for catalog searches
+            const page = Math.floor(offset / perPage) + 1;
+            const filters = q ? { q } : undefined;
+            const { total, data } = await this.obtenerMarcasUseCase.execute(page, perPage, filters) as any;
+            res.status(200).json(Respuesta.paginacion('Marcas obtenidas con éxito', data, total, perPage, offset as number));
         } catch (error) {
             next(error);
         }

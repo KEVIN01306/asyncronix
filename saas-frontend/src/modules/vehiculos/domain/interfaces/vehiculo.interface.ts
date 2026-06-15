@@ -1,4 +1,11 @@
 import type { ApiResponse, PaginatedResponse } from '../../../../core/api/interfaces/api-response.interface';
+import type { Modelo } from '../../../modelos/domain/interface/modelo.interface';
+
+
+export interface VehiculoTipoRelation {
+    id: string;
+    tipo: string;
+}
 
 export interface Vehiculo {
     id: string;
@@ -8,11 +15,8 @@ export interface Vehiculo {
     avatar_url?: string | null;
     calcomania_url?: string | null;
     cliente_id?: string | null;
-    modelo_nombre?: string | null;
-    marca?: string | null;
-    linea?: string | null;
-    cilindrada?: number | null;
-    tipo_vehiculo?: string | null;
+    modelo?: Modelo| null;
+    vehiculo_tipo?: VehiculoTipoRelation | null;
     cliente?: {
         id: string;
         nombre: string;

@@ -12,21 +12,25 @@ export class ModeloController extends BaseController {
 
     listar = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { limit, offset } = res.locals.query;
-            const page = Math.floor(offset / limit) + 1;
+            const { offset } = res.locals.query;
             const parseIds = (value: string | string[] | undefined) => {
                 if (!value) return undefined;
                 return Array.isArray(value) ? value : [value];
             };
 
+            const q = (req.query.q as string | undefined)?.trim();
             const filters: any = {
                 marca_id: parseIds(req.query.marca_id as any),
                 linea_id: parseIds(req.query.linea_id as any),
                 cilindrada_id: parseIds(req.query.cilindrada_id as any),
             };
 
-            const { total, data } = await this.obtenerModelosUseCase.execute(page, limit as number, filters) as any;
-            res.status(200).json(Respuesta.paginacion('Modelos obtenidos con éxito', data, total, limit as number, offset as number));
+            if (q) filters.q = q;
+
+            const perPage = 10; // catalogue searches should return a small set
+            const page = Math.floor(offset / perPage) + 1;
+            const { total, data } = await this.obtenerModelosUseCase.execute(page, perPage, filters) as any;
+            res.status(200).json(Respuesta.paginacion('Modelos obtenidos con éxito', data, total, perPage, offset as number));
         } catch (error) {
             next(error);
         }

@@ -5,8 +5,10 @@ import type { Marca } from '../domain/interface/marca.interface';
 const URL = '/marcas';
 
 export const marcasRepository = {
-    listar: async (limit: number, offset: number): Promise<PaginatedResponse<Marca>> => {
-        const response = await api.get<PaginatedResponse<Marca>>(URL, { params: { limit, offset } });
+    listar: async (limit: number, offset: number, q?: string, signal?: AbortSignal): Promise<PaginatedResponse<Marca>> => {
+        const params: any = { limit, offset };
+        if (q) params.q = q;
+        const response = await api.get<PaginatedResponse<Marca>>(URL, { params, signal });
         return response as any;
     },
     obtener: async (id: string): Promise<ApiResponse<Marca>> => {

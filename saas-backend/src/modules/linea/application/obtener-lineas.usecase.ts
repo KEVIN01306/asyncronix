@@ -5,9 +5,9 @@ import type { LineaRepository } from "../domain/linea.repository.js";
 export class ObtenerLineasUseCase {
     constructor(private readonly lineaRepository: LineaRepository) { }
 
-    async execute(page: number, perPage: number) {
+    async execute(page: number, perPage: number, filters?: { q?: string }) {
         try {
-            return await this.lineaRepository.listar({ page, perPage });
+            return await this.lineaRepository.listar({ page, perPage, filters });
         } catch (error) {
             if (error instanceof DatabaseError) throw new AppError('Error en DB', 'DATABASE_ERROR', 500);
             throw error;

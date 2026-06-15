@@ -5,9 +5,9 @@ import type { MarcaRepository } from "../domain/marca.repository.js";
 export class ObtenerMarcasUseCase {
     constructor(private readonly marcaRepository: MarcaRepository) { }
 
-    async execute(page: number, perPage: number) {
+    async execute(page: number, perPage: number, filters?: { q?: string }) {
         try {
-            return await this.marcaRepository.listar({ page, perPage });
+            return await this.marcaRepository.listar({ page, perPage, filters });
         } catch (error) {
             if (error instanceof DatabaseError) throw new AppError('Error en DB', 'DATABASE_ERROR', 500);
             throw error;

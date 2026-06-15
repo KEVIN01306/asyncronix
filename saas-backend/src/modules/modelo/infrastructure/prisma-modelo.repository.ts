@@ -15,6 +15,8 @@ export class PrismaModeloRepository implements ModeloRepository {
         if (filters?.marca_id?.length) where.marca_id = { in: filters.marca_id };
         if (filters?.linea_id?.length) where.linea_id = { in: filters.linea_id };
         if (filters?.cilindrada_id?.length) where.cilindrada_id = { in: filters.cilindrada_id };
+        if (filters?.q) where.modelo = { contains: filters.q };
+        if (filters?.anio) where.anio = filters.anio;
 
         try {
             const [total, items] = await Promise.all([
