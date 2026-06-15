@@ -188,11 +188,11 @@ const ServicioFormPage = () => {
                             </Box>
                             <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 1, display: 'grid', gap: 1 }}>
                                 <Typography><strong>Placa:</strong> {vehiculo.placa}</Typography>
-                                <Typography><strong>Modelo:</strong> {vehiculo.modelo_nombre ?? vehiculo.modelo_id}</Typography>
-                                <Typography><strong>Marca:</strong> {vehiculo.marca ?? 'N/A'}</Typography>
-                                <Typography><strong>Línea:</strong> {vehiculo.linea ?? 'N/A'}</Typography>
-                                <Typography><strong>Cilindrada:</strong> {vehiculo.cilindrada ?? 'N/A'}</Typography>
-                                <Typography><strong>Tipo de vehículo:</strong> {vehiculo.tipo_vehiculo ?? vehiculo.vehiculo_tipo_id}</Typography>
+                                <Typography><strong>Modelo:</strong> {vehiculo.modelo?.modelo ?? vehiculo.modelo_id}</Typography>
+                                <Typography><strong>Marca:</strong> {vehiculo.modelo?.marca?.marca ?? 'N/A'}</Typography>
+                                <Typography><strong>Línea:</strong> {vehiculo.modelo?.linea?.linea ?? 'N/A'}</Typography>
+                                <Typography><strong>Cilindrada:</strong> {vehiculo.modelo?.cilindrada?.cilindrada ?? 'N/A'}</Typography>
+                                <Typography><strong>Tipo de vehículo:</strong> {vehiculo.vehiculo_tipo?.tipo ?? 'N/A'}</Typography>
                                     <Box display="flex" alignItems="center" gap={1}>
                                         <Typography><strong>Cliente asociado:</strong> {vehiculo.cliente ? `${vehiculo.cliente.nombre} (${vehiculo.cliente.nit ?? vehiculo.cliente.dpi ?? 'Sin documento'})` : 'Sin cliente asociado'}</Typography>
                                         {isEdit && vehiculo.cliente && servicioClienteId !== vehiculo.cliente.id && params.id && (
