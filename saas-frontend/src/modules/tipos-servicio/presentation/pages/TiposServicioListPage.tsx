@@ -1,8 +1,10 @@
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
-import { Add, Edit, Visibility, Delete } from "@mui/icons-material";
+import { Add, Edit, Visibility, Delete, Search } from "@mui/icons-material";
 import { Alert, AlertTitle, Box, Button, InputAdornment, Paper, TableContainer, TextField, useTheme } from "@mui/material";
+import { isAbortError, useAbortableFetch } from "../../../../core/hooks/useAbortableFetch";
+import { useDebounce } from "../../../../core/hooks/useDebounce";
 import ListTable from "../../../../shared/components/ui/tables/ListTable";
 import { TipoServicioRepository } from "../../infrastructure/repositories/tipo-servicio.repository";
 import type { TipoServicio } from "../../domain/interfaces/tipo-servicio.interface";
@@ -16,6 +18,8 @@ const TiposServicioListPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const q = searchParams.get('q') || '';
+    const [searchQuery, setSearchQuery] = useState(q);
     const [tipos, setTipos] = useState<TipoServicio[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -26,28 +30,36 @@ const TiposServicioListPage = () => {
         { id: 'opciones', name: 'Opciones', format: (value: any) => value?.length ?? 0 }
     ];
 
-    const fetchTipos = useCallback(async () => {
+    const abortableFetch = useAbortableFetch();
+    const debouncedQuery = useDebounce(searchQuery, 300);
+
+    useEffect(() => {
+        setSearchQuery(q);
+    }, [q]);
+
+    const loadTipos = useCallback(async (signal?: AbortSignal) => {
         setLoading(true);
+
         try {
-            const response = await TipoServicioRepository.listar(limit, offset);
+            const response = await TipoServicioRepository.listar(limit, offset, debouncedQuery, signal);
             setTipos(response.data);
             setTotal(response.meta.total);
         } catch (error) {
-            console.error(error);
+            if (!isAbortError(error)) console.error(error);
         } finally {
             setLoading(false);
         }
-    }, [limit, offset]);
+    }, [limit, offset, debouncedQuery]);
 
     useEffect(() => {
-        fetchTipos();
-    }, [fetchTipos]);
+        abortableFetch(loadTipos);
+    }, [abortableFetch, loadTipos]);
 
     const handleDelete = async (id: string) => {
         try {
             await TipoServicioRepository.eliminar(id);
             toast.success('Tipo de servicio eliminado correctamente');
-            fetchTipos();
+            abortableFetch(loadTipos);
         } catch (error) {
             console.error(error);
             toast.error('No se pudo eliminar el tipo de servicio');
@@ -90,7 +102,19 @@ const TiposServicioListPage = () => {
                     fullWidth
                     label="Buscar tipos de servicio"
                     placeholder="Ej: Mantenimiento general"
-                    InputProps={{ startAdornment: (<InputAdornment position="start"><Add color="primary" /></InputAdornment>) }}
+                    value={searchQuery}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        setSearchQuery(value);
+                        const params: Record<string, string> = {
+                            limit: limit.toString(),
+                            offset: '0'
+                        };
+
+                        if (value) params.q = value;
+                        setSearchParams(params);
+                    }}
+                    InputProps={{ startAdornment: (<InputAdornment position="start"><Search color="primary" /></InputAdornment>) }}
                 />
                 <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/tipos-servicio/nuevo')}>
                     Nuevo tipo
@@ -109,8 +133,16 @@ const TiposServicioListPage = () => {
                             total,
                             limit,
                             offset,
-                            onPageChange: (newPage) => setSearchParams({ limit: limit.toString(), offset: (newPage * limit).toString() }),
-                            onRowsPerPageChange: (newLimit) => setSearchParams({ limit: newLimit.toString(), offset: '0' })
+                            onPageChange: (newPage) => setSearchParams({
+                                limit: limit.toString(),
+                                offset: (newPage * limit).toString(),
+                                ...(q ? { q } : {})
+                            }),
+                            onRowsPerPageChange: (newLimit) => setSearchParams({
+                                limit: newLimit.toString(),
+                                offset: '0',
+                                ...(q ? { q } : {})
+                            })
                         }}
                     />
                 )}

@@ -3,7 +3,7 @@ import type { ChecklistItemRepository } from "../domain/checklist-item.repositor
 export class ObtenerChecklistItemsUseCase {
     constructor(private readonly repository: ChecklistItemRepository) { }
 
-    async execute(negocio_id: string, page: number, perPage: number) {
-        return this.repository.listar(negocio_id, page, perPage);
+    async execute(negocio_id: string, page: number, perPage: number, q?: string | null) {
+        return this.repository.listar(negocio_id, page, perPage, q);
     }
 }

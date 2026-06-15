@@ -4,9 +4,13 @@ import type { ChecklistItemDetailResponse, ChecklistItemsResponse } from "../../
 const URL_MODULE = '/checklist-items/';
 
 export const ChecklistItemRepository = {
-    listar: async (limit: number = 10, offset: number = 0): Promise<ChecklistItemsResponse> => {
+    listar: async (limit: number = 10, offset: number = 0, q?: string | null, signal?: AbortSignal): Promise<ChecklistItemsResponse> => {
+        const params: any = { limit, offset };
+        if (q) params.q = q;
+
         const response = await api.get<ChecklistItemsResponse>(URL_MODULE, {
-            params: { limit, offset }
+            params,
+            signal
         });
 
         return response;

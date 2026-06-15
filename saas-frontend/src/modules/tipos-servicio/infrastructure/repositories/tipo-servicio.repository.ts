@@ -4,9 +4,13 @@ import type { TipoServicioDetailResponse, TiposServicioResponse } from "../../..
 const URL_MODULE = '/tipos-servicio/';
 
 export const TipoServicioRepository = {
-    listar: async (limit: number = 10, offset: number = 0): Promise<TiposServicioResponse> => {
+    listar: async (limit: number = 10, offset: number = 0, q?: string | null, signal?: AbortSignal): Promise<TiposServicioResponse> => {
+        const params: any = { limit, offset };
+        if (q) params.q = q;
+
         const response = await api.get<TiposServicioResponse>(URL_MODULE, {
-            params: { limit, offset }
+            params,
+            signal
         });
 
         return response;

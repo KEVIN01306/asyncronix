@@ -21,9 +21,9 @@ export class TipoServicioController extends BaseController {
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res);
-            const { limit, offset } = res.locals.query;
+            const { limit, offset, q } = res.locals.query;
             const page = Math.floor(offset / limit) + 1;
-            const { total, data } = await this.obtenerTiposServicioUseCase.execute(negocio_id, page, limit);
+            const { total, data } = await this.obtenerTiposServicioUseCase.execute(negocio_id, page, limit, q);
             res.status(200).json(Respuesta.paginacion('Tipos de servicio obtenidos con éxito', data, total, limit, offset));
         } catch (error) {
             next(error);

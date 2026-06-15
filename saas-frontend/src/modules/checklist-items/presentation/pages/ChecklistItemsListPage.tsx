@@ -1,8 +1,10 @@
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
-import { Add, Edit, Visibility, Delete } from "@mui/icons-material";
+import { Add, Edit, Visibility, Delete, Search } from "@mui/icons-material";
 import { Alert, AlertTitle, Box, Button, InputAdornment, Paper, TableContainer, TextField, useTheme } from "@mui/material";
+import { isAbortError, useAbortableFetch } from "../../../../core/hooks/useAbortableFetch";
+import { useDebounce } from "../../../../core/hooks/useDebounce";
 import ListTable from "../../../../shared/components/ui/tables/ListTable";
 import { ChecklistItemRepository } from "../../infrastructure/repositories/checklist-item.repository";
 import type { ChecklistItem } from "../../domain/interfaces/checklist-item.interface";
@@ -16,6 +18,8 @@ const ChecklistItemsListPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const q = searchParams.get('q') || '';
+    const [searchQuery, setSearchQuery] = useState(q);
     const [items, setItems] = useState<ChecklistItem[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -25,28 +29,36 @@ const ChecklistItemsListPage = () => {
         { id: 'activo', name: 'Activo', format: (value: any) => value ? 'Sí' : 'No' }
     ];
 
-    const fetchItems = useCallback(async () => {
+    const abortableFetch = useAbortableFetch();
+    const debouncedQuery = useDebounce(searchQuery, 300);
+
+    useEffect(() => {
+        setSearchQuery(q);
+    }, [q]);
+
+    const loadItems = useCallback(async (signal?: AbortSignal) => {
         setLoading(true);
+
         try {
-            const response = await ChecklistItemRepository.listar(limit, offset);
+            const response = await ChecklistItemRepository.listar(limit, offset, debouncedQuery, signal);
             setItems(response.data);
             setTotal(response.meta.total);
         } catch (error) {
-            console.error(error);
+            if (!isAbortError(error)) console.error(error);
         } finally {
             setLoading(false);
         }
-    }, [limit, offset]);
+    }, [limit, offset, debouncedQuery]);
 
     useEffect(() => {
-        fetchItems();
-    }, [fetchItems]);
+        abortableFetch(loadItems);
+    }, [abortableFetch, loadItems]);
 
     const handleDelete = async (id: string) => {
         try {
             await ChecklistItemRepository.eliminar(id);
             toast.success('Checklist item eliminado correctamente');
-            fetchItems();
+            abortableFetch(loadItems);
         } catch (error) {
             console.error(error);
             toast.error('No se pudo eliminar el checklist item');
@@ -89,7 +101,19 @@ const ChecklistItemsListPage = () => {
                     fullWidth
                     label="Buscar checklist"
                     placeholder="Ej: Verificar frenos"
-                    InputProps={{ startAdornment: (<InputAdornment position="start"><Add color="primary" /></InputAdornment>) }}
+                    value={searchQuery}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        setSearchQuery(value);
+                        const params: Record<string, string> = {
+                            limit: limit.toString(),
+                            offset: '0'
+                        };
+
+                        if (value) params.q = value;
+                        setSearchParams(params);
+                    }}
+                    InputProps={{ startAdornment: (<InputAdornment position="start"><Search color="primary" /></InputAdornment>) }}
                 />
                 <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/checklist/nuevo')}>
                     Nuevo checklist
@@ -108,8 +132,16 @@ const ChecklistItemsListPage = () => {
                             total,
                             limit,
                             offset,
-                            onPageChange: (newPage) => setSearchParams({ limit: limit.toString(), offset: (newPage * limit).toString() }),
-                            onRowsPerPageChange: (newLimit) => setSearchParams({ limit: newLimit.toString(), offset: '0' })
+                            onPageChange: (newPage) => setSearchParams({
+                                limit: limit.toString(),
+                                offset: (newPage * limit).toString(),
+                                ...(q ? { q } : {})
+                            }),
+                            onRowsPerPageChange: (newLimit) => setSearchParams({
+                                limit: newLimit.toString(),
+                                offset: '0',
+                                ...(q ? { q } : {})
+                            })
                         }}
                     />
                 )}

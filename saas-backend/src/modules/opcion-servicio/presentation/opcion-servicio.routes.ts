@@ -2,8 +2,7 @@ import { Router } from "express";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { opcionServicioController } from "../opcion-servicio.module.js";
-import { opcionServicioSchema, opcionServicioActualizarSchema } from "./validators/opcion-servicio.schema.js";
-import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
+import { opcionServicioSchema, opcionServicioActualizarSchema, opcionServicioListQuerySchema } from "./validators/opcion-servicio.schema.js";
 
 const router = Router();
 const validarMiddleware = new ValidarMiddleware();
@@ -21,7 +20,7 @@ router.post(
 router.get(
     "/",
     authMiddleware.verificarPermiso(['VER_OPCION_SERVICIO']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(opcionServicioListQuerySchema),
     opcionServicioController.listar
 );
 

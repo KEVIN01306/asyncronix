@@ -25,10 +25,15 @@ const mapTipoServicio = (record: any): TipoServicioSimple => ({
 export class PrismaTipoServicioRepository implements TipoServicioRepository {
     constructor(private readonly prisma: PrismaClient) { }
 
-    async listar(negocio_id: string, page: number, perPage: number) {
+    async listar(negocio_id: string, page: number, perPage: number, q?: string | null) {
+        const where: any = { negocio_id };
+        if (q) {
+            where.nombre = { contains: q };
+        }
+
         const [data, total] = await Promise.all([
             this.prisma.tipoServicio.findMany({
-                where: { negocio_id },
+                where,
                 orderBy: { created_at: 'desc' },
                 skip: (page - 1) * perPage,
                 take: perPage,
@@ -38,7 +43,7 @@ export class PrismaTipoServicioRepository implements TipoServicioRepository {
                     }
                 }
             }),
-            this.prisma.tipoServicio.count({ where: { negocio_id } })
+            this.prisma.tipoServicio.count({ where })
         ]);
 
         return { data: data.map(mapTipoServicio), total };

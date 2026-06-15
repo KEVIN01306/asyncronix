@@ -5,15 +5,20 @@ import type { PrismaClient } from "@prisma/client";
 export class PrismaOpcionServicioRepository implements OpcionServicioRepository {
     constructor(private readonly prisma: PrismaClient) { }
 
-    async listar(negocio_id: string, page: number, perPage: number) {
+    async listar(negocio_id: string, page: number, perPage: number, q?: string | null) {
+        const where: any = { negocio_id };
+        if (q) {
+            where.nombre = { contains: q };
+        }
+
         const [data, total] = await Promise.all([
             this.prisma.opcionServicio.findMany({
-                where: { negocio_id },
+                where,
                 orderBy: { created_at: 'desc' },
                 skip: (page - 1) * perPage,
                 take: perPage,
             }),
-            this.prisma.opcionServicio.count({ where: { negocio_id } })
+            this.prisma.opcionServicio.count({ where })
         ]);
 
         return { data, total };

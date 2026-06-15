@@ -2,8 +2,7 @@ import { Router } from "express";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { checklistItemController } from "../checklist-item.module.js";
-import { checklistItemSchema, checklistItemActualizarSchema } from "./validators/checklist-item.schema.js";
-import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
+import { checklistItemSchema, checklistItemActualizarSchema, checklistItemListQuerySchema } from "./validators/checklist-item.schema.js";
 
 const router = Router();
 const validarMiddleware = new ValidarMiddleware();
@@ -21,7 +20,7 @@ router.post(
 router.get(
     "/",
     authMiddleware.verificarPermiso(['VER_CHECKLIST']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(checklistItemListQuerySchema),
     checklistItemController.listar
 );
 
