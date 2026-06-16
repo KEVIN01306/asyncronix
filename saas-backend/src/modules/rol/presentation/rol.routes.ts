@@ -4,6 +4,7 @@ import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { rolController } from "../rol.module.js";
 import { rolCrearSchema, rolActualizarSchema } from "./validators/rol.schema.js";
 import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
+import { z } from 'zod';
 
 const router = Router();
 const validarMiddleware = new ValidarMiddleware();
@@ -13,7 +14,7 @@ router.use(authMiddleware.protegerRuta);
 
 router.get('/',
     authMiddleware.verificarPermiso(['VER_ROLES']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(paginacionQuerySchema.extend({ q: z.string().optional() })),
     rolController.listar
 );
 

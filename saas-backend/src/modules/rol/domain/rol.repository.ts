@@ -4,7 +4,7 @@ import type { Rol, RolActualizar, RolCrear, RolObtenidoDetalle, RolSimple } from
 
 export interface RolRepository {
     obtener(id: Rol["id"], negocio_id: Rol["negocio_id"]): Promise<RolObtenidoDetalle | null>
-    listar(negocio_id: Rol["negocio_id"], pagination: Pagination): Promise<Paginated<RolSimple>>
+    listar(negocio_id: Rol["negocio_id"], pagination: Pagination, q?: string): Promise<Paginated<RolSimple>>
     validarPermisos(negocio_id: Rol["negocio_id"], permisoIds: string[]): Promise<void>
     registrar(data: RolCrear, negocio_id: Rol["negocio_id"]): Promise<RolSimple>
     actualizar(id: Rol["id"], negocio_id: Rol["negocio_id"], data: RolActualizar): Promise<RolSimple>

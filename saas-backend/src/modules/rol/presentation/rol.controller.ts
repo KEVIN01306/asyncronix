@@ -34,8 +34,9 @@ export class RolController extends BaseController {
         try {
             const { negocio_id } = this.obtenerEntorno(res)
             const { limit, offset } = res.locals.query
+            const { q } = res.locals.query as { q?: string }
             const page = offset / limit + 1
-            const { total, data } = await this.obtenerRolesUseCase.execute({ negocio_id, page, perPage: limit })
+            const { total, data } = await this.obtenerRolesUseCase.execute({ negocio_id, page, perPage: limit, q })
             res.status(200).json(Respuesta.paginacion('Roles obtenidos con exito', data, total, limit, offset))
         } catch (error) {
             next(error)

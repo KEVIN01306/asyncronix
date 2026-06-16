@@ -5,9 +5,10 @@ import type { Modulo, Permiso, Rol, RolDetailResponse, RolesResponse } from "../
 const URL_MODULE = '/roles/';
 
 export const RolesRepository = {
-    listar: async (limit: number = 10, offset: number = 0): Promise<RolesResponse> => {
+    listar: async (limit: number = 10, offset: number = 0, q?: string, signal?: AbortSignal): Promise<RolesResponse> => {
         const response = await api.get<RolesResponse>(URL_MODULE, {
-            params: { limit, offset }
+            params: { limit, offset, q },
+            signal
         });
 
         return response;

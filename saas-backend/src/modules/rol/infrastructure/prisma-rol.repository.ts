@@ -26,11 +26,13 @@ export class PrismaRolRepository implements RolRepository {
         return RolMapper.mapDetalle(rol)
     }
 
-    async listar(negocio_id: Rol["negocio_id"], pagination: Pagination): Promise<Paginated<RolSimple>> {
+    async listar(negocio_id: Rol["negocio_id"], pagination: Pagination, q?: string): Promise<Paginated<RolSimple>> {
         const { page, perPage } = pagination
         const offset = (page - 1) * perPage
 
-        const where = { negocio_id, activo: true }
+        const baseWhere: any = { negocio_id, activo: true }
+
+        const where = q ? { ...baseWhere, nombre: { contains: q } } : baseWhere
 
         const [total, roles] = await Promise.all([
             this.db.rol.count({ where }),

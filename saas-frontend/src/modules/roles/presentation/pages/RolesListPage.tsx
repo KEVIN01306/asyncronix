@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
 import { Add, Edit, Visibility, Search, Security } from '@mui/icons-material';
@@ -6,6 +6,7 @@ import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Rol } from '../../domain/interfaces/rol.interface';
 import { RolesRepository } from '../../infrastructure/repositories/rol.repository';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { useDebounce } from '../../../../core/hooks/useDebounce';
 
 const RolesListPage = () => {
     const navigate = useNavigate();
@@ -15,10 +16,14 @@ const RolesListPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const qParam = searchParams.get('q') || '';
 
     const [roles, setRoles] = useState<Rol[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState(qParam);
+    const debouncedQuery = useDebounce(searchQuery, 300);
+    const abortRef = useRef<AbortController | null>(null);
 
     const columns = [
         { id: 'nombre', name: 'Nombre', format: (value: any) => value?.toUpperCase() },
@@ -53,13 +58,20 @@ const RolesListPage = () => {
         },
     ];
 
-    const fetchRoles = useCallback(async () => {
+    const fetchRoles = useCallback(async (q?: string) => {
         setLoading(true);
         try {
-            const response = await RolesRepository.listar(limit, offset);
+            if (abortRef.current) abortRef.current.abort();
+            const controller = new AbortController();
+            abortRef.current = controller;
+            const response = await RolesRepository.listar(limit, offset, q, controller.signal);
             setRoles(response.data);
             setTotal(response.meta.total);
         } catch (error) {
+            if ((error as any)?.name === 'CanceledError' || (error as any)?.message === 'canceled') {
+                // request aborted
+                return;
+            }
             console.error(error);
         } finally {
             setLoading(false);
@@ -67,8 +79,12 @@ const RolesListPage = () => {
     }, [limit, offset]);
 
     useEffect(() => {
-        fetchRoles();
-    }, [fetchRoles]);
+        fetchRoles(debouncedQuery || undefined);
+        // sync q param into URL
+        const params: any = { limit: limit.toString(), offset: offset.toString() };
+        if (debouncedQuery) params.q = debouncedQuery;
+        setSearchParams(params);
+    }, [fetchRoles, debouncedQuery, limit, offset, setSearchParams]);
 
     return (
         <Box p={isMobile ? 2 : 4}>
@@ -85,6 +101,8 @@ const RolesListPage = () => {
                     fullWidth
                     label="Buscar roles"
                     placeholder="Ej: Administrador, Vendedor"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
