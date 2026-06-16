@@ -40,9 +40,10 @@ export class UsuarioController extends BaseController {
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res)
-            const { limit, offset } = res.locals.query
+            const { limit, offset, q, email, sucursal_id, roles } = res.locals.query
             const page = offset / limit + 1
-            const { total, usuarios } = await this.obtenerUsuariosUseCase.execute({ negocio_id, page, perPage: limit });
+            const rolesArray = roles ? (String(roles).split(',').map((r: string) => r.trim()).filter(Boolean)) : null
+            const { total, usuarios } = await this.obtenerUsuariosUseCase.execute({ negocio_id, page, perPage: limit, q, email, sucursal_id, roles: rolesArray });
             res.status(200).json(Respuesta.paginacion('Usuarios Obtenidos con exito', usuarios, total, limit, offset))
         } catch (error) {
             next(error)

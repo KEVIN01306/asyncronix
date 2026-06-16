@@ -19,7 +19,14 @@ export const ProtectedRoute = () => {
         const validarSesion = async () => {
             const token = localStorage.getItem('accessToken');
 
-            if (!user || !token || !isAuth) {
+            // Si no hay token, no intentar refresh - ir directo a login
+            if (!token) {
+                setHasCheckedAuth(true);
+                setIsLoading(false);
+                return;
+            }
+
+            if (!user || !isAuth) {
                 try {
                     const refreshResponse = await authRepository.refreshToken();
                     const accessToken = refreshResponse?.accessToken;

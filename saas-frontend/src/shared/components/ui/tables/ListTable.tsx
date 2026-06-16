@@ -171,10 +171,7 @@ const ListTable: React.FC<ListTableProps> = ({
                 onClose={handleMenuClose}
                 PaperProps={{
                     sx: {
-                        boxShadow: '0 5px 5px -3px rgba(0,0,0,0.1)',
-                        borderRadius: '2px',
                         minWidth: 160,
-                        border: '1px solid #dadada'
                     }
                 }}
             >

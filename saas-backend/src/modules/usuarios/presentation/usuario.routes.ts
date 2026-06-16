@@ -3,7 +3,7 @@ import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { usuarioController } from "../usuario.module.js";
 import { usuariosCrearSchema } from "./validators/usuario.schema.js";
-import { usuarioActualizarSchema, actualizarPerfilSchema, cambiarPasswordSchema } from "./validators/usuario.schema.js";
+import { usuarioActualizarSchema, actualizarPerfilSchema, cambiarPasswordSchema, usuariosListQuerySchema } from "./validators/usuario.schema.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
 import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
 
@@ -16,7 +16,7 @@ router.use(authMiddleware.protegerRuta)
 
 router.get('/',
     authMiddleware.verificarPermiso(['VER_USUARIOS']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(usuariosListQuerySchema),
     usuarioController.listar
 )
 

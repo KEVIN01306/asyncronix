@@ -60,15 +60,37 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     }
 
 
+
     async listar(
         negocio_id: Usuario["negocio_id"],
-        pagination: Pagination
+        pagination: Pagination,
+        filters: Record<string, any> = {}
     ): Promise<Paginated<UsuarioSimple>> {
 
         const { page, perPage } = pagination
         const offset = (page - 1) * perPage
 
-        const where = { negocio_id, activo: true };
+        const where: any = { negocio_id, activo: true };
+
+        const { q, email, sucursal_id, roles } = filters || {};
+
+        if (sucursal_id) where.sucursal_id = sucursal_id;
+        if (email) where.email = { contains: String(email) };
+        if (roles && Array.isArray(roles) && roles.length > 0) {
+            where.roles = { some: { id: { in: roles } } };
+        }
+
+        if (q) {
+            const value = String(q);
+            where.OR = [
+                { nombre: { contains: value } },
+                { apellido: { contains: value } },
+                { telefono: { contains: value } },
+                { email: { contains: value } },
+                { sucursal: { is: { nombre: { contains: value } } } },
+                { roles: { some: { nombre: { contains: value } } } }
+            ];
+        }
 
         const [total, usuarios] = await Promise.all([
             this.db.usuario.count({ where }),

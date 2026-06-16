@@ -35,11 +35,17 @@ interface NavbarProps {
 }
 
 const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: NavbarProps) => {
-  const lagaout = useAuthStore((state) => state.logout)
+  const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    handleMenuClose();
+    logout();
+    navigate('/auth/login', { replace: true });
+  };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -189,7 +195,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
             </ListItemIcon>
             Personalización
           </MenuItem>
-          <MenuItem onClick={() => { handleMenuClose(); lagaout(); }}>
+          <MenuItem onClick={handleLogout}>
             <ListItemIcon>
               <Logout fontSize="small" />
             </ListItemIcon>

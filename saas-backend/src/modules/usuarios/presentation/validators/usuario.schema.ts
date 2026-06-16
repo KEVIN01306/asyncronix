@@ -1,4 +1,5 @@
 import z from "zod";
+import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
 
 export const usuariosSchema = z.object({
     id: z.string().max(36),
@@ -35,4 +36,11 @@ export const cambiarPasswordSchema = z.object({
 }).refine(data => data.password === data.confirm_password, {
     message: "Las contraseñas no coinciden",
     path: ["confirm_password"]
+})
+
+export const usuariosListQuerySchema = paginacionQuerySchema.extend({
+    q: z.string().optional(),
+    email: z.string().email().optional(),
+    sucursal_id: z.string().max(36).optional(),
+    roles: z.string().optional() // comma separated role ids
 })

@@ -13,11 +13,12 @@ const App = () => {
   const themeMode = useUiStore((state) => state.themeMode);
   const borderIntensity = useUiStore((state) => state.borderIntensity);
   const borderColorIntensity = useUiStore((state) => state.borderColorIntensity);
+  const themeVariant = useUiStore((state) => state.themeVariant);
   const toasterPosition = useUiStore((state) => state.toasterPosition);
   const toasterStyle = useUiStore((state) => state.toasterStyle);
 
   return (
-    <ThemeProvider theme={createAppTheme(themeMode, borderIntensity, borderColorIntensity)}>
+    <ThemeProvider theme={createAppTheme(themeMode, borderIntensity, borderColorIntensity, themeVariant)}>
       <CssBaseline />
       <RouterProvider router={appRouter} />
       <Toaster 

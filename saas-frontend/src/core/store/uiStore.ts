@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import type { PaletteMode } from '@mui/material';
+import type { ThemeVariant } from '../theme/types';
+import { getStoredThemeVariant, setStoredThemeVariant } from '../theme/mainTheme';
 
 const THEME_SOURCE_KEY = 'themeSource';
 const BORDER_INTENSITY_KEY = 'borderIntensity';
@@ -8,6 +10,7 @@ const TOASTER_POSITION_KEY = 'toasterPosition';
 const TOASTER_STYLE_KEY = 'toasterStyle';
 
 type ThemeSource = 'system' | 'light' | 'dark';
+type ThemeVariantLocal = ThemeVariant;
 type ToasterPosition = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 type ToasterStyle = 'colorful' | 'simple';
 
@@ -34,6 +37,7 @@ const getActualThemeMode = (source: ThemeSource): PaletteMode => {
 interface UiState {
     themeSource: ThemeSource;
     themeMode: PaletteMode;
+    themeVariant: ThemeVariantLocal;
     borderIntensity: number;
     borderColorIntensity: number;
     toasterPosition: ToasterPosition;
@@ -43,6 +47,7 @@ interface UiState {
     setBorderColorIntensity: (intensity: number) => void;
     setToasterPosition: (position: ToasterPosition) => void;
     setToasterStyle: (style: ToasterStyle) => void;
+    setThemeVariant: (variant: ThemeVariantLocal) => void;
 }
 
 export const useUiStore = create<UiState>((set) => {
@@ -63,6 +68,7 @@ export const useUiStore = create<UiState>((set) => {
     return {
         themeSource: initialSource,
         themeMode: getActualThemeMode(initialSource),
+        themeVariant: getStoredThemeVariant(),
         borderIntensity: initialIntensity,
         borderColorIntensity: initialColorIntensity,
         toasterPosition: initialToasterPosition,
@@ -71,6 +77,15 @@ export const useUiStore = create<UiState>((set) => {
             localStorage.setItem(THEME_SOURCE_KEY, source);
             const actualMode = getActualThemeMode(source);
             set({ themeSource: source, themeMode: actualMode });
+        },
+        setThemeVariant: (variant) => {
+            try {
+                setStoredThemeVariant(variant);
+            } catch (e) {
+                // ignore storage errors
+                console.warn('Could not persist theme variant', e);
+            }
+            set({ themeVariant: variant });
         },
         setBorderIntensity: (intensity) => {
             const clamped = Math.max(0, Math.min(1, intensity));

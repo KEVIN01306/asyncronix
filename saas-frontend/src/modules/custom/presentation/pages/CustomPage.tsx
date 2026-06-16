@@ -1,10 +1,13 @@
 import { Box, Card, CardContent, Typography, Radio, RadioGroup, FormControlLabel, Slider, Divider, Button, ButtonGroup, Stack } from '@mui/material';
 import { useUiStore } from '../../../../core/store/uiStore';
+import type { ThemeVariant } from '../../../../core/theme/types';
 import { toast } from 'sonner';
 
 export const CustomPage = () => {
     const themeSource = useUiStore((state) => state.themeSource);
     const setThemeSource = useUiStore((state) => state.setThemeSource);
+    const themeVariant = useUiStore((state) => state.themeVariant);
+    const setThemeVariant = useUiStore((state) => state.setThemeVariant);
     const borderIntensity = useUiStore((state) => state.borderIntensity);
     const setBorderIntensity = useUiStore((state) => state.setBorderIntensity);
     const borderColorIntensity = useUiStore((state) => state.borderColorIntensity);
@@ -34,6 +37,11 @@ export const CustomPage = () => {
 
     const handleToasterStyleChange = (style: 'colorful' | 'simple') => {
         setToasterStyle(style);
+    };
+
+    const handleVariantChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const v = event.target.value as ThemeVariant;
+        setThemeVariant(v);
     };
 
     const handleShowTestToast = () => {
@@ -77,6 +85,17 @@ export const CustomPage = () => {
                             control={<Radio />}
                             label="Oscuro"
                         />
+                    </RadioGroup>
+
+                    <Typography variant="subtitle2" fontWeight="bold" mb={1} mt={2}>
+                        Variante de color
+                    </Typography>
+                    <RadioGroup value={themeVariant} onChange={handleVariantChange}>
+                        <FormControlLabel value={'normal'} control={<Radio />} label="Normal" />
+                        <FormControlLabel value={'marton'} control={<Radio />} label="Marton" />
+                        <FormControlLabel value={'corport'} control={<Radio />} label="Corporativo" />
+                        <FormControlLabel value={'brutalist'} control={<Radio />} label="Brutalist" />
+                        <FormControlLabel value={'neumorphic'} control={<Radio />} label="Neumorphic" />
                     </RadioGroup>
                 </CardContent>
             </Card>

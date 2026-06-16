@@ -27,9 +27,16 @@ type UsuarioUpdateDTO = {
 
 export const usuarioRepository = {
 
-    listar: async ( limit: number, offset: number ) => {
+    listar: async ( limit: number, offset: number, q?: string | null, email?: string | null, sucursal_id?: string | null, roles?: string[] | null, signal?: AbortSignal ) => {
+        const params: any = { limit, offset };
+        if (q) params.q = q;
+        if (email) params.email = email;
+        if (sucursal_id) params.sucursal_id = sucursal_id;
+        if (roles && Array.isArray(roles) && roles.length > 0) params.roles = roles.join(',');
+
         const response = await api.get<UsuariosResponse>(URL_MODULO, {
-            params: { limit, offset }
+            params,
+            signal
         });
 
         return response;
