@@ -6,11 +6,9 @@ import { toast } from 'sonner';
 
 import { vehiculoRepository } from '../../infrastructure/vehiculo.repository';
 import { vehiculoTipoRepository } from '../../infrastructure/vehiculo-tipo.repository';
-import { modelosRepository } from '../../../modelos/infrastructure/modelos.repository';
 import { clienteRepository } from '../../../clientes/infrastructure/clientes.repository';
 import type { Vehiculo } from '../../domain/interfaces/vehiculo.interface';
 import type { VehiculoTipo } from '../../domain/interfaces/vehiculo-tipo.interface';
-import type { Modelo } from '../../../modelos/domain/interface/modelo.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 import VehicleImageUploader from '../components/VehicleImageUploader';
@@ -21,7 +19,6 @@ const VehiculoDetailPage = () => {
     const navigate = useNavigate();
     const [vehiculo, setVehiculo] = useState<Vehiculo | null>(null);
     const [tipo, setTipo] = useState<VehiculoTipo | null>(null);
-    const [modelo, setModelo] = useState<Modelo | null>(null);
     const [loading, setLoading] = useState(true);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadingPdf, setUploadingPdf] = useState(false);
@@ -40,9 +37,6 @@ const VehiculoDetailPage = () => {
             ]);
             setVehiculo(vehiculoRes);
             setTipo(tiposRes.data.find((item) => item.id === vehiculoRes.vehiculo_tipo_id) ?? null);
-
-            const modeloRes = await modelosRepository.obtener(vehiculoRes.modelo_id);
-            setModelo(modeloRes.data);
         } catch (error) {
             console.error(error);
         } finally {
@@ -162,10 +156,10 @@ const VehiculoDetailPage = () => {
                         <Stack spacing={2}>
                             <Typography variant="body2"><strong>Placa:</strong> {vehiculo.placa}</Typography>
                             <Typography variant="body2"><strong>Tipo de vehículo:</strong> {tipo?.tipo ?? '-'}</Typography>
-                            <Typography variant="body2"><strong>Modelo:</strong> {modelo?.modelo ?? '-'}</Typography>
-                            <Typography variant="body2"><strong>Marca:</strong> {modelo?.marca?.marca ?? '-'}</Typography>
-                            <Typography variant="body2"><strong>Línea:</strong> {modelo?.linea?.linea ?? '-'}</Typography>
-                            <Typography variant="body2"><strong>Cilindrada:</strong> {modelo?.cilindrada?.cilindrada ?? '-'}</Typography>
+                            <Typography variant="body2"><strong>Modelo:</strong> {vehiculo.modelo?.modelo ?? '-'}</Typography>
+                            <Typography variant="body2"><strong>Marca:</strong> {vehiculo.modelo?.marca?.marca ?? '-'}</Typography>
+                            <Typography variant="body2"><strong>Línea:</strong> {vehiculo.modelo?.linea?.linea ?? '-'}</Typography>
+                            <Typography variant="body2"><strong>Cilindrada:</strong> {vehiculo.modelo?.cilindrada?.cilindrada ?? '-'}</Typography>
                             <Typography variant="body2"><strong>Cliente:</strong></Typography>
                             {vehiculo.cliente ? (
                                 <Box>

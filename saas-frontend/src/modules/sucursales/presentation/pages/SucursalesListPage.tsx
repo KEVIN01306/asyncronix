@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
 import { Add, Edit, Visibility,Search } from '@mui/icons-material';
@@ -6,6 +6,7 @@ import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Sucursal } from '../../domain/interfaces/sucursal.interface';
 import { sucursalRepository } from '../../infrastructure/repositories/sucursal.repository';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { useDebounce } from '../../../../core/hooks/useDebounce';
 
 
 const SucursalesListPage = () => {
@@ -16,10 +17,14 @@ const SucursalesListPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const qParam = searchParams.get('q') || '';
 
     const [sucursales, setSucursales] = useState<Sucursal[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState(qParam);
+    const debouncedQuery = useDebounce(searchQuery, 300);
+    const abortRef = useRef<AbortController | null>(null);
 
     const columns = [
         { id: 'nombre', name: 'Nombre', format: (value: any) => value.toUpperCase() },
@@ -42,22 +47,37 @@ const SucursalesListPage = () => {
         },
     ];
 
-    const fetchSucursales = useCallback(async () => {
+    const fetchSucursales = useCallback(async (q?: string) => {
         setLoading(true);
         try {
-            const response = await sucursalRepository.listar(limit, offset);
+            if (abortRef.current) abortRef.current.abort();
+            const controller = new AbortController();
+            abortRef.current = controller;
+            const response = await sucursalRepository.listar(limit, offset, q, controller.signal);
             setSucursales(response.data);
             setTotal(response.meta.total);
         } catch (error) {
+            if ((error as any)?.name === 'CanceledError' || (error as any)?.message === 'canceled') {
+                // request aborted
+                return;
+            }
             console.error(error);
         } finally {
             setLoading(false);
         }
     }, [limit, offset]);
 
+    // Effect 1: Fetch data when query, pagination changes
     useEffect(() => {
-        fetchSucursales();
-    }, [fetchSucursales]);
+        fetchSucursales(debouncedQuery || undefined);
+    }, [debouncedQuery, limit, offset, fetchSucursales]);
+
+    // Effect 2: Sync URL params separately to avoid loading flash
+    useEffect(() => {
+        const params: any = { limit: limit.toString(), offset: offset.toString() };
+        if (debouncedQuery) params.q = debouncedQuery;
+        setSearchParams(params);
+    }, [debouncedQuery, limit, offset, setSearchParams]);
 
     return (
         <Box p={isMobile ? 2 : 4}>
@@ -77,6 +97,8 @@ const SucursalesListPage = () => {
                     fullWidth
                     label="Buscar Sucursal"
                     placeholder="Ej: Sucursal Centro"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">

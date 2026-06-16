@@ -28,7 +28,7 @@ router.use('/vehiculos', (await import('../modules/vehiculo/presentation/vehicul
 router.use('/opciones-servicio', (await import('../modules/opcion-servicio/presentation/opcion-servicio.routes.js')).default)
 router.use('/tipos-servicio', (await import('../modules/tipo-servicio/presentation/tipo-servicio.routes.js')).default)
 router.use('/checklist-items', (await import('../modules/checklist-item/presentation/checklist-item.routes.js')).default)
-router.use('/servicios', (await import('../modules/servicio/presentation/servicio.routes.js')).default)
+router.use('/servicio-vehiculos', (await import('../modules/servicioVehiculo/presentation/servicio.routes.js')).default)
 router.use('/notifications', (await import('../modules/notificacion/presentation/notificacion.routes.js')).default)
 router.use('/proveedores', (await import('../modules/proveedor/presentation/proveedor.routes.js')).default)
 

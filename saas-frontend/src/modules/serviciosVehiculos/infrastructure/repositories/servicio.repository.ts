@@ -1,0 +1,172 @@
+import api from '../../../../core/api/api';
+import type { ServicioVehiculo, ServicioVehiculoDetailResponse, ServicioVehiculoEstadoResponse, ServicioVehiculoEstado, ServiciosVehiculoResponse } from '../../domain/interfaces/servicio.interface';
+
+const URL_MODULE = '/servicio-vehiculos';
+
+export type ServicioVehiculoListParams = {
+    limit: number;
+    offset: number;
+    estado?: string;
+    placa?: string;
+    codigo?: string;
+    q?: string;
+    mecanico_id?: string;
+};
+
+export const servicioRepository = {
+    listar: async (params: ServicioVehiculoListParams): Promise<ServiciosVehiculoResponse> => {
+        const searchParams = { ...params } as Record<string, unknown>;
+        Object.keys(searchParams).forEach((key) => {
+            const value = searchParams[key];
+            if (value === undefined || value === '') {
+                delete searchParams[key];
+            }
+        });
+
+        const response = await api.get<ServiciosVehiculoResponse>(`${URL_MODULE}`, {
+            params: searchParams
+        });
+        return response as any;
+    },
+
+    obtener: async (id: string): Promise<ServicioVehiculo> => {
+        const response = await api.get<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}`) as unknown as ServicioVehiculoDetailResponse;
+        return response.data;
+    },
+
+    obtenerEstado: async (id: string): Promise<ServicioVehiculoEstado> => {
+        const response = await api.get<ServicioVehiculoEstadoResponse>(`${URL_MODULE}/${id}/estado`) as unknown as ServicioVehiculoEstadoResponse;
+        return response.data;
+    },
+
+    registrar: async (data: any): Promise<ServicioVehiculo> => {
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}`, data) as unknown as ServicioVehiculoDetailResponse;
+        return response.data;
+    },
+
+    actualizar: async (id: string, data: any): Promise<ServicioVehiculo> => {
+        const response = await api.put<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}`, data) as unknown as ServicioVehiculoDetailResponse;
+        return response.data;
+    },
+
+    cambiarEstado: async (id: string, estado: string): Promise<ServicioVehiculo> => {
+        const response = await api.patch<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/estado`, { estado }) as unknown as ServicioVehiculoDetailResponse;
+        return response.data;
+    },
+
+    listoSalida: async (id: string): Promise<ServicioVehiculo> => {
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/listo-salida`) as unknown as ServicioVehiculoDetailResponse;
+        return response.data;
+    },
+
+    finalizarSalida: async (id: string, file: File, metodo_pago: string): Promise<ServicioVehiculo> => {
+        const formData = new FormData();
+        formData.append('firma_cliente', file);
+        formData.append('metodo_pago', metodo_pago);
+
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/salida`, formData) as unknown as ServicioVehiculoDetailResponse;
+
+        return response.data;
+    },
+
+    subirImagen: async (id: string, file: File, descripcion?: string): Promise<ServicioVehiculo> => {
+        const formData = new FormData();
+        formData.append('imagen', file);
+        if (descripcion) formData.append('descripcion', descripcion);
+
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/imagenes`, formData) as unknown as ServicioVehiculoDetailResponse;
+        return response.data;
+    },
+
+    guardarFirmaEntrada: async (id: string, file: File): Promise<ServicioVehiculo> => {
+        const formData = new FormData();
+        formData.append('firma', file);
+
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/firma-entrada`, formData) as unknown as ServicioVehiculoDetailResponse;
+        return response.data;
+    },
+
+    eliminarImagen: async (id: string, imagenId: string): Promise<void> => {
+        await api.delete(`${URL_MODULE}/${id}/imagenes/${imagenId}`);
+    },
+
+    subirImagenProgreso: async (id: string, file: File, descripcion?: string): Promise<ServicioVehiculo> => {
+        const formData = new FormData();
+        formData.append('imagen', file);
+        if (descripcion) formData.append('descripcion', descripcion);
+
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/progreso/imagenes`, formData) as unknown as ServicioVehiculoDetailResponse;
+        return response.data;
+    },
+
+    registrarTarea: async (id: string, data: { nombre: string }): Promise<any> => {
+        const response = await api.post(`${URL_MODULE}/${id}/tareas`, data);
+        return response.data.data;
+    },
+
+    actualizarTarea: async (id: string, tareaId: string, data: { nombre?: string; completado?: boolean; observacion?: string | null }): Promise<void> => {
+        await api.put(`${URL_MODULE}/${id}/tareas/${tareaId}`, data);
+    },
+
+    eliminarTarea: async (id: string, tareaId: string): Promise<void> => {
+        await api.delete(`${URL_MODULE}/${id}/tareas/${tareaId}`);
+    },
+
+    actualizarObservaciones: async (id: string, data: { observaciones?: string | null }): Promise<ServicioVehiculo> => {
+        const response = await api.put<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/observaciones`, data);
+        return response.data;
+    },
+
+    listarChecklistRespuestas: async (id: string): Promise<any[]> => {
+        const response = await api.get<any>(`${URL_MODULE}/${id}/checklist-respuestas`);
+        return response.data.data;
+    },
+
+    registrarChecklistRespuesta: async (id: string, data: any): Promise<any> => {
+        const response = await api.post<any>(`${URL_MODULE}/${id}/checklist-respuestas`, data);
+        return response.data.data;
+    },
+
+    actualizarChecklistRespuesta: async (id: string, respuestaId: string, data: any): Promise<any> => {
+        const response = await api.put<any>(`${URL_MODULE}/${id}/checklist-respuestas/${respuestaId}`, data);
+        return response.data.data;
+    },
+
+    eliminarChecklistRespuesta: async (id: string, respuestaId: string): Promise<void> => {
+        await api.delete(`${URL_MODULE}/${id}/checklist-respuestas/${respuestaId}`);
+    },
+    
+    asociarCliente: async (id: string): Promise<ServicioVehiculo> => {
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/asociar-cliente`);
+        return response.data;
+    }
+    ,
+    asociarMecanico: async (id: string, mecanicoId: string): Promise<ServicioVehiculo> => {
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/asociar-mecanico`, { mecanico_id: mecanicoId });
+        return response.data;
+    },
+    crearRepuestoCliente: async (servicioId: string, data: { nombre: string; cantidad: number }) => {
+        const response = await api.post(`${URL_MODULE}/${servicioId}/repuestos-cliente`, data);
+        return response.data;
+    },
+    eliminarRepuestoCliente: async (servicioId: string, id: string) => {
+        const response = await api.delete(`${URL_MODULE}/${servicioId}/repuestos-cliente/${id}`);
+        return response.data;
+    },
+    crearRepuesto: async (servicioId: string, data: { variante_id?: string; codigo?: string; cantidad: number; sucursal_id: string }) => {
+        const response = await api.post(`${URL_MODULE}/${servicioId}/repuestos`, data);
+        return response.data;
+    },
+    eliminarRepuesto: async (servicioId: string, id: string, sucursal_id: string) => {
+        const response = await api.delete(`${URL_MODULE}/${servicioId}/repuestos/${id}`, { data: { sucursal_id } });
+        return response.data;
+    },
+    cambiarMecanico: async (id: string, mecanicoAnteriorId: string, mecanicoNuevoId: string): Promise<ServicioVehiculo> => {
+        const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/cambiar-mecanico`, { mecanicoAnteriorId, mecanicoNuevoId });
+        return response.data;
+    },
+    actualizarClienteExterno: async (id: string, data: { nombre_extra: string; documento_extra: string; numero_extra: string }): Promise<ServicioVehiculo> => {
+        const response = await api.put<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/cliente-externo`, data);
+        return response.data;
+    }
+};

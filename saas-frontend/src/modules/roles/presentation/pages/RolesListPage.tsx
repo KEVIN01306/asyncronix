@@ -78,13 +78,17 @@ const RolesListPage = () => {
         }
     }, [limit, offset]);
 
+    // Effect 1: Fetch data when query, pagination changes
     useEffect(() => {
         fetchRoles(debouncedQuery || undefined);
-        // sync q param into URL
+    }, [debouncedQuery, limit, offset, fetchRoles]);
+
+    // Effect 2: Sync URL params separately to avoid loading flash
+    useEffect(() => {
         const params: any = { limit: limit.toString(), offset: offset.toString() };
         if (debouncedQuery) params.q = debouncedQuery;
         setSearchParams(params);
-    }, [fetchRoles, debouncedQuery, limit, offset, setSearchParams]);
+    }, [debouncedQuery, limit, offset, setSearchParams]);
 
     return (
         <Box p={isMobile ? 2 : 4}>

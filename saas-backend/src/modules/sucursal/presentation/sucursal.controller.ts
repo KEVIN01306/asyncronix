@@ -35,8 +35,9 @@ export class SucursalController extends BaseController {
         try {
             const { negocio_id } = this.obtenerEntorno(res)
             const { limit, offset } = res.locals.query
+            const { q } = res.locals.query as { q?: string }
             const page = Math.floor(offset / limit) + 1
-            const { total, data } = await this.obtenerSucursalesUseCase.execute(negocio_id, page, limit);
+            const { total, data } = await this.obtenerSucursalesUseCase.execute(negocio_id, page, limit, q);
             res.status(200).json(Respuesta.paginacion('Sucursales obtenidas con éxito', data, total, limit, offset))
         } catch (error) {
             next(error)

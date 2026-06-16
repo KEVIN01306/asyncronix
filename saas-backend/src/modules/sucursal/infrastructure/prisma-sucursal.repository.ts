@@ -74,15 +74,26 @@ export class PrismaSucursalRepository implements SucursalRepository {
         }
     }
 
-    async listar(negocio_id: string, pagination: Pagination): Promise<Paginated<SucursalSimple>> {
+    async listar(negocio_id: string, pagination: Pagination, q?: string): Promise<Paginated<SucursalSimple>> {
         try {
             const { page, perPage } = pagination;
             const skip = (page - 1) * perPage;
 
+            const baseWhere: any = { negocio_id }
+            const where = q
+                ? {
+                    ...baseWhere,
+                    OR: [
+                        { nombre: { contains: q } },
+                        { direccion: { contains: q } }
+                    ]
+                }
+                : baseWhere
+
             const [total, sucursales] = await Promise.all([
-                this.prisma.sucursal.count({ where: { negocio_id } }),
+                this.prisma.sucursal.count({ where }),
                 this.prisma.sucursal.findMany({
-                    where: { negocio_id },
+                    where,
                     include: { negocio: true },
                     skip,
                     take: perPage,

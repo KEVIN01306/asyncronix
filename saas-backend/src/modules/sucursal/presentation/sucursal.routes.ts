@@ -4,6 +4,7 @@ import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { sucursalActualizarSchema, sucursalCrearSchema } from "./validators/sucursal.validator.js";
 import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
+import { z } from 'zod';
 
 const router = Router()
 
@@ -14,7 +15,7 @@ router.use(authMiddleware.protegerRuta)
 
 router.get('/',
     authMiddleware.verificarPermiso(['VER_SUCURSALES']),
-    validarMiddleware.validarQuery(paginacionQuerySchema),
+    validarMiddleware.validarQuery(paginacionQuerySchema.extend({ q: z.string().optional() })),
     sucursalController.listar
 );
 

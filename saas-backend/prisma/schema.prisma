@@ -149,10 +149,11 @@ model Usuario {
   sessions Session?
 
   // Relaciones inversas corregidas
-  servicios_mecanico Servicio[] @relation("ServicioMecanico")
-  ventas_vendedor    Venta[]    @relation("VentaVendedor")
-  trasladosCreados  Traslado[] @relation("TrasladosCreados")
-  trasladosRecibidos Traslado[] @relation("TrasladosRecibidos")
+  servicios_mecanico ServicioVehiculo[] @relation(name: "ServicioMecanico")
+  ventas_vendedor    Venta[]    @relation(name: "VentaVendedor")
+  trasladosCreados  Traslado[] @relation(name: "TrasladosCreados")
+  trasladosRecibidos Traslado[] @relation(name: "TrasladosRecibidos")
+  servicios_recepcionista Servicio[] @relation(name: "ServicioRecepcionista")
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -281,7 +282,7 @@ model Vehiculo {
   modelo        Modelo       @relation(fields: [modelo_id], references: [id])
   cliente       Cliente?     @relation(fields: [cliente_id], references: [id])
   vehiculo_tipo VehiculoTipo @relation(fields: [vehiculo_tipo_id], references: [id])
-  servicios     Servicio[]
+  servicioVehiculo     ServicioVehiculo[]
   citas         Cita[]
 
   @@unique([negocio_id, placa])
@@ -333,15 +334,12 @@ model Servicio {
   id                  String         @id @default(uuid()) @db.Char(36)
   negocio_id          String         @db.Char(36)
   sucursal_id         String         @db.Char(36)
-  vehiculo_id         String         @db.Char(36)
-  mecanico_id         String?        @db.Char(36)
   cliente_id          String?        @db.Char(36)
   tipo_servicio_id    String?        @db.Char(36)
+  recepcionista_id    String?        @db.Char(36)
   descripcion         String?        @db.Text
   diagnostico         String?        @db.Text
   observaciones       String?        @db.Text
-  kilometraje         Int?
-  kilometraje_proximo Int?
   firma_entrada       String?        @db.Text
   firma_salida        String?        @db.Text
   fecha_entrada       DateTime       @default(now())
@@ -349,28 +347,46 @@ model Servicio {
   total               Float          @default(0)
   documento_extra     String?        @db.VarChar(20)
   nombre_extra        String?        @db.VarChar(255)
-  numero_extra        String?        @db.VarChar(20)
-  estado              EstadoServicio @default(RECEPCION)
+  numero_extra        String?        @db.VarChar(20)  
   activo              Boolean        @default(true)
-  MetodoPago          MetodoPago     @default(EFECTIVO)
+  MetodoPago          MetodoPago?     @default(EFECTIVO)
+  servicio_tipo       ServicioTipo   @default(VEHICULO)
   created_at          DateTime       @default(now())
   updated_at          DateTime       @updatedAt
 
   negocio       Negocio       @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal      @relation(fields: [sucursal_id], references: [id])
-  vehiculo      Vehiculo?     @relation(fields: [vehiculo_id], references: [id])
-  mecanico      Usuario?      @relation("ServicioMecanico", fields: [mecanico_id], references: [id])
-  cliente       Cliente?      @relation("ServicioCliente", fields: [cliente_id], references: [id])
+  cliente       Cliente?      @relation(name: "ServicioCliente", fields: [cliente_id], references: [id])
+  recepcionista Usuario?      @relation(name: "ServicioRecepcionista", fields: [recepcionista_id], references: [id])
   tipo_servicio TipoServicio? @relation(fields: [tipo_servicio_id], references: [id])
 
+  servicioVehiculo ServicioVehiculo? @relation(name: "ServicioServicioVehiculo")
   imagenes                Imagen[]
   checklist               ChecklistRespuesta[]
   tareas                  ServicioTarea[]
   repuestos               ServicioRepuesto[]
-  venta                   Venta?
   ServicioRepuestoCliente ServicioRepuestoCliente[]
-
+  
   @@map("servicios")
+}
+
+
+model ServicioVehiculo {
+  id                 String   @id @default(uuid()) @db.Char(36)
+  servicio_id         String   @unique @db.Char(36)
+  vehiculo_id         String   @db.Char(36)
+  mecanico_id           String?   @db.Char(36)
+  kilometraje        Int
+  proximoKilometraje Int?
+  created_at          DateTime       @default(now())
+  updated_at          DateTime       @updatedAt
+
+  estado             EstadoServicioVehiculo @default(RECEPCION)
+  servicio           Servicio @relation(name: "ServicioServicioVehiculo", fields: [servicio_id], references: [id], onDelete: Cascade)
+  vehiculo           Vehiculo @relation(fields: [vehiculo_id], references: [id], onDelete: Cascade)
+  mecanico           Usuario? @relation(name: "ServicioMecanico", fields: [mecanico_id], references: [id], onDelete: Cascade)
+
+  @@map("servicio_vehiculo")
 }
 
 model TipoServicio {
@@ -706,7 +722,6 @@ model Venta {
   sucursal_id String      @db.Char(36)
   usuario_id  String      @db.Char(36)
   cliente_id  String?     @db.Char(36)
-  servicio_id String?     @unique @db.Char(36)
   total       Float
   total_costo Float
   comentarios String?     @db.Text
@@ -720,7 +735,6 @@ model Venta {
   sucursal Sucursal       @relation(fields: [sucursal_id], references: [id])
   usuario  Usuario        @relation("VentaVendedor", fields: [usuario_id], references: [id])
   cliente  Cliente?       @relation("VentaCliente", fields: [cliente_id], references: [id])
-  servicio Servicio?      @relation(fields: [servicio_id], references: [id])
   detalles VentaDetalle[]
 
   @@map("ventas")
@@ -817,7 +831,7 @@ enum EstadoCita {
   NO_ASISTIO
 }
 
-enum EstadoServicio {
+enum EstadoServicioVehiculo {
   RECEPCION
   EN_SERVICIO
   EN_PRUEBAS
@@ -847,4 +861,9 @@ enum EstadoTraslado {
   PENDIENTE
   COMPLETADO
   CANCELADO
+}
+
+
+enum ServicioTipo {
+  VEHICULO
 }

@@ -6,9 +6,10 @@ import type { SucursalFormValues } from "../../domain/schemas/sucursal.schema";
 const URL_MODULO = '/sucursales/';
 
 export const sucursalRepository = {
-    listar: async (limit: number, offset: number): Promise<SucursalesResponse> => {
+    listar: async (limit: number, offset: number, q?: string, signal?: AbortSignal): Promise<SucursalesResponse> => {
         const response = await api.get<SucursalesResponse>(`${URL_MODULO}`, {
-            params: { limit, offset }
+            params: { limit, offset, q },
+            signal
         });
         return response;
     },

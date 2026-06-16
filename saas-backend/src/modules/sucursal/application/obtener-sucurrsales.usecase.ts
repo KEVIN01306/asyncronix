@@ -9,9 +9,9 @@ export class ObtenerSucursalesUseCase {
         private readonly sucursalRepository: SucursalRepository
     ) { }
 
-    async execute(negocio_id: string, page: number, perPage: number): Promise<Paginated<SucursalSimple>> {
+    async execute(negocio_id: string, page: number, perPage: number, q?: string): Promise<Paginated<SucursalSimple>> {
         try {
-            return await this.sucursalRepository.listar(negocio_id, { page: page, perPage: perPage });
+            return await this.sucursalRepository.listar(negocio_id, { page: page, perPage: perPage }, q);
         } catch (error) {
             if (error instanceof DatabaseError) {
                 throw new AppError('Error en base de datos', 'DATABASE_ERROR', 500)
