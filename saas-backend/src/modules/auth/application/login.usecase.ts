@@ -32,6 +32,7 @@ interface LoginRespuesta {
     }
 }
 
+
 export class LoginUseCase {
     constructor(
         private readonly authRepository: AuthRepository,
