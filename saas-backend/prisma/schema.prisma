@@ -684,11 +684,11 @@ model ServicioRepuesto {
 
 model Traslado {
   id               String             @id @default(uuid()) @db.Char(36)
-  consecutivo      Int               @unique @default(autoincrement()) // Número de guía/traslado
+  consecutivo      Int               @unique @default(autoincrement())
   origen_id         String  @db.Char(36)
   destino_id        String  @db.Char(36)
   creador_id        String   @db.Char(36)
-  recibidor_id      String?  @db.Char(36) // Usuario que recibe el traslado (puede ser null hasta que se reciba)
+  recibidor_id      String?  @db.Char(36)
   estado           EstadoTraslado    @default(PENDIENTE) // PENDIENTE, COMPLETADO, CANCELADO
   fecha_recibido    DateTime?
   comentarios       String?            @db.Text

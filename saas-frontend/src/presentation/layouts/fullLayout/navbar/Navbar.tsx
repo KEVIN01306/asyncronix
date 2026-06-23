@@ -77,11 +77,11 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
       position="fixed" 
       elevation={0}
       sx={{ 
-        width: (!isMobile && isSidebarOpen) ? `calc(100% - ${drawerWidth}px)` : '100%',
-        ml: (!isMobile && isSidebarOpen) ? `${drawerWidth}px` : 0,
+        width: (!isMobile && drawerWidth > 0) ? `calc(100% - ${drawerWidth}px)` : '100%',
+        ml: (!isMobile && drawerWidth > 0) ? `${drawerWidth}px` : 0,
         transition: (theme) => theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
+            easing: theme.transitions.easing.easeInOut,
+            duration: theme.transitions.duration.standard,
         }),
         bgcolor: "background.paper",
         color: 'text.primary',
@@ -91,7 +91,8 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 } }}>
         <Stack direction="row" alignItems="center" spacing={2}>
-        <IconButton 
+        {(isMobile || !isSidebarOpen) && (
+          <IconButton 
             onClick={onToggleSidebar}
             edge="start"
             sx={{ 
@@ -101,6 +102,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
           >
             <MenuIcon />
           </IconButton>
+        )}
           
           {/*<Box 
             sx={{ 

@@ -323,7 +323,7 @@ async function main() {
             negocio_id_email: { 
                 negocio_id: negocio.id, 
                 email: "kevin@gmail.com" 
-            } 
+            }
         },
         update: {},
         create: {

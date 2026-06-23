@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
 import Sidebar from "./siderbar/Sidebar";
 import Navbar from "./navbar/Navbar";
@@ -7,6 +7,7 @@ import MenuItems from "./siderbar/menuItems";
 import { useAuthStore } from "../../../core/store/authStore";
 
 const DRAWER_WIDTH = 220;
+const COLLAPSED_DRAWER_WIDTH = 72;
 
 const FullLayout = () => {
     const theme = useTheme();
@@ -14,10 +15,36 @@ const FullLayout = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     
     const [open, setOpen] = useState(!isMobile);
+    const [collapsed, setCollapsed] = useState(false);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setOpen(!isMobile);
+            setCollapsed(false);
+        });
+        return () => window.clearTimeout(timer);
+    }, [isMobile]);
 
     const user = useAuthStore((state) => state.user);
 
-    const toggleSidebar = () => setOpen(!open);
+    const toggleSidebar = () => {
+        setOpen((prevOpen) => {
+            const nextOpen = !prevOpen;
+            if (nextOpen) {
+                setCollapsed(false);
+            }
+            return nextOpen;
+        });
+    };
+
+    const collapseSidebar = () => setCollapsed(true);
+
+    const expandSidebar = () => setCollapsed(false);
+    
+    const openSidebar = () => {
+        setOpen(true);
+        setCollapsed(false);
+    };
 
     const menuItems = MenuItems.map((item: any) => {
         if (item.permiso && !user?.permisos.includes(item.permiso)) {
@@ -32,6 +59,8 @@ const FullLayout = () => {
         }
         return item;
     });
+
+    const sidebarWidth = isMobile ? 0 : open ? (collapsed ? COLLAPSED_DRAWER_WIDTH : DRAWER_WIDTH) : 0;
     
     return (
         <Box sx={{
@@ -49,7 +78,11 @@ const FullLayout = () => {
                 onClose={toggleSidebar}
                 isMobile={isMobile}
                 drawerWidth={DRAWER_WIDTH} 
-                menuItems={menuItems} 
+                menuItems={menuItems}
+                collapsed={collapsed}
+                onOpen={openSidebar}
+                onCollapseSidebar={collapseSidebar}
+                onExpandSidebar={expandSidebar}
             />
 
             <Box 
@@ -59,36 +92,38 @@ const FullLayout = () => {
                     display: 'flex', 
                     flexDirection: 'column',
                     minWidth: 0,
-                    transition: theme.transitions.create(['margin', 'width'], {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.leavingScreen,
+                    height: '100vh',
+                    overflow: 'hidden',
+                    transition: theme.transitions.create(['margin'], {
+                        easing: theme.transitions.easing.easeInOut,
+                        duration: theme.transitions.duration.standard,
                     }),
-                    ml: (!isMobile && open) ? 0 : 0, 
+                    // ml: !isMobile ? `${sidebarWidth}px` : 0,
                 }}
             >
                 <Navbar 
                     onToggleSidebar={toggleSidebar} 
                     isSidebarOpen={open}
                     isMobile={isMobile}
-                    drawerWidth={DRAWER_WIDTH}
+                    drawerWidth={sidebarWidth}
                 />
-                <Container 
-                    maxWidth="xl" 
-                    sx={{ 
-                        mt: '70px', 
-                        mb: 4, 
-                        flexGrow: 1,
-                        transition: theme.transitions.create('all', {
-                            easing: theme.transitions.easing.sharp,
-                            duration: theme.transitions.duration.standard,
-                        }),
-                        width: '100%',
-                        padding: 2,
-                        borderRadius: 1
-                    }}
-                >
-                    <Outlet />
-                </Container>
+                <Box sx={{ flex: 1, overflowY: 'auto', pt: '70px' }}>
+                    <Container 
+                        maxWidth="xl" 
+                        sx={{ 
+                            mb: 4, 
+                            width: '100%',
+                            transition: theme.transitions.create('all', {
+                                easing: theme.transitions.easing.sharp,
+                                duration: theme.transitions.duration.standard,
+                            }),
+                            padding: 2,
+                            borderRadius: 1,
+                        }}
+                    >
+                        <Outlet />
+                    </Container>
+                </Box>
             </Box>
         </Box>
     );
