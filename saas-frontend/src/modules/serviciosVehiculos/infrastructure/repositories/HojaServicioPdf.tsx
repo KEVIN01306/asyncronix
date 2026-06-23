@@ -1,7 +1,7 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { getPdfStyles, PDF_COLORS } from '../../../../core/theme/pdfTheme'; 
-import type { Servicio } from '../../domain/interfaces/servicio.interface';
+import type { ServicioVehiculo } from '../../domain/interfaces/servicio.interface';
 
 // 1. Instanciamos los estilos base estáticos
 const baseStyles = getPdfStyles();
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
 });
 
 interface HojaServicioPdfProps {
-    servicio: Servicio;
+    servicio: ServicioVehiculo;
     user: any;
 }
 
