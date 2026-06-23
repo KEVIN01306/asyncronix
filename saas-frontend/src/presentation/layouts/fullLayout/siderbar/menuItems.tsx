@@ -3,7 +3,7 @@ import {
   Inventory2,
   SettingsSuggest,
   StoreMallDirectory,
-  BusinessCenterOutlined,
+  PointOfSale,
   AccountCircleOutlined,
   CarCrash,
   Build,
@@ -19,16 +19,20 @@ import type { ElementType } from 'react';
 export interface MenuItem {
   name?: string;
   module?: string;
+  group?: string;
   link?: string;
-  icon: ElementType;
+  icon?: ElementType;
   permiso?: string;
   children?: MenuItem[];
 }
 
 const MenuItems: MenuItem[] = [
+  { group: "Home"},
   { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/" },
-  { name: "Ventas", icon: BusinessCenterOutlined, link: "/ventas", permiso: "VER_VENTAS" },
+  { group: "Enlaces rapidos"},
+  { name: "Ventas", icon: PointOfSale, link: "/ventas", permiso: "VER_VENTAS" },
   { name: "Clientes", icon: AccountCircleOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
+  { group: "modulos"},
   { 
     module: "traslados", name: "Traslados", icon: MoveDownRounded, children: [
       { name: "Salidas", link: "/traslados/salidas", icon: ViewHeadlineRounded, permiso: "VER_TRASLADO" },
@@ -59,6 +63,7 @@ const MenuItems: MenuItem[] = [
     { name: "Tipos servicio", link: "/tipos-servicio", icon: PrecisionManufacturing, permiso: "VER_TIPO_SERVICIO" },
     { name: "Checklist", link: "/checklist", icon: ListAlt, permiso: "VER_CHECKLIST" },
   ]}, 
+  { group: "Configuración negocio"},
   {
     module: "configuracion", name: "Configuración", icon: SettingsSuggest, children: [
       { name: "Usuarios", link: "/usuarios", icon: AdminPanelSettingsOutlined, permiso: "VER_USUARIOS" },

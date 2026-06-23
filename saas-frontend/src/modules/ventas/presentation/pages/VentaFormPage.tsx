@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import { Grid, Button, Card, CardContent, Divider, FormControl, InputLabel, IconButton, MenuItem, Paper, Select, TextField, Typography, Autocomplete, useTheme, useMediaQuery, TableContainer, Box } from '@mui/material';
+import { useForm } from 'react-hook-form';
+import { Grid, Button, Card, CardContent, Divider, IconButton, TextField, Typography, Autocomplete, useTheme, useMediaQuery, TableContainer, Box } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, QrCodeScanner as QrCodeScannerIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
@@ -32,7 +32,7 @@ export default function VentaFormPage() {
     const user = useAuthStore(state => state.user);
 
     const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
+    const [, setSaving] = useState(false);
     const [productosSeleccionados, setProductosSeleccionados] = useState<VentaProductoInput[]>([]);
     const [ventaId, setVentaId] = useState<string | null>(null);
     const [showClientModal, setShowClientModal] = useState(false);
@@ -42,7 +42,7 @@ export default function VentaFormPage() {
     const [scanLoading, setScanLoading] = useState(false);
     const [clienteNombre, setClienteNombre] = useState('Consumidor Final');
     const [clientSelected, setClientSelected] = useState(false);
-    const { control, handleSubmit, setValue, watch } = useForm<FormValues>({
+    const { setValue, watch } = useForm<FormValues>({
         defaultValues: {
             cliente_id: '',
             metodo_pago: 'EFECTIVO',
@@ -260,13 +260,33 @@ export default function VentaFormPage() {
         setShowScannerModal(true);
     };
 
+    const resetForm = () => {
+        setVentaId(null);
+        setProductosSeleccionados([]);
+        setClienteNombre('Consumidor Final');
+        setClientSelected(false);
+        setProductoSeleccionado(null);
+        setCantidadAgregar(1);
+        setPendingProduct(null);
+        setShowPaymentModal(false);
+        setShowClientModal(false);
+        setShowScannerModal(false);
+        setScanLoading(false);
+        setSaving(false);
+        setValue('cliente_id', '');
+        setValue('metodo_pago', 'EFECTIVO');
+        setValue('estado', 'PENDIENTE');
+    };
+
     const handlePaymentConfirm = async (metodo: string) => {
         if (!ventaId || !user?.sucursal_id) return;
         try {
             setSaving(true);
             await ventaRepository.finalizarVenta(ventaId, user.sucursal_id, metodo);
             toast.success('Venta finalizada');
-            navigate(`/ventas/${ventaId}`);
+            // reset local state and navigate to start a new sale
+            resetForm();
+            navigate('/ventas/nuevo');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Error al finalizar la venta');
         } finally {
@@ -346,123 +366,29 @@ export default function VentaFormPage() {
         })();
     };
 
-    const onSubmit = async () => {
-        if (!ventaId) {
-            toast.warning('Agregue productos para crear la venta');
-            return;
-        }
-        setShowPaymentModal(true);
-    };
-
     const totalVenta = productosSeleccionados.reduce((acc, curr) => acc + (curr.subtotal || 0), 0);
 
     if (loading) return <Loading />;
 
     return (
-        <Grid container spacing={3} p={isMobile ? 2 : 4} mx="auto" sx={{ width: '100%', boxSizing: 'border-box' }}>
+        <Grid container spacing={2} p={isMobile ? 2 : 4} mx="auto" sx={{ width: '100%', boxSizing: 'border-box' }}>
             <Grid size={{ xs: 12 }}>
-                <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/ventas')} sx={{ mb: 2, textTransform: 'none' }}>
+                <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/ventas')} sx={{ mb: 1, textTransform: 'none' }}>
                     Volver
                 </Button>
             </Grid>
 
-            <Grid size={{ xs: 12 }}>
-                <Paper sx={{ p: 2, border: (theme) => `1px solid ${theme.palette.divider}`, mb: 2 }}>
-                    <Typography variant="h5" fontWeight={700}>
-                        {isEdit ? 'Continuar Venta' : 'Nueva Venta'}
-                    </Typography>
-                </Paper>
-            </Grid>
+            <Box sx={{ mb: 1 }}>
+                <Typography variant="overline" color="text.secondary" sx={{ display: 'block', letterSpacing: 1 }}>
+                    Gestión de Ventas
+                </Typography>
+                <Typography variant="h5" fontWeight={600}>
+                    {isEdit ? 'Continuar con la venta' : 'Iniciar nueva venta'}
+                </Typography>
+            </Box>
 
             <Grid size={{ xs: 12 }} container spacing={3}>
-                <Grid size={{ xs: 12, md: 4 }}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>Datos de la Venta</Typography>
-                            <Divider sx={{ mb: 2 }} />
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Estado</InputLabel>
-                                <Controller
-                                    name="estado"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            {...field}
-                                            label="Estado"
-                                            disabled={!isEdit || !isEditable}
-                                        >
-                                            <MenuItem value="PENDIENTE">PENDIENTE</MenuItem>
-                                            <MenuItem value="COMPLETADA">COMPLETADA</MenuItem>
-                                        </Select>
-                                    )}
-                                />
-                            </FormControl>
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Método de Pago</InputLabel>
-                                <Controller
-                                    name="metodo_pago"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select
-                                            {...field}
-                                            label="Método de Pago"
-                                            disabled={!isEditable}
-                                        >
-                                            <MenuItem value="EFECTIVO">EFECTIVO</MenuItem>
-                                            <MenuItem value="TARJETA">TARJETA</MenuItem>
-                                            <MenuItem value="TRANSFERENCIA">TRANSFERENCIA</MenuItem>
-                                            <MenuItem value="OTROS">OTROS</MenuItem>
-                                        </Select>
-                                    )}
-                                />
-                            </FormControl>
-                            <Box sx={{ mt: 2, mb: 2 }}>
-                                <Typography variant="caption" color="textSecondary" display="block" gutterBottom>
-                                    Cliente de la Venta
-                                </Typography>
-                                <Box
-                                    sx={{
-                                        p: 2,
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                        borderRadius: 1,
-                                        bgcolor: 'background.default',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                    }}
-                                >
-                                    <Box>
-                                        <Typography variant="body1" fontWeight={600}>
-                                            {clienteNombre}
-                                        </Typography>
-                                        {watch('cliente_id') && (
-                                            <Typography variant="caption" color="textSecondary" display="block">
-                                                ID: {watch('cliente_id')}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                    <Button
-                                        size="small"
-                                        variant="outlined"
-                                        onClick={() => setShowClientModal(true)}
-                                        disabled={!isEditable}
-                                        sx={{ textTransform: 'none' }}
-                                    >
-                                        {watch('cliente_id') ? 'Cambiar' : 'Seleccionar'}
-                                    </Button>
-                                </Box>
-                            </Box>
-                            <Grid container sx={{ mt: 4 }}>
-                                <Button variant="contained" color="primary" fullWidth onClick={handleSubmit(onSubmit)} disabled={saving || !isEditable}>
-                                    {saving ? 'Guardando...' : ventaId ? 'Finalizar Venta' : 'Iniciar Venta'}
-                                </Button>
-                            </Grid>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 8 }}>
+                <Grid size={{ xs: 12, md: 12 }}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>Productos de la Venta</Typography>
@@ -545,6 +471,76 @@ export default function VentaFormPage() {
                     </Card>
                 </Grid>
             </Grid>
+            <Grid size={{ xs: 12, md: 12 }}>
+                <Card variant="outlined">
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom color="primary">
+                            Detalle de la Venta
+                        </Typography>
+                        <Divider sx={{ mb: 3 }} />
+
+                        <Grid container spacing={4}>
+                            {/* Información de Estado y Pago */}
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                                    Estado de la Venta
+                                </Typography>
+                                <Typography variant="body1" fontWeight={700} sx={{ mt: 0.5, color: 'text.primary' }}>
+                                    {watch('estado') || 'N/A'}
+                                </Typography>
+                            </Grid>
+
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                                    Método de Pago
+                                </Typography>
+                                <Typography variant="body1" fontWeight={700} sx={{ mt: 0.5, color: 'text.primary' }}>
+                                    {watch('metodo_pago') || 'No definido'}
+                                </Typography>
+                            </Grid>
+                        </Grid>
+
+                        <Box sx={{ mt: 4 }}>
+                            <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                                Información del Cliente
+                            </Typography>
+                            <Box
+                                sx={{
+                                    mt: 1,
+                                    p: 2.5,
+                                    bgcolor: 'background.paper',
+                                    borderRadius: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    border: '1px dashed',
+                                    borderColor: 'grey.300'
+                                }}
+                            >
+                                <Box>
+                                    <Typography variant="h6" sx={{ color: 'primary.main' }}>
+                                        {clienteNombre || 'Sin cliente asignado'}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        ID Cliente: {watch('cliente_id') || '---'}
+                                    </Typography>
+                                </Box>
+
+                                <Button
+                                    size="small"
+                                    variant="text"
+                                    onClick={() => setShowClientModal(true)}
+                                    disabled={!isEditable}
+                                >
+                                    {watch('cliente_id') ? 'Cambiar cliente' : 'Asignar cliente'}
+                                </Button>
+                            </Box>
+                        </Box>
+                    </CardContent>
+                </Card>
+            </Grid>
+
+
             <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
             <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={clienteNombre} />
             <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleCodigoLeido} />

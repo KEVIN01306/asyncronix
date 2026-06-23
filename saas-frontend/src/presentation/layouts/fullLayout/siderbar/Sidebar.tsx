@@ -5,6 +5,9 @@ import {
   Drawer,
   IconButton,
   List,
+  ListItem,
+  Tooltip,
+  Typography,
   useTheme,
 } from '@mui/material';
 import { SidebarContext } from './SidebarContext';
@@ -18,6 +21,7 @@ import { Add, ChevronLeft } from '@mui/icons-material';
 export interface MenuItem {
   name?: string;
   module?: string;
+  group?: string;
   link?: string;
   icon: React.ElementType;
   children?: MenuItem[];
@@ -203,11 +207,27 @@ const Sidebar = ({ open, onClose, isMobile, drawerWidth, menuItems, onOpen, onCo
               justifyContent: collapsed ? 'center' : 'flex-start',
             },
             }}>
-            {menuItems.map((item) => (
+            {menuItems.map((item, index) => (
               item ? (
-                item.children 
-                  ? <SidebarGroup key={item.module} item={item} />
-                  : <SidebarItem key={item.name} item={item} />
+                item.group ? (
+                  <ListItem key={`group-${index}`} sx={{ px: 2, py: 1.25, display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : 'flex-start' }}>
+                    {collapsed ? (
+                      <Tooltip title={item.group} placement="right" arrow>
+                        <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer' }}>
+                          {item.group.charAt(0)}
+                        </Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', textAlign: 'left', cursor: 'pointer' }}>
+                        {item.group}
+                      </Typography>
+                    )}
+                  </ListItem>
+                ) : item.children ? (
+                  <SidebarGroup key={item.module} item={item} />
+                ) : (
+                  <SidebarItem key={item.name} item={item} />
+                )
               ) : null
             ))}
           </List>

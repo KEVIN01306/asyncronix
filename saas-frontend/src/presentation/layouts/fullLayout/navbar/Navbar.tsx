@@ -3,29 +3,29 @@ import {
   Box, 
   Toolbar, 
   IconButton, 
-  //InputBase, 
-  //Badge, 
   Avatar, 
   Stack, 
   alpha,
   Menu,
   MenuItem,
   ListItemIcon,
-  Tooltip
+  Tooltip,
+  Modal,
+  Paper,
 } from "@mui/material";
 import { 
-  //Search as SearchIcon, 
-  //NotificationsNoneOutlined as NotificationsIcon,
-  //ChatBubbleOutlineOutlined as ChatIcon,
+  Search as SearchIcon,
   MenuOutlined as MenuIcon, 
   PersonOutline,
   Logout,
   CopyAll,
   Tune,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { useAuthStore } from "../../../../core/store/authStore";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import SearchBar from "./SearchBar";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -67,6 +67,8 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
 
   const location = useLocation();
 
+  const [openMobileSearch, setOpenMobileSearch] = useState(false);
+
   const handleDuplicate = () => {
     const fullUrl = `${window.location.origin}${location.pathname}`;
     window.open(fullUrl, '_blank');
@@ -91,60 +93,41 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 } }}>
         <Stack direction="row" alignItems="center" spacing={2}>
-        {(isMobile || !isSidebarOpen) && (
-          <IconButton 
-            onClick={onToggleSidebar}
-            edge="start"
-            sx={{ 
-              color: 'primary.main',
-              mr: 1 
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-        )}
-          
-          {/*<Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              bgcolor: alpha('#f4f7fa', 1),
-              px: 2, 
-              py: 0.5, 
-              borderRadius: '12px',
-              width: { xs: '40px', md: '300px' },
-              transition: 'all 0.3s ease',
-              border: '1px solid transparent',
-              '&:focus-within': {
-                bgcolor: '#ffffff',
-                borderColor: 'secondary.main',
-                boxShadow: `0 0 0 4px ${alpha('#6889b8', 0.1)}`
-              }
-            }}
-          >
-            
-            <SearchIcon sx={{ color: 'secondary.main', fontSize: '1.2rem' }} />
-            <InputBase
-              placeholder="Buscar servicios, motos..."
+          {(isMobile || !isSidebarOpen) && (
+            <IconButton 
+              onClick={onToggleSidebar}
+              edge="start"
               sx={{ 
-                ml: 1, 
-                flex: 1, 
-                fontSize: '0.875rem', 
-                fontWeight: 500,
-                display: { xs: 'none', md: 'block' } 
+                color: 'primary.main',
+                mr: 1 
               }}
-            />
-            
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          
+          {/* Desktop search bar */}
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+            <SearchBar permisos={user?.permisos} fullWidth />
           </Box>
-          */}
+
+          {/* Mobile search icon */}
+          <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+            <IconButton 
+              onClick={() => setOpenMobileSearch(true)}
+              sx={{ color: 'primary.main' }}
+            >
+              <SearchIcon />
+            </IconButton>
+          </Box>
         </Stack>
 
         <Stack direction="row" alignItems="center" spacing={1.5}>
           <Tooltip followCursor describeChild title="Duplicar página" placement="top-end">
-              <ListItemIcon sx={{ borderRadius: 1, padding: 2 }} onClick={handleDuplicate}>
-                    <CopyAll fontSize="small" />
-              </ListItemIcon>
-            </Tooltip>
+            <ListItemIcon sx={{ borderRadius: 1, padding: 2 }} onClick={handleDuplicate}>
+              <CopyAll fontSize="small" />
+            </ListItemIcon>
+          </Tooltip>
           <Box sx={{ width: '1px', height: '24px', bgcolor: alpha('#6889b8', 0.2), mx: 1 }} />
 
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ cursor: 'pointer' }} onClick={handleMenuOpen}>
@@ -205,6 +188,42 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
           </MenuItem>
         </Menu>
       </Toolbar>
+
+      {/* Mobile search modal */}
+      <Modal
+        open={openMobileSearch}
+        onClose={() => setOpenMobileSearch(false)}
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          pt: 2,
+          zIndex: 1300,
+        }}
+      >
+        <Paper
+          sx={{
+            width: '90%',
+            maxWidth: 500,
+            p: 2,
+            borderRadius: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box component="span" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+              Buscar
+            </Box>
+            <IconButton
+              size="small"
+              onClick={() => setOpenMobileSearch(false)}
+              sx={{ color: 'text.secondary' }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <SearchBar permisos={user?.permisos} fullWidth placeholder="Buscar módulos, acciones..." />
+        </Paper>
+      </Modal>
     </AppBar>
   );
 };

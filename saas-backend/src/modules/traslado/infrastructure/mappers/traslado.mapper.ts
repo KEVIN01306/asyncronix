@@ -6,7 +6,7 @@ export class TrasladoMapper {
             id: traslado.id,
             consecutivo: traslado.consecutivo,
             origen_id: traslado.origen_id,
-            destino_id: traslado.destino_id,
+            destino_id: traslado.destino_id,    
             creador_id: traslado.creador_id,
             estado: traslado.estado,
             created_at: traslado.created_at.toISOString(),
@@ -16,7 +16,7 @@ export class TrasladoMapper {
                 nombre: traslado.origen.nombre,
             },
             destino: {
-                id: traslado.destino.id,
+                id: traslado.destino.id,    
                 nombre: traslado.destino.nombre,
             },
             creador: {

@@ -1,83 +1,82 @@
-import { alpha, Box, Typography, Paper, Stack, keyframes, Grid } from "@mui/material";
+import { alpha, Box, Typography, Paper,/* Stack,*/ keyframes} from "@mui/material";
 import { 
-  WavingHand as WavingHandIcon, 
-  Assignment as AssignmentIcon, 
+  /*WavingHand as WavingHandIcon,*/
+  Inventory2 as Inventory2Icon,
+  PointOfSale as PointOfSaleIcon,
+  People as PeopleIcon,
+  Build as BuildIcon,
 } from "@mui/icons-material";
+import type { ReactNode } from "react";
 import { useAuthStore } from "../../../core/store/authStore";
+import { useNavigate } from "react-router-dom";
 
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(15px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const premiumCardStyle = {
+const cardStyle = {
   p: 3,
-  borderRadius: "2px", 
-  background: `linear-gradient(135deg, ${alpha("#fff", 0.9)} 0%, ${alpha("#edf2f7", 0.4)} 100%)`, // Gradiente sutil de fondo
+  borderRadius: 3,
   border: "1px solid",
-  borderColor: alpha("#6889b8", 0.1),
-  boxShadow: `0 20px 60px -15px ${alpha("#6889b8", 0.15)}`,
-  backdropFilter: "blur(12px)", 
-  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-  animation: `${fadeIn} 0.5s ease-out both`, 
+  borderColor: "divider",
+  boxShadow: "none",
+  transition: "transform 0.2s, box-shadow 0.2s",
+  animation: `${fadeIn} 0.5s ease-out both`,
   "&:hover": {
-    transform: "translateY(-6px)",
-    boxShadow: `0 30px 70px -10px ${alpha("#6889b8", 0.25)}`,
+    borderColor: "primary.light",
+    boxShadow: (theme: any) => `0 4px 20px ${alpha(theme.palette.primary.main, 0.08)}`,
   },
 };
 
 const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+
+  const canViewProducts = Boolean(user?.permisos.includes('BUSCAR_PRODUCTOS'));
+  const canViewSales = Boolean(user?.permisos.includes('CREAR_VENTAS'));
+  const canViewUsers = Boolean(user?.permisos.includes('VER_USUARIOS'));
+  const canViewServices = Boolean(user?.permisos.includes('VER_SERVICIOS'));
+
+  const quickLinks = [
+    canViewProducts && { title: 'Productos', description: 'Búsqueda y scanner', icon: <Inventory2Icon color="primary" />, path: '/productos/scanner' },
+    canViewSales && { title: 'Ventas', description: 'Iniciar venta', icon: <PointOfSaleIcon color="primary" />, path: '/ventas/nuevo' },
+    canViewUsers && { title: 'Usuarios', description: 'Gestión de personal', icon: <PeopleIcon color="primary" />, path: '/usuarios' },
+    canViewServices && { title: 'Servicios', description: 'Servicios activos', icon: <BuildIcon color="primary" />, path: '/servicios-vehiculo?estado=EN_SERVICIO' },
+  ].filter(Boolean) as Array<{ title: string; description: string; icon: ReactNode; path: string }>
+
 
   return (
-    <Box sx={{ p: { xs: 2, md: 5 }, maxWidth: 1600, margin: "0 auto" }}>
-      
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 6 }}>
-        <Box>
-          <Typography variant="h3" sx={{ fontWeight: 900, color: "primary.main", letterSpacing: "-1.5px", position: 'relative' }}>
-            {user?.negocio?.nombre_comercial || "Asyncronix"}
-          </Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary", mt: 1, fontWeight: 500, fontSize: '1.1rem' }}>
-            Bienvenido al núcleo operativo de tu red de servicios.
-          </Typography>
-        </Box>
-      </Stack>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, margin: "0 auto" }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: "-0.5px" }}>Hola, {user?.nombre}</Typography>
+        <Typography color="text.secondary">Bienvenido a {user?.negocio?.nombre_comercial || "Asyncronix"}</Typography>
+      </Box>
 
-      <Grid container spacing={4}>
-        
-        <Grid size={12} sx={{ animationDelay: '0.1s' }}>
-          <Paper sx={{ 
-            ...premiumCardStyle, 
-            background: `linear-gradient(160deg, #1d3557 0%, #6889b8 100%)`,
-            position: 'relative', overflow: 'hidden'
-          }}>
-            <Box sx={{ position: 'absolute', top: -50, right: -50, opacity: 0.15, transform: 'rotate(-20deg)' }}>
-              <AssignmentIcon sx={{ fontSize: 250, color: '#fff' }} />
-            </Box>
-            
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
-              <Box sx={{ 
-                width: 80, height: 80, borderRadius: "24px", bgcolor: alpha("#fff", 0.15),
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: `0 8px 16px ${alpha("#000", 0.2)}`, backdropFilter: 'blur(5px)'
-              }}>
-                <WavingHandIcon sx={{ color: "secondary.main", fontSize: 45 }} />
-              </Box>
-              
-              <Box sx={{ flexGrow: 1, textAlign: { xs: 'center', sm: 'left' } }}>
-                <Typography variant="h4" sx={{ fontWeight: 800, color: "#fff", letterSpacing: '-1px' }}>
-                  ¡Hola, {user?.nombre}!
-                </Typography>
-                <Typography variant="h6" sx={{ color: alpha("#fff", 0.8), mt: 0.5, fontWeight: 500 }}>
-                  Que haremos hoy? 
-                </Typography>
-              </Box>
-            </Stack>
+      {/*
+      <Paper sx={{ ...cardStyle, mb: 4, background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #1d3557 100%)`, color: 'white' }}>
+        <Stack direction="row" spacing={3} alignItems="center">
+          <Box sx={{ bgcolor: alpha('#fff', 0.2), p: 2, borderRadius: 3 }}>
+            <WavingHandIcon fontSize="large" />
+          </Box>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>¿Qué haremos hoy?</Typography>
+            <Typography sx={{ opacity: 0.8 }}>Tienes {0} servicios pendientes para esta jornada.</Typography>
+          </Box>
+        </Stack>
+      </Paper>
+      */}
+
+      {/* Quick Links */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
+        {quickLinks.map((link) => (
+          <Paper key={link.title} onClick={() => navigate(link.path)} sx={{ ...cardStyle, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {link.icon}
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{link.title}</Typography>
+            <Typography variant="body2" color="text.secondary">{link.description}</Typography>
           </Paper>
-        </Grid>
-
-        
-      </Grid>
+        ))}
+      </Box>
     </Box>
   );
 };
