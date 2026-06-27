@@ -21,7 +21,11 @@ export class LoteController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             const payload = req.body;
             const created = await this.registrarLoteUseCase.execute(payload, negocio_id);
-            res.status(201).json(Respuesta.exito('Lote creado con exito', created));
+            const message = created.regularizacionAutomatica
+                ? 'Lote creado con exito. Se detectó stock negativo y se inició la regularización automática.'
+                : 'Lote creado con exito';
+
+            res.status(201).json(Respuesta.exito(message, created));
         } catch (error) {
             next(error);
         }

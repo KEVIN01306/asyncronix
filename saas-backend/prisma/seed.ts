@@ -52,6 +52,7 @@ const permisosData = [
     { codigo: "CREAR_VENTAS" },
     { codigo: "EDITAR_VENTAS" },
     { codigo: "ANULAR_VENTAS" },
+    { codigo: "VENTAS_FORZAR_STOCK" },
 
     { codigo: "VER_CLIENTES" },
     { codigo: "VER_CLIENTES_DETALLE" },
@@ -157,7 +158,7 @@ const modulosConPermisos = [
     },
     {
         nombre: "VENTAS",
-        permisos: ["VER_VENTAS", "VER_VENTAS_DETALLE", "CREAR_VENTAS", "EDITAR_VENTAS", "ANULAR_VENTAS"]
+        permisos: ["VER_VENTAS", "VER_VENTAS_DETALLE", "CREAR_VENTAS", "EDITAR_VENTAS", "ANULAR_VENTAS", "VENTAS_FORZAR_STOCK"]
     },
     {
         nombre: "CLIENTES",
@@ -317,7 +318,7 @@ async function main() {
     });
     
     const passwordHash = await hashProvider.hash("12345678");
-
+    /*
     const usuarioAdmin = await prisma.usuario.upsert({
         where: { 
             negocio_id_email: { 

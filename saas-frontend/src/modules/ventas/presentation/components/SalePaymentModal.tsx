@@ -1,20 +1,35 @@
-import  { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { useMemo, useState } from 'react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, MenuItem, Select, FormControl, InputLabel, TextField, CircularProgress } from '@mui/material';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 
 type Props = {
     open: boolean;
     onClose: () => void;
-    onConfirm: (metodo: string) => void;
+    onConfirm: (payload: { metodo: string; efectivo_recibido: number | null; vuelto: number | null }) => void;
     total: number;
     clienteLabel: string;
+    loading?: boolean;
 };
 
-export default function SalePaymentModal({ open, onClose, onConfirm, total, clienteLabel }: Props) {
+export default function SalePaymentModal({ open, onClose, onConfirm, total, clienteLabel, loading = false }: Props) {
     const [metodo, setMetodo] = useState('EFECTIVO');
+    const [efectivoRecibido, setEfectivoRecibido] = useState<string>('');
+
+    const vuelto = useMemo(() => {
+        const valor = Number(efectivoRecibido || 0);
+        return Number.isFinite(valor) ? valor - total : 0;
+    }, [efectivoRecibido, total]);
+
+    const handleConfirm = () => {
+        const recibido = metodo === 'EFECTIVO' ? Number(efectivoRecibido || 0) : 0;
+        const vueltoFinal = metodo === 'EFECTIVO' ? Math.max(0, recibido - total) : null;
+        onConfirm({ metodo, efectivo_recibido: metodo === 'EFECTIVO' ? recibido : null, vuelto: vueltoFinal });
+    };
+
+    const isCashInvalid = metodo === 'EFECTIVO' && Number(efectivoRecibido || 0) < total;
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <Dialog key={open ? 'open' : 'closed'} open={open} onClose={loading ? undefined : onClose} fullWidth maxWidth="sm">
             <DialogTitle>Finalizar Venta</DialogTitle>
             <DialogContent>
                 <Box mt={1}>
@@ -29,14 +44,31 @@ export default function SalePaymentModal({ open, onClose, onConfirm, total, clie
                             <MenuItem value="EFECTIVO">Efectivo</MenuItem>
                             <MenuItem value="TARJETA">Tarjeta</MenuItem>
                             <MenuItem value="TRANSFERENCIA">Transferencia</MenuItem>
-                            <MenuItem value="OTROS">Otros</MenuItem>
+                            <MenuItem value="OTRO">Otro</MenuItem>
                         </Select>
                     </FormControl>
                 </Box>
+                {metodo === 'EFECTIVO' && (
+                    <Box mt={2} display="grid" gap={1}>
+                        <TextField
+                            fullWidth
+                            label="Efectivo recibido"
+                            type="number"
+                            value={efectivoRecibido}
+                            onChange={(e) => setEfectivoRecibido(e.target.value)}
+                            inputProps={{ min: 0, step: 0.01 }}
+                        />
+                        <Typography variant="body2" color={isCashInvalid ? 'error' : 'text.secondary'}>
+                            Vuelto: {formatMoney(vuelto)}
+                        </Typography>
+                    </Box>
+                )}
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Cancelar</Button>
-                <Button onClick={() => onConfirm(metodo)} variant="contained">Confirmar</Button>
+                <Button onClick={onClose} disabled={loading}>Cancelar</Button>
+                <Button onClick={handleConfirm} variant="contained" disabled={isCashInvalid || loading}>
+                    {loading ? <CircularProgress size={20} color="inherit" /> : 'Confirmar'}
+                </Button>
             </DialogActions>
         </Dialog>
     );

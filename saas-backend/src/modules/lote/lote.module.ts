@@ -5,10 +5,12 @@ import { ObtenerLotesUseCase } from './application/obtener-lotes.usecase.js';
 import { ObtenerLoteUseCase } from './application/obtener-lote.usecase.js';
 import { ListarLotesUseCase } from './application/listar-lotes.usecase.js';
 import { ListarLotesPorProductoUseCase } from './application/listar-lotes-por-producto.usecase.js';
+import { RegularizarStockNegativoUseCase } from './application/regularizar-stock-negativo.usecase.js';
 import { LoteController } from './presentation/lote.controller.js';
 
 const repo = new PrismaLoteRepository(prisma);
-const registrar = new RegistrarLoteUseCase(repo);
+const regularizarStockNegativo = new RegularizarStockNegativoUseCase();
+const registrar = new RegistrarLoteUseCase(repo, prisma, regularizarStockNegativo);
 const obtener = new ObtenerLoteUseCase(repo);
 const obtenerPorProducto = new ObtenerLotesUseCase(repo);
 const listar = new ListarLotesUseCase(repo);

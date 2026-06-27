@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useForm, Controller } from 'react-hook-form';
-import { Box, Typography, Paper, TextField, Stack, Button, FormControl, InputLabel, Select, MenuItem, FormHelperText, Grid } from '@mui/material';
+import { Box, Typography, Paper, TextField, Stack, Button, FormControl, InputLabel, Select, MenuItem, FormHelperText, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
@@ -15,6 +15,7 @@ import type { Producto } from '../../../productos/domain/interfaces/producto.int
 import type { Sucursal } from '../../../sucursales/domain/interfaces/sucursal.interface';
 import type { Proveedor } from '../../../proveedores/domain/interfaces/proveedor.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import type { LoteRegistroResponse } from '../../domain/interfaces/lote.interface';
 
 interface LoteFormValues {
     producto_id: string;
@@ -41,6 +42,8 @@ const LoteCreatePage = () => {
     const [proveedores, setProveedores] = useState<Proveedor[]>([]);
     const [sucursales, setSucursales] = useState<Sucursal[]>([]);
     const [loading, setLoading] = useState(true);
+    const [resultadoRegistro, setResultadoRegistro] = useState<LoteRegistroResponse | null>(null);
+    const [showRegularizacionModal, setShowRegularizacionModal] = useState(false);
 
     const {
         register,
@@ -113,8 +116,16 @@ const LoteCreatePage = () => {
     const onSubmit = async (data: LoteFormValues) => {
         setLoading(true);
         try {
-            await LoteRepository.registrar(data);
-            toast.success('Lote creado');
+            const response = await LoteRepository.registrar(data);
+            setResultadoRegistro(response);
+
+            toast.success(response.mensaje);
+
+            if (response.regularizacionAutomatica) {
+                setShowRegularizacionModal(true);
+                return;
+            }
+
             navigate('/lotes');
         } catch (error) {
             console.error(error);
@@ -333,6 +344,45 @@ const LoteCreatePage = () => {
                     </Grid>
                 </Box>
             </Paper>
+
+            <Dialog
+                open={showRegularizacionModal}
+                onClose={() => {
+                    setShowRegularizacionModal(false);
+                    navigate('/lotes');
+                }}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Regularización de Stock</DialogTitle>
+                <DialogContent dividers>
+                    <Stack spacing={2}>
+                        <Typography variant="body1">
+                            Se detectó stock negativo para esta variante. El sistema actualizó automáticamente las ventas asociadas al lote negativo usando el nuevo lote.
+                        </Typography>
+                        <Typography variant="body2">
+                            Stock regularizado: <strong>{resultadoRegistro?.stockRegularizado ?? 0} unidades</strong>.
+                        </Typography>
+                        <Typography variant="body2">
+                            Stock pendiente por cubrir: <strong>{resultadoRegistro?.stockPendiente ?? 0} unidades</strong>.
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {resultadoRegistro?.mensaje ?? 'La regularización automática del stock finalizó correctamente.'}
+                        </Typography>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            setShowRegularizacionModal(false);
+                            navigate('/lotes');
+                        }}
+                        variant="contained"
+                    >
+                        Entendido
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

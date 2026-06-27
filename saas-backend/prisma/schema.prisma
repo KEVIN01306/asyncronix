@@ -72,6 +72,7 @@ model Negocio {
   productos     Producto[]
   lotes         Lote[]
   ventas        Venta[]
+  pre_ventas    PreVenta[]
   servicios     Servicio[]
   citas         Cita[]
   tipos_serv    TipoServicio[]
@@ -97,6 +98,7 @@ model Sucursal {
   negocio          Negocio           @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   usuarios         Usuario[]
   ventas           Venta[]
+  pre_ventas       PreVenta[]
   servicios        Servicio[]
   citas            Cita[]
   ingresos_egresos IngresosEgresos[]
@@ -138,6 +140,7 @@ model Usuario {
   dpi           String?
   nit           String?
   telefono      String
+  pin_caja      String?  @db.Text
   verificado    Boolean  @default(false)
   activo        Boolean  @default(true)
   created_at    DateTime @default(now())
@@ -154,6 +157,8 @@ model Usuario {
   trasladosCreados  Traslado[] @relation(name: "TrasladosCreados")
   trasladosRecibidos Traslado[] @relation(name: "TrasladosRecibidos")
   servicios_recepcionista Servicio[] @relation(name: "ServicioRecepcionista")
+  ventas_autorizadas Venta[] @relation("VentaAutorizador")
+  pre_ventas PreVenta[] @relation("PreVentaUsuario")
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -178,6 +183,7 @@ model Cliente {
   citas     Cita[]     @relation("CitaCliente")
   servicios Servicio[] @relation("ServicioCliente")
   ventas    Venta[]    @relation("VentaCliente")
+  pre_ventas PreVenta[] @relation("PreVentaCliente")
 
   @@unique([negocio_id, telefono])
   @@unique([negocio_id, dpi])
@@ -611,6 +617,7 @@ model VarianteProducto {
   lotes          Lote[]
   repuestos      ServicioRepuesto[]
   venta_detalles VentaDetalle[]
+  pre_venta_detalles PreVentaDetalle[]
 
   @@index([producto_id])
   @@map("variantes_producto")
@@ -636,7 +643,7 @@ model Lote {
   negocio_id        String    @db.Char(36)
   sucursal_id       String    @db.Char(36)
   proveedor_id      String    @db.Char(36) // ¡Obligatorio para la trazabilidad!
-  codigo_lote       String // El código asignado a esta tanda de ingreso
+  codigo_lote       String? // El código asignado a esta tanda de ingreso
   cantidad_inicial  Int // Para auditorías
   cantidad_actual   Int
   costo_compra      Float
@@ -722,9 +729,12 @@ model Venta {
   sucursal_id String      @db.Char(36)
   usuario_id  String      @db.Char(36)
   cliente_id  String?     @db.Char(36)
+  autorizador_id  String?  @db.Char(36)
   total       Float
   total_costo Float
   comentarios String?     @db.Text
+  efectivo_recibido      Float?
+  vuelto      Float?
   estado      EstadoVenta @default(PENDIENTE)
   activo      Boolean     @default(true)
   metodo_pago MetodoPago  @default(EFECTIVO)
@@ -735,6 +745,7 @@ model Venta {
   sucursal Sucursal       @relation(fields: [sucursal_id], references: [id])
   usuario  Usuario        @relation("VentaVendedor", fields: [usuario_id], references: [id])
   cliente  Cliente?       @relation("VentaCliente", fields: [cliente_id], references: [id])
+  autorizador  Usuario?   @relation("VentaAutorizador", fields: [autorizador_id], references: [id])
   detalles VentaDetalle[]
 
   @@map("ventas")
@@ -759,6 +770,41 @@ model VentaDetalle {
 
   @@index([variante_id])
   @@map("venta_detalles")
+}
+
+
+
+model PreVenta {
+  id          String           @id @default(uuid()) @db.Char(36)
+  negocio_id  String           @db.Char(36)
+  sucursal_id String           @db.Char(36)
+  usuario_id  String           @db.Char(36)
+  cliente_id  String?          @db.Char(36)
+  activo      Boolean          @default(true)
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+
+  negocio     Negocio          @relation(fields: [negocio_id], references: [id])
+  sucursal    Sucursal         @relation(fields: [sucursal_id], references: [id])
+  usuario     Usuario          @relation("PreVentaUsuario", fields: [usuario_id], references: [id])
+  cliente     Cliente?         @relation("PreVentaCliente", fields: [cliente_id], references: [id])
+  detalles    PreVentaDetalle[]
+
+  @@map("pre_ventas")
+}
+
+model PreVentaDetalle {
+  id           String   @id @default(uuid()) @db.Char(36)
+  pre_venta_id String   @db.Char(36)
+  variante_id  String   @db.Char(36)
+  descripcion  String
+  cantidad     Int
+  precio       Float
+
+  pre_venta    PreVenta         @relation(fields: [pre_venta_id], references: [id], onDelete: Cascade)
+  variante     VarianteProducto @relation(fields: [variante_id], references: [id])
+
+  @@map("pre_venta_detalles")
 }
 
 model Imagen {

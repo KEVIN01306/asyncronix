@@ -1,5 +1,5 @@
 import api from '../../../../core/api/api';
-import type { Lote, LotesResponse } from '../../domain/interfaces/lote.interface';
+import type { Lote, LoteRegistroResponse, LotesResponse } from '../../domain/interfaces/lote.interface';
 
 const URL = '/lotes/';
 
@@ -28,8 +28,8 @@ export const LoteRepository = {
         return response.data;
     },
 
-    registrar: async (payload: any): Promise<Lote> => {
-        const response = await api.post<{ data: Lote }>(URL, payload);
+    registrar: async (payload: any): Promise<LoteRegistroResponse> => {
+        const response = await api.post<{ data: LoteRegistroResponse }>(URL, payload);
         return response.data;
     }
 }

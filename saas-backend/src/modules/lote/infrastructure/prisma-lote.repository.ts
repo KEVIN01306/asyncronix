@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaErrorMapper } from '@shared/database/prisma/PrismaErrorMapper.js';
 import type { LoteCrear, LoteDetalle } from '../domain/lote.entity.js';
 import type { LoteRepository } from '../domain/lote.repository.js';
@@ -10,7 +10,7 @@ import { PersistenceError } from '../../../shared/database/errors/PersistenceErr
 export class PrismaLoteRepository implements LoteRepository {
     constructor(private readonly prisma: PrismaClient) { }
 
-    async registrar(lote: LoteCrear, negocio_id: string): Promise<LoteDetalle> {
+    async registrar(lote: LoteCrear, negocio_id: string, tx?: Prisma.TransactionClient): Promise<LoteDetalle> {
         try {
             const fecha_vencimiento = lote.fecha_vencimiento
                 ? new Date(lote.fecha_vencimiento)
@@ -28,7 +28,9 @@ export class PrismaLoteRepository implements LoteRepository {
                 delete createPayload.fecha_vencimiento;
             }
 
-            const created = await this.prisma.lote.create({
+            const db = tx ?? this.prisma;
+
+            const created = await db.lote.create({
                 data: createPayload,
                 include: {
                     variante: { select: { id: true, sku: true, producto_id: true, producto: { select: { id: true, nombre: true } } } },

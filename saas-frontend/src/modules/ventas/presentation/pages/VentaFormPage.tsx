@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Grid, Button, Card, CardContent, Divider, IconButton, TextField, Typography, Autocomplete, useTheme, useMediaQuery, TableContainer, Box } from '@mui/material';
+import { Grid, Button, Card, CardContent, Divider, IconButton, TextField, Typography, Autocomplete, useTheme, useMediaQuery, TableContainer, Box, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, QrCodeScanner as QrCodeScannerIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
@@ -26,20 +26,31 @@ type FormValues = {
 export default function VentaFormPage() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const preventaId = searchParams.get('preventa_id');
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isEdit = Boolean(id);
     const user = useAuthStore(state => state.user);
 
     const [loading, setLoading] = useState(false);
-    const [, setSaving] = useState(false);
+    const [isSaving, setSaving] = useState(false);
+    const [deletingRows, setDeletingRows] = useState<Record<string, boolean>>({});
     const [productosSeleccionados, setProductosSeleccionados] = useState<VentaProductoInput[]>([]);
     const [ventaId, setVentaId] = useState<string | null>(null);
+    const [preventaIdState, setPreventaIdState] = useState<string | null>(preventaId);
     const [showClientModal, setShowClientModal] = useState(false);
     const [pendingProduct, setPendingProduct] = useState<VentaProductoInput | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showScannerModal, setShowScannerModal] = useState(false);
+    const [showStockDialog, setShowStockDialog] = useState(false);
+    const [stockIssue, setStockIssue] = useState<any | null>(null);
+    const [pendingPaymentPayload, setPendingPaymentPayload] = useState<{ metodo: string; efectivo_recibido: number | null; vuelto: number | null } | null>(null);
+    const [pendingPreventaId, setPendingPreventaId] = useState<string | null>(null);
+    const [forceStockPin, setForceStockPin] = useState('');
+    const [forceStockLoading, setForceStockLoading] = useState(false);
     const [scanLoading, setScanLoading] = useState(false);
+    const [addingProductLoading, setAddingProductLoading] = useState(false);
     const [clienteNombre, setClienteNombre] = useState('Consumidor Final');
     const [clientSelected, setClientSelected] = useState(false);
     const { setValue, watch } = useForm<FormValues>({
@@ -129,12 +140,42 @@ export default function VentaFormPage() {
         }
     }, [id, navigate, setValue]);
 
+    const cargarPreVenta = useCallback(async (preventaIdValue: string) => {
+        try {
+            setLoading(true);
+            const res = await ventaRepository.obtenerPreVenta(preventaIdValue);
+            const preventa = res.data;
+            setVentaId(null);
+            setValue('cliente_id', preventa.cliente_id || '');
+            setValue('metodo_pago', 'EFECTIVO');
+            setValue('estado', 'PENDIENTE');
+            setClienteNombre('Consumidor Final');
+            setClientSelected(Boolean(preventa.cliente_id));
+            setProductosSeleccionados(preventa.detalles.map((detalle) => ({
+                producto_id: detalle.variante_id,
+                cantidad: detalle.cantidad,
+                nombre: detalle.descripcion,
+                precio_sugerido: detalle.precio,
+                subtotal: detalle.precio * detalle.cantidad
+            })));
+        } catch {
+            toast.error('Error al cargar la preventa');
+            navigate('/ventas');
+        } finally {
+            setLoading(false);
+        }
+    }, [navigate, setValue]);
+
     useEffect(() => {
         cargarProductosDisponibles();
+        if (preventaId) {
+            cargarPreVenta(preventaId);
+            return;
+        }
         if (isEdit) {
             cargarVenta();
         }
-    }, [isEdit, cargarProductosDisponibles, cargarVenta]);
+    }, [isEdit, cargarProductosDisponibles, cargarVenta, cargarPreVenta, preventaId]);
 
     const registrarNuevaVenta = async (primerProducto: VentaProductoInput) => {
         if (!user?.sucursal_id) return;
@@ -144,17 +185,21 @@ export default function VentaFormPage() {
             const payload: any = {
                 sucursal_id: user.sucursal_id,
                 cliente_id: cliente_id || null,
-                metodo_pago: watch('metodo_pago') || 'EFECTIVO',
-                estado: 'PENDIENTE',
-                productos: [{ producto_id: primerProducto.producto_id, cantidad: primerProducto.cantidad }]
+                items: [{ variante_id: primerProducto.producto_id, cantidad: primerProducto.cantidad, precio: primerProducto.precio_sugerido ?? 0, descripcion: primerProducto.nombre }]
             };
-            const res = await ventaRepository.registrar(payload);
-            const venta = res.data;
-            setVentaId(venta.id);
-            setProductosSeleccionados(agruparDetalles(venta.detalles));
-            toast.success('Venta creada y primer detalle agregado');
+            const res = await ventaRepository.crearPreVenta(payload);
+            const preventa = res.data;
+            setPreventaIdState(preventa.id);
+            setProductosSeleccionados(preventa.detalles.map((detalle: any) => ({
+                producto_id: detalle.variante_id,
+                cantidad: detalle.cantidad,
+                nombre: detalle.descripcion,
+                precio_sugerido: detalle.precio,
+                subtotal: detalle.precio * detalle.cantidad
+            })));
+            toast.success('Preventa creada y primer detalle agregado');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Error al crear la venta');
+            toast.error(error.response?.data?.message || 'Error al crear la preventa');
         } finally {
             setSaving(false);
             setProductoSeleccionado(null);
@@ -173,45 +218,63 @@ export default function VentaFormPage() {
         email?: string | null;
     }) => {
         setShowClientModal(false);
-        const selectedNombre = data.nombre || 'Consumidor Final';
-        const targetClienteId = data.cliente_id || null;
-
-        setClienteNombre(selectedNombre);
-        setValue('cliente_id', targetClienteId || '');
-        setClientSelected(true);
-
-        if (!user?.sucursal_id) return;
 
         try {
             setSaving(true);
-            if (ventaId) {
-                await ventaRepository.actualizar(ventaId, {
-                    sucursal_id: user.sucursal_id,
-                    cliente_id: targetClienteId
-                });
-                toast.success('Cliente actualizado en la venta');
-            } else if (pendingProduct) {
-                const payload: any = {
-                    sucursal_id: user.sucursal_id,
-                    cliente_id: targetClienteId,
-                    metodo_pago: watch('metodo_pago') || 'EFECTIVO',
-                    estado: 'PENDIENTE',
-                    productos: [{ producto_id: pendingProduct.producto_id, cantidad: pendingProduct.cantidad }]
-                };
+            setValue('cliente_id', data.cliente_id || '');
+            setClienteNombre(data.nombre || 'Consumidor Final');
+            setClientSelected(true);
+            if (preventaIdState) {
+                await ventaRepository.actualizarClientePreVenta(preventaIdState, data.cliente_id || null);
+            }
+            // use pendingProduct (set when user tried to add before selecting client)
+            if (!pendingProduct) {
+                toast.error('No hay producto pendiente para agregar');
+                return;
+            }
 
-                const res = await ventaRepository.registrar(payload);
-                const venta = res.data;
-                setVentaId(venta.id);
-                setProductosSeleccionados(agruparDetalles(venta.detalles));
-                toast.success('Venta creada y primer detalle agregado');
-                setPendingProduct(null);
-                setProductoSeleccionado(null);
-                setCantidadAgregar(1);
+            if (preventaIdState) {
+                await ventaRepository.addDetallePreVenta(preventaIdState, { variante_id: pendingProduct.producto_id!, cantidad: pendingProduct.cantidad, precio: pendingProduct.precio_sugerido ?? 0, descripcion: pendingProduct.nombre });
+                const res = await ventaRepository.obtenerPreVenta(preventaIdState);
+                const preventa = res.data;
+                setProductosSeleccionados(preventa.detalles.map((detalle: any) => ({
+                    producto_id: detalle.variante_id,
+                    cantidad: detalle.cantidad,
+                    nombre: detalle.descripcion,
+                    precio_sugerido: detalle.precio,
+                    subtotal: detalle.precio * detalle.cantidad
+                })));
+                toast.success('Producto agregado a la preventa');
+            } else {
+                // crear preventa con el primer producto
+                if (!user?.sucursal_id) {
+                    toast.error('No se pudo determinar la sucursal del usuario');
+                    return;
+                }
+                const cliente_id = watch('cliente_id') || null;
+                const res = await ventaRepository.crearPreVenta({
+                    sucursal_id: user.sucursal_id,
+                    cliente_id,
+                    items: [{ variante_id: pendingProduct.producto_id!, cantidad: pendingProduct.cantidad, precio: pendingProduct.precio_sugerido ?? 0, descripcion: pendingProduct.nombre }]
+                });
+                const preventa = res.data;
+                setPreventaIdState(preventa.id);
+                setProductosSeleccionados(preventa.detalles.map((detalle: any) => ({
+                    producto_id: detalle.variante_id,
+                    cantidad: detalle.cantidad,
+                    nombre: detalle.descripcion,
+                    precio_sugerido: detalle.precio,
+                    subtotal: detalle.precio * detalle.cantidad
+                })));
+                toast.success('Producto agregado y preventa creada');
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Error al actualizar el cliente');
+            toast.error(error.response?.data?.message || 'Error al agregar el producto');
         } finally {
             setSaving(false);
+            setProductoSeleccionado(null);
+            setCantidadAgregar(1);
+            setPendingProduct(null);
         }
     };
 
@@ -221,34 +284,53 @@ export default function VentaFormPage() {
 
         try {
             setScanLoading(true);
-            if (!ventaId) {
-                const productResponse = await ventaRepository.buscarPorCodigo(codigo);
-                const variant = productResponse.data;
-                if (!variant) {
-                    toast.error('No se encontró una variante con ese código');
-                    return;
-                }
-                const prodInput: VentaProductoInput = {
-                    producto_id: variant.id,
-                    cantidad: 1,
-                    nombre: variant.producto?.nombre ?? variant.sku,
-                    precio_sugerido: variant.precio_sugerido,
-                    subtotal: variant.precio_sugerido
-                };
-
-                if (clientSelected) {
-                    await registrarNuevaVenta(prodInput);
-                } else {
-                    setPendingProduct(prodInput);
-                    setShowClientModal(true);
-                }
+            const productResponse = await ventaRepository.buscarPorCodigo(codigo);
+            const variant = productResponse.data;
+            if (!variant) {
+                toast.error('No se encontró una variante con ese código');
                 return;
             }
 
-            await ventaRepository.agregarProducto(ventaId, codigo, user.sucursal_id, 1);
-            const res = await ventaRepository.obtener(ventaId);
-            setProductosSeleccionados(agruparDetalles(res.data.detalles));
-            toast.success('Detalle agregado por código');
+            const atributos = (variant.valores ?? [])
+                .map((valor: any) => valor.atributo ? `${valor.atributo.nombre}: ${valor.valor}` : valor.valor)
+                .join(', ');
+            const productoNombre = variant.producto?.nombre ?? variant.sku;
+            const descripcion = atributos ? `${productoNombre} (${atributos})` : productoNombre;
+
+            const prodInput: VentaProductoInput = {
+                producto_id: variant.id,
+                cantidad: 1,
+                nombre: descripcion,
+                precio_sugerido: variant.precio_sugerido,
+                subtotal: variant.precio_sugerido
+            };
+
+            if (preventaIdState) {
+                await ventaRepository.addDetallePreVenta(preventaIdState, {
+                    variante_id: prodInput.producto_id!,
+                    cantidad: prodInput.cantidad,
+                    precio: prodInput.precio_sugerido ?? 0,
+                    descripcion: prodInput.nombre
+                });
+                const res = await ventaRepository.obtenerPreVenta(preventaIdState);
+                const preventa = res.data;
+                setProductosSeleccionados(preventa.detalles.map((detalle: any) => ({
+                    producto_id: detalle.variante_id,
+                    cantidad: detalle.cantidad,
+                    nombre: detalle.descripcion,
+                    precio_sugerido: detalle.precio,
+                    subtotal: detalle.precio * detalle.cantidad
+                })));
+                toast.success('Detalle agregado a la preventa');
+                return;
+            }
+
+            if (clientSelected) {
+                await registrarNuevaVenta(prodInput);
+            } else {
+                setPendingProduct(prodInput);
+                setShowClientModal(true);
+            }
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Error al procesar el código');
         } finally {
@@ -271,20 +353,79 @@ export default function VentaFormPage() {
         setShowPaymentModal(false);
         setShowClientModal(false);
         setShowScannerModal(false);
+        setShowStockDialog(false);
         setScanLoading(false);
         setSaving(false);
+        setStockIssue(null);
+        setPendingPaymentPayload(null);
+        setPendingPreventaId(null);
+        setForceStockPin('');
         setValue('cliente_id', '');
         setValue('metodo_pago', 'EFECTIVO');
         setValue('estado', 'PENDIENTE');
     };
 
-    const handlePaymentConfirm = async (metodo: string) => {
-        if (!ventaId || !user?.sucursal_id) return;
+    const finalizarPreVentaConPayload = async (preventaIdValue: string, payload: { metodo: string; efectivo_recibido: number | null; vuelto: number | null }, overrideStock = false, pinCaja?: string) => {
+        return ventaRepository.finalizarPreVenta(preventaIdValue, {
+            metodo_pago: payload.metodo,
+            comentarios: null,
+            efectivo_recibido: payload.efectivo_recibido,
+            vuelto: payload.vuelto,
+            override_stock: overrideStock,
+            pin_caja: pinCaja
+        });
+    };
+
+    const handlePaymentConfirm = async (payload: { metodo: string; efectivo_recibido: number | null; vuelto: number | null }) => {
+        if (!user?.sucursal_id) return;
         try {
             setSaving(true);
-            await ventaRepository.finalizarVenta(ventaId, user.sucursal_id, metodo);
+            if (!ventaId && preventaIdState) {
+                const result = await finalizarPreVentaConPayload(preventaIdState, payload);
+                const resultData = (result as any)?.data ?? result;
+                if (resultData?.faltantes?.length) {
+                    setStockIssue(resultData);
+                    setPendingPaymentPayload(payload);
+                    setPendingPreventaId(preventaIdState);
+                    setShowStockDialog(true);
+                    return;
+                }
+                toast.success('Venta finalizada desde preventa');
+                resetForm();
+                navigate('/ventas/nuevo');
+                return;
+            }
+
+            if (!ventaId && productosSeleccionados.length > 0) {
+                const cliente_id = watch('cliente_id') || null;
+                const createRes = await ventaRepository.crearPreVenta({
+                    sucursal_id: user.sucursal_id,
+                    cliente_id,
+                    items: productosSeleccionados.map((producto) => ({ variante_id: producto.producto_id, cantidad: producto.cantidad, precio: producto.precio_sugerido ?? 0, descripcion: producto.nombre }))
+                });
+                const preventaCreated = createRes.data;
+                const result = await finalizarPreVentaConPayload(preventaCreated.id, payload);
+                const resultData = (result as any)?.data ?? result;
+                if (resultData?.faltantes?.length) {
+                    setStockIssue(resultData);
+                    setPendingPaymentPayload(payload);
+                    setPendingPreventaId(preventaCreated.id);
+                    setShowStockDialog(true);
+                    return;
+                }
+                toast.success('Venta finalizada desde preventa');
+                resetForm();
+                navigate('/ventas/nuevo');
+                return;
+            }
+
+            if (!ventaId) {
+                toast.warning('No hay productos para finalizar');
+                return;
+            }
+
+            await ventaRepository.finalizarVenta(ventaId, user.sucursal_id, payload.metodo);
             toast.success('Venta finalizada');
-            // reset local state and navigate to start a new sale
             resetForm();
             navigate('/ventas/nuevo');
         } catch (error: any) {
@@ -295,12 +436,54 @@ export default function VentaFormPage() {
         }
     };
 
+    const handleForceStockConfirm = async () => {
+        if (!forceStockPin.trim()) {
+            toast.error('Ingresa el PIN de caja');
+            return;
+        }
+
+        if (!pendingPaymentPayload) {
+            toast.error('No hay un pago pendiente para confirmar');
+            return;
+        }
+
+        try {
+            setForceStockLoading(true);
+            const preventaIdParaForzar = pendingPreventaId || preventaIdState;
+            if (!preventaIdParaForzar) {
+                toast.error('No hay una preventa activa para continuar');
+                return;
+            }
+
+            const result = await finalizarPreVentaConPayload(preventaIdParaForzar, pendingPaymentPayload, true, forceStockPin);
+            const resultData = (result as any)?.data ?? result;
+            if (resultData?.faltantes?.length) {
+                toast.error('No se pudo completar la venta con stock forzado');
+                return;
+            }
+
+            toast.success('Venta finalizada con stock forzado');
+            resetForm();
+            navigate('/ventas/nuevo');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al forzar stock');
+        } finally {
+            setForceStockLoading(false);
+            setShowStockDialog(false);
+        }
+    };
+
+    
+
     const handleAgregarProducto = async () => {
         if (!productoSeleccionado) return;
         if (cantidadAgregar <= 0) {
             toast.warning("La cantidad debe ser mayor a 0");
             return;
         }
+        if (addingProductLoading) return;
+
+        setAddingProductLoading(true);
 
         const prodInput: VentaProductoInput = {
             producto_id: productoSeleccionado.id,
@@ -310,17 +493,46 @@ export default function VentaFormPage() {
             subtotal: cantidadAgregar * productoSeleccionado.precio_sugerido
         };
 
-        if (!ventaId) {
-            if (clientSelected) {
-                await registrarNuevaVenta(prodInput);
-            } else {
-                setPendingProduct(prodInput);
-                setShowClientModal(true);
-            }
-            return;
-        }
-
         try {
+            if (!ventaId) {
+                if (clientSelected) {
+                    if (preventaIdState) {
+                        try {
+                            setSaving(true);
+                            await ventaRepository.addDetallePreVenta(preventaIdState, {
+                                variante_id: prodInput.producto_id!,
+                                cantidad: prodInput.cantidad,
+                                precio: prodInput.precio_sugerido ?? 0,
+                                descripcion: prodInput.nombre
+                            });
+                            const res = await ventaRepository.obtenerPreVenta(preventaIdState);
+                            const preventa = res.data;
+                            setProductosSeleccionados(preventa.detalles.map((detalle: any) => ({
+                                producto_id: detalle.variante_id,
+                                cantidad: detalle.cantidad,
+                                nombre: detalle.descripcion,
+                                precio_sugerido: detalle.precio,
+                                subtotal: detalle.precio * detalle.cantidad
+                            })));
+                            toast.success('Producto agregado a la preventa');
+                        } catch (error: any) {
+                            toast.error(error.response?.data?.message || 'Error al agregar producto');
+                        } finally {
+                            setSaving(false);
+                            setProductoSeleccionado(null);
+                            setCantidadAgregar(1);
+                        }
+                        return;
+                    }
+
+                    await registrarNuevaVenta(prodInput);
+                } else {
+                    setPendingProduct(prodInput);
+                    setShowClientModal(true);
+                }
+                return;
+            }
+
             setSaving(true);
             const codigo = productoSeleccionado?.codigo_secuencial ?? productoSeleccionado?.codigo_barras ?? productoSeleccionado?.qr_codigo ?? productoSeleccionado?.sku ?? productoSeleccionado?.id;
             if (!codigo) throw new Error('Código de variante no disponible');
@@ -335,12 +547,13 @@ export default function VentaFormPage() {
             setSaving(false);
             setProductoSeleccionado(null);
             setCantidadAgregar(1);
+            setAddingProductLoading(false);
         }
     };
 
-    const handleEliminarProducto = (index: number) => {
+    const handleEliminarProducto = (index: number, rowKey: string) => {
         const prod = productosSeleccionados[index];
-        if (!ventaId) {
+        if (!ventaId && !preventaIdState) {
             const nuevos = [...productosSeleccionados];
             nuevos.splice(index, 1);
             setProductosSeleccionados(nuevos);
@@ -349,18 +562,44 @@ export default function VentaFormPage() {
 
         (async () => {
             try {
+                setDeletingRows((prev) => ({ ...prev, [rowKey]: true }));
                 setSaving(true);
-                const res = await ventaRepository.obtener(ventaId);
-                const detalle = res.data.detalles.find((d: any) => (d.variante_id ?? d.lote_id ?? '') === prod.producto_id || d.descripcion === prod.nombre);
-                if (detalle) {
-                    await ventaRepository.eliminarDetalle(ventaId, detalle.id, user!.sucursal_id!);
-                    const ventaRef = await ventaRepository.obtener(ventaId);
-                    setProductosSeleccionados(agruparDetalles(ventaRef.data.detalles));
-                    toast.success('Detalle eliminado');
+                if (ventaId) {
+                    const res = await ventaRepository.obtener(ventaId);
+                    const detalle = res.data.detalles.find((d: any) => (d.variante_id ?? d.lote_id ?? '') === prod.producto_id || d.descripcion === prod.nombre);
+                    if (detalle) {
+                        await ventaRepository.eliminarDetalle(ventaId, detalle.id, user!.sucursal_id!);
+                        const ventaRef = await ventaRepository.obtener(ventaId);
+                        setProductosSeleccionados(agruparDetalles(ventaRef.data.detalles));
+                        toast.success('Detalle eliminado');
+                        return;
+                    }
+                }
+
+                if (preventaIdState) {
+                    const resPreventa = await ventaRepository.obtenerPreVenta(preventaIdState);
+                    const detallePreventa = resPreventa.data.detalles.find((d: any) => d.variante_id === prod.producto_id || d.descripcion === prod.nombre);
+                    if (detallePreventa) {
+                        await ventaRepository.eliminarDetallePreVenta(detallePreventa.id);
+                        const preventaRef = await ventaRepository.obtenerPreVenta(preventaIdState);
+                        setProductosSeleccionados(preventaRef.data.detalles.map((detalle: any) => ({
+                            producto_id: detalle.variante_id,
+                            cantidad: detalle.cantidad,
+                            nombre: detalle.descripcion,
+                            precio_sugerido: detalle.precio,
+                            subtotal: detalle.precio * detalle.cantidad
+                        })));
+                        toast.success('Detalle eliminado');
+                    }
                 }
             } catch (error: any) {
                 toast.error(error.response?.data?.message || 'Error al eliminar detalle');
             } finally {
+                setDeletingRows((prev) => {
+                    const next = { ...prev };
+                    delete next[rowKey];
+                    return next;
+                });
                 setSaving(false);
             }
         })();
@@ -386,6 +625,53 @@ export default function VentaFormPage() {
                     {isEdit ? 'Continuar con la venta' : 'Iniciar nueva venta'}
                 </Typography>
             </Box>
+
+            <Dialog open={showStockDialog} onClose={() => {
+                setShowStockDialog(false);
+                setStockIssue(null);
+                setPendingPaymentPayload(null);
+                setPendingPreventaId(null);
+                setForceStockPin('');
+            }} fullWidth maxWidth="sm">
+                <DialogTitle>Stock insuficiente</DialogTitle>
+                <DialogContent>
+                    {stockIssue?.faltantes?.length ? (
+                        <Box mt={1} display="grid" gap={1}>
+                            <Typography>Hay productos sin stock suficiente para completar la venta.</Typography>
+                            {stockIssue.faltantes.map((faltante: any, index: number) => (
+                                <Typography key={`${faltante.variante_id}-${index}`} variant="body2" color="text.secondary">
+                                    • {faltante.descripcion}: solicitado {faltante.solicitado}, disponible {faltante.disponible}
+                                </Typography>
+                            ))}
+                        </Box>
+                    ) : (
+                        <Typography>No fue posible completar la venta por stock insuficiente.</Typography>
+                    )}
+
+                    <Box mt={2}>
+                        <TextField
+                            fullWidth
+                            label="PIN de caja"
+                            type="password"
+                            value={forceStockPin}
+                            onChange={(e) => setForceStockPin(e.target.value)}
+                            inputProps={{ maxLength: 6 }}
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setShowStockDialog(false);
+                        setStockIssue(null);
+                        setPendingPaymentPayload(null);
+                        setPendingPreventaId(null);
+                        setForceStockPin('');
+                    }}>Cancelar</Button>
+                    <Button onClick={handleForceStockConfirm} variant="contained" disabled={forceStockLoading}>
+                        {forceStockLoading ? 'Procesando…' : 'Forzar stock'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <Grid size={{ xs: 12 }} container spacing={3}>
                 <Grid size={{ xs: 12, md: 12 }}>
@@ -454,19 +740,21 @@ export default function VentaFormPage() {
                                             variant="contained"
                                             color="secondary"
                                             onClick={handleAgregarProducto}
-                                            disabled={!productoSeleccionado || !isEditable}
+                                            disabled={!productoSeleccionado || !isEditable || addingProductLoading}
                                             sx={{ height: 56, width: '100%' }}
                                         >
-                                            Agregar
+                                            {addingProductLoading ? <CircularProgress size={20} color="inherit" /> : 'Agregar'}
                                         </Button>
                                     </Grid>
                                 </Grid>
                             </Grid>
                             <TableContainer>
-                                <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} />
+                                <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} deletingRows={deletingRows} />
                             </TableContainer>
 
-                            <SaleSummary total={totalVenta} clienteLabel={clienteNombre} onFinalize={() => setShowPaymentModal(true)} disabled={!ventaId} />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+                                <SaleSummary total={totalVenta} clienteLabel={clienteNombre} onFinalize={() => setShowPaymentModal(true)} disabled={!productosSeleccionados.length} />
+                            </Box>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -542,7 +830,7 @@ export default function VentaFormPage() {
 
 
             <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
-            <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={clienteNombre} />
+            <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={clienteNombre} loading={isSaving} />
             <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleCodigoLeido} />
         </Grid>
     );

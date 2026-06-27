@@ -1,4 +1,4 @@
-import { TableRow, TableCell, IconButton } from '@mui/material';
+import { TableRow, TableCell, IconButton, CircularProgress } from '@mui/material';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import type { VentaProductoInput } from '../../domain/interfaces/venta.interface';
@@ -7,9 +7,10 @@ type Props = {
     item: VentaProductoInput;
     onDelete?: () => void;
     isEditable?: boolean;
+    isDeleting?: boolean;
 };
 
-export default function SaleDetailRow({ item, onDelete, isEditable = true }: Props) {
+export default function SaleDetailRow({ item, onDelete, isEditable = true, isDeleting = false }: Props) {
     return (
         <TableRow sx={{ height: 55 }}>
             <TableCell
@@ -39,9 +40,9 @@ export default function SaleDetailRow({ item, onDelete, isEditable = true }: Pro
                     color="error"
                     onClick={onDelete}
                     size="small"
-                    disabled={!isEditable}
+                    disabled={!isEditable || isDeleting}
                 >
-                    <DeleteIcon />
+                    {isDeleting ? <CircularProgress size={18} color="inherit" /> : <DeleteIcon />}
                 </IconButton>
             </TableCell>
         </TableRow>

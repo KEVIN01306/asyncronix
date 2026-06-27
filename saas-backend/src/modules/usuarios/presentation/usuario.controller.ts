@@ -9,6 +9,7 @@ import type { EliminarUsuarioUseCase } from "../application/eliminar-usuario.use
 import type { ActualizarPerfilUseCase } from "../application/actualizar-perfil.usecase.js";
 import type { ActualizarAvatarUseCase } from "../application/actualizar-avatar.usecase.js";
 import type { CambiarPasswordUseCase } from "../application/cambiar-password.usecase.js";
+import type { ActualizarPinCajaUseCase } from "../application/actualizar-pin-caja.usecase.js";
 import AppError from "../../../shared/errors/AppError.js";
 
 export class UsuarioController extends BaseController {
@@ -21,7 +22,8 @@ export class UsuarioController extends BaseController {
         private readonly eliminarUsuarioUseCase: EliminarUsuarioUseCase,
         private readonly actualizarPerfilUseCase: ActualizarPerfilUseCase,
         private readonly actualizarAvatarUseCase: ActualizarAvatarUseCase,
-        private readonly cambiarPasswordUseCase: CambiarPasswordUseCase
+        private readonly cambiarPasswordUseCase: CambiarPasswordUseCase,
+        private readonly actualizarPinCajaUseCase: ActualizarPinCajaUseCase
     ) {
         super()
     }
@@ -125,6 +127,17 @@ export class UsuarioController extends BaseController {
             const { password } = req.body
             await this.cambiarPasswordUseCase.execute(id, negocio_id, password)
             res.status(200).json(Respuesta.exito('Contraseña actualizada con exito', null))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    actualizarPinCaja = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id, negocio_id } = this.obtenerEntorno(res)
+            const { pin_caja } = req.body
+            await this.actualizarPinCajaUseCase.execute(id, negocio_id, pin_caja)
+            res.status(200).json(Respuesta.exito('Pin de caja actualizado con exito', null))
         } catch (error) {
             next(error)
         }

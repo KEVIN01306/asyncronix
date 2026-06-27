@@ -4,11 +4,12 @@ import type { VentaProductoInput } from '../../domain/interfaces/venta.interface
 
 type Props = {
     items: VentaProductoInput[];
-    onDelete: (index: number) => void;
+    onDelete: (index: number, rowKey: string) => void;
     isEditable?: boolean;
+    deletingRows?: Record<string, boolean>;
 };
 
-export default function SaleProductsTable({ items, onDelete, isEditable = true }: Props) {
+export default function SaleProductsTable({ items, onDelete, isEditable = true, deletingRows = {} }: Props) {
     return (
         <TableContainer
             component={Paper}
@@ -88,14 +89,18 @@ export default function SaleProductsTable({ items, onDelete, isEditable = true }
                 </TableHead>
 
                 <TableBody>
-                    { items && items.length > 0 ?  items.map((it, idx) => (
+                    { items && items.length > 0 ?  items.map((it, idx) => {
+                        const rowKey = `${it.producto_id}-${idx}`;
+                        return (
                         <SaleDetailRow
-                            key={it.producto_id + '-' + idx}
+                            key={rowKey}
                             item={it}
-                            onDelete={() => onDelete(idx)}
+                            onDelete={() => onDelete(idx, rowKey)}
                             isEditable={isEditable}
+                            isDeleting={Boolean(deletingRows[rowKey])}
                         />
-                    )) : 
+                    );
+                    }) : 
                     <TableRow>
                         <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                             No hay productos agregados

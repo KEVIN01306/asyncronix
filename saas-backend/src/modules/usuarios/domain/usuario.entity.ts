@@ -14,6 +14,7 @@ export interface Usuario {
     negocio_id: string,
     sucursal_id: string | null,
     roles: string[]
+    pin_caja?: string | null
 }
 
 export interface UsuarioObtenidoDetalle extends Omit<Usuario, "password_hash" | "negocio_id" | "activo" | "sucursal_id"> {

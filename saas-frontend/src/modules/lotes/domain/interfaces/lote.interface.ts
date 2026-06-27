@@ -26,4 +26,12 @@ export interface Lote {
     };
 }
 
+export interface LoteRegistroResponse {
+    lote: Lote;
+    regularizacionAutomatica: boolean;
+    stockRegularizado: number;
+    stockPendiente: number;
+    mensaje: string;
+}
+
 export type LotesResponse = PaginatedResponse<Lote>;

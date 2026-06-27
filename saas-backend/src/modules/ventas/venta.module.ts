@@ -15,7 +15,16 @@ import prisma from "@infrastructure/config/prisma.js";
 import { PrismaLoteRepository } from "../lote/infrastructure/prisma-lote.repository.js";
 import { PrismaVarianteRepository } from "../producto/infrastructure/prisma-variante.repository.js";
 import { PrismaClienteRepository } from "../cliente/infrastructure/prisma-cliente.repository.js";
-
+import { Argon2HashProvider } from "../../shared/infrastructure/argon2-hash.provider.js";
+import { CrearPreVentaUseCase } from "./application/crear-preventa.usecase.js";
+import { ObtenerPreVentasUseCase } from "./application/obtener-preventas.usecase.js";
+import { ObtenerPreVentaUseCase } from "./application/obtener-preventa.usecase.js";
+import { ActualizarCantidadPreVentaUseCase } from "./application/actualizar-cantidad-preventa.usecase.js";
+import { FinalizarPreVentaUseCase } from "./application/finalizar-preventa.usecase.js";
+import { ValidarPinCajaUseCase } from "./application/validar-pin.usecase.js";
+import { AgregarDetallePreVentaUseCase } from "./application/agregar-detalle-preventa.usecase.js";
+import { ActualizarClientePreVentaUseCase } from "./application/actualizar-cliente-preventa.usecase.js";
+import { EliminarDetallePreVentaUseCase } from "./application/eliminar-detalle-preventa.usecase.js";
 
 const ventaRepository = new PrismaVentaRepository(prisma);
 const loteRepository = new PrismaLoteRepository(prisma);
@@ -33,6 +42,16 @@ const obtenerVentaUseCase = new ObtenerVentaUseCase(ventaRepository);
 const obtenerVentasUseCase = new ObtenerVentasUseCase(ventaRepository);
 const buscarClientePorNitVentaUseCase = new BuscarClientePorNitVentaUseCase(clienteRepository);
 const registrarClienteParaVentaUseCase = new RegistrarClienteParaVentaUseCase(clienteRepository);
+const crearPreVentaUseCase = new CrearPreVentaUseCase(prisma);
+const obtenerPreVentasUseCase = new ObtenerPreVentasUseCase(prisma);
+const obtenerPreVentaUseCase = new ObtenerPreVentaUseCase(prisma);
+const actualizarCantidadPreVentaUseCase = new ActualizarCantidadPreVentaUseCase(prisma);
+const hashProvider = new Argon2HashProvider();
+const finalizarPreVentaUseCase = new FinalizarPreVentaUseCase(prisma, hashProvider);
+const validarPinCajaUseCase = new ValidarPinCajaUseCase(prisma, hashProvider);
+const agregarDetallePreVentaUseCase = new AgregarDetallePreVentaUseCase(prisma);
+const actualizarClientePreVentaUseCase = new ActualizarClientePreVentaUseCase(prisma);
+const eliminarDetallePreVentaUseCase = new EliminarDetallePreVentaUseCase(prisma);
 
 
 export const ventaController = new VentaController(
@@ -46,5 +65,14 @@ export const ventaController = new VentaController(
     eliminarDetalleVentaUseCase,
     finalizarVentaUseCase,
     buscarClientePorNitVentaUseCase,
-    registrarClienteParaVentaUseCase
+    registrarClienteParaVentaUseCase,
+    crearPreVentaUseCase,
+    obtenerPreVentasUseCase,
+    obtenerPreVentaUseCase,
+    actualizarCantidadPreVentaUseCase,
+    finalizarPreVentaUseCase,
+    validarPinCajaUseCase,
+    agregarDetallePreVentaUseCase,
+    actualizarClientePreVentaUseCase,
+    eliminarDetallePreVentaUseCase
 );

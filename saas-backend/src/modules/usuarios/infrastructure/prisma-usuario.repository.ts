@@ -252,4 +252,15 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         }
     }
 
+    async actualizarPinCaja(id: Usuario["id"], negocio_id: Usuario["negocio_id"], pin_caja: string): Promise<void> {
+        try {
+            await this.db.usuario.update({
+                where: { id, negocio_id, activo: true },
+                data: { pin_caja }
+            })
+        } catch (error) {
+            throw PrismaErrorMapper.map(error)
+        }
+    }
+
 }

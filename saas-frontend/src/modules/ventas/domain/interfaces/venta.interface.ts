@@ -1,7 +1,7 @@
 import type { PaginatedResponse } from "../../../../core/api/interfaces/api-response.interface";
 
 export type EstadoVenta = 'PENDIENTE' | 'COMPLETADA' | 'ANULADA';
-export type MetodoPago = 'EFECTIVO' | 'TARJETA_CREDITO' | 'TARJETA_DEBITO' | 'TRANSFERENCIA' | 'OTROS';
+export type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' | 'OTRO';
 
 export interface VentaDetalleSimple {
     id: string;
@@ -29,6 +29,14 @@ export interface VentaVarianteDetalle {
         id: string;
         nombre: string;
     };
+    valores?: Array<{
+        id: string;
+        valor: string;
+        atributo?: {
+            id: string;
+            nombre: string;
+        };
+    }>;
 }
 
 export interface VentaClienteInfo {
@@ -82,6 +90,37 @@ export interface VentaCreateForm {
     metodo_pago: MetodoPago;
     estado: EstadoVenta;
     productos: VentaProductoInput[];
+}
+
+export interface PreVentaDetalle {
+    id: string;
+    variante_id: string;
+    descripcion: string;
+    cantidad: number;
+    precio: number;
+}
+
+export interface PreVenta {
+    id: string;
+    negocio_id: string;
+    sucursal_id: string;
+    usuario_id: string;
+    cliente_id: string | null;
+    activo: boolean;
+    created_at: string;
+    updated_at: string;
+    detalles: PreVentaDetalle[];
+}
+
+export interface PreVentaCreateForm {
+    sucursal_id: string;
+    cliente_id: string | null;
+    items: Array<{
+        variante_id: string;
+        cantidad: number;
+        precio?: number;
+        descripcion?: string;
+    }>;
 }
 
 export interface VentaUpdateForm {

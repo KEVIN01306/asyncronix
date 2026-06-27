@@ -12,8 +12,13 @@ import type { BuscarProductoPorCodigoUseCase } from "../application/buscar-produ
 import type { EliminarDetalleVentaUseCase } from "../application/eliminar-detalle-venta.usecase.js";
 import type { FinalizarVentaUseCase } from "../application/finalizar-venta.usecase.js";
 import type { BuscarClientePorNitVentaUseCase } from "../application/buscar-cliente-por-nit.usecase.js";
-import type { RegistrarClienteParaVentaUseCase } from "../application/registrar-cliente-para-venta.usecase.js";
-
+import type { RegistrarClienteParaVentaUseCase } from "../application/registrar-cliente-para-venta.usecase.js";import type { CrearPreVentaUseCase } from "../application/crear-preventa.usecase.js";
+import type { ObtenerPreVentasUseCase } from "../application/obtener-preventas.usecase.js";
+import type { ObtenerPreVentaUseCase } from "../application/obtener-preventa.usecase.js";
+import type { ActualizarCantidadPreVentaUseCase } from "../application/actualizar-cantidad-preventa.usecase.js";
+import type { FinalizarPreVentaUseCase } from "../application/finalizar-preventa.usecase.js";
+import type { ActualizarClientePreVentaUseCase } from "../application/actualizar-cliente-preventa.usecase.js";
+import type { EliminarDetallePreVentaUseCase } from "../application/eliminar-detalle-preventa.usecase.js";
 export class VentaController extends BaseController {
     constructor(
         private readonly registrarVentaUseCase: RegistrarVentaUseCase,
@@ -26,7 +31,16 @@ export class VentaController extends BaseController {
         private readonly eliminarDetalleVentaUseCase: EliminarDetalleVentaUseCase,
         private readonly finalizarVentaUseCase: FinalizarVentaUseCase,
         private readonly buscarClientePorNitVentaUseCase: BuscarClientePorNitVentaUseCase,
-        private readonly registrarClienteParaVentaUseCase: RegistrarClienteParaVentaUseCase
+        private readonly registrarClienteParaVentaUseCase: RegistrarClienteParaVentaUseCase,
+        private readonly crearPreVentaUseCase: CrearPreVentaUseCase,
+        private readonly obtenerPreVentasUseCase: ObtenerPreVentasUseCase,
+        private readonly obtenerPreVentaUseCase: ObtenerPreVentaUseCase,
+        private readonly actualizarCantidadPreVentaUseCase: ActualizarCantidadPreVentaUseCase,
+        private readonly finalizarPreVentaUseCase: FinalizarPreVentaUseCase,
+        private readonly validarPinCajaUseCase: any,
+        private readonly agregarDetallePreVentaUseCase: any,
+        private readonly actualizarClientePreVentaUseCase: ActualizarClientePreVentaUseCase,
+        private readonly eliminarDetallePreVentaUseCase: EliminarDetallePreVentaUseCase
     ) {
         super();
     }
@@ -180,6 +194,125 @@ export class VentaController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             const cliente = await this.registrarClienteParaVentaUseCase.execute(req.body, negocio_id);
             res.status(201).json(Respuesta.exito('Cliente creado con éxito', cliente));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    crearPreVenta = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id: usuario_id, negocio_id } = this.obtenerEntorno(res);
+            const { sucursal_id, cliente_id, items } = req.body;
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const preventa = await this.crearPreVentaUseCase.execute({ sucursal_id, cliente_id, items }, negocio_id, sucursal_id, usuario_id);
+            res.status(201).json(Respuesta.exito('Preventa creada con éxito', preventa));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    crearDetallePreVenta = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const item = req.body;
+            const preventa = await this.agregarDetallePreVentaUseCase.execute(id, item, negocio_id, sucursal_id, usuario_id);
+            res.status(201).json(Respuesta.exito('Detalle agregado a la preventa', preventa));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    actualizarClientePreVenta = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const { cliente_id } = req.body;
+            const preventa = await this.actualizarClientePreVentaUseCase.execute(id, cliente_id ?? null, negocio_id, sucursal_id, usuario_id);
+            res.status(200).json(Respuesta.exito('Cliente asociado a la preventa', preventa));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listarPreVentas = async (_req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const preventas = await this.obtenerPreVentasUseCase.execute(negocio_id, sucursal_id, usuario_id);
+            res.status(200).json(Respuesta.exito('Preventas obtenidas con éxito', preventas));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    obtenerPreVenta = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const preventa = await this.obtenerPreVentaUseCase.execute(id, negocio_id, sucursal_id, usuario_id);
+            res.status(200).json(Respuesta.exito('Preventa obtenida con éxito', preventa));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    actualizarCantidadPreVenta = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const { cantidad } = req.body;
+            const result = await this.actualizarCantidadPreVentaUseCase.execute(id, cantidad, negocio_id, sucursal_id);
+            res.status(200).json(Respuesta.exito('Cantidad actualizada', result));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    eliminarDetallePreVenta = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const preventa = await this.eliminarDetallePreVentaUseCase.execute(id, negocio_id, sucursal_id, usuario_id);
+            res.status(200).json(Respuesta.exito('Detalle de preventa eliminado', preventa));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    finalizarPreVenta = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const result = await this.finalizarPreVentaUseCase.execute(id, negocio_id, sucursal_id, usuario_id, req.body, res.locals.usuario?.permisos ?? []);
+            res.status(200).json(Respuesta.exito('Preventa finalizada con éxito', result));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    validarPinCaja = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
+            const { pin_caja } = req.body;
+            const result = await this.validarPinCajaUseCase.execute(pin_caja, negocio_id, sucursal_id);
+            res.status(200).json(Respuesta.exito('PIN válido', result));
         } catch (error) {
             next(error);
         }

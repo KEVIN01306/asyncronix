@@ -10,7 +10,7 @@ export const ventaCrearSchema = z.object({
     sucursal_id: z.string().uuid("Sucursal inválida"),
     cliente_id: z.string().uuid("ID de cliente inválido").optional().nullable().or(z.literal("")).transform(v => v === "" ? null : v),
     estado: z.nativeEnum(EstadoVenta).optional().default(EstadoVenta.PENDIENTE),
-    metodo_pago: z.nativeEnum(MetodoPago, { required_error: "El método de pago es obligatorio" }),
+    metodo_pago: z.nativeEnum(MetodoPago, { message: "El método de pago es obligatorio" }),
     productos: z.array(productoInputSchema).min(1, "Debe incluir al menos un producto")
 });
 

@@ -6,8 +6,10 @@ import { authRepository } from '../../../auth/infrastructure/repositories/auth.r
 import { perfilRepository } from '../../infrastructure/perfil.repository';
 import { toast } from 'sonner';
 import type { ActualizarPerfilForm, CambiarPasswordForm, Perfil } from '../../domain/interfaces/perfil.interface'
+import type { ActualizarPinCajaFormValues } from '../../domain/schemas/perfil.schema'
 import { EditProfileModal } from '../components/EditProfileModal';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
+import { ChangePinCajaModal } from '../components/ChangePinCajaModal';
 import { EditAvatarModal } from '../components/EditAvatarModal';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
@@ -19,6 +21,7 @@ export const PerfilPage = () => {
 
     const [openEditProfile, setOpenEditProfile] = useState(false);
     const [openChangePassword, setOpenChangePassword] = useState(false);
+    const [openChangePinCaja, setOpenChangePinCaja] = useState(false);
     const [openEditAvatar, setOpenEditAvatar] = useState(false);
 
     const AvatarSource = perfil?.avatar_url ? `${import.meta.env.VITE_API_URL}/${perfil.avatar_url}` : undefined;
@@ -90,6 +93,20 @@ export const PerfilPage = () => {
         }
     };
 
+    const handleChangePinCaja = async (data: ActualizarPinCajaFormValues) => {
+        try {
+            await perfilRepository.actualizarPinCaja(data);
+            toast.success("Pin de caja actualizado con éxito");
+            setOpenChangePinCaja(false);
+            cargarPerfil();
+            const globalUser = await authRepository.getMe();
+            getMeStore(globalUser);
+        } catch (error: any) {
+            console.log(error)
+            toast.error(error.response?.data?.message || "Error al actualizar el pin de caja");
+        }
+    };
+
     if (loading) return <Loading />;
     
     return (
@@ -153,7 +170,7 @@ export const PerfilPage = () => {
                                 </Grid>
                             </Grid>
 
-                            <Box mt={4}>
+                            <Box mt={4} display="flex" gap={2} flexWrap="wrap">
                                 <Button
                                     variant="outlined"
                                     color="secondary"
@@ -162,6 +179,16 @@ export const PerfilPage = () => {
                                 >
                                     Cambiar Contraseña
                                 </Button>
+                                {userStore?.permisos?.includes('VENTAS_FORZAR_STOCK') && (
+                                    <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        startIcon={<PersonIcon />}
+                                        onClick={() => setOpenChangePinCaja(true)}
+                                    >
+                                        Cambiar Pin de Caja
+                                    </Button>
+                                )}
                             </Box>
                         </Grid>
                     </Grid>
@@ -173,6 +200,12 @@ export const PerfilPage = () => {
                 onClose={() => setOpenEditProfile(false)}
                 onSubmit={handleUpdateProfile}
                 initialData={perfil ? { nombre: perfil.nombre, apellido: perfil.apellido, email: perfil.email, telefono: perfil.telefono } : null}
+            />
+
+            <ChangePinCajaModal
+                open={openChangePinCaja}
+                onClose={() => setOpenChangePinCaja(false)}
+                onSubmit={handleChangePinCaja}
             />
 
             <EditAvatarModal

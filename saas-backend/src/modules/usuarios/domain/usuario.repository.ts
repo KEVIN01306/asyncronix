@@ -13,4 +13,5 @@ export interface UsuarioRepository {
     actualizarPerfil(id: Usuario['id'], negocio_id: Usuario['negocio_id'], data: UsuarioActualizarPerfil): Promise<UsuarioSimple>
     actualizarAvatar(id: Usuario['id'], negocio_id: Usuario['negocio_id'], avatar_url: string): Promise<void>
     cambiarPassword(id: Usuario['id'], negocio_id: Usuario['negocio_id'], password_hash: string): Promise<void>
+    actualizarPinCaja(id: Usuario['id'], negocio_id: Usuario['negocio_id'], pin_caja: string): Promise<void>
 }

@@ -6,6 +6,7 @@ import { ValidarMiddleware } from "../../../app/middlewares/ValidarMiddleware.js
 import { ventaController } from "../venta.module.js";
 import { ventaCrearSchema, ventaActualizarSchema, buscarScannerSchema, ventaAgregarProductoSchema } from "./validators/venta.schema.js";
 import { buscarClienteNitVentaSchema, crearClienteVentaSchema } from "./validators/cliente-venta.schema.js";
+import { preVentaCrearSchema, preVentaCantidadSchema, preVentaFinalizarSchema, pinCajaSchema, preVentaDetalleInputSchema } from "./validators/preventa.schema.js";
 import { paginacionQuerySchema } from "../../../shared/presentation/validators/paginacion.query.schema.js";
 
 const routes = Router();
@@ -56,6 +57,61 @@ routes.post("/clientes",
     authMiddleware.verificarPermiso(['CREAR_VENTAS']),
     validarMiddleware.validarBody(crearClienteVentaSchema),
     ventaController.registrarCliente
+);
+
+routes.post('/pre-ventas',
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarBody(preVentaCrearSchema),
+    ventaController.crearPreVenta
+);
+
+routes.get('/pre-ventas',
+    authMiddleware.verificarPermiso(['VER_VENTAS']),
+    ventaController.listarPreVentas
+);
+
+routes.get('/pre-ventas/:id',
+    authMiddleware.verificarPermiso(['VER_VENTAS']),
+    ventaController.obtenerPreVenta
+);
+
+routes.patch('/pre-ventas/:id/cantidad',
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarBody(preVentaCantidadSchema),
+    ventaController.actualizarCantidadPreVenta
+);
+
+routes.patch('/pre-ventas/detalles/:id/cantidad',
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarBody(preVentaCantidadSchema),
+    ventaController.actualizarCantidadPreVenta
+);
+
+routes.delete('/pre-ventas/detalles/:id',
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    ventaController.eliminarDetallePreVenta
+);
+
+routes.post('/pre-ventas/:id/detalles',
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarBody(preVentaDetalleInputSchema),
+    ventaController.crearDetallePreVenta
+);
+
+routes.patch('/pre-ventas/:id/cliente',
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    ventaController.actualizarClientePreVenta
+);
+
+routes.post('/pre-ventas/validar-pin',
+    validarMiddleware.validarBody(pinCajaSchema),
+    ventaController.validarPinCaja
+);
+
+routes.patch('/pre-ventas/:id/finalizar',
+    authMiddleware.verificarPermiso(['CREAR_VENTAS']),
+    validarMiddleware.validarBody(preVentaFinalizarSchema),
+    ventaController.finalizarPreVenta
 );
 
 routes.get("/:id",

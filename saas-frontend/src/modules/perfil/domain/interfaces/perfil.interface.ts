@@ -7,6 +7,7 @@ export interface Perfil {
     avatar_url: string | null;
     verificado: boolean;
     negocio_id: string;
+    pin_caja?: string | null;
     roles: string[];
 }
 
@@ -15,6 +16,10 @@ export interface ActualizarPerfilForm {
     apellido: string | null;
     email: string | null;
     telefono: string;
+}
+
+export interface ActualizarPinCajaForm {
+    pin_caja: string;
 }
 
 export interface CambiarPasswordForm {

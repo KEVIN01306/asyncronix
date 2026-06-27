@@ -12,6 +12,11 @@ export const perfilRepository = {
         return response.data;
     },
 
+    actualizarPinCaja: async (data: { pin_caja: string }) => {
+        const response = await api.patch('/usuarios/me/pin-caja', data);
+        return response.data;
+    },
+
     actualizarAvatar: async (file: File) => {
         const formData = new FormData();
         formData.append('avatar', file);

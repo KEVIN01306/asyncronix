@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Select, MenuItem, Stack } from '@mui/material';
+import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Select, MenuItem, Stack, Checkbox, FormControlLabel } from '@mui/material';
 import { Add, Visibility, Search, FilterList } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
-import type { Venta } from '../../domain/interfaces/venta.interface';
+import type { PreVenta, Venta } from '../../domain/interfaces/venta.interface';
 import { ventaRepository } from '../../infrastructure/venta.repository';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
@@ -22,12 +22,19 @@ const VentasListPage = () => {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const [ventas, setVentas] = useState<Venta[]>([]);
+    const [preventasPendientes, setPreventasPendientes] = useState<PreVenta[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showAnularModal, setShowAnularModal] = useState(false);
     const [ventaToAnular, setVentaToAnular] = useState<Venta | null>(null);
     const [comentarioAnular, setComentarioAnular] = useState('');
     const [anularSaving, setAnularSaving] = useState(false);
+    const [showFinalizePreVentaModal, setShowFinalizePreVentaModal] = useState(false);
+    const [preventaToFinalize, setPreventaToFinalize] = useState<PreVenta | null>(null);
+    const [overrideStock, setOverrideStock] = useState(false);
+    const [pinCaja, setPinCaja] = useState('');
+    const [showFaltantesModal, setShowFaltantesModal] = useState(false);
+    const [faltantesList, setFaltantesList] = useState<any[]>([]);
 
     // filters
     const [filtroQ, setFiltroQ] = useState<string | null>(() => searchParams.get('q'));
@@ -71,9 +78,20 @@ const VentasListPage = () => {
         }
     }, [limit, offset, debouncedFiltroQ, filtroMetodo, fechaInicio, fechaFin]);
 
+    const cargarPreventasPendientes = useCallback(async () => {
+        try {
+            const response = await ventaRepository.listarPreVentas();
+            setPreventasPendientes(response.data ?? []);
+        } catch (error) {
+            console.error(error);
+            toast.error('Error al cargar preventas pendientes');
+        }
+    }, []);
+
     useEffect(() => {
         abortableFetch(fetchVentas);
-    }, [abortableFetch, fetchVentas]);
+        cargarPreventasPendientes();
+    }, [abortableFetch, fetchVentas, cargarPreventasPendientes]);
 
     const handleAnular = (row: Venta) => {
         setVentaToAnular(row);
@@ -110,6 +128,37 @@ const VentasListPage = () => {
         setFechaFin(tempFechaFin);
         applyFiltersToSearchParams({ metodo_pago: tempFiltroMetodo, fecha_inicio: tempFechaInicio, fecha_fin: tempFechaFin });
         setFilterModalOpen(false);
+    };
+
+    const handleContinuarPreVenta = (id: string) => {
+        navigate(`/ventas/nuevo?preventa_id=${id}`);
+    };
+
+    const confirmFinalizePreVenta = async () => {
+        if (!preventaToFinalize) return;
+        try {
+            const result = await ventaRepository.finalizarPreVenta(preventaToFinalize.id, {
+                metodo_pago: 'EFECTIVO',
+                override_stock: overrideStock,
+                pin_caja: overrideStock ? pinCaja : undefined
+            });
+
+            if (result?.faltantes) {
+                // Mostrar lista de faltantes y ofrecer forzar
+                setFaltantesList(result.faltantes);
+                setShowFaltantesModal(true);
+                return;
+            }
+
+            toast.success('Preventa finalizada');
+            setShowFinalizePreVentaModal(false);
+            setPreventaToFinalize(null);
+            setOverrideStock(false);
+            setPinCaja('');
+            await cargarPreventasPendientes();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al finalizar la preventa');
+        }
     };
 
     const confirmAnular = async () => {
@@ -150,6 +199,27 @@ const VentasListPage = () => {
                 <AlertTitle>Información</AlertTitle>
                 En este módulo puedes administrar tus Ventas: ver detalles, crear nuevas ventas, editarlas o anularlas.
             </Alert>
+
+            {preventasPendientes.length > 0 && (
+                <Box component={Paper} sx={{ p: 2, mb: 3, border: (theme) => `1px solid ${theme.palette.divider}` }}>
+                    <Typography variant="h6" gutterBottom>Preventas pendientes</Typography>
+                    <Stack spacing={1.5}>
+                        {preventasPendientes.map((preventa) => (
+                            <Box key={preventa.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                <Box>
+                                    <Typography fontWeight={600}>Preventa #{preventa.id.slice(0, 8)}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {preventa.detalles.length} productos • {new Date(preventa.created_at).toLocaleString()}
+                                    </Typography>
+                                </Box>
+                                <Stack direction={isMobile ? 'column' : 'row'} spacing={1}>
+                                    <Button size="small" variant="contained" onClick={() => handleContinuarPreVenta(preventa.id)}>Continuar</Button>
+                                </Stack>
+                            </Box>
+                        ))}
+                    </Stack>
+                </Box>
+            )}
 
             <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={'center'} gap={2} mb={1}
                 sx={{ bgcolor: 'background.paper', p: 2 }}
@@ -227,6 +297,35 @@ const VentasListPage = () => {
                 </DialogActions>
             </Dialog>
 
+            <Dialog open={showFinalizePreVentaModal} onClose={() => setShowFinalizePreVentaModal(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Finalizar preventa</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1}>
+                        <Typography variant="body2" color="text.secondary">
+                            ¿Deseas finalizar esta preventa y convertirla en venta?
+                        </Typography>
+                        <FormControlLabel
+                            control={<Checkbox checked={overrideStock} onChange={(_, checked) => setOverrideStock(checked)} />}
+                            label="Forzar finalización aunque haya stock insuficiente"
+                        />
+                        {overrideStock && (
+                            <TextField
+                                fullWidth
+                                label="PIN de caja"
+                                type="password"
+                                inputMode="numeric"
+                                value={pinCaja}
+                                onChange={(e) => setPinCaja(e.target.value)}
+                            />
+                        )}
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowFinalizePreVentaModal(false)}>Cancelar</Button>
+                    <Button onClick={confirmFinalizePreVenta} variant="contained">Confirmar</Button>
+                </DialogActions>
+            </Dialog>
+
             <Dialog open={filterModalOpen} onClose={() => setFilterModalOpen(false)} fullWidth maxWidth="sm">
                 <DialogTitle>Filtros</DialogTitle>
                 <DialogContent>
@@ -256,6 +355,28 @@ const VentasListPage = () => {
                     <Button onClick={() => setFilterModalOpen(false)}>Cancelar</Button>
                     <Button onClick={handleClearFilters} variant="outlined">Limpiar</Button>
                     <Button onClick={handleApplyFilters} variant="contained">Aplicar</Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={showFaltantesModal} onClose={() => setShowFaltantesModal(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Faltantes de stock</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary">Las siguientes variantes no poseen stock suficiente:</Typography>
+                    <Stack spacing={1} mt={2}>
+                        {faltantesList.map((f, idx) => (
+                            <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography>{f.descripcion}</Typography>
+                                <Typography color="text.secondary">Solicitado: {f.solicitado} • Disponible: {f.disponible}</Typography>
+                            </Box>
+                        ))}
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowFaltantesModal(false)}>Cancelar</Button>
+                    <Button onClick={() => {
+                        setShowFaltantesModal(false);
+                        setShowFinalizePreVentaModal(true);
+                        setOverrideStock(true);
+                    }} variant="contained">Forzar stock</Button>
                 </DialogActions>
             </Dialog>
         </Box>

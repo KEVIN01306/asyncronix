@@ -6,6 +6,7 @@ import { RegistrarUsuarioUseCase } from "./application/registrar-usuario.usecase
 import { ActualizarPerfilUseCase } from "./application/actualizar-perfil.usecase.js";
 import { ActualizarAvatarUseCase } from "./application/actualizar-avatar.usecase.js";
 import { CambiarPasswordUseCase } from "./application/cambiar-password.usecase.js";
+import { ActualizarPinCajaUseCase } from "./application/actualizar-pin-caja.usecase.js";
 import { PrismaUsuarioRepository } from "./infrastructure/prisma-usuario.repository.js";
 import { UsuarioController } from "./presentation/usuario.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
@@ -23,6 +24,7 @@ const eliminarUsuarioUseCase = new EliminarUsuarioUseCase(usuarioRepository)
 const actualizarPerfilUseCase = new ActualizarPerfilUseCase(usuarioRepository)
 const actualizarAvatarUseCase = new ActualizarAvatarUseCase(usuarioRepository)
 const cambiarPasswordUseCase = new CambiarPasswordUseCase(usuarioRepository, hashProvider)
+const actualizarPinCajaUseCase = new ActualizarPinCajaUseCase(usuarioRepository, hashProvider)
 
 export const usuarioController = new UsuarioController(
     obtenerUsuarioUseCase,
@@ -32,5 +34,6 @@ export const usuarioController = new UsuarioController(
     eliminarUsuarioUseCase,
     actualizarPerfilUseCase,
     actualizarAvatarUseCase,
-    cambiarPasswordUseCase
+    cambiarPasswordUseCase,
+    actualizarPinCajaUseCase
 );

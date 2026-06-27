@@ -1,5 +1,5 @@
 import api from "../../../core/api/api";
-import type { Venta, VentaCreateForm, VentaUpdateForm, VentaResponse, VentaVarianteDetalle } from "../domain/interfaces/venta.interface";
+import type { PreVenta, PreVentaCreateForm, Venta, VentaCreateForm, VentaUpdateForm, VentaResponse, VentaVarianteDetalle } from "../domain/interfaces/venta.interface";
 
 export const ventaRepository = {
     listar: async (limit: number, offset: number, cliente_id?: string | null, metodo_pago?: string | null, q?: string | null, fecha_inicio?: string | null, fecha_fin?: string | null, signal?: AbortSignal): Promise<VentaResponse> => {
@@ -59,6 +59,43 @@ export const ventaRepository = {
     },
     finalizarVenta: async (ventaId: string, sucursal_id: string, metodo_pago?: string): Promise<{ data: Venta }> => {
         const response = await api.patch<{ data: Venta }>(`/ventas/${ventaId}/finalizar`, { sucursal_id, metodo_pago });
+        return response as any;
+    },
+    crearPreVenta: async (data: PreVentaCreateForm): Promise<{ data: PreVenta }> => {
+        const response = await api.post<{ data: PreVenta }>('/ventas/pre-ventas', data);
+        return response as any;
+    },
+    listarPreVentas: async (): Promise<{ data: PreVenta[] }> => {
+        const response = await api.get<{ data: PreVenta[] }>('/ventas/pre-ventas');
+        return response as any;
+    },
+    obtenerPreVenta: async (id: string): Promise<{ data: PreVenta }> => {
+        const response = await api.get<{ data: PreVenta }>(`/ventas/pre-ventas/${id}`);
+        return response as any;
+    },
+    actualizarCantidadPreVenta: async (detalleId: string, cantidad: number): Promise<any> => {
+        const response = await api.patch(`/ventas/pre-ventas/detalles/${detalleId}/cantidad`, { cantidad });
+        return response as any;
+    },
+    eliminarDetallePreVenta: async (detalleId: string): Promise<any> => {
+        const response = await api.delete(`/ventas/pre-ventas/detalles/${detalleId}`);
+        return response as any;
+    },
+    finalizarPreVenta: async (id: string, payload?: { metodo_pago?: string; comentarios?: string | null; override_stock?: boolean; pin_caja?: string; efectivo_recibido?: number | null; vuelto?: number | null }): Promise<any> => {
+        const response = await api.patch(`/ventas/pre-ventas/${id}/finalizar`, payload ?? {});
+        return response as any;
+    },
+    actualizarClientePreVenta: async (id: string, cliente_id: string | null): Promise<any> => {
+        const response = await api.patch(`/ventas/pre-ventas/${id}/cliente`, { cliente_id });
+        return response as any;
+    },
+    validarPinCaja: async (pin: string): Promise<any> => {
+        const response = await api.post('/ventas/pre-ventas/validar-pin', { pin_caja: pin });
+        return response as any;
+    }
+    ,
+    addDetallePreVenta: async (preventaId: string, item: { variante_id: string; cantidad: number; precio?: number; descripcion?: string }): Promise<any> => {
+        const response = await api.post(`/ventas/pre-ventas/${preventaId}/detalles`, item);
         return response as any;
     }
 };
