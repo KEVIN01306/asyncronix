@@ -14,12 +14,12 @@ export const VarianteRepository = {
         return response;
     },
 
-    crear: async (producto_id: string, payload: Omit<Variante, 'id' | 'stock_total' | 'activo' | 'sku' | 'qr_codigo' | 'url_imagen' | 'valores'>): Promise<Variante> => {
+    crear: async (producto_id: string, payload: Omit<Variante, 'id' | 'stock_total' | 'activo' | 'sku' | 'qr_codigo' | 'valores' | 'imagen'>): Promise<Variante> => {
         const response = await api.post<{ data: Variante }>(`${URL_MODULE}${producto_id}/variantes`, payload);
         return response.data;
     },
 
-    actualizar: async (id: string, payload: Partial<Omit<Variante, 'id' | 'producto_id' | 'stock_total' | 'activo' | 'sku' | 'qr_codigo' | 'url_imagen' | 'valores'>>): Promise<Variante> => {
+    actualizar: async (id: string, payload: Partial<Omit<Variante, 'id' | 'producto_id' | 'stock_total' | 'activo' | 'sku' | 'qr_codigo' | 'valores' | 'imagen'>>): Promise<Variante> => {
         const response = await api.put<{ data: Variante }>(`${URL_MODULE}variantes/${id}`, payload);
         return response.data;
     },
@@ -33,18 +33,6 @@ export const VarianteRepository = {
 
     generarQr: async (id: string): Promise<Variante> => {
         const response = await api.post<{ data: Variante }>(`${URL_MODULE}variantes/${id}/generar-qr`);
-        return response.data;
-    },
-
-    subirImagen: async (id: string, file: File): Promise<Variante> => {
-        const formData = new FormData();
-        formData.append('imagen', file);
-
-        const response = await api.post<{ data: Variante }>(`${URL_MODULE}variantes/${id}/imagen`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
         return response.data;
     },
 

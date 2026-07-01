@@ -4,7 +4,6 @@ import type { VarianteRepository } from '../domain/variante.repository.js';
 import { GenerarSku } from '../domain/actions/generarSku.action.js';
 import { PrismaErrorMapper } from '@shared/database/prisma/PrismaErrorMapper.js';
 import AppError from '@shared/errors/AppError.js';
-import ManejadorArchivos from '@shared/infrastructure/manejadorArchivos.utils.js';
 
 export class PrismaVarianteRepository implements VarianteRepository {
     constructor(private readonly prisma: PrismaClient) { }
@@ -12,8 +11,16 @@ export class PrismaVarianteRepository implements VarianteRepository {
     async crear(variante: VarianteCrear, negocio_id: string): Promise<VarianteDetalle> {
         try {
             const producto = await this.prisma.producto.findFirst({
-                where: { id: variante.producto_id, negocio_id },
-                include: { categoria: true, marca: true, negocio: true }
+                where: { id: variante.producto_id, negocio_id, activo: true },
+                include: {
+                    categoria: true,
+                    marca: true,
+                    negocio: true,
+                    imagenes: {
+                        where: { es_principal: true },
+                        take: 1
+                    }
+                }
             });
 
             if (!producto) throw new AppError('Producto no encontrado', 'PRODUCTO_NOT_FOUND', 404);
@@ -30,16 +37,30 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 valores: valores.map((valor) => valor.valor)
             });
 
+            let imagen_id = variante.imagen_id ?? null;
+            if (!imagen_id) {
+                imagen_id = producto.imagenes?.[0]?.id ?? null;
+            }
+
+            if (imagen_id) {
+                const imagenValida = await this.prisma.imagenProducto.findFirst({
+                    where: { id: imagen_id, producto_id: variante.producto_id }
+                });
+                if (!imagenValida) {
+                    throw new AppError('La imagen seleccionada no pertenece al producto', 'IMAGEN_INVALIDA', 400);
+                }
+            }
+
             const createData: any = {
                 producto_id: variante.producto_id,
+                imagen_id,
                 sku,
                 codigo_barras: variante.codigo_barras ?? null,
                 codigo_secuencial: variante.codigo_secuencial ?? null,
                 qr_codigo: null,
                 precio_sugerido: variante.precio_sugerido,
                 stock_total: 0,
-                activo: true,
-                url_imagen: ''
+                activo: true
             };
 
             if (variante.valor_atributo_ids && variante.valor_atributo_ids.length) {
@@ -49,6 +70,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
             const created = await this.prisma.varianteProducto.create({
                 data: createData,
                 include: {
+                    imagen: true,
                     producto: { select: { id: true, nombre: true } },
                     valores: { include: { atributo: true } }
                 }
@@ -91,6 +113,18 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 sku
             };
 
+            if (variante.imagen_id !== undefined) {
+                if (variante.imagen_id) {
+                    const imagenValida = await this.prisma.imagenProducto.findFirst({
+                        where: { id: variante.imagen_id, producto_id: existing.producto_id }
+                    });
+                    if (!imagenValida) {
+                        throw new AppError('La imagen seleccionada no pertenece al producto', 'IMAGEN_INVALIDA', 400);
+                    }
+                }
+                updateData.imagen_id = variante.imagen_id;
+            }
+
             if (variante.valor_atributo_ids) {
                 updateData.valores = { set: valorIds.map((valor_id) => ({ id: valor_id })) };
             }
@@ -99,6 +133,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 where: { id },
                 data: updateData,
                 include: {
+                    imagen: true,
                     producto: { select: { id: true, nombre: true } },
                     valores: { include: { atributo: true } }
                 }
@@ -128,13 +163,13 @@ export class PrismaVarianteRepository implements VarianteRepository {
             const found = await this.prisma.varianteProducto.findFirst({
                 where: { id, producto: { negocio_id }, activo: true },
                 include: {
+                    imagen: true,
                     producto: { select: { id: true, nombre: true } },
                     valores: { include: { atributo: true } }
                 }
             });
 
             if (!found) return null;
-            // calcular stock_total para la variante consultada
             const agg = await this.prisma.lote.aggregate({ where: { variante_id: found.id, activo: true }, _sum: { cantidad_actual: true } });
             (found as any).stock_total = (agg._sum.cantidad_actual ?? 0) as number;
             return this.mapToDetalle(found);
@@ -155,6 +190,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
                     ]
                 },
                 include: {
+                    imagen: true,
                     producto: { select: { id: true, nombre: true } },
                     valores: { include: { atributo: true } }
                 }
@@ -178,6 +214,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
                     producto: { negocio_id }
                 },
                 include: {
+                    imagen: true,
                     producto: { select: { id: true, nombre: true } },
                     valores: { include: { atributo: true } }
                 },
@@ -218,6 +255,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
                     producto: { negocio_id }
                 },
                 include: {
+                    imagen: true,
                     producto: { select: { id: true, nombre: true } },
                     valores: { include: { atributo: true } }
                 },
@@ -257,7 +295,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
         try {
             const existing = await this.prisma.varianteProducto.findFirst({
                 where: { id, producto: { negocio_id }, activo: true },
-                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
+                include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
             });
 
             if (!existing) throw new AppError('Variante no encontrada', 'VARIANTE_NOT_FOUND', 404);
@@ -265,7 +303,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
             const updated = await this.prisma.varianteProducto.update({
                 where: { id },
                 data: { codigo_barras },
-                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
+                include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
             });
 
             return this.mapToDetalle(updated);
@@ -278,7 +316,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
         try {
             const existing = await this.prisma.varianteProducto.findFirst({
                 where: { id, producto: { negocio_id }, activo: true },
-                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
+                include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
             });
 
             if (!existing) throw new AppError('Variante no encontrada', 'VARIANTE_NOT_FOUND', 404);
@@ -286,7 +324,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
             const updated = await this.prisma.varianteProducto.update({
                 where: { id },
                 data: { codigo_secuencial },
-                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
+                include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
             });
 
             return this.mapToDetalle(updated);
@@ -299,7 +337,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
         try {
             const existing = await this.prisma.varianteProducto.findFirst({
                 where: { id, producto: { negocio_id }, activo: true },
-                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
+                include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
             });
 
             if (!existing) throw new AppError('Variante no encontrada', 'VARIANTE_NOT_FOUND', 404);
@@ -308,29 +346,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
             const updated = await this.prisma.varianteProducto.update({
                 where: { id },
                 data: { qr_codigo: existing.codigo_secuencial },
-                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
-            });
-
-            return this.mapToDetalle(updated);
-        } catch (error) {
-            throw PrismaErrorMapper.map(error);
-        }
-    }
-
-    async subirImagen(id: string, url_imagen: string, negocio_id: string): Promise<VarianteDetalle> {
-        try {
-            const existing = await this.prisma.varianteProducto.findFirst({
-                where: { id, producto: { negocio_id }, activo: true },
-                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
-            });
-
-            if (!existing) throw new AppError('Variante no encontrada', 'VARIANTE_NOT_FOUND', 404);
-            if (existing.url_imagen) await ManejadorArchivos.eliminarArchivo(existing.url_imagen);
-
-            const updated = await this.prisma.varianteProducto.update({
-                where: { id },
-                data: { url_imagen },
-                include: { producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
+                include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
             });
 
             return this.mapToDetalle(updated);
@@ -343,6 +359,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
         const detalle: VarianteDetalle = {
             id: found.id,
             producto_id: found.producto_id,
+            imagen_id: found.imagen_id,
             sku: found.sku,
             codigo_barras: found.codigo_barras,
             codigo_secuencial: found.codigo_secuencial,
@@ -350,7 +367,12 @@ export class PrismaVarianteRepository implements VarianteRepository {
             precio_sugerido: found.precio_sugerido,
             stock_total: found.stock_total,
             activo: found.activo,
-            url_imagen: found.url_imagen,
+            imagen: found.imagen ? {
+                id: found.imagen.id,
+                url: found.imagen.url,
+                descripcion: found.imagen.descripcion,
+                es_principal: found.imagen.es_principal
+            } : null,
             valores: found.valores?.map((valor: any) => ({
                 id: valor.id,
                 atributo_id: valor.atributo_id,

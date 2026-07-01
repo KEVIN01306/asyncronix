@@ -13,12 +13,16 @@ import type { EliminarVarianteUseCase } from "../application/eliminar-variante.u
 import type { ListarVariantesProductoUseCase } from "../application/listar-variantes-producto.usecase.js";
 import type { ListarVariantesNegocioUseCase } from "../application/listar-variantes-negocio.usecase.js";
 import type { ObtenerVarianteUseCase } from "../application/obtener-variante.usecase.js";
-import type { SubirImagenVarianteUseCase } from "../application/subir-imagen-variante.usecase.js";
 import type { ActualizarCodigoBarrasVarianteUseCase } from "../application/actualizar-codigo-barras-variante.usecase.js";
 import type { GenerarQrVarianteUseCase } from "../application/generar-qr-variante.usecase.js";
 import type { BuscarVariantePorCodigoUseCase } from "../application/buscar-variante-por-codigo.usecase.js";
 import type { ListarAtributosProductoUseCase } from "../application/listar-atributos-producto.usecase.js";
 import type { ActualizarAtributosProductoUseCase } from "../application/actualizar-atributos-producto.usecase.js";
+import type { ListarImagenesProductoUseCase } from "../application/listar-imagenes-producto.usecase.js";
+import type { ActualizarArchivoImagenProductoUseCase } from "../application/actualizar-archivo-imagen-producto.usecase.js";
+import type { ActualizarDescripcionImagenProductoUseCase } from "../application/actualizar-descripcion-imagen-producto.usecase.js";
+import type { EstablecerImagenPrincipalProductoUseCase } from "../application/establecer-imagen-principal-producto.usecase.js";
+import type { EliminarImagenProductoUseCase } from "../application/eliminar-imagen-producto.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ProductoController extends BaseController {
@@ -29,13 +33,17 @@ export class ProductoController extends BaseController {
         private readonly actualizarProductoUseCase: ActualizarProductoUseCase,
         private readonly eliminarProductoUseCase: EliminarProductoUseCase,
         private readonly subirImagenProductoUseCase: SubirImagenProductoUseCase,
+        private readonly listarImagenesProductoUseCase: ListarImagenesProductoUseCase,
+        private readonly actualizarArchivoImagenProductoUseCase: ActualizarArchivoImagenProductoUseCase,
+        private readonly actualizarDescripcionImagenProductoUseCase: ActualizarDescripcionImagenProductoUseCase,
+        private readonly establecerImagenPrincipalProductoUseCase: EstablecerImagenPrincipalProductoUseCase,
+        private readonly eliminarImagenProductoUseCase: EliminarImagenProductoUseCase,
         private readonly crearVarianteUseCase: CrearVarianteUseCase,
         private readonly actualizarVarianteUseCase: ActualizarVarianteUseCase,
         private readonly eliminarVarianteUseCase: EliminarVarianteUseCase,
         private readonly listarVariantesProductoUseCase: ListarVariantesProductoUseCase,
         private readonly listarVariantesNegocioUseCase: ListarVariantesNegocioUseCase,
         private readonly obtenerVarianteUseCase: ObtenerVarianteUseCase,
-        private readonly subirImagenVarianteUseCase: SubirImagenVarianteUseCase,
         private readonly actualizarCodigoBarrasVarianteUseCase: ActualizarCodigoBarrasVarianteUseCase,
         private readonly generarQrVarianteUseCase: GenerarQrVarianteUseCase,
         private readonly buscarVariantePorCodigoUseCase: BuscarVariantePorCodigoUseCase,
@@ -155,22 +163,6 @@ export class ProductoController extends BaseController {
         }
     }
 
-    subirImagenVariante = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
-        try {
-            const { id } = req.params;
-            const { negocio_id } = this.obtenerEntorno(res);
-
-            if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
-
-            const url_imagen = req.file.path.replace(/\\/g, '/');
-            const variant = await this.subirImagenVarianteUseCase.execute(id, url_imagen, negocio_id);
-
-            res.status(201).json(Respuesta.exito('Imagen de variante subida con exito', variant));
-        } catch (error) {
-            next(error);
-        }
-    }
-
     actualizarCodigoBarrasVariante = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
@@ -253,17 +245,78 @@ export class ProductoController extends BaseController {
         try {
             const { producto_id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
+            const { descripcion } = req.body;
 
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
 
-            const url_imagen = req.file.path.replace(/\\/g, '/');
+            const url = req.file.path.replace(/\\/g, '/');
             const producto = await this.subirImagenProductoUseCase.execute({
                 producto_id,
-                url_imagen,
+                url,
+                descripcion: descripcion ?? null,
                 negocio_id
             });
 
             res.status(201).json(Respuesta.exito('Imagen subida con exito', producto));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listarImagenes = async (req: Request<{ producto_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { producto_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const imagenes = await this.listarImagenesProductoUseCase.execute(producto_id, negocio_id);
+            res.status(200).json(Respuesta.exito('Imagenes obtenidas con exito', imagenes));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    actualizarArchivoImagen = async (req: Request<{ imagen_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { imagen_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
+
+            const url = req.file.path.replace(/\\/g, '/');
+            const imagen = await this.actualizarArchivoImagenProductoUseCase.execute(imagen_id, url, negocio_id);
+            res.status(200).json(Respuesta.exito('Imagen actualizada con exito', imagen));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    actualizarDescripcionImagen = async (req: Request<{ imagen_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { imagen_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const { descripcion } = req.body;
+            const imagen = await this.actualizarDescripcionImagenProductoUseCase.execute(imagen_id, descripcion ?? null, negocio_id);
+            res.status(200).json(Respuesta.exito('Descripcion actualizada con exito', imagen));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    establecerImagenPrincipal = async (req: Request<{ imagen_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { imagen_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const imagen = await this.establecerImagenPrincipalProductoUseCase.execute(imagen_id, negocio_id);
+            res.status(200).json(Respuesta.exito('Imagen principal actualizada con exito', imagen));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    eliminarImagen = async (req: Request<{ imagen_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { imagen_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            await this.eliminarImagenProductoUseCase.execute(imagen_id, negocio_id);
+            res.status(200).json(Respuesta.exito('Imagen eliminada con exito', null));
         } catch (error) {
             next(error);
         }

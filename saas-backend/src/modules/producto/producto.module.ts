@@ -4,12 +4,16 @@ import { ObtenerProductoUseCase } from "./application/obtener-producto.usecase.j
 import { ObtenerProductosUseCase } from "./application/obtener-productos.usecase.js";
 import { RegistrarProductoUseCase } from "./application/registrar-producto.usecase.js";
 import { SubirImagenProductoUseCase } from "./application/subir-imagen-producto.usecase.js";
+import { ListarImagenesProductoUseCase } from "./application/listar-imagenes-producto.usecase.js";
+import { ActualizarArchivoImagenProductoUseCase } from "./application/actualizar-archivo-imagen-producto.usecase.js";
+import { ActualizarDescripcionImagenProductoUseCase } from "./application/actualizar-descripcion-imagen-producto.usecase.js";
+import { EstablecerImagenPrincipalProductoUseCase } from "./application/establecer-imagen-principal-producto.usecase.js";
+import { EliminarImagenProductoUseCase } from "./application/eliminar-imagen-producto.usecase.js";
 import { CrearVarianteUseCase } from "./application/crear-variante.usecase.js";
 import { ActualizarVarianteUseCase } from "./application/actualizar-variante.usecase.js";
 import { EliminarVarianteUseCase } from "./application/eliminar-variante.usecase.js";
 import { ListarVariantesProductoUseCase } from "./application/listar-variantes-producto.usecase.js";
 import { ObtenerVarianteUseCase } from "./application/obtener-variante.usecase.js";
-import { SubirImagenVarianteUseCase } from "./application/subir-imagen-variante.usecase.js";
 import { ActualizarCodigoBarrasVarianteUseCase } from "./application/actualizar-codigo-barras-variante.usecase.js";
 import { GenerarQrVarianteUseCase } from "./application/generar-qr-variante.usecase.js";
 import { ListarAtributosProductoUseCase } from "./application/listar-atributos-producto.usecase.js";
@@ -31,6 +35,11 @@ const obtenerProductoUseCase = new ObtenerProductoUseCase(productoRepository);
 const obtenerProductosUseCase = new ObtenerProductosUseCase(productoRepository);
 const eliminarProductoUseCase = new EliminarProductoUseCase(productoRepository);
 const subirImagenProductoUseCase = new SubirImagenProductoUseCase(productoRepository);
+const listarImagenesProductoUseCase = new ListarImagenesProductoUseCase(productoRepository);
+const actualizarArchivoImagenProductoUseCase = new ActualizarArchivoImagenProductoUseCase(productoRepository);
+const actualizarDescripcionImagenProductoUseCase = new ActualizarDescripcionImagenProductoUseCase(productoRepository);
+const establecerImagenPrincipalProductoUseCase = new EstablecerImagenPrincipalProductoUseCase(productoRepository);
+const eliminarImagenProductoUseCase = new EliminarImagenProductoUseCase(productoRepository);
 const obtenerSecuenciaUseCase = new ObtenerSecuenciaUseCase(barcodeSequenceRepository);
 const crearVarianteUseCase = new CrearVarianteUseCase(varianteRepository, obtenerSecuenciaUseCase);
 const registrarProductoUseCase = new RegistrarProductoUseCase(productoRepository, varianteRepository, obtenerSecuenciaUseCase);
@@ -42,7 +51,6 @@ const eliminarVarianteUseCase = new EliminarVarianteUseCase(varianteRepository);
 const listarVariantesProductoUseCase = new ListarVariantesProductoUseCase(varianteRepository);
 const listarVariantesNegocioUseCase = new ListarVariantesNegocioUseCase(varianteRepository);
 const obtenerVarianteUseCase = new ObtenerVarianteUseCase(varianteRepository);
-const subirImagenVarianteUseCase = new SubirImagenVarianteUseCase(varianteRepository);
 const actualizarCodigoBarrasVarianteUseCase = new ActualizarCodigoBarrasVarianteUseCase(varianteRepository);
 const generarQrVarianteUseCase = new GenerarQrVarianteUseCase(varianteRepository);
 const buscarVariantePorCodigoUseCase = new BuscarVariantePorCodigoUseCase(varianteRepository);
@@ -54,13 +62,17 @@ export const productoController = new ProductoController(
     actualizarProductoUseCase,
     eliminarProductoUseCase,
     subirImagenProductoUseCase,
+    listarImagenesProductoUseCase,
+    actualizarArchivoImagenProductoUseCase,
+    actualizarDescripcionImagenProductoUseCase,
+    establecerImagenPrincipalProductoUseCase,
+    eliminarImagenProductoUseCase,
     crearVarianteUseCase,
     actualizarVarianteUseCase,
     eliminarVarianteUseCase,
     listarVariantesProductoUseCase,
     listarVariantesNegocioUseCase,
     obtenerVarianteUseCase,
-    subirImagenVarianteUseCase,
     actualizarCodigoBarrasVarianteUseCase,
     generarQrVarianteUseCase,
     buscarVariantePorCodigoUseCase,

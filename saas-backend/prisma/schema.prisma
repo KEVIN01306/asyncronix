@@ -78,9 +78,11 @@ model Negocio {
   tipos_serv    TipoServicio[]
   opciones_serv OpcionServicio[]
   checklist     ChecklistItem[]
-  contabilidad  IngresosEgresos[]
   proveedores   Proveedor[]
-
+  cajas                Caja[]
+  cuentas_bancarias    CuentaBancaria[]
+  categorias_trans_neg CategoriaTransaccion[]
+  transacciones        Transaccion[]
   @@map("negocios")
 }
 
@@ -101,8 +103,10 @@ model Sucursal {
   pre_ventas       PreVenta[]
   servicios        Servicio[]
   citas            Cita[]
-  ingresos_egresos IngresosEgresos[]
   lotes            Lote[]
+  cajas            Caja[]
+  cuentas_bancarias SucursalCuentaBancaria[]
+  transacciones    Transaccion[]
   trasladosOrigen  Traslado[]        @relation("SucursalOrigen")
   trasladosDestino Traslado[]        @relation("SucursalDestino")
 
@@ -159,6 +163,7 @@ model Usuario {
   servicios_recepcionista Servicio[] @relation(name: "ServicioRecepcionista")
   ventas_autorizadas Venta[] @relation("VentaAutorizador")
   pre_ventas PreVenta[] @relation("PreVentaUsuario")
+  transacciones_hechas Transaccion[] @relation("TransaccionesUsuario")
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -355,6 +360,8 @@ model Servicio {
   nombre_extra        String?        @db.VarChar(255)
   numero_extra        String?        @db.VarChar(20)  
   activo              Boolean        @default(true)
+  efectivo_recibido   Float?
+  vuelto              Float?
   MetodoPago          MetodoPago?     @default(EFECTIVO)
   servicio_tipo       ServicioTipo   @default(VEHICULO)
   created_at          DateTime       @default(now())
@@ -552,7 +559,6 @@ model Producto {
   codigo       String?  @db.VarChar(100)
   categoria_id String   @db.Char(36)
   marca_id     String?  @db.Char(36)
-  url_imagen   String   @db.Text
   nombre       String   @db.VarChar(100)
   descripcion  String?  @db.Text
   activo       Boolean  @default(true)
@@ -565,8 +571,28 @@ model Producto {
   variantes         VarianteProducto[]
   productoAtributos ProductoAtributo[]
 
+  imagenes          ImagenProducto[]
+  
   @@unique([negocio_id, codigo])
   @@map("productos")
+}
+
+
+model ImagenProducto {
+  id          String   @id @default(uuid()) @db.Char(36)
+  producto_id String   @db.Char(36)
+  url         String   @db.Text
+  descripcion String?  @db.VarChar(255)
+  es_principal Boolean @default(false) 
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  producto    Producto @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  
+  variantes   VarianteProducto[]
+
+  @@index([producto_id])
+  @@map("imagenes_producto")
 }
 
 model Atributo {
@@ -601,7 +627,7 @@ model ProductoAtributo {
 model VarianteProducto {
   id              String   @id @default(uuid()) @db.Char(36)
   producto_id     String   @db.Char(36)
-  url_imagen      String   @db.Text
+  imagen_id       String?  @db.Char(36)
   sku             String   @unique
   codigo_secuencial String? @unique @db.VarChar(20)
   codigo_barras   String?  @unique
@@ -613,6 +639,7 @@ model VarianteProducto {
   updated_at      DateTime @updatedAt
 
   producto       Producto           @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  imagen         ImagenProducto?    @relation(fields: [imagen_id], references: [id], onDelete: SetNull)
   valores        ValorAtributo[]
   lotes          Lote[]
   repuestos      ServicioRepuesto[]
@@ -622,7 +649,6 @@ model VarianteProducto {
   @@index([producto_id])
   @@map("variantes_producto")
 }
-
 model ValorAtributo {
   id          String   @id @default(uuid()) @db.Char(36)
   atributo_id String   @db.Char(36)
@@ -820,37 +846,6 @@ model Imagen {
 
   @@map("imagenes")
 }
-
-model TipoContabilidad {
-  id               String            @id @default(uuid()) @db.Char(36)
-  tipo             String
-  activo           Boolean           @default(true)
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @updatedAt
-  ingresos_egresos IngresosEgresos[]
-
-  @@map("tipos_contabilidad")
-}
-
-model IngresosEgresos {
-  id          String   @id @default(uuid()) @db.Char(36)
-  negocio_id  String   @db.Char(36)
-  sucursal_id String   @db.Char(36)
-  tipo_id     String   @db.Char(36)
-  descripcion String?
-  monto       Float
-  activo      Boolean  @default(true)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-
-  negocio  Negocio          @relation(fields: [negocio_id], references: [id])
-  sucursal Sucursal         @relation(fields: [sucursal_id], references: [id])
-  tipo     TipoContabilidad @relation(fields: [tipo_id], references: [id])
-
-  @@map("ingresos_egresos")
-}
-
-
 model BarcodeSequence {
   id         BigInt   @id @default(autoincrement())
   created_at DateTime @default(now())
@@ -858,9 +853,157 @@ model BarcodeSequence {
   @@map("barcode_sequences")
 }
 
+
+model Banco {
+  id         String   @id @default(uuid()) @db.Char(36)
+  nombre     String   @unique
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  cuentas    CuentaBancaria[]
+
+  @@map("bancos") 
+}
+
+model Caja {
+  id          String   @id @default(uuid()) @db.Char(36)
+  negocio_id  String   @db.Char(36)
+  sucursal_id String   @db.Char(36)
+  nombre      String   // Ej: "Caja Principal", "Caja Virtual Efectivo"
+  tipo        TipoCaja @default(FISICA)
+  saldo       Float    @default(0)
+  activo      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  negocio     Negocio  @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  sucursal    Sucursal @relation(fields: [sucursal_id], references: [id], onDelete: Cascade)
+
+  // Relaciones para auditoría de movimientos
+  transaccionesOrigen  Transaccion[] @relation("OrigenCaja")
+  transaccionesDestino Transaccion[] @relation("DestinoCaja")
+
+  @@map("cajas")
+}
+
+model CuentaBancaria {
+  id             String   @id @default(uuid()) @db.Char(36)
+  negocio_id     String   @db.Char(36)
+  banco_id       String   @db.Char(36)
+  numero_cuenta  String
+  nombre_titular String
+  saldo          Float    @default(0)
+  activo         Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  negocio        Negocio  @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  banco          Banco    @relation(fields: [banco_id], references: [id])
+  
+  // Relación Muchos a Muchos implícita o explícita con sucursales
+  sucursales     SucursalCuentaBancaria[]
+
+  transaccionesOrigen  Transaccion[] @relation("OrigenCuenta")
+  transaccionesDestino Transaccion[] @relation("DestinoCuenta")
+
+  @@unique([negocio_id, numero_cuenta])
+  @@map("cuentas_bancarias")
+}
+
+// Tabla intermedia explícita para poder asignar una cuenta a varias sucursales
+model SucursalCuentaBancaria {
+  sucursal_id        String   @db.Char(36)
+  cuenta_bancaria_id String   @db.Char(36)
+  created_at         DateTime @default(now())
+
+  sucursal        Sucursal       @relation(fields: [sucursal_id], references: [id], onDelete: Cascade)
+  cuenta_bancaria CuentaBancaria @relation(fields: [cuenta_bancaria_id], references: [id], onDelete: Cascade)
+
+  @@id([sucursal_id, cuenta_bancaria_id])
+  @@map("sucursal_cuentas_bancarias")
+}
+
+model CategoriaTransaccion {
+  id         String   @id @default(uuid()) @db.Char(36)
+  negocio_id String?  @db.Char(36) // null si es una categoría global del sistema
+  nombre     String   // Ej: "Pago de Planilla", "Compra de Suministros", "Venta de Repuestos"
+  tipo       TipoMovimiento
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  negocio    Negocio? @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  transacciones Transaccion[]
+
+  @@unique([negocio_id, nombre])
+  @@map("categorias_transaccion")
+}
+
+model Transaccion {
+  id                     String                @id @default(uuid()) @db.Char(36)
+  negocio_id             String                @db.Char(36)
+  sucursal_id            String                @db.Char(36)
+  categoria_id           String?               @db.Char(36)
+  usuario_id             String                @db.Char(36) // Quién ejecutó el movimiento
+  
+  tipo_movimiento        TipoMovimiento
+  origen_tipo            TipoOrigenTransaccion @default(INGRESO_EGRESO)
+  origen_id              String?               @db.Char(36) // ID de la Venta, Servicio o registro de Gasto externo
+
+  monto                  Float
+  descripcion            String?               @db.Text
+  
+  // Control de Flujo de Fondos (Polimorfismo limpio mediante llaves foráneas opcionales)
+  origen_entidad         TipoEntidadFinanciera?
+  origen_caja_id         String?               @db.Char(36)
+  origen_cuenta_id       String?               @db.Char(36)
+
+  destino_entidad        TipoEntidadFinanciera?
+  destino_caja_id        String?               @db.Char(36)
+  destino_cuenta_id      String?               @db.Char(36)
+
+  fecha_transaccion      DateTime              @default(now())
+  created_at             DateTime              @default(now())
+
+  negocio          Negocio               @relation(fields: [negocio_id], references: [id])
+  sucursal         Sucursal              @relation(fields: [sucursal_id], references: [id])
+  categoria        CategoriaTransaccion? @relation(fields: [categoria_id], references: [id])
+  usuario          Usuario               @relation("TransaccionesUsuario", fields: [usuario_id], references: [id])
+
+  origen_caja      Caja?                 @relation("OrigenCaja", fields: [origen_caja_id], references: [id])
+  origen_cuenta    CuentaBancaria?       @relation("OrigenCuenta", fields: [origen_cuenta_id], references: [id])
+  destino_caja     Caja?                 @relation("DestinoCaja", fields: [destino_caja_id], references: [id])
+  destino_cuenta   CuentaBancaria?       @relation("DestinoCuenta", fields: [destino_cuenta_id], references: [id])
+
+  @@map("transacciones")
+}
+
 // ==============================================================
 // 8. ENUMERACIONES
 // ==============================================================
+enum TipoCaja {
+  FISICA
+  EN_LINEA
+}
+
+enum TipoEntidadFinanciera {
+  CAJA
+  CUENTA
+}
+
+enum TipoMovimiento {
+  INGRESO
+  EGRESO
+  TRANSFERENCIA
+}
+
+enum TipoOrigenTransaccion {
+  VENTA
+  SERVICIO
+  INGRESO_EGRESO // Gastos, pagos a personal, etc.
+  MOVIMIENTO_INTERNO // Transferencia entre cajas/cuentas, depósitos, retiros
+}
 
 enum MetodoPago {
   EFECTIVO

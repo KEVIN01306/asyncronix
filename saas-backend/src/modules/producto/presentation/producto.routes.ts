@@ -7,7 +7,8 @@ import {
     productoCrearSchema,
     productoActualizarSchema,
     productoAtributosSchema,
-    productoListarQuerySchema
+    productoListarQuerySchema,
+    imagenDescripcionSchema
 } from "./validators/producto.schema.js";
 import {
     varianteCrearSchema,
@@ -72,12 +73,6 @@ routes.put("/variantes/:id",
     productoController.actualizarVariante
 );
 
-routes.post("/variantes/:id/imagen",
-    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
-    FileUploadMiddleware.single('imagen', 'productos'),
-    productoController.subirImagenVariante
-);
-
 routes.post("/variantes/:id/codigo-barras",
     authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
     validarMiddleware.validarBody(varianteCodigoBarrasSchema),
@@ -120,6 +115,33 @@ routes.post("/imagenes/:producto_id",
     authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
     FileUploadMiddleware.single('imagen', 'productos'),
     productoController.subirImagen
+);
+
+routes.get("/:producto_id/imagenes",
+    authMiddleware.verificarPermiso(['VER_PRODUCTOS_DETALLE']),
+    productoController.listarImagenes
+);
+
+routes.put("/imagenes/:imagen_id/archivo",
+    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
+    FileUploadMiddleware.single('imagen', 'productos'),
+    productoController.actualizarArchivoImagen
+);
+
+routes.patch("/imagenes/:imagen_id/descripcion",
+    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
+    validarMiddleware.validarBody(imagenDescripcionSchema),
+    productoController.actualizarDescripcionImagen
+);
+
+routes.post("/imagenes/:imagen_id/principal",
+    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
+    productoController.establecerImagenPrincipal
+);
+
+routes.delete("/imagenes/:imagen_id",
+    authMiddleware.verificarPermiso(['EDITAR_PRODUCTOS']),
+    productoController.eliminarImagen
 );
 
 export default routes;

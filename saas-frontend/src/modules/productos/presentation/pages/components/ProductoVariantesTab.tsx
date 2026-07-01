@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Button, Card, CardContent, CardActions, Grid, Typography, Stack, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Divider, FormControl, InputLabel, Select, MenuItem, IconButton } from '@mui/material';
-import { Add, Delete, Edit, Inventory2, PhotoCamera, QrCode, Download } from '@mui/icons-material';
+import { Add, Delete, Edit, Inventory2, QrCode, Download } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useForm, type Resolver } from 'react-hook-form';
 import CodigoModal from '../../components/CodigoModal';
@@ -12,19 +12,20 @@ import ConfirmDialog from '../../../../../shared/components/ui/dialog/ConfirmDia
 import Loading from '../../../../../shared/components/ui/Loaders/Loading';
 import { VarianteRepository } from '../../../infrastructure/repositories/variante.repository';
 import { ProductoRepository } from '../../../infrastructure/repositories/producto.repository';
-import type { Variante } from '../../../domain/interfaces/producto.interface';
-import { bajarCalidadImagen } from '../../../../../core/utils/bajarCalidadImagen';
+import type { ImagenProducto, Variante } from '../../../domain/interfaces/producto.interface';
 
 const variantFormSchema = z.object({
     precio_sugerido: z.coerce.number().min(0, 'El precio sugerido es obligatorio'),
-    codigo_barras: z.string().max(100, 'El código de barras no puede superar 100 caracteres').optional().nullable()
+    codigo_barras: z.string().max(100, 'El código de barras no puede superar 100 caracteres').optional().nullable(),
+    imagen_id: z.string().nullable().optional()
 });
 
 type VarianteForm = z.infer<typeof variantFormSchema>;
 
 const defaultForm: VarianteForm = {
     precio_sugerido: 0,
-    codigo_barras: null
+    codigo_barras: null,
+    imagen_id: null
 };
 
 interface Props {
@@ -38,16 +39,14 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
     const [saving, setSaving] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
     const [variantToDelete, setVariantToDelete] = useState<Variante | null>(null);
-    const [uploadingVariantId, setUploadingVariantId] = useState<string | null>(null);
-    const [uploadingImage, setUploadingImage] = useState(false);
+    const [imagenesProducto, setImagenesProducto] = useState<ImagenProducto[]>([]);
     const [variants, setVariants] = useState<Variante[]>([]);
     const [loadingVariants, setLoadingVariants] = useState(true);
     const [atributos, setAtributos] = useState<any[]>([]);
     const [attributeSelections, setAttributeSelections] = useState<Array<{ id: string; atributo_id: string; valor_id: string }>>([]);
     const [openCodigoModal, setOpenCodigoModal] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm<VarianteForm>({
+    const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<VarianteForm>({
         resolver: zodResolver(variantFormSchema) as Resolver<VarianteForm>,
         defaultValues: defaultForm
     });
@@ -56,7 +55,8 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
         if (editingVariant) {
             reset({
                 precio_sugerido: editingVariant.precio_sugerido ?? 0,
-                codigo_barras: editingVariant.codigo_barras ?? null
+                codigo_barras: editingVariant.codigo_barras ?? null,
+                imagen_id: editingVariant.imagen_id ?? null
             });
         } else {
             reset(defaultForm);
@@ -78,6 +78,20 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
             setAttributeSelections([]);
         }
     }, [editingVariant, reset, atributos]);
+
+    useEffect(() => {
+        const fetchImagenes = async () => {
+            try {
+                const data = await ProductoRepository.listarImagenes(productoId);
+                setImagenesProducto(data);
+            } catch (error) {
+                console.error(error);
+                setImagenesProducto([]);
+            }
+        };
+
+        fetchImagenes();
+    }, [productoId]);
 
     useEffect(() => {
         const fetchAtributos = async () => {
@@ -166,7 +180,8 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
         try {
             const payload: any = {
                 precio_sugerido: data.precio_sugerido,
-                codigo_barras: data.codigo_barras?.trim() || null
+                codigo_barras: data.codigo_barras?.trim() || null,
+                imagen_id: data.imagen_id || null
             };
 
             const valor_atributo_ids = attributeSelections
@@ -244,35 +259,6 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
         }
     };
 
-    const handleOpenImageUpload = (variantId: string) => {
-        setUploadingVariantId(variantId);
-        fileInputRef.current?.click();
-    };
-
-    const handleImageFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file || !uploadingVariantId) return;
-
-        setUploadingImage(true);
-
-        try {
-            const compressedFile = await bajarCalidadImagen(file);
-            await VarianteRepository.subirImagen(uploadingVariantId, compressedFile);
-            toast.success('Imagen de variante actualizada correctamente');
-            await onRefresh();
-            await fetchVariants();
-        } catch (error) {
-            console.error(error);
-            toast.error('Error al subir la imagen de la variante');
-        } finally {
-            setUploadingVariantId(null);
-            setUploadingImage(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
-    };
-
     useEffect(() => {
         fetchVariants();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -325,16 +311,16 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                                             </Stack>
                                         </Stack>
 
-                                        {variant.url_imagen ? (
+                                        {variant.imagen?.url ? (
                                             <Box
                                                 component="img"
-                                                src={`${import.meta.env.VITE_API_URL }/${variant.url_imagen}`}
+                                                src={`${import.meta.env.VITE_API_URL }/${variant.imagen.url}`}
                                                 alt={variant.sku ?? 'Variante'}
                                                 sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}
                                             />
                                         ) : (
                                             <Box sx={{ width: '100%', height: 180, borderRadius: 2, border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-                                                <Typography variant="body2" color="text.secondary">No hay imagen de variante</Typography>
+                                                <Typography variant="body2" color="text.secondary">No hay imagen asociada</Typography>
                                             </Box>
                                         )}
 
@@ -384,9 +370,6 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                                 </CardContent>
 
                                 <CardActions sx={{ justifyContent: 'flex-end', flexWrap: 'wrap', gap: 1, p: 2 }}>
-                                    <Button size="small" startIcon={<PhotoCamera />} onClick={() => handleOpenImageUpload(variant.id)} disabled={uploadingImage && uploadingVariantId === variant.id}>
-                                        {uploadingImage && uploadingVariantId === variant.id ? 'Subiendo...' : 'Subir imagen'}
-                                    </Button>
                                     {!variant.qr_codigo && (
                                         <Button size="small" startIcon={<QrCode />} onClick={() => handleGenerateQr(variant)}>
                                             Generar QR
@@ -445,6 +428,27 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                                 Escanear
                             </Button>
                         </Stack>
+
+                        <FormControl fullWidth>
+                            <InputLabel id="imagen-variante-label">Imagen del producto</InputLabel>
+                            <Select
+                                labelId="imagen-variante-label"
+                                label="Imagen del producto"
+                                value={watch('imagen_id') ?? ''}
+                                onChange={(event) => setValue('imagen_id', (event.target.value as string) || null)}
+                            >
+                                <MenuItem value="">Sin imagen</MenuItem>
+                                {imagenesProducto.map((imagen) => (
+                                    <MenuItem key={imagen.id} value={imagen.id}>
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                            <Box component="img" src={`${import.meta.env.VITE_API_URL}/${imagen.url}`} alt={imagen.descripcion ?? 'Imagen'} sx={{ width: 36, height: 36, borderRadius: 1, objectFit: 'cover' }} />
+                                            <Typography variant="body2">{imagen.descripcion || 'Sin descripción'}</Typography>
+                                            {imagen.es_principal ? <Chip label="Principal" size="small" color="primary" /> : null}
+                                        </Stack>
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
                             <Box>
                             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
@@ -522,14 +526,6 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                 onClose={() => !saving && setOpenDelete(false)}
                 onConfirm={handleDelete}
                 isLoading={saving}
-            />
-
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={handleImageFileChange}
             />
         </Box>
     );

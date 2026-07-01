@@ -1,19 +1,16 @@
-import type { ProductoRepository } from "../domain/producto.repository.js";
 import AppError from "@shared/errors/AppError.js";
 import ManejadorArchivos from "@shared/infrastructure/manejadorArchivos.utils.js";
+import type { ImagenProducto } from "../domain/producto.entity.js";
+import type { ProductoRepository } from "../domain/producto.repository.js";
 
-export class EliminarImagenProductoUseCase {
+export class ActualizarArchivoImagenProductoUseCase {
     constructor(private readonly repository: ProductoRepository) { }
 
-    async execute(imagen_id: string, negocio_id: string): Promise<void> {
+    async execute(imagen_id: string, url: string, negocio_id: string): Promise<ImagenProducto> {
         const imagen = await this.repository.obtenerImagen(imagen_id, negocio_id);
         if (!imagen) throw new AppError('Imagen no encontrada', 'IMAGEN_NOT_FOUND', 404);
-        if (imagen.es_principal) {
-            throw new AppError('No es posible eliminar la imagen principal del producto.', 'IMAGEN_PRINCIPAL_NO_ELIMINABLE', 400);
-        }
 
         await ManejadorArchivos.eliminarArchivo(imagen.url);
-
-        await this.repository.eliminarImagen(imagen_id, negocio_id);
+        return this.repository.actualizarArchivoImagen(imagen_id, url, negocio_id);
     }
 }

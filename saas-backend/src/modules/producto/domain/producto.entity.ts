@@ -9,8 +9,18 @@ export interface Producto {
     descripcion?: string | null;
     precio_sugerido: number;
     stock_total: number;
-    url_imagen: string;
+    url_imagen?: string | null;
     activo: boolean;
+}
+
+export interface ImagenProducto {
+    id: string;
+    producto_id: string;
+    url: string;
+    descripcion?: string | null;
+    es_principal: boolean;
+    created_at?: Date;
+    updated_at?: Date;
 }
 
 export interface ProductoMarca {
@@ -49,6 +59,7 @@ export interface ProductoAtributo {
 
 export interface ProductoDetalle extends ProductoSimple {
     variantes?: VariantePublic[];
+    imagenes?: ImagenProducto[];
     negocio?: {
         id: string;
         slug: string;

@@ -11,11 +11,13 @@ type ProductoConVariantes = ProductoSimple & {
 
 const mapVariantFields = (producto: ProductoConVariantes) => {
     const variant = producto.variantes?.[0];
+    const imagenPrincipal = (producto as any).imagenes?.find((img: any) => img.es_principal) ?? (producto as any).imagenes?.[0];
 
     return {
         sku: producto.codigo ?? '',
         precio_sugerido: variant?.precio_sugerido ?? producto.precio_sugerido ?? 0,
-        stock_total: variant?.stock_total ?? producto.stock_total ?? 0
+        stock_total: variant?.stock_total ?? producto.stock_total ?? 0,
+        url_imagen: imagenPrincipal?.url ?? null
     };
 };
 
@@ -33,7 +35,7 @@ export class ProductoMapper {
             descripcion: producto.descripcion ?? null,
             precio_sugerido: variant.precio_sugerido,
             stock_total: variant.stock_total,
-            url_imagen: producto.url_imagen,
+            url_imagen: variant.url_imagen,
             activo: producto.activo,
             categoria: producto.categoria ? {
                 id: producto.categoria.id,
@@ -56,7 +58,7 @@ export class ProductoMapper {
             descripcion: producto.descripcion ?? null,
             precio_sugerido: variant.precio_sugerido,
             stock_total: variant.stock_total,
-            url_imagen: producto.url_imagen,
+            url_imagen: variant.url_imagen,
             activo: producto.activo,
             categoria: producto.categoria ? {
                 id: producto.categoria.id,
@@ -64,6 +66,15 @@ export class ProductoMapper {
             } : null,
             marca: producto.marca ? { id: producto.marca.id, marca: producto.marca.marca } : null,
             negocio: (producto as any).negocio ? { id: (producto as any).negocio.id, slug: (producto as any).negocio.slug } : undefined,
+            imagenes: ((producto as any).imagenes ?? []).map((img: any) => ({
+                id: img.id,
+                producto_id: img.producto_id,
+                url: img.url,
+                descripcion: img.descripcion ?? null,
+                es_principal: !!img.es_principal,
+                created_at: img.created_at,
+                updated_at: img.updated_at
+            })),
             ...(producto.productoAtributos ? {
                 atributos: producto.productoAtributos.map((item: any) => ({
                     id: item.atributo.id,
@@ -78,6 +89,13 @@ export class ProductoMapper {
                 stock_total: v?.stock_total ?? undefined,
                 codigo_barras: (v as any)?.codigo_barras ?? null,
                 qr_codigo: (v as any)?.qr_codigo ?? null,
+                imagen_id: (v as any)?.imagen_id ?? null,
+                imagen: (v as any)?.imagen ? {
+                    id: (v as any).imagen.id,
+                    url: (v as any).imagen.url,
+                    descripcion: (v as any).imagen.descripcion ?? null,
+                    es_principal: !!(v as any).imagen.es_principal
+                } : null,
                 valores: (v as any)?.valores?.map((val: any) => ({ id: val.id, valor: val.valor, atributo: val.atributo ? { id: val.atributo.id, nombre: val.atributo.nombre } : undefined })) ?? []
             })) ?? []
         };

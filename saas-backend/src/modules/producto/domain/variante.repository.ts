@@ -11,5 +11,4 @@ export interface VarianteRepository {
     actualizarCodigoSecuencial(id: string, codigo_secuencial: string, negocio_id: string): Promise<VarianteDetalle>;
     actualizarCodigoBarras(id: string, codigo_barras: string | null, negocio_id: string): Promise<VarianteDetalle>;
     generarQr(id: string, negocio_id: string): Promise<VarianteDetalle>;
-    subirImagen(id: string, url_imagen: string, negocio_id: string): Promise<VarianteDetalle>;
 }

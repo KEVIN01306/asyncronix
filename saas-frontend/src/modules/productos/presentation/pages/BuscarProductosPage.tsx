@@ -468,7 +468,10 @@ const BuscarProductosPage = () => {
         }
     };
 
-    const selectedVariantImage = activeVariant?.url_imagen || searchResult?.producto.url_imagen;
+    const selectedVariantImage = activeVariant?.imagen?.url
+        || searchResult?.producto.imagenes?.find((img) => img.es_principal)?.url
+        || searchResult?.producto.imagenes?.[0]?.url
+        || searchResult?.producto.url_imagen;
 
     return (
         <Box p={isMobile ? 2 : 4} bgcolor={theme.palette.background.paper} minHeight="100vh">

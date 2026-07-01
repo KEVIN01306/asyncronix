@@ -1,10 +1,11 @@
 import type { PrismaClient } from "@prisma/client";
 import type {
+    ImagenProducto,
     ProductoActualizar,
     ProductoAtributo,
     ProductoCrear,
-    ProductoSimple,
-    ProductoDetalle
+    ProductoDetalle,
+    ProductoSimple
 } from "../domain/producto.entity.js";
 import type { ProductoRepository } from "../domain/producto.repository.js";
 import { ProductoMapper } from "./mappers/producto.mapper.js";
@@ -18,26 +19,42 @@ export class PrismaProductoRepository implements ProductoRepository {
     private readonly includeList = {
         categoria: true,
         marca: true,
+        imagenes: {
+            orderBy: [{ es_principal: 'desc' as const }, { created_at: 'asc' as const }]
+        },
         variantes: {
             where: { activo: true },
             orderBy: { created_at: 'asc' as const },
-            include: { valores: { include: { atributo: true } } }
+            include: {
+                imagen: true,
+                valores: { include: { atributo: true } }
+            }
         }
     };
 
     private readonly includeDetail = {
         categoria: true,
         marca: true,
+        imagenes: {
+            orderBy: [{ es_principal: 'desc' as const }, { created_at: 'asc' as const }]
+        },
         productoAtributos: {
             orderBy: { orden: 'asc' as const },
             include: {
-                atributo: true
+                atributo: {
+                    include: {
+                        valores: true
+                    }
+                }
             }
         },
         variantes: {
             where: { activo: true },
             orderBy: { created_at: 'asc' as const },
-            include: { valores: { include: { atributo: true } } }
+            include: {
+                imagen: true,
+                valores: { include: { atributo: true } }
+            }
         }
     };
 
@@ -54,7 +71,6 @@ export class PrismaProductoRepository implements ProductoRepository {
 
         if (!producto) return null;
 
-        // Calcular stock_total por variante (suma de cantidad_actual en lotes activos)
         const varianteIds = (producto.variantes ?? []).map((v: any) => v.id).filter(Boolean);
         if (varianteIds.length > 0) {
             const grupos = await this.prisma.lote.groupBy({
@@ -111,7 +127,6 @@ export class PrismaProductoRepository implements ProductoRepository {
             })
         ]);
 
-        // Agregar stock_total por variante para cada producto
         const varianteIds: string[] = [];
         for (const p of productos) {
             const vars = (p.variantes ?? []).map((v: any) => v.id).filter(Boolean);
@@ -136,8 +151,9 @@ export class PrismaProductoRepository implements ProductoRepository {
                 }
             }
         }
+
         return {
-            data: productos.map(producto => ProductoMapper.mapSimple(producto as any)),
+            data: productos.map((producto) => ProductoMapper.mapSimple(producto as any)),
             total,
             page,
             perPage
@@ -209,7 +225,7 @@ export class PrismaProductoRepository implements ProductoRepository {
             }));
         }
 
-        await this.prisma.$transaction(transactionActions);
+        await this.prisma.$transaction(transactionActions as any);
 
         const updatedProducto = await this.prisma.producto.findFirst({
             where: { id: producto_id, negocio_id, activo: true },
@@ -217,7 +233,7 @@ export class PrismaProductoRepository implements ProductoRepository {
                 productoAtributos: {
                     orderBy: { orden: 'asc' as const },
                     where: { atributo: { activo: true } },
-                    include: { atributo: true }
+                    include: { atributo: { include: { valores: true } } }
                 }
             }
         });
@@ -240,13 +256,13 @@ export class PrismaProductoRepository implements ProductoRepository {
                 data: {
                     ...productoData,
                     negocio_id,
-                    activo: true,
-                    url_imagen: productoData.url_imagen ?? ''
+                    activo: true
                 },
                 include: {
                     categoria: true,
                     marca: true,
-                    negocio: true
+                    negocio: true,
+                    imagenes: true
                 }
             });
 
@@ -258,8 +274,6 @@ export class PrismaProductoRepository implements ProductoRepository {
 
     async actualizar(id: string, producto: ProductoActualizar, negocio_id: string): Promise<ProductoDetalle> {
         try {
-            // Excluir sku y precio_sugerido para que no se modifiquen al actualizar el producto
-            // El SKU y precio pertenecen a las variantes, no al producto
             const { sku: _sku, precio_sugerido: _precio_sugerido, ...productoData } = producto as any;
 
             const result = await this.prisma.producto.updateMany({
@@ -353,29 +367,230 @@ export class PrismaProductoRepository implements ProductoRepository {
         }
     }
 
-    async registrarImagen(producto_id: string, url_imagen: string, negocio_id: string): Promise<ProductoDetalle> {
+    async registrarImagen(producto_id: string, url: string, descripcion: string | null, negocio_id: string): Promise<ProductoDetalle> {
         try {
-            const existing = await this.prisma.producto.findFirst({
-                where: { id: producto_id, negocio_id }
+            const producto = await this.prisma.producto.findFirst({
+                where: { id: producto_id, negocio_id, activo: true },
+                include: { imagenes: true }
             });
 
-            if (!existing) throw new Error('Producto no encontrado');
+            if (!producto) throw new Error('Producto no encontrado');
 
-            const result = await this.prisma.producto.updateMany({
-                where: { id: producto_id, negocio_id },
-                data: { url_imagen }
+            const esPrimeraImagen = (producto.imagenes?.length ?? 0) === 0;
+            await this.prisma.imagenProducto.create({
+                data: {
+                    producto_id,
+                    url,
+                    descripcion,
+                    es_principal: esPrimeraImagen
+                }
             });
 
-            if (result.count === 0) throw new Error('Producto no encontrado');
-
-            const productoActualizado = await this.prisma.producto.findFirst({
-                where: { id: producto_id, negocio_id },
-                include: this.includeDetail
+            const updated = await this.prisma.producto.findFirst({
+                where: { id: producto_id, negocio_id, activo: true },
+                include: {
+                    ...this.includeDetail,
+                    negocio: true
+                }
             });
 
-            if (!productoActualizado) throw new Error('Producto no encontrado');
+            if (!updated) throw new Error('Producto no encontrado');
+            return ProductoMapper.mapDetalle(updated as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 
-            return ProductoMapper.mapDetalle(productoActualizado as any);
+    async listarImagenes(producto_id: string, negocio_id: string): Promise<ImagenProducto[]> {
+        try {
+            const producto = await this.prisma.producto.findFirst({
+                where: { id: producto_id, negocio_id, activo: true },
+                select: { id: true }
+            });
+
+            if (!producto) throw new Error('Producto no encontrado');
+
+            const imagenes = await this.prisma.imagenProducto.findMany({
+                where: { producto_id },
+                orderBy: [{ es_principal: 'desc' }, { created_at: 'asc' }]
+            });
+
+            return imagenes.map((img) => ({
+                id: img.id,
+                producto_id: img.producto_id,
+                url: img.url,
+                descripcion: img.descripcion,
+                es_principal: img.es_principal,
+                created_at: img.created_at,
+                updated_at: img.updated_at
+            }));
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async obtenerImagen(imagen_id: string, negocio_id: string): Promise<ImagenProducto | null> {
+        try {
+            const imagen = await this.prisma.imagenProducto.findFirst({
+                where: {
+                    id: imagen_id,
+                    producto: {
+                        negocio_id,
+                        activo: true
+                    }
+                }
+            });
+
+            if (!imagen) return null;
+
+            return {
+                id: imagen.id,
+                producto_id: imagen.producto_id,
+                url: imagen.url,
+                descripcion: imagen.descripcion,
+                es_principal: imagen.es_principal,
+                created_at: imagen.created_at,
+                updated_at: imagen.updated_at
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async actualizarArchivoImagen(imagen_id: string, url: string, negocio_id: string): Promise<ImagenProducto> {
+        try {
+            const existing = await this.prisma.imagenProducto.findFirst({
+                where: {
+                    id: imagen_id,
+                    producto: {
+                        negocio_id,
+                        activo: true
+                    }
+                }
+            });
+
+            if (!existing) throw new Error('Imagen no encontrada');
+
+            const updated = await this.prisma.imagenProducto.update({
+                where: { id: imagen_id },
+                data: { url }
+            });
+
+            return {
+                id: updated.id,
+                producto_id: updated.producto_id,
+                url: updated.url,
+                descripcion: updated.descripcion,
+                es_principal: updated.es_principal,
+                created_at: updated.created_at,
+                updated_at: updated.updated_at
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async actualizarDescripcionImagen(imagen_id: string, descripcion: string | null, negocio_id: string): Promise<ImagenProducto> {
+        try {
+            const existing = await this.prisma.imagenProducto.findFirst({
+                where: {
+                    id: imagen_id,
+                    producto: {
+                        negocio_id,
+                        activo: true
+                    }
+                }
+            });
+
+            if (!existing) throw new Error('Imagen no encontrada');
+
+            const updated = await this.prisma.imagenProducto.update({
+                where: { id: imagen_id },
+                data: { descripcion }
+            });
+
+            return {
+                id: updated.id,
+                producto_id: updated.producto_id,
+                url: updated.url,
+                descripcion: updated.descripcion,
+                es_principal: updated.es_principal,
+                created_at: updated.created_at,
+                updated_at: updated.updated_at
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async establecerImagenPrincipal(imagen_id: string, negocio_id: string): Promise<ImagenProducto> {
+        try {
+            const selected = await this.prisma.imagenProducto.findFirst({
+                where: {
+                    id: imagen_id,
+                    producto: {
+                        negocio_id,
+                        activo: true
+                    }
+                }
+            });
+
+            if (!selected) throw new Error('Imagen no encontrada');
+
+            const updated = await this.prisma.$transaction(async (tx) => {
+                await tx.imagenProducto.updateMany({
+                    where: {
+                        producto_id: selected.producto_id,
+                        es_principal: true,
+                        NOT: { id: selected.id }
+                    },
+                    data: { es_principal: false }
+                });
+
+                return tx.imagenProducto.update({
+                    where: { id: selected.id },
+                    data: { es_principal: true }
+                });
+            });
+
+            return {
+                id: updated.id,
+                producto_id: updated.producto_id,
+                url: updated.url,
+                descripcion: updated.descripcion,
+                es_principal: updated.es_principal,
+                created_at: updated.created_at,
+                updated_at: updated.updated_at
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async eliminarImagen(imagen_id: string, negocio_id: string): Promise<void> {
+        try {
+            const imagen = await this.prisma.imagenProducto.findFirst({
+                where: {
+                    id: imagen_id,
+                    producto: {
+                        negocio_id,
+                        activo: true
+                    }
+                }
+            });
+
+            if (!imagen) throw new Error('Imagen no encontrada');
+
+            await this.prisma.$transaction(async (tx) => {
+                await tx.varianteProducto.updateMany({
+                    where: { imagen_id: imagen.id },
+                    data: { imagen_id: null }
+                });
+
+                await tx.imagenProducto.delete({
+                    where: { id: imagen.id }
+                });
+            });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

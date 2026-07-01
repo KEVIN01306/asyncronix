@@ -1,6 +1,6 @@
 import api from "../../../../core/api/api";
 import type { ApiResponse } from "../../../../core/api/interfaces/api-response.interface";
-import type { Producto, ProductosResponse, ProductoDetailResponse, ProductoAtributo, Variante } from "../../domain/interfaces/producto.interface";
+import type { Producto, ProductosResponse, ProductoDetailResponse, ProductoAtributo, Variante, ImagenProducto } from "../../domain/interfaces/producto.interface";
 
 const URL_MODULE = '/productos/';
 
@@ -43,9 +43,10 @@ export const ProductoRepository = {
         await api.delete(`${URL_MODULE}${id}`);
     },
 
-    subirImagen: async (id: string, file: File): Promise<Producto> => {
+    subirImagen: async (id: string, file: File, descripcion?: string | null): Promise<Producto> => {
         const formData = new FormData();
         formData.append('imagen', file);
+        if (descripcion !== undefined) formData.append('descripcion', descripcion ?? '');
 
         const response = await api.post<ProductoDetailResponse>(`${URL_MODULE}imagenes/${id}`, formData, {
             headers: {
@@ -54,6 +55,38 @@ export const ProductoRepository = {
         });
 
         return response.data;
+    },
+
+    listarImagenes: async (producto_id: string): Promise<ImagenProducto[]> => {
+        const response = await api.get<ApiResponse<ImagenProducto[]>>(`${URL_MODULE}${producto_id}/imagenes`);
+        return response.data;
+    },
+
+    actualizarArchivoImagen: async (imagen_id: string, file: File): Promise<ImagenProducto> => {
+        const formData = new FormData();
+        formData.append('imagen', file);
+
+        const response = await api.put<ApiResponse<ImagenProducto>>(`${URL_MODULE}imagenes/${imagen_id}/archivo`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        return response.data;
+    },
+
+    actualizarDescripcionImagen: async (imagen_id: string, descripcion: string | null): Promise<ImagenProducto> => {
+        const response = await api.patch<ApiResponse<ImagenProducto>>(`${URL_MODULE}imagenes/${imagen_id}/descripcion`, { descripcion });
+        return (response as any).data;
+    },
+
+    establecerImagenPrincipal: async (imagen_id: string): Promise<ImagenProducto> => {
+        const response = await api.post<ApiResponse<ImagenProducto>>(`${URL_MODULE}imagenes/${imagen_id}/principal`);
+        return (response as any).data;
+    },
+
+    eliminarImagen: async (imagen_id: string): Promise<void> => {
+        await api.delete(`${URL_MODULE}imagenes/${imagen_id}`);
     },
 
     obtenerAtributos: async (id: string): Promise<ProductoAtributo[]> => {

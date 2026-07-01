@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Box, Grid, Alert, Paper } from '@mui/material';
 import { toast } from 'sonner';
-import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
 
 import ConfirmDialog from '../../../../shared/components/ui/dialog/ConfirmDialog';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
@@ -10,13 +9,13 @@ import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageL
 import { ProductoRepository } from '../../infrastructure/repositories/producto.repository';
 import type { Producto } from '../../domain/interfaces/producto.interface';
 import ProductoDetailHeader from './components/ProductoDetailHeader';
-import ProductoImageCard from './components/ProductoImageCard';
 import ProductoDetailsPanel from './components/ProductoDetailsPanel';
 import ProductoQrCard from './components/ProductoQrCard';
 import ProductoSummaryCard from './components/ProductoSummaryCard';
 import ProductoLotesTab from './components/ProductoLotesTab';
 import ProductoVariantesTab from './components/ProductoVariantesTab';
 import ProductoAtributosTab from './components/ProductoAtributosTab';
+import ProductoImagenesTab from './components/ProductoImagenesTab';
 import { Tabs, Tab } from '@mui/material';
 
 const ProductoDetailPage = () => {
@@ -27,10 +26,9 @@ const ProductoDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const [openDelete, setOpenDelete] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [uploading, setUploading] = useState(false);
     const [generatingQr, setGeneratingQr] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const ImageSource = producto?.url_imagen ? `${import.meta.env.VITE_API_URL}/${producto.url_imagen}` : undefined;
+    const principalImage = producto?.imagenes?.find((img) => img.es_principal) ?? producto?.imagenes?.[0];
+    const ImageSource = principalImage?.url ? `${import.meta.env.VITE_API_URL}/${principalImage.url}` : undefined;
     const QrImageSource = producto?.qr_imagen ? `${import.meta.env.VITE_API_URL}/${producto.qr_imagen}` : undefined;
 
     // Read tab from URL query params, default to 0
@@ -84,29 +82,6 @@ const ProductoDetailPage = () => {
         } finally {
             setIsDeleting(false);
             setOpenDelete(false);
-        }
-    };
-
-    const handleUploadImage = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file || !id) return;
-
-        setUploading(true);
-        try {
-            const compressedFile = await bajarCalidadImagen(file);
-            const updatedProduct = await ProductoRepository.subirImagen(id, compressedFile);
-            setProducto(updatedProduct);
-            toast.success('Imagen del producto actualizada correctamente');
-        } catch (error) {
-            console.error(error);
-            toast.error('Error al subir la imagen');
-        } finally {
-            setUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -208,24 +183,18 @@ const ProductoDetailPage = () => {
             />
 
             <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 2 }}>
-                <Tab label="Detalles" />
-                <Tab label="Variantes" />
-                <Tab label="Lotes" />
+                <Tab label="Información General" />
                 <Tab label="Atributos" />
+                <Tab label="Variantes" />
+                <Tab label="Imágenes" />
+                <Tab label="Lotes" />
             </Tabs>
 
             {tab === 0 ? (
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, md: 8 }}>
                     <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                        <ProductoImageCard
-                            nombre={producto.nombre}
-                            imageSource={ImageSource}
-                            uploading={uploading}
-                            onUploadImage={handleUploadImage}
-                            fileInputRef={fileInputRef}
-                            onFileChange={handleFileChange}
-                        />
+                        {ImageSource ? <Box component="img" src={ImageSource} alt={producto.nombre} sx={{ width: '100%', maxHeight: 320, objectFit: 'contain', borderRadius: 2, border: '1px solid', borderColor: 'divider', mb: 3 }} /> : null}
                         <ProductoDetailsPanel
                             categoria={producto.categoria}
                             codigo={producto.codigo}
@@ -257,19 +226,25 @@ const ProductoDetailPage = () => {
             ) : tab === 1 ? (
                 <Box>
                     <Paper sx={{ p: 2 }}>
-                        <ProductoVariantesTab productoId={id as string} onRefresh={fetchProducto} />
+                        <ProductoAtributosTab productoId={id as string} onRefresh={fetchProducto} />
                     </Paper>
                 </Box>
             ) : tab === 2 ? (
                 <Box>
                     <Paper sx={{ p: 2 }}>
-                        <ProductoLotesTab productoId={id as string} />
+                        <ProductoVariantesTab productoId={id as string} onRefresh={fetchProducto} />
+                    </Paper>
+                </Box>
+            ) : tab === 3 ? (
+                <Box>
+                    <Paper sx={{ p: 2 }}>
+                        <ProductoImagenesTab productoId={id as string} onRefresh={fetchProducto} />
                     </Paper>
                 </Box>
             ) : (
                 <Box>
                     <Paper sx={{ p: 2 }}>
-                        <ProductoAtributosTab productoId={id as string} onRefresh={fetchProducto} />
+                        <ProductoLotesTab productoId={id as string} />
                     </Paper>
                 </Box>
             )}

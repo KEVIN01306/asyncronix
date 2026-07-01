@@ -241,7 +241,7 @@ async function main() {
     }
 
     // 2. CORRECCIÓN: wa_id idénticos en where y create
-    const whatsappId = "50230108703"; // Asegúrate de que este valor sea único para evitar conflictos en el upsert
+    const whatsappId = "50295769927"; // Asegúrate de que este valor sea único para evitar conflictos en el upsert
 
     const negocio = await prisma.negocio.upsert({
         where: { wa_id: whatsappId }, 
@@ -254,11 +254,11 @@ async function main() {
             }
         },
         create: {
-            nombre: "asyncronix",
-            nombre_comercial: "ASYNCRONIX",
-            slug: "asyncronix",
+            nombre: "Motoservicio VM",
+            nombre_comercial: "MOTOSERVICIO VM",
+            slug: "motoservicio-vm",
             wa_id: whatsappId, // Mismo valor que el where
-            nit_rut: "388577959",
+            nit_rut: "50295769927",
             slogan: "Todos juntos podemos",
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))
@@ -341,20 +341,20 @@ async function main() {
             }
         },
     });
-    /*
+    */
     const usuarioAdmin = await prisma.usuario.upsert({
         where: { 
             negocio_id_email: { 
                 negocio_id: negocio.id, 
-                email: "kimberly@gmail.com" 
+                email: " Motoserviciovm9793@gmail.com" 
             } 
         },
         update: {},
         create: {
-            nombre: "Kimberly",
-            email: "kimberly@gmail.com",
-            telefono: "30108704",
-            dpi: "3885779590104",
+            nombre: "Motoservicio VM",
+            email: "Motoserviciovm9793@gmail.com",
+            telefono: "43850429",
+            dpi: "3018641870101",
             password_hash: passwordHash,
             activo: true,
             verificado: false,
@@ -363,7 +363,7 @@ async function main() {
                 connect: [{ id: rolAdmin.id }]
             }
         },
-    });*/
+    });
 
     console.log("¡Seed ejecutado con éxito!");
 }

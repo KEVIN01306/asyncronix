@@ -17,7 +17,13 @@ export interface VarianteValor {
 
 export interface Variante {
     id: string;
-    url_imagen?: string;
+    imagen_id?: string | null;
+    imagen?: {
+        id: string;
+        url: string;
+        descripcion?: string | null;
+        es_principal: boolean;
+    } | null;
     sku?: string;
     codigo_barras?: string | null;
     codigo_secuencial?: string | null;
@@ -51,7 +57,8 @@ export interface Producto {
     sku: string;
     precio_sugerido: number;
     stock_total: number;
-    url_imagen: string;
+    url_imagen?: string | null;
+    imagenes?: ImagenProducto[];
     qr_imagen?: string | null;
     activo: boolean;
     categoria: ProductoCategoria | null;
@@ -61,6 +68,14 @@ export interface Producto {
     } | null;
     variantes?: Variante[];
     atributos?: ProductoAtributo[];
+}
+
+export interface ImagenProducto {
+    id: string;
+    producto_id: string;
+    url: string;
+    descripcion?: string | null;
+    es_principal: boolean;
 }
 
 export type ProductoDetailResponse = ApiResponse<Producto>;
