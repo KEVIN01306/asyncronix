@@ -15,8 +15,8 @@ import Loading from '../../../../shared/components/ui/Loaders/Loading';
 const proveedorFormSchema = z.object({
     nombre: z.string().min(1, 'El nombre es requerido'),
     contacto: z.string().optional().nullable(),
-    telefono: z.string().min(1, 'El teléfono es requerido'),
-    email: z.string().email('El correo no es válido').optional().nullable(),
+    telefono: z.string().optional().nullable(),
+    email: z.union([z.string().email('El correo no es válido'), z.literal('')]).optional().nullable(),
     nit: z.string().optional().nullable(),
 });
 

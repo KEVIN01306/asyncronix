@@ -13,7 +13,7 @@ export interface Proveedor {
 export interface ProveedorCreateFormValues {
     nombre: string;
     contacto?: string | null;
-    telefono: string;
+    telefono?: string | null;
     email?: string | null;
     nit?: string | null;
 }
