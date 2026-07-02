@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Grid, useTheme, useMediaQuery, Alert, AlertTitle } from '@mui/material';
-import { Box, Card, CardContent, Typography, Button, Table, TableHead, TableBody, TableRow, TableCell, Chip, Divider, Paper, TableContainer } from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, Chip, Divider, Paper } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Print as PrintIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { ventaRepository } from '../../infrastructure/venta.repository';
@@ -9,6 +9,7 @@ import { useAuthStore } from '../../../../core/store/authStore';
 import type { Venta } from '../../domain/interfaces/venta.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { ListTableSimple } from '../../../../shared/components/ui/tables/ListTableSimple';
 
 export default function VentaDetallePage() {
     const { id } = useParams();
@@ -93,29 +94,18 @@ export default function VentaDetallePage() {
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>Productos</Typography>
-                            <TableContainer component={Paper} variant="outlined" elevation={0}>
-                                <Table>
-                                    <TableHead sx={{ bgcolor: 'secondary.main' }}>
-                                        <TableRow>
-                                            <TableCell><strong>Producto</strong></TableCell>
-                                            <TableCell align="right"><strong>Cantidad</strong></TableCell>
-                                            <TableCell align="right"><strong>Precio Unit.</strong></TableCell>
-                                            <TableCell align="right"><strong>Subtotal</strong></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {venta.detalles.map((detalle) => (
-                                            <TableRow key={detalle.id}>
-                                                <TableCell>{detalle.descripcion}</TableCell>
-                                                <TableCell align="right">{detalle.cantidad}</TableCell>
-                                                <TableCell align="right">{formatMoney(detalle.precio_unitario)}</TableCell>
-                                                <TableCell align="right">{formatMoney(detalle.subtotal)}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-
+                            <ListTableSimple
+                                columns={[
+                                    { id: 'descripcion', name: 'Producto', format: (value: any) => value || '-' },
+                                    { id: 'cantidad', name: 'Cantidad', format: (value: any) => value || '-' },
+                                    { id: 'precio_unitario', name: 'Precio Unit.', format: (value:any ) => formatMoney(value) },
+                                    { id: 'subtotal', name: 'Subtotal', format: (value: any) => formatMoney(value) }
+                                ]}
+                                data={venta.detalles}
+                                headerBgColor={theme.palette.primary.main}
+                                headerTextColor="#fff"
+                                disableVerticalScroll={true}
+                            />
                             <Box display="flex" justifyContent="flex-end" mt={3}>
                                 <Box textAlign="right">
                                     <Typography variant="h5" fontWeight="bold">Total: {formatMoney(venta.total)}</Typography>

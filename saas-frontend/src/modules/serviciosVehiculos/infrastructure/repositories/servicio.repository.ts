@@ -59,10 +59,18 @@ export const servicioRepository = {
         return response.data;
     },
 
-    finalizarSalida: async (id: string, file: File, metodo_pago: string): Promise<ServicioVehiculo> => {
+    finalizarSalida: async (
+        id: string,
+        file: File,
+        metodo_pago: string,
+        efectivo_recibido?: number | null,
+        vuelto?: number | null
+    ): Promise<ServicioVehiculo> => {
         const formData = new FormData();
         formData.append('firma_cliente', file);
         formData.append('metodo_pago', metodo_pago);
+        if (efectivo_recibido != null) formData.append('efectivo_recibido', String(efectivo_recibido));
+        if (vuelto != null) formData.append('vuelto', String(vuelto));
 
         const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/salida`, formData) as unknown as ServicioVehiculoDetailResponse;
 
@@ -99,7 +107,7 @@ export const servicioRepository = {
         return response.data;
     },
 
-    registrarTarea: async (id: string, data: { nombre: string }): Promise<any> => {
+    registrarTarea: async (id: string, data: { nombre: string; extra?: boolean }): Promise<any> => {
         const response = await api.post(`${URL_MODULE}/${id}/tareas`, data);
         return response.data.data;
     },
@@ -110,6 +118,20 @@ export const servicioRepository = {
 
     eliminarTarea: async (id: string, tareaId: string): Promise<void> => {
         await api.delete(`${URL_MODULE}/${id}/tareas/${tareaId}`);
+    },
+
+    listarCambiosSiguienteServicio: async (id: string): Promise<any[]> => {
+        const response = await api.get<any>(`${URL_MODULE}/${id}/cambios-siguiente-servicio`);
+        return response.data.data;
+    },
+
+    crearCambioSiguienteServicio: async (id: string, data: { item: string }): Promise<any> => {
+        const response = await api.post<any>(`${URL_MODULE}/${id}/cambios-siguiente-servicio`, data);
+        return response.data.data;
+    },
+
+    eliminarCambioSiguienteServicio: async (id: string, cambioId: string): Promise<void> => {
+        await api.delete(`${URL_MODULE}/${id}/cambios-siguiente-servicio/${cambioId}`);
     },
 
     actualizarObservaciones: async (id: string, data: { observaciones?: string | null }): Promise<ServicioVehiculo> => {

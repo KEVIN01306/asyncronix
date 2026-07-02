@@ -29,6 +29,9 @@ import type { EliminarRepuestoClienteUseCase } from "../application/eliminar-rep
 import type { CrearServicioRepuestoUseCase } from "../application/crear-repuesto-servicio.usecase.js";
 import type { EliminarServicioRepuestoUseCase } from "../application/eliminar-repuesto-servicio.usecase.js";
 import type { ActualizarObservacionesServicioUseCase } from "../application/actualizar-observaciones-servicio.usecase.js";
+import type { CrearCambioSiguienteServicioUseCase } from "../application/crear-cambio-siguiente-servicio.usecase.js";
+import type { ListarCambiosSiguienteServicioUseCase } from "../application/listar-cambios-siguiente-servicio.usecase.js";
+import type { EliminarCambioSiguienteServicioUseCase } from "../application/eliminar-cambio-siguiente-servicio.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class ServicioController extends BaseController {
@@ -59,7 +62,10 @@ export class ServicioController extends BaseController {
         private readonly eliminarRepuestoClienteUseCase?: EliminarRepuestoClienteUseCase,
         private readonly crearServicioRepuestoUseCase?: CrearServicioRepuestoUseCase,
         private readonly eliminarServicioRepuestoUseCase?: EliminarServicioRepuestoUseCase,
-        private readonly actualizarObservacionesServicioUseCase?: ActualizarObservacionesServicioUseCase
+        private readonly actualizarObservacionesServicioUseCase?: ActualizarObservacionesServicioUseCase,
+        private readonly crearCambioSiguienteServicioUseCase?: CrearCambioSiguienteServicioUseCase,
+        private readonly listarCambiosSiguienteServicioUseCase?: ListarCambiosSiguienteServicioUseCase,
+        private readonly eliminarCambioSiguienteServicioUseCase?: EliminarCambioSiguienteServicioUseCase
     ) {
         super();
     }
@@ -215,9 +221,9 @@ export class ServicioController extends BaseController {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             if (!req.file) throw new AppError('No se ha subido ninguna firma', 'SIGNATURE_REQUIRED', 400);
-            const { metodo_pago } = req.body;
+            const { metodo_pago, efectivo_recibido, vuelto } = req.body;
             const firma_url = req.file.path.replace(/\\/g, '/');
-            const servicio = await this.finalizarServicioUseCase.execute(id, negocio_id, firma_url, metodo_pago);
+            const servicio = await this.finalizarServicioUseCase.execute(id, negocio_id, firma_url, metodo_pago, efectivo_recibido, vuelto);
             res.status(200).json(Respuesta.exito('Servicio finalizado con éxito', servicio));
         } catch (error) {
             next(error);
@@ -308,6 +314,44 @@ export class ServicioController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             await this.eliminarServicioTareaUseCase.execute(tarea_id, id, negocio_id);
             res.status(200).json(Respuesta.exito('Tarea eliminada con éxito', null));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    listarCambiosSiguienteServicio = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.listarCambiosSiguienteServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            const cambios = await this.listarCambiosSiguienteServicioUseCase.execute(id, negocio_id);
+            res.status(200).json(Respuesta.exito('Cambios del siguiente servicio obtenidos', cambios));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    crearCambioSiguienteServicio = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const usuario = (req as any).usuario;
+            if (!this.crearCambioSiguienteServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            const cambio = await this.crearCambioSiguienteServicioUseCase.execute(id, req.body, negocio_id, usuario?.permisos ?? []);
+            res.status(201).json(Respuesta.exito('Cambio para siguiente servicio creado', cambio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    eliminarCambioSiguienteServicio = async (req: Request<{ id: string; cambio_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id, cambio_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const usuario = (req as any).usuario;
+            if (!this.eliminarCambioSiguienteServicioUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            await this.eliminarCambioSiguienteServicioUseCase.execute(cambio_id, id, negocio_id, usuario?.permisos ?? []);
+            res.status(200).json(Respuesta.exito('Cambio para siguiente servicio eliminado', null));
         } catch (error) {
             next(error);
         }

@@ -7,15 +7,14 @@ import { ESTADO_SERVICIO_VEHICULO, type EstadoVehiculoServicio } from '../../dom
 
 type Props = {
     servicio: ServicioVehiculo;
+    tareas: ServicioTarea[];
     onUpdate: (s: ServicioVehiculo) => void;
-    canAddManual?: boolean;
+    emptyMessage?: string;
 };
 
-const ServiceProgressTasks: React.FC<Props> = ({ servicio, onUpdate, canAddManual = false }) => {
+const ServiceProgressTasks: React.FC<Props> = ({ servicio, tareas, onUpdate, emptyMessage = 'No hay tareas de progreso disponibles para este servicio.' }) => {
     const [taskUpdates, setTaskUpdates] = useState<Record<string, { completado: boolean; observacion: string }>>({});
     const [savingTaskId, setSavingTaskId] = useState<string | null>(null);
-    const [newTaskName, setNewTaskName] = useState('');
-    const [creatingTask, setCreatingTask] = useState(false);
 
     const estadosPermitidos: EstadoVehiculoServicio[] = [
         ESTADO_SERVICIO_VEHICULO.EN_SERVICIO,
@@ -25,11 +24,11 @@ const ServiceProgressTasks: React.FC<Props> = ({ servicio, onUpdate, canAddManua
 
     useEffect(() => {
         const map: Record<string, { completado: boolean; observacion: string }> = {};
-        servicio.tareas?.forEach((tarea) => {
+        tareas.forEach((tarea) => {
             map[tarea.id] = { completado: tarea.completado, observacion: tarea.observacion ?? '' };
         });
         setTaskUpdates(map);
-    }, [servicio.tareas]);
+    }, [tareas]);
 
     const handleToggleCompletion = (tarea: ServicioTarea) => {
         if (!canEdit) return;
@@ -73,45 +72,12 @@ const ServiceProgressTasks: React.FC<Props> = ({ servicio, onUpdate, canAddManua
         }
     };
 
-    const handleCreateTarea = async () => {
-        if (!newTaskName.trim()) {
-            toast.error('El nombre de la tarea es requerido');
-            return;
-        }
-        setCreatingTask(true);
-        try {
-            await servicioRepository.registrarTarea(servicio.id, { nombre: newTaskName.trim() });
-            const updated = await servicioRepository.obtener(servicio.id);
-            onUpdate(updated);
-            setNewTaskName('');
-            toast.success('Tarea manual creada correctamente');
-        } catch (error) {
-            console.error(error);
-            toast.error('No se pudo crear la tarea manual');
-        } finally {
-            setCreatingTask(false);
-        }
-    };
-
-    if (!servicio.tareas?.length) {
+    if (!tareas.length) {
         return (
             <Paper sx={{ p: 2 }}>
                 <Typography color="text.secondary" mb={2}>
-                    No hay tareas de progreso disponibles para este servicio.
+                    {emptyMessage}
                 </Typography>
-                {canAddManual && canEdit && (
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
-                        <TextField
-                            fullWidth
-                            label="Nueva tarea manual"
-                            value={newTaskName}
-                            onChange={(e) => setNewTaskName(e.target.value)}
-                        />
-                        <Button variant="contained" onClick={handleCreateTarea} disabled={creatingTask}>
-                            {creatingTask ? 'Creando...' : 'Crear tarea'}
-                        </Button>
-                    </Stack>
-                )}
             </Paper>
         );
     }
@@ -129,7 +95,7 @@ const ServiceProgressTasks: React.FC<Props> = ({ servicio, onUpdate, canAddManua
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {servicio.tareas.map((tarea) => {
+                        {tareas.map((tarea) => {
                             const update = taskUpdates[tarea.id] ?? { completado: tarea.completado, observacion: tarea.observacion ?? '' };
                             return (
                                 <TableRow key={tarea.id}>

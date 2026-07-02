@@ -23,7 +23,8 @@ export const servicioCrearSchema = z.object({
 export const servicioActualizarSchema = servicioCrearSchema.partial();
 
 export const servicioTareaCrearSchema = z.object({
-    nombre: z.string().trim().min(1, 'El nombre de la tarea es requerido')
+    nombre: z.string().trim().min(1, 'El nombre de la tarea es requerido'),
+    extra: z.boolean().optional()
 });
 
 export const servicioTareaActualizarSchema = z.object({
@@ -47,7 +48,29 @@ export const servicioListarQuerySchema = z.object({
 });
 
 export const servicioSalidaSchema = z.object({
-    metodo_pago: metodoPagoEnum
+    metodo_pago: metodoPagoEnum,
+    efectivo_recibido: z.coerce.number().nonnegative().optional().nullable(),
+    vuelto: z.coerce.number().nonnegative().optional().nullable()
+}).superRefine((data, ctx) => {
+    if (data.metodo_pago !== 'EFECTIVO') {
+        return;
+    }
+
+    if (data.efectivo_recibido == null) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El efectivo recibido es obligatorio cuando el método de pago es EFECTIVO',
+            path: ['efectivo_recibido']
+        });
+    }
+
+    if (data.vuelto == null) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El vuelto es obligatorio cuando el método de pago es EFECTIVO',
+            path: ['vuelto']
+        });
+    }
 });
 
 export const repuestoClienteCrearSchema = z.object({
@@ -82,4 +105,8 @@ export const clienteExternoSchema = z.object({
     nombre_extra: z.string().trim().min(1),
     documento_extra: z.string().trim().min(1),
     numero_extra: z.string().trim().min(1)
+});
+
+export const cambioSiguienteServicioCrearSchema = z.object({
+    item: z.string().trim().min(1, 'El item es requerido').max(100, 'El item no puede exceder 100 caracteres')
 });

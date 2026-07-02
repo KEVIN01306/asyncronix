@@ -55,11 +55,11 @@ const ClienteFormPage = () => {
 
             fetchCliente();
         } else {
-            const nitFromQuery = searchParams.get('nit');
-            if (nitFromQuery) {
+            const dpiFromQuery = searchParams.get('dpi');
+            if (dpiFromQuery) {
                 reset((current) => ({
                     ...current,
-                    nit: nitFromQuery,
+                    dpi: dpiFromQuery,
                 }));
             }
         }

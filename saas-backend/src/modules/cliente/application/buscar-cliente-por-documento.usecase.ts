@@ -8,9 +8,12 @@ export class BuscarClientePorDocumentoUseCase {
         private readonly clienteRepository: ClienteRepository
     ) { }
 
-    async execute(nit: string, negocio_id: string): Promise<ClienteObtenidoDetalle | null> {
+    async execute(data: { nit?: string | null; dpi?: string | null }, negocio_id: string): Promise<ClienteObtenidoDetalle | null> {
         try {
-            return await this.clienteRepository.buscarPorDocumento({ nit, dpi: null }, negocio_id);
+            return await this.clienteRepository.buscarPorDocumento({
+                nit: data.nit ?? null,
+                dpi: data.dpi ?? null
+            }, negocio_id);
         } catch (error) {
             if (error instanceof DatabaseError) {
                 throw new AppError('Error en base de datos', 'DATABASE_ERROR', 500)

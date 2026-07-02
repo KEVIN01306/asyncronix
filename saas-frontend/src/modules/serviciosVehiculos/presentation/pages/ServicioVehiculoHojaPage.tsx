@@ -23,6 +23,8 @@ const ServicioHojaPage = () => {
     const [error, setError] = useState<string | null>(null);
     const user = useAuthStore((state: any) => state.user);
     const theme = useTheme();
+    const tareasNormales = (servicio?.tareas || []).filter((tarea) => !tarea.extra);
+    const tareasExtras = (servicio?.tareas || []).filter((tarea) => tarea.extra);
 
     const pdfServicio = servicio ? (
         <HojaServicioPdf 
@@ -211,7 +213,7 @@ const ServicioHojaPage = () => {
                             textAlign="start"
                             sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                         >
-                            {servicio.tipo_servicio?.nombre}
+                            Tareas del Servicio {servicio.tipo_servicio?.nombre ? `- ${servicio.tipo_servicio.nombre}` : ''}
                         </Typography>
                         <ListTableSimple 
                             columns={[
@@ -219,11 +221,33 @@ const ServicioHojaPage = () => {
                                 { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
                                 { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' },
                             ]}
-                            data={servicio.tareas || []}
+                            data={tareasNormales}
                             headerBgColor={'primary.main'}
                             headerTextColor="#fff"
                         />
                 </Grid>
+                {tareasExtras.length > 0 && (
+                    <Grid container size={12} mt={2} justifyContent="start" alignItems="center">
+                        <Typography 
+                            variant="h6" 
+                            component="h2" 
+                            textAlign="start"
+                            sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                        >
+                            Servicios Extras
+                        </Typography>
+                        <ListTableSimple 
+                            columns={[
+                                { id: 'nombre', name: 'Tarea', format: (value) => value || '-' },
+                                { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
+                                { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' },
+                            ]}
+                            data={tareasExtras}
+                            headerBgColor={'primary.main'}
+                            headerTextColor="#fff"
+                        />
+                    </Grid>
+                )}
                 <Grid container size={12} mt={2} justifyContent="space-between" alignItems="center">
                     <Grid size={{ xs: 12, sm: 5 }} alignItems="center">
                         <Typography 
@@ -261,6 +285,23 @@ const ServicioHojaPage = () => {
                                 { id: 'cantidad', name: 'Cantidad' },
                             ]}
                             data={servicio.repuestos_inventario || []}
+                            headerBgColor={theme.palette.primary.main}
+                            headerTextColor="#fff"
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 5 }} alignItems="center">
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                        >
+                            Cambios de repuestos para el siguiente servicio
+                        </Typography>
+                        <ListTableSimple
+                            columns={[
+                                { id: 'item', name: 'Item'}
+                            ]}
+                            data={servicio.cambios_siguiente_servicio || []}
                             headerBgColor={theme.palette.primary.main}
                             headerTextColor="#fff"
                         />

@@ -14,11 +14,13 @@ import { ListTableSimple } from '../../../../shared/components/ui/tables/ListTab
 import { useAuthStore } from '../../../../core/store/authStore';
 import ServiceProgressTasks from '../components/ServiceProgressTasks';
 import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
+import ServiceNextServiceChanges from '../components/ServiceNextServiceChanges';
 
 const allowedStates: EstadoVehiculoServicio[] = [
     ESTADO_SERVICIO_VEHICULO.EN_SERVICIO,
     ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS,
-    ESTADO_SERVICIO_VEHICULO.ESPERA_REPUESTOS
+    ESTADO_SERVICIO_VEHICULO.ESPERA_REPUESTOS,
+    ESTADO_SERVICIO_VEHICULO.LISTO_ENTREGA
 ];
 
 const ServicioProgresoPage = () => {
@@ -123,13 +125,24 @@ const ServicioProgresoPage = () => {
 
     const canTransition = servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_SERVICIO;
     const isLocked = servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS;
+    const isAdminServicios = user?.permisos.includes('ADMIN_SERVICIOS') ?? false;
     const canEditObservaciones = servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_SERVICIO
-        ? (user?.permisos.includes('EDITAR_SERVICIOS') || user?.permisos.includes('ADMIN_SERVICIOS')) ?? false
+        ? true
         : servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS
-            ? user?.permisos.includes('ADMIN_SERVICIOS') ?? false
+            ? isAdminServicios
             : false;
-    const observacionesViewStates: EstadoVehiculoServicio[] = [ESTADO_SERVICIO_VEHICULO.EN_SERVICIO, ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS];
+    const observacionesViewStates: EstadoVehiculoServicio[] = [
+        ESTADO_SERVICIO_VEHICULO.EN_SERVICIO,
+        ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS
+    ];
     const canViewObservaciones = observacionesViewStates.includes(servicio.estado);
+    const canEditCambios = servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_SERVICIO
+        ? true
+        : servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS
+            ? isAdminServicios
+            : false;
+    const tareasNormales = (servicio.tareas || []).filter((tarea) => !tarea.extra);
+    const tareasExtras = (servicio.tareas || []).filter((tarea) => tarea.extra);
 
     return (
         <Box p={isMobile ? 2 : 4}>
@@ -245,25 +258,31 @@ const ServicioProgresoPage = () => {
                         component="h2" 
                         sx={{ fontWeight: 600, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                     >
-                        Tareas de progreso {servicio.tipo_servicio?.nombre ? `- ${servicio.tipo_servicio.nombre}` : ''}
+                        Tareas del Servicio {servicio.tipo_servicio?.nombre ? `- ${servicio.tipo_servicio.nombre}` : ''}
                     </Typography>
                     <Grid size={12}>
-                            {
-                                servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_SERVICIO ? (
-                                    <ServiceProgressTasks servicio={servicio} onUpdate={(s) => setServicio(s)} canAddManual />
-                                ) : (
-                                    <ListTableSimple 
-                                        columns={[
-                                            { id: 'nombre', name: 'Tarea', format: (value) => value || '-' },
-                                            { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
-                                            { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' },
-                                        ]}
-                                        data={servicio.tareas || []}
-                                        headerBgColor={theme.palette.primary.main}
-                                        headerTextColor="#fff"
-                                    />
-                                )
-                            }
+                        <ServiceProgressTasks
+                            servicio={servicio}
+                            tareas={tareasNormales}
+                            onUpdate={(s) => setServicio(s)}
+                            emptyMessage="No hay tareas del servicio para este registro."
+                        />
+                    </Grid>
+
+                    <Typography 
+                        variant="h6" 
+                        component="h2" 
+                        sx={{ fontWeight: 600, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                    >
+                        Servicios Extras
+                    </Typography>
+                    <Grid size={12}>
+                        <ServiceProgressTasks
+                            servicio={servicio}
+                            tareas={tareasExtras}
+                            onUpdate={(s) => setServicio(s)}
+                            emptyMessage="No hay servicios extras para este registro."
+                        />
                     </Grid>
                     <Grid size={12} alignItems="center">
                         <ServiceProgressObservaciones
@@ -272,6 +291,16 @@ const ServicioProgresoPage = () => {
                             canView={canViewObservaciones}
                             onUpdate={(s) => setServicio(s)}
                         />
+                    </Grid>
+                    <Grid size={12} alignItems="center">
+                        <Paper sx={{ p: 3 }}>
+                            <Typography variant="h6" mb={2}>Cambios para el siguiente servicio</Typography>
+                            <ServiceNextServiceChanges
+                                servicio={servicio}
+                                canEdit={canEditCambios}
+                                onUpdate={(s) => setServicio(s)}
+                            />
+                        </Paper>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }} alignItems="center">
                         <Paper sx={{ p: 3 }}>

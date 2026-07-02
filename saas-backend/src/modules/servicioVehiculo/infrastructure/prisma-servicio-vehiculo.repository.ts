@@ -34,6 +34,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
                 { servicio: { id: { contains: q } } },
                 { servicio: { descripcion: { contains: q } } },
                 { vehiculo: { placa: { contains: q } } },
+                { vehiculo: { modelo: { modelo: { contains: q } } } },
                 { servicio: { cliente: { nombre: { contains: q } } } },
                 { mecanico: { nombre: { contains: q } } },
                 { mecanico: { apellido: { contains: q } } },
@@ -74,7 +75,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             const record = await this.prisma.servicioVehiculo.findFirst({
                 where: { servicio_id: id, servicio: { negocio_id, activo: true } },
                 include: {
-                    servicio: { include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } }, tipo_servicio: { include: { opciones: { include: { opcion_servicio: true } } } }, ServicioRepuestoCliente: true, repuestos: { include: { variante: { include: { producto: true, valores: { include: { atributo: true } } } } } } } },
+                    servicio: { include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, CambiosSiguienteServicio: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } }, tipo_servicio: { include: { opciones: { include: { opcion_servicio: true } } } }, ServicioRepuestoCliente: true, repuestos: { include: { variante: { include: { producto: true, valores: { include: { atributo: true } } } } } } } },
                     vehiculo: { include: { modelo: true } },
                     mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }
                 }
@@ -137,7 +138,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
                     checklist: tipoServicio?.checklist ? {
                         create: checklistItems.map((item) => ({ checklist_item_id: item.id, estado: 'OPTIMO', observaciones: null }))
                     } : undefined,
-                    tareas: tipoServicio?.opciones?.length ? { create: tipoServicio.opciones.map((item) => ({ nombre: item.opcion_servicio.nombre, completado: false, observacion: null })) } : undefined
+                    tareas: tipoServicio?.opciones?.length ? { create: tipoServicio.opciones.map((item) => ({ nombre: item.opcion_servicio.nombre, completado: false, observacion: null, extra: false })) } : undefined
                 } as any
             });
 
@@ -170,12 +171,12 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
         }
     }
 
-    async crearTarea(servicio_id: string, data: { nombre: string }, negocio_id: string) {
+    async crearTarea(servicio_id: string, data: { nombre: string; extra?: boolean }, negocio_id: string) {
         try {
             const servicio = await this.prisma.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
             if (!servicio) throw new Error('Servicio no encontrado');
 
-            const tarea = await this.prisma.servicioTarea.create({ data: { servicio_id, nombre: data.nombre, completado: false, observacion: null } });
+            const tarea = await this.prisma.servicioTarea.create({ data: { servicio_id, nombre: data.nombre, completado: false, observacion: null, extra: data.extra ?? false } });
             return tarea as any;
         } catch (error) {
             throw PrismaErrorMapper.map(error);
@@ -238,6 +239,8 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
                 fecha_salida: data.fecha_salida ? new Date(data.fecha_salida) : undefined,
                 firma_salida: data.firma_salida ?? undefined,
                 total: data.total ?? undefined,
+                efectivo_recibido: data.efectivo_recibido ?? undefined,
+                vuelto: data.vuelto ?? undefined,
                 MetodoPago: data.MetodoPago ?? undefined
             };
 
@@ -588,12 +591,12 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
         }
     }
 
-    async eliminarTareas(servicio_id: string, negocio_id: string) {
+    async eliminarTareasNoExtra(servicio_id: string, negocio_id: string) {
         try {
             const servicio = await this.prisma.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
             if (!servicio) throw new Error('Servicio no encontrado');
 
-            await this.prisma.servicioTarea.deleteMany({ where: { servicio_id } });
+            await this.prisma.servicioTarea.deleteMany({ where: { servicio_id, extra: false } });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
@@ -606,10 +609,53 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             const tipoServicio = await this.prisma.tipoServicio.findFirst({ where: { id: tipo_servicio_id, negocio_id, activo: true }, include: { opciones: { include: { opcion_servicio: true } } } });
             if (!tipoServicio) throw new Error('Tipo de servicio no encontrado');
 
-            const tareasData = (tipoServicio.opciones ?? []).map((op) => ({ servicio_id, nombre: op.opcion_servicio.nombre, completado: false, observacion: null }));
+            const tareasData = (tipoServicio.opciones ?? []).map((op) => ({ servicio_id, nombre: op.opcion_servicio.nombre, completado: false, observacion: null, extra: false }));
             if (tareasData.length === 0) return;
 
             await this.prisma.servicioTarea.createMany({ data: tareasData });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async listarCambiosSiguienteServicio(servicio_id: string, negocio_id: string) {
+        try {
+            const servicio = await this.prisma.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            const cambios = await this.prisma.cambiosSiguienteServicio.findMany({
+                where: { servicio_id },
+                orderBy: { created_at: 'desc' }
+            });
+
+            return cambios as any;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async crearCambioSiguienteServicio(servicio_id: string, data: { item: string }, negocio_id: string) {
+        try {
+            const servicio = await this.prisma.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            const cambio = await this.prisma.cambiosSiguienteServicio.create({
+                data: { servicio_id, item: data.item }
+            });
+
+            return cambio as any;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async eliminarCambioSiguienteServicio(id: string, servicio_id: string, negocio_id: string) {
+        try {
+            const servicio = await this.prisma.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
+            if (!servicio) throw new Error('Servicio no encontrado');
+
+            const deleted = await this.prisma.cambiosSiguienteServicio.deleteMany({ where: { id, servicio_id } });
+            if (deleted.count === 0) throw new Error('Cambio no encontrado');
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

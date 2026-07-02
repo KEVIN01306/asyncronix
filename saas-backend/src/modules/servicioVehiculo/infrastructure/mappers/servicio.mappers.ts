@@ -59,6 +59,8 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
     firma_entrada: record.firma_entrada,
     firma_salida: record.firma_salida,
     total: record.total,
+    efectivo_recibido: record.efectivo_recibido ?? null,
+    vuelto: record.vuelto ?? null,
     estado: record.estado,
     MetodoPago: record.MetodoPago,
     activo: record.activo,
@@ -92,6 +94,14 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         nombre: item.nombre,
         completado: item.completado,
         observacion: item.observacion,
+        extra: item.extra ?? false,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+    })),
+    cambios_siguiente_servicio: (record.CambiosSiguienteServicio ?? []).map((item: any) => ({
+        id: item.id,
+        servicio_id: item.servicio_id,
+        item: item.item,
         created_at: item.created_at,
         updated_at: item.updated_at
     })),

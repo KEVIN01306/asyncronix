@@ -47,7 +47,11 @@ export const clienteActualizarSchema = clienteCrearShape.partial().refine(
 )
 
 export const clienteBuscarSchema = z.object({
-    nit: z.string().min(1, "El NIT es obligatorio").max(50, "El NIT no puede exceder 50 caracteres")
+    nit: z.string().trim().min(1, "El NIT no puede estar vacío").max(50, "El NIT no puede exceder 50 caracteres").optional(),
+    dpi: z.string().trim().min(1, "El DPI no puede estar vacío").max(50, "El DPI no puede exceder 50 caracteres").optional()
+}).refine((data) => Boolean(data.nit || data.dpi), {
+    message: "Debes enviar NIT o DPI",
+    path: ["nit"]
 })
 
 export const clienteListQuerySchema = z.object({

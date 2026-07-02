@@ -12,7 +12,7 @@ datasource db {
 // ==============================================================
 
 model Modulo {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   nombre      String   @unique
   descripcion String?
   activo      Boolean  @default(true)
@@ -26,7 +26,7 @@ model Modulo {
 }
 
 model Permiso {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   modulo_id   String   @db.Char(36)
   codigo      String   @unique
   descripcion String?
@@ -42,7 +42,7 @@ model Permiso {
 }
 
 model Negocio {
-  id                     String    @id @default(uuid()) @db.Char(36)
+  id                     String    @id @default(dbgenerated("(UUID())")) @db.Char(36)
   nombre                 String
   codigo                 String?   @db.VarChar(10)
   slug                   String    @unique
@@ -87,7 +87,7 @@ model Negocio {
 }
 
 model Sucursal {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id String   @db.Char(36)
   nombre     String
   direccion  String?
@@ -115,7 +115,7 @@ model Sucursal {
 }
 
 model Session {
-  id               String   @id @default(uuid()) @db.Char(36)
+  id               String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   token            String   @unique(map: "token") @db.VarChar(255)
   fcm_token        String?  @db.VarChar(255)
   usuario_id       String   @db.Char(36)
@@ -133,7 +133,7 @@ model Session {
 // ==============================================================
 
 model Usuario {
-  id            String   @id @default(uuid()) @db.Char(36)
+  id            String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id    String   @db.Char(36)
   sucursal_id   String?  @db.Char(36)
   avatar_url    String?  @db.Text
@@ -172,7 +172,7 @@ model Usuario {
 }
 
 model Cliente {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id String   @db.Char(36)
   nombre     String
   apellido   String?
@@ -197,7 +197,7 @@ model Cliente {
 }
 
 model Rol {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id  String   @db.Char(36)
   nombre      String
   descripcion String?
@@ -218,7 +218,7 @@ model Rol {
 // ==============================================================
 
 model Marca {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   marca      String   @unique
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
@@ -230,7 +230,7 @@ model Marca {
 }
 
 model Linea {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   linea      String   @unique
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
@@ -241,7 +241,7 @@ model Linea {
 }
 
 model Cilindrada {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   cilindrada Int      @unique
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
@@ -252,7 +252,7 @@ model Cilindrada {
 }
 
 model Modelo {
-  id               String   @id @default(uuid()) @db.Char(36)
+  id               String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   modelo           String   @unique
   anio             Int
   marca_id         String   @db.Char(36)
@@ -277,7 +277,7 @@ model Modelo {
 // ==============================================================
 
 model Vehiculo {
-  id               String   @id @default(uuid()) @db.Char(36)
+  id               String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id       String   @db.Char(36)
   placa            String
   modelo_id        String   @db.Char(36)
@@ -301,7 +301,7 @@ model Vehiculo {
 }
 
 model VehiculoTipo {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   tipo       String   @unique
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
@@ -314,7 +314,7 @@ model VehiculoTipo {
 }
 
 model Cita {
-  id                String     @id @default(uuid()) @db.Char(36)
+  id                String     @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id        String     @db.Char(36)
   sucursal_id       String     @db.Char(36)
   cliente_id        String?    @db.Char(36)
@@ -342,7 +342,7 @@ model Cita {
 }
 
 model Servicio {
-  id                  String         @id @default(uuid()) @db.Char(36)
+  id                  String         @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id          String         @db.Char(36)
   sucursal_id         String         @db.Char(36)
   cliente_id          String?        @db.Char(36)
@@ -379,13 +379,14 @@ model Servicio {
   tareas                  ServicioTarea[]
   repuestos               ServicioRepuesto[]
   ServicioRepuestoCliente ServicioRepuestoCliente[]
+  CambiosSiguienteServicio   CambiosSiguienteServicio[]
   
   @@map("servicios")
 }
 
 
 model ServicioVehiculo {
-  id                 String   @id @default(uuid()) @db.Char(36)
+  id                 String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   servicio_id         String   @unique @db.Char(36)
   vehiculo_id         String   @db.Char(36)
   mecanico_id           String?   @db.Char(36)
@@ -403,7 +404,7 @@ model ServicioVehiculo {
 }
 
 model TipoServicio {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id  String   @db.Char(36)
   nombre      String
   precio_base Float    @default(0)
@@ -421,7 +422,7 @@ model TipoServicio {
 }
 
 model OpcionServicio {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id  String   @db.Char(36)
   nombre      String
   descripcion String?
@@ -450,7 +451,7 @@ model TipoServicioOpcion {
 }
 
 model ServicioRepuestoCliente {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   servicio_id String   @db.Char(36)
   repuesto    String   @db.Text
   cantidad    Int
@@ -467,7 +468,7 @@ model ServicioRepuestoCliente {
 // ==============================================
 
 model ChecklistItem {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id String   @db.Char(36)
   nombre     String
   activo     Boolean  @default(true)
@@ -481,7 +482,7 @@ model ChecklistItem {
 }
 
 model ChecklistRespuesta {
-  id                String          @id @default(uuid()) @db.Char(36)
+  id                String          @id @default(dbgenerated("(UUID())")) @db.Char(36)
   checklist_item_id String          @db.Char(36)
   servicio_id       String          @db.Char(36)
   estado            EstadoChecklist @default(OPTIMO)
@@ -497,11 +498,12 @@ model ChecklistRespuesta {
 }
 
 model ServicioTarea {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   servicio_id String   @db.Char(36)
   nombre      String
   completado  Boolean  @default(false)
   observacion String?
+  extra       Boolean  @default(false)
   activo      Boolean  @default(true)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
@@ -516,7 +518,7 @@ model ServicioTarea {
 // ==============================================================
 
 model Proveedor {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id String   @db.Char(36)
   nombre     String
   contacto   String?  @db.VarChar(100)
@@ -536,7 +538,7 @@ model Proveedor {
 }
 
 model CategoriaProducto {
-  id                String   @id @default(uuid()) @db.Char(36)
+  id                String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id        String?  @db.Char(36)
   categoria         String
   codigo            String?  @db.VarChar(20)
@@ -554,7 +556,7 @@ model CategoriaProducto {
 }
 
 model Producto {
-  id           String   @id @default(uuid()) @db.Char(36)
+  id           String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id   String   @db.Char(36)
   codigo       String?  @db.VarChar(100)
   categoria_id String   @db.Char(36)
@@ -579,7 +581,7 @@ model Producto {
 
 
 model ImagenProducto {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   producto_id String   @db.Char(36)
   url         String   @db.Text
   descripcion String?  @db.VarChar(255)
@@ -596,7 +598,7 @@ model ImagenProducto {
 }
 
 model Atributo {
-  id                String              @id @default(uuid()) @db.Char(36)
+  id                String              @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id        String              @db.Char(36)
   nombre            String              // Ej. "Viscosidad", "Talla", "Medida"
   activo            Boolean             @default(true)
@@ -625,7 +627,7 @@ model ProductoAtributo {
 }
 
 model VarianteProducto {
-  id              String   @id @default(uuid()) @db.Char(36)
+  id              String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   producto_id     String   @db.Char(36)
   imagen_id       String?  @db.Char(36)
   sku             String   @unique
@@ -650,7 +652,7 @@ model VarianteProducto {
   @@map("variantes_producto")
 }
 model ValorAtributo {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   atributo_id String   @db.Char(36)
   valor       String // Ej. "10W-40", "M", "120/70-17"
   created_at  DateTime @default(now())
@@ -664,7 +666,7 @@ model ValorAtributo {
 }
 
 model Lote {
-  id                String    @id @default(uuid()) @db.Char(36)
+  id                String    @id @default(dbgenerated("(UUID())")) @db.Char(36)
   variante_id       String    @db.Char(36) // Cambiado de producto_id a variante_id
   negocio_id        String    @db.Char(36)
   sucursal_id       String    @db.Char(36)
@@ -695,7 +697,7 @@ model Lote {
 }
 
 model ServicioRepuesto {
-  id           String   @id @default(uuid()) @db.Char(36)
+  id           String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   servicio_id  String   @db.Char(36)
   lote_id      String?  @db.Char(36)
   variante_id  String   @db.Char(36)
@@ -714,9 +716,20 @@ model ServicioRepuesto {
   @@map("servicio_repuestos")
 }
 
+model CambiosSiguienteServicio {
+  id                 String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  servicio_id        String   @db.Char(36)
+  item String   @db.VarChar(100)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  servicio Servicio @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
+
+  @@map("cambios_siguiente_servicio")
+}
 
 model Traslado {
-  id               String             @id @default(uuid()) @db.Char(36)
+  id               String             @id @default(dbgenerated("(UUID())")) @db.Char(36)
   consecutivo      Int               @unique @default(autoincrement())
   origen_id         String  @db.Char(36)
   destino_id        String  @db.Char(36)
@@ -736,7 +749,7 @@ model Traslado {
 }
 
 model DetalleTraslado {
-  id               String            @id @default(uuid()) @db.Char(36)
+  id               String            @id @default(dbgenerated("(UUID())")) @db.Char(36)
   traslado_id       String  @db.Char(36)
   lote_id           String  @db.Char(36)            // Lote de ORIGEN
   cantidad         Int               // Cantidad que se va a mover
@@ -750,7 +763,7 @@ model DetalleTraslado {
 // ==============================================================
 
 model Venta {
-  id          String      @id @default(uuid()) @db.Char(36)
+  id          String      @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id  String      @db.Char(36)
   sucursal_id String      @db.Char(36)
   usuario_id  String      @db.Char(36)
@@ -778,7 +791,7 @@ model Venta {
 }
 
 model VentaDetalle {
-  id              String   @id @default(uuid()) @db.Char(36)
+  id              String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   venta_id        String   @db.Char(36)
   lote_id         String?  @db.Char(36)
   variante_id     String?  @db.Char(36)
@@ -801,7 +814,7 @@ model VentaDetalle {
 
 
 model PreVenta {
-  id          String           @id @default(uuid()) @db.Char(36)
+  id          String           @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id  String           @db.Char(36)
   sucursal_id String           @db.Char(36)
   usuario_id  String           @db.Char(36)
@@ -820,7 +833,7 @@ model PreVenta {
 }
 
 model PreVentaDetalle {
-  id           String   @id @default(uuid()) @db.Char(36)
+  id           String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   pre_venta_id String   @db.Char(36)
   variante_id  String   @db.Char(36)
   descripcion  String
@@ -834,7 +847,7 @@ model PreVentaDetalle {
 }
 
 model Imagen {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   servicio_id String   @db.Char(36)
   imagen      String
   descripcion String?
@@ -855,7 +868,7 @@ model BarcodeSequence {
 
 
 model Banco {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   nombre     String   @unique
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
@@ -867,7 +880,7 @@ model Banco {
 }
 
 model Caja {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id  String   @db.Char(36)
   sucursal_id String   @db.Char(36)
   nombre      String   // Ej: "Caja Principal", "Caja Virtual Efectivo"
@@ -888,7 +901,7 @@ model Caja {
 }
 
 model CuentaBancaria {
-  id             String   @id @default(uuid()) @db.Char(36)
+  id             String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id     String   @db.Char(36)
   banco_id       String   @db.Char(36)
   numero_cuenta  String
@@ -925,7 +938,7 @@ model SucursalCuentaBancaria {
 }
 
 model CategoriaTransaccion {
-  id         String   @id @default(uuid()) @db.Char(36)
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id String?  @db.Char(36) // null si es una categoría global del sistema
   nombre     String   // Ej: "Pago de Planilla", "Compra de Suministros", "Venta de Repuestos"
   tipo       TipoMovimiento
@@ -941,7 +954,7 @@ model CategoriaTransaccion {
 }
 
 model Transaccion {
-  id                     String                @id @default(uuid()) @db.Char(36)
+  id                     String                @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id             String                @db.Char(36)
   sucursal_id            String                @db.Char(36)
   categoria_id           String?               @db.Char(36)

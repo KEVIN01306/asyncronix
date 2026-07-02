@@ -3,7 +3,7 @@ import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
 import { servicioController } from "../servicio.module.js";
-import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioSalidaSchema, servicioTareaCrearSchema, servicioTareaActualizarSchema, servicioObservacionesSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema, repuestoCrearSchema } from "./validators/servicio.schema.js";
+import { servicioCrearSchema, servicioActualizarSchema, servicioCambiarEstadoSchema, servicioListarQuerySchema, servicioSalidaSchema, servicioTareaCrearSchema, servicioTareaActualizarSchema, servicioObservacionesSchema, asociarMecanicoSchema, cambiarMecanicoSchema, clienteExternoSchema, repuestoClienteCrearSchema, repuestoCrearSchema, cambioSiguienteServicioCrearSchema } from "./validators/servicio.schema.js";
 import { checklistRespuestaCrearSchema, checklistRespuestaActualizarSchema } from "./validators/checklist-respuesta.schema.js";
 
 const router = Router();
@@ -117,6 +117,25 @@ router.delete(
     "/:id/tareas/:tarea_id",
     authMiddleware.verificarPermiso(['EDITAR_SERVICIOS']),
     servicioController.eliminarTarea
+);
+
+router.get(
+    "/:id/cambios-siguiente-servicio",
+    authMiddleware.verificarPermiso(['VER_SERVICIOS_DETALLE']),
+    servicioController.listarCambiosSiguienteServicio
+);
+
+router.post(
+    "/:id/cambios-siguiente-servicio",
+    authMiddleware.verificarPermisoSome(['EDITAR_SERVICIOS', 'ADMIN_SERVICIOS']),
+    validarMiddleware.validarBody(cambioSiguienteServicioCrearSchema),
+    servicioController.crearCambioSiguienteServicio
+);
+
+router.delete(
+    "/:id/cambios-siguiente-servicio/:cambio_id",
+    authMiddleware.verificarPermisoSome(['EDITAR_SERVICIOS', 'ADMIN_SERVICIOS']),
+    servicioController.eliminarCambioSiguienteServicio
 );
 
 router.get(

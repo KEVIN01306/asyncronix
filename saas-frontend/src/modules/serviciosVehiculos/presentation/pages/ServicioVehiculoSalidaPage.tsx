@@ -19,7 +19,19 @@ import type { VarianteValor } from '../../../productos/domain/interfaces/product
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const salidaSchema = z.object({
-    metodo_pago: z.enum(Object.values(METODO_PAGO) as [string, ...string[]], 'El método de pago es requerido')
+    metodo_pago: z.enum(Object.values(METODO_PAGO) as [string, ...string[]], 'El método de pago es requerido'),
+    efectivo_recibido: z.number().nonnegative().optional().nullable(),
+    vuelto: z.number().nonnegative().optional().nullable()
+}).superRefine((data, ctx) => {
+    if (data.metodo_pago !== METODO_PAGO.EFECTIVO) return;
+
+    if (data.efectivo_recibido == null) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'El efectivo recibido es obligatorio para pagos en efectivo',
+            path: ['efectivo_recibido']
+        });
+    }
 });
 
 type SalidaForm = z.infer<typeof salidaSchema>;
@@ -43,8 +55,11 @@ const ServicioSalidaPage = () => {
     const hasSalidaPermission = useMemo(() => user?.permisos?.includes('SALIDA_SERVICIOS'), [user]);
     const form = useForm<SalidaForm>({
         resolver: zodResolver(salidaSchema),
-        defaultValues: { metodo_pago: '' }
+        defaultValues: { metodo_pago: '', efectivo_recibido: null, vuelto: null }
     });
+
+    const metodoPago = form.watch('metodo_pago');
+    const efectivoRecibido = form.watch('efectivo_recibido');
 
     const fetchService = useCallback(async () => {
         if (!id) {
@@ -99,6 +114,30 @@ const ServicioSalidaPage = () => {
         }
         return acc;
     }, 0) || 0;
+    const totalCobro = (servicio?.total ?? 0) + totalRepuestos;
+    const diferenciaPago = useMemo(() => {
+        const recibido = Number(efectivoRecibido ?? 0);
+        if (!Number.isFinite(recibido)) return -totalCobro;
+        return recibido - totalCobro;
+    }, [efectivoRecibido, totalCobro]);
+    const isCashInsufficient = metodoPago === METODO_PAGO.EFECTIVO && diferenciaPago < 0;
+    const vueltoCalculado = useMemo(() => {
+        const recibido = Number(efectivoRecibido ?? 0);
+        if (!Number.isFinite(recibido)) return 0;
+        return Math.max(0, recibido - totalCobro);
+    }, [efectivoRecibido, totalCobro]);
+
+    useEffect(() => {
+        if (metodoPago !== METODO_PAGO.EFECTIVO) {
+            form.setValue('efectivo_recibido', null);
+            form.setValue('vuelto', null);
+            return;
+        }
+
+        form.setValue('vuelto', vueltoCalculado);
+    }, [metodoPago, vueltoCalculado, form]);
+    const tareasNormales = (servicio?.tareas || []).filter((tarea) => !tarea.extra);
+    const tareasExtras = (servicio?.tareas || []).filter((tarea) => tarea.extra);
 
     const handleOpenSignaturePad = () => setOpenSignaturePad(true);
     const handleCloseSignaturePad = () => setOpenSignaturePad(false);
@@ -124,11 +163,22 @@ const ServicioSalidaPage = () => {
             return;
         }
 
+        if (values.metodo_pago === METODO_PAGO.EFECTIVO && (values.efectivo_recibido ?? 0) < totalCobro) {
+            toast.error('El efectivo recibido no puede ser menor al total a cobrar');
+            return;
+        }
+
         try {
             setSavingSalida(true);
             const blob = await fetch(base64).then((response) => response.blob());
             const file = new File([blob], 'firma_salida.png', { type: 'image/png' });
-            const updatedService = await servicioRepository.finalizarSalida(servicio.id, file, values.metodo_pago);
+            const updatedService = await servicioRepository.finalizarSalida(
+                servicio.id,
+                file,
+                values.metodo_pago,
+                values.metodo_pago === METODO_PAGO.EFECTIVO ? values.efectivo_recibido ?? null : null,
+                values.metodo_pago === METODO_PAGO.EFECTIVO ? values.vuelto ?? null : null
+            );
             setServicio(updatedService);
             toast.success('Servicio finalizado correctamente');
         } catch (err) {
@@ -254,7 +304,17 @@ const ServicioSalidaPage = () => {
                     </Grid>
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
                         <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
-                            Total: {formatMoney(servicio.total ? servicio.total + totalRepuestos : totalRepuestos)}
+                            Total: {formatMoney(totalCobro)}
+                        </Typography>
+                    </Grid>
+                    <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
+                        <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                            Efectivo recibido: {servicio.efectivo_recibido != null ? formatMoney(servicio.efectivo_recibido) : '-'}
+                        </Typography>
+                    </Grid>
+                    <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
+                        <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                            Vuelto: {servicio.vuelto != null ? formatMoney(servicio.vuelto) : '-'}
                         </Typography>
                     </Grid>
                 </Grid>
@@ -306,7 +366,7 @@ const ServicioSalidaPage = () => {
                         textAlign="start"
                         sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                     >
-                        {servicio.tipo_servicio?.nombre}
+                        Tareas del Servicio {servicio.tipo_servicio?.nombre ? `- ${servicio.tipo_servicio.nombre}` : ''}
                     </Typography>
                     <ListTableSimple
                         columns={[
@@ -314,11 +374,33 @@ const ServicioSalidaPage = () => {
                             { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
                             { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' }
                         ]}
-                        data={servicio.tareas || []}
+                        data={tareasNormales}
                         headerBgColor={'primary.main'}
                         headerTextColor="#fff"
                     />
                 </Grid>
+                {tareasExtras.length > 0 && (
+                    <Grid container size={12} mt={2} justifyContent="start" alignItems="center">
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            textAlign="start"
+                            sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                        >
+                            Servicios Extras
+                        </Typography>
+                        <ListTableSimple
+                            columns={[
+                                { id: 'nombre', name: 'Tarea', format: (value) => value || '-' },
+                                { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
+                                { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' }
+                            ]}
+                            data={tareasExtras}
+                            headerBgColor={'primary.main'}
+                            headerTextColor="#fff"
+                        />
+                    </Grid>
+                )}
                 <Grid container size={12} mt={2} justifyContent="space-between" alignItems="center">
                     <Grid size={{ xs: 12, sm: 5 }} alignItems="center">
                         <Typography
@@ -367,6 +449,24 @@ const ServicioSalidaPage = () => {
                             headerTextColor="#fff"
                         />
                     </Grid>
+                    <Grid size={{ xs: 12, sm: 5 }} alignItems="center">
+                        <Typography
+                            variant="h6"
+                            component="h2"
+                            sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                        >
+                            Cambios de repuestos para el siguiente servicio
+                        </Typography>
+                        <ListTableSimple
+                            columns={[
+                                { id: 'item', name: 'Item'}
+                            ]}
+                            data={servicio.cambios_siguiente_servicio || []}
+                            headerBgColor={theme.palette.primary.main}
+                            headerTextColor="#fff"
+                        />
+                    </Grid>
+                    
                 </Grid>
                 <Grid container size={12} mt={2} justifyContent="center" alignItems="center" spacing={2}>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -426,6 +526,45 @@ const ServicioSalidaPage = () => {
                                     )}
                                 />
                             </Grid>
+                            {metodoPago === METODO_PAGO.EFECTIVO && (
+                                <>
+                                    <Grid size={{ xs: 12, md: 6 }}>
+                                        <Controller
+                                            name="efectivo_recibido"
+                                            control={form.control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    label="Efectivo recibido"
+                                                    type="number"
+                                                    value={field.value ?? ''}
+                                                    onChange={(event) => {
+                                                        const value = event.target.value;
+                                                        field.onChange(value === '' ? null : Number(value));
+                                                    }}
+                                                    inputProps={{ min: 0, step: 0.01 }}
+                                                    fullWidth
+                                                    error={Boolean(form.formState.errors.efectivo_recibido) || isCashInsufficient}
+                                                    helperText={
+                                                        form.formState.errors.efectivo_recibido?.message
+                                                        ?? (metodoPago === METODO_PAGO.EFECTIVO
+                                                            ? `Diferencia: ${formatMoney(diferenciaPago)}`
+                                                            : undefined)
+                                                    }
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 12, md: 6 }}>
+                                        <Box sx={{ p: 1 }}>
+                                            <Typography variant="body2" color={isCashInsufficient ? 'error.main' : 'text.secondary'}>
+                                                {isCashInsufficient
+                                                    ? `Faltante: ${formatMoney(diferenciaPago)}`
+                                                    : `Vuelto: ${formatMoney(vueltoCalculado)}`}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                </>
+                            )}
                             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Button variant="outlined" onClick={handleOpenSignaturePad} disabled={!isSalidaState || !hasSalidaPermission}>
                                     Capturar firma de salida
@@ -436,7 +575,7 @@ const ServicioSalidaPage = () => {
                                     type="submit"
                                     variant="contained"
                                     color="success"
-                                    disabled={!isSalidaState || !hasSalidaPermission || savingSalida}
+                                    disabled={!isSalidaState || !hasSalidaPermission || savingSalida || isCashInsufficient}
                                 >
                                     {savingSalida ? 'Procesando...' : 'Dar salida'}
                                 </Button>

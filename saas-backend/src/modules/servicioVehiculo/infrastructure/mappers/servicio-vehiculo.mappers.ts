@@ -22,6 +22,7 @@ export const toServicioRecordFromServicioVehiculo = (record: any) => {
         imagenes: servicio.imagenes ?? [],
         checklist: servicio.checklist ?? [],
         tareas: servicio.tareas ?? [],
+        CambiosSiguienteServicio: servicio.CambiosSiguienteServicio ?? [],
         ServicioRepuestoCliente: servicio.ServicioRepuestoCliente ?? [],
         repuestos: servicio.repuestos ?? [],
         tipo_servicio: servicio.tipo_servicio ?? null,
@@ -31,6 +32,8 @@ export const toServicioRecordFromServicioVehiculo = (record: any) => {
         descripcion: servicio.descripcion ?? null,
         diagnostico: servicio.diagnostico ?? null,
         total: servicio.total ?? 0,
+        efectivo_recibido: servicio.efectivo_recibido ?? null,
+        vuelto: servicio.vuelto ?? null,
         created_at: servicio.created_at ?? record.created_at,
         updated_at: servicio.updated_at ?? record.updated_at
     };

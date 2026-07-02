@@ -1,6 +1,6 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { Add, Article, Edit, Visibility } from '@mui/icons-material';
-import { Autocomplete, Box, Button, Chip, Paper, TextField, TableContainer, useTheme, AlertTitle, Alert } from '@mui/material';
+import { Add, Article, Edit, FilterList, Search, Visibility } from '@mui/icons-material';
+import { Autocomplete, Box, Button, Chip, Paper, TextField, TableContainer, useTheme, AlertTitle, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Stack, InputAdornment } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
@@ -25,11 +25,17 @@ const ServiciosListPage = () => {
     const [codigo, setCodigo] = useState('');
     const [placa, setPlaca] = useState('');
     const [estado, setEstado] = useState('');
+    const [tempCodigo, setTempCodigo] = useState('');
+    const [tempPlaca, setTempPlaca] = useState('');
+    const [tempEstado, setTempEstado] = useState('');
     const [mechanicOptions, setMechanicOptions] = useState<Array<{ id: string; label: string }>>([]);
     const [selectedMechanic, setSelectedMechanic] = useState<{ id: string; label: string } | null>(null);
+    const [tempSelectedMechanic, setTempSelectedMechanic] = useState<{ id: string; label: string } | null>(null);
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
 
-    const isAdmin = useAuthStore((state) => state.user?.permisos.includes('ADMIN_SERVICIOS')) ?? false;
+    const user = useAuthStore((state) => state.user);
     const hasSalidaPermission = useAuthStore((state) => state.user?.permisos.includes('SALIDA_SERVICIOS')) ?? false;
+    const sucursalId = user?.sucursal_id ?? null;
 
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -71,8 +77,8 @@ const ServiciosListPage = () => {
         placa: searchParams.get('placa') || undefined,
         codigo: searchParams.get('codigo') || undefined,
         q: searchParams.get('q') || undefined,
-        mecanico_id: isAdmin ? (searchParams.get('mecanico_id') || undefined) : undefined
-    }), [limit, offset, searchParams, isAdmin]);
+        mecanico_id: searchParams.get('mecanico_id') || undefined
+    }), [limit, offset, searchParams]);
 
     const fetchServicios = useCallback(async () => {
         setLoading(true);
@@ -89,15 +95,15 @@ const ServiciosListPage = () => {
     }, [queryParams]);
 
     const loadMechanics = useCallback(async () => {
-        if (!isAdmin) return;
+        if (!sucursalId) return;
         try {
-            const response = await usuarioRepository.listar(100, 0);
-            setMechanicOptions((response.data ?? []).map((user) => ({ id: user.id, label: `${user.nombre} ${user.apellido ?? ''}`.trim() })));
+            const response = await usuarioRepository.listar(100, 0, null, null, sucursalId);
+            setMechanicOptions((response.data ?? []).map((userData) => ({ id: userData.id, label: `${userData.nombre} ${userData.apellido ?? ''}`.trim() })));
         } catch (error) {
             console.error(error);
             toast.error('No se pudo cargar la lista de mecánicos');
         }
-    }, [isAdmin]);
+    }, [sucursalId]);
 
     useEffect(() => {
         loadMechanics();
@@ -118,6 +124,15 @@ const ServiciosListPage = () => {
     }, [searchParams, mechanicOptions]);
 
     useEffect(() => {
+        if (filterModalOpen) {
+            setTempCodigo(codigo);
+            setTempPlaca(placa);
+            setTempEstado(estado);
+            setTempSelectedMechanic(selectedMechanic);
+        }
+    }, [filterModalOpen, codigo, placa, estado, selectedMechanic]);
+
+    useEffect(() => {
         const timeout = window.setTimeout(() => {
             const params = new URLSearchParams();
             params.set('limit', String(limit));
@@ -126,12 +141,12 @@ const ServiciosListPage = () => {
             if (codigo) params.set('codigo', codigo);
             if (placa) params.set('placa', placa);
             if (estado) params.set('estado', estado);
-            if (isAdmin && currentMechanicId) params.set('mecanico_id', currentMechanicId);
+            if (currentMechanicId) params.set('mecanico_id', currentMechanicId);
             setSearchParams(params, { replace: true });
         }, 450);
 
         return () => window.clearTimeout(timeout);
-    }, [limit, offset, searchText, codigo, placa, estado, currentMechanicId, isAdmin, setSearchParams]);
+    }, [limit, offset, searchText, codigo, placa, estado, currentMechanicId, setSearchParams]);
 
     useEffect(() => {
         fetchServicios();
@@ -195,6 +210,42 @@ const ServiciosListPage = () => {
         setSearchParams(params, { replace: true });
     };
 
+    const handleClearFilters = () => {
+        setTempCodigo('');
+        setTempPlaca('');
+        setTempEstado('');
+        setTempSelectedMechanic(null);
+        setCodigo('');
+        setPlaca('');
+        setEstado('');
+        setSelectedMechanic(null);
+
+        const params = new URLSearchParams();
+        params.set('limit', String(limit));
+        params.set('offset', '0');
+        if (searchText) params.set('q', searchText);
+        setSearchParams(params, { replace: true });
+        setFilterModalOpen(false);
+    };
+
+    const handleApplyFilters = () => {
+        setCodigo(tempCodigo);
+        setPlaca(tempPlaca);
+        setEstado(tempEstado);
+        setSelectedMechanic(tempSelectedMechanic);
+
+        const params = new URLSearchParams();
+        params.set('limit', String(limit));
+        params.set('offset', '0');
+        if (searchText) params.set('q', searchText);
+        if (tempCodigo) params.set('codigo', tempCodigo);
+        if (tempPlaca) params.set('placa', tempPlaca);
+        if (tempEstado) params.set('estado', tempEstado);
+        if (tempSelectedMechanic?.id) params.set('mecanico_id', tempSelectedMechanic.id);
+        setSearchParams(params, { replace: true });
+        setFilterModalOpen(false);
+    };
+
     return (
         <Box p={isMobile ? 2 : 4}>
 
@@ -203,63 +254,81 @@ const ServiciosListPage = () => {
                 <AlertTitle>Servicios</AlertTitle>
                 Administra tus servicios, crea nuevos registros y actualiza la información de contacto en cualquier momento.
             </Alert>
-            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" gap={2} mb={2} component={Paper} p={2}>
-                <TextField
+            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems="center" gap={2} mb={2} component={Paper} p={2}>
+                <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} gap={1} width="100%">
+                    <TextField
                         fullWidth
-                        label="Buscar servicio"
+                        label="Búsqueda general"
+                        placeholder="Código, ID, placa, tipo de servicio o mecánico"
                         value={searchText}
                         onChange={(event) => setSearchText(event.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Search color="primary" />
+                                </InputAdornment>
+                            )
+                        }}
                     />
+                    <Button variant="outlined" fullWidth={isMobile} startIcon={<FilterList />} onClick={() => setFilterModalOpen(true)}>
+                        Más filtros
+                    </Button>
+                </Box>
                 <Button variant="contained" fullWidth={isMobile} startIcon={<Add />} onClick={() => navigate('/servicios-vehiculo/nuevo')}>
                     Nuevo servicio
                 </Button>
             </Box>
 
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: isAdmin ? 'repeat(4, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))' }} gap={2}>
-
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Código / ID"
-                        value={codigo}
-                        onChange={(event) => setCodigo(event.target.value)}
-                    />
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Placa"
-                        value={placa}
-                        onChange={(event) => setPlaca(event.target.value)}
-                    />
-                    <TextField
-                        fullWidth
-                        select
-                        focused
-                        size="small"
-                        label="Estado"
-                        value={estado}
-                        onChange={(event) => setEstado(event.target.value)}
-                        SelectProps={{ native: true }}
-                    >
-                        <option value="">Todos</option>
-                        {Object.values(ESTADO_SERVICIO_VEHICULO).map((estadoOption) => (
-                            <option key={estadoOption} value={estadoOption}>{estadoOption}</option>
-                        ))}
-                    </TextField>
-                    {isAdmin && (
+            <Dialog open={filterModalOpen} onClose={() => setFilterModalOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Filtros</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Código / ID"
+                            value={tempCodigo}
+                            onChange={(event) => setTempCodigo(event.target.value)}
+                        />
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Placa"
+                            value={tempPlaca}
+                            onChange={(event) => setTempPlaca(event.target.value)}
+                        />
+                        <TextField
+                            fullWidth
+                            select
+                            size="small"
+                            label="Estado"
+                            value={tempEstado}
+                            focused
+                            onChange={(event) => setTempEstado(event.target.value)}
+                            SelectProps={{ native: true }}
+                        >
+                            <option value="">Todos</option>
+                            {Object.values(ESTADO_SERVICIO_VEHICULO).map((estadoOption) => (
+                                <option key={estadoOption} value={estadoOption}>{estadoOption}</option>
+                            ))}
+                        </TextField>
                         <Autocomplete
                             fullWidth
                             size="small"
                             options={mechanicOptions}
-                            value={selectedMechanic}
+                            value={tempSelectedMechanic}
                             getOptionLabel={(option) => option.label}
-                            onChange={(_, newValue) => setSelectedMechanic(newValue)}
-                            renderInput={(params) => <TextField {...params} label="Mecánico" />}
+                            onChange={(_, newValue) => setTempSelectedMechanic(newValue)}
+                            renderInput={(params) => <TextField {...params} label={sucursalId ? 'Mecánico de la sucursal' : 'Mecánico'} />}
                         />
-                    )}
-                </Box>
-            </Paper>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setFilterModalOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleClearFilters} variant="outlined">Limpiar</Button>
+                    <Button onClick={handleApplyFilters} variant="contained">Aplicar</Button>
+                </DialogActions>
+            </Dialog>
 
             <TableContainer>
                 {loading ? (

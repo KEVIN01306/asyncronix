@@ -48,6 +48,14 @@ export interface ServicioRepuestoCliente {
     updated_at: string;
 }
 
+export interface CambioSiguienteServicio {
+    id: string;
+    servicio_id: string;
+    item: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface ServicioVehiculo {
     id: string;
     sucursal_id: string;
@@ -64,6 +72,8 @@ export interface ServicioVehiculo {
     firma_entrada?: string | null;
     firma_salida?: string | null;
     total?: number | null;
+    efectivo_recibido?: number | null;
+    vuelto?: number | null;
     estado: EstadoVehiculoServicio;
     MetodoPago: string;
     activo?: boolean;
@@ -74,6 +84,7 @@ export interface ServicioVehiculo {
     repuestos?: ServicioRepuestoCliente[];
     repuestos_inventario?: ServicioRepuesto[];
     tareas?: ServicioTarea[];
+    cambios_siguiente_servicio?: CambioSiguienteServicio[];
     vehiculo?: {
         id: string;
         placa: string;
@@ -116,6 +127,7 @@ export interface ServicioTarea {
     nombre: string;
     completado: boolean;
     observacion?: string | null;
+    extra: boolean;
     created_at: string;
     updated_at: string;
 }

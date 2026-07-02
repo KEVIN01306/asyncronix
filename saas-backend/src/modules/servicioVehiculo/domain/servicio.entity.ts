@@ -29,6 +29,15 @@ export interface ServicioTarea {
     nombre: string;
     completado: boolean;
     observacion?: string | null;
+    extra: boolean;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface CambioSiguienteServicio {
+    id: string;
+    servicio_id: string;
+    item: string;
     created_at: Date;
     updated_at: Date;
 }
@@ -82,6 +91,8 @@ export interface Servicio {
     firma_entrada?: string | null;
     firma_salida?: string | null;
     total?: number;
+    efectivo_recibido?: number | null;
+    vuelto?: number | null;
     estado: EstadoServicio;
     MetodoPago: MetodoPago;
     activo?: boolean;
@@ -123,6 +134,7 @@ export interface ServicioDetalle extends Servicio {
     imagenes: ImagenServicio[];
     checklist: ChecklistRespuestaSimple[];
     tareas: ServicioTarea[];
+    cambios_siguiente_servicio: CambioSiguienteServicio[];
     tipo_servicio?: {
         id: string;
         nombre: string;

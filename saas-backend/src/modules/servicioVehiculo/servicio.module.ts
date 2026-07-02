@@ -27,6 +27,9 @@ import { EliminarRepuestoClienteUseCase } from './application/eliminar-repuesto-
 import { CrearServicioRepuestoUseCase } from './application/crear-repuesto-servicio.usecase.js';
 import { EliminarServicioRepuestoUseCase } from './application/eliminar-repuesto-servicio.usecase.js';
 import { ActualizarObservacionesServicioUseCase } from './application/actualizar-observaciones-servicio.usecase.js';
+import { CrearCambioSiguienteServicioUseCase } from './application/crear-cambio-siguiente-servicio.usecase.js';
+import { ListarCambiosSiguienteServicioUseCase } from './application/listar-cambios-siguiente-servicio.usecase.js';
+import { EliminarCambioSiguienteServicioUseCase } from './application/eliminar-cambio-siguiente-servicio.usecase.js';
 import { ServicioController } from './presentation/servicio.controller.js';
 import { enviarNotificacionUseCase } from '../notificacion/notificacion.module.js';
 import { PrismaLoteRepository } from '../lote/infrastructure/prisma-lote.repository.js';
@@ -66,6 +69,9 @@ const varianteRepository = new PrismaVarianteRepository(prisma as any);
 const crearServicioRepuestoUseCase = new CrearServicioRepuestoUseCase(repository, loteRepository, varianteRepository);
 const eliminarServicioRepuestoUseCase = new EliminarServicioRepuestoUseCase(repository);
 const actualizarObservacionesServicioUseCase = new ActualizarObservacionesServicioUseCase(repository);
+const crearCambioSiguienteServicioUseCase = new CrearCambioSiguienteServicioUseCase(repository);
+const listarCambiosSiguienteServicioUseCase = new ListarCambiosSiguienteServicioUseCase(repository);
+const eliminarCambioSiguienteServicioUseCase = new EliminarCambioSiguienteServicioUseCase(repository);
 
 export const servicioController = new ServicioController(
     obtenerServiciosUseCase,
@@ -94,5 +100,8 @@ export const servicioController = new ServicioController(
     eliminarRepuestoClienteUseCase, 
     crearServicioRepuestoUseCase, 
     eliminarServicioRepuestoUseCase, 
-    actualizarObservacionesServicioUseCase
+    actualizarObservacionesServicioUseCase,
+    crearCambioSiguienteServicioUseCase,
+    listarCambiosSiguienteServicioUseCase,
+    eliminarCambioSiguienteServicioUseCase
 );

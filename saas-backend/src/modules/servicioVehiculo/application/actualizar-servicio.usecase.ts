@@ -17,7 +17,7 @@ export class ActualizarServicioUseCase {
 
             // Si cambió el tipo de servicio, reiniciar tareas
             if (nuevoTipo !== viejoTipo) {
-                await this.repository.eliminarTareas(id, negocio_id);
+                await this.repository.eliminarTareasNoExtra(id, negocio_id);
                 if (nuevoTipo) {
                     await this.repository.crearTareasDesdeTipoServicio(id, nuevoTipo, negocio_id);
                 }

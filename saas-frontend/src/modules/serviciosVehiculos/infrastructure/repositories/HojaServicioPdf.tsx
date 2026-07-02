@@ -94,6 +94,8 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
     const baseUrl = import.meta.env.VITE_API_URL;
     const logoSrc = user?.negocio?.logo_url ? `${baseUrl}/${user.negocio.logo_url}` : '/icons/asyncronix_corto.png';
     console.log('Generando PDF para servicio:', servicio, logoSrc);
+    const tareasNormales = (servicio.tareas || []).filter((tarea) => !tarea.extra);
+    const tareasExtras = (servicio.tareas || []).filter((tarea) => tarea.extra);
 
     const getStatusStyle = (estado: string) => {
         const est = estado?.toLowerCase();
@@ -195,16 +197,16 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                     )}
                 </View>
 
-                {/* TABLA 2: TAREAS DEL TIPO DE SERVICIO */}
-                <Text style={styles.tableSectionTitle}>{servicio.tipo_servicio?.nombre || 'Tareas del Servicio'}</Text>
+                {/* TABLA 2: TAREAS DEL SERVICIO */}
+                <Text style={styles.tableSectionTitle}>Tareas del Servicio {servicio.tipo_servicio?.nombre ? `- ${servicio.tipo_servicio.nombre}` : ''}</Text>
                 <View style={styles.tableContainer}>
                     <View style={styles.tableHeader}>
                         <Text style={[styles.tableHeaderCell, { width: '40%' }]}>Tarea</Text>
                         <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Estado</Text>
                         <Text style={[styles.tableHeaderCell, { width: '40%' }]}>Observaciones</Text>
                     </View>
-                    {servicio.tareas && servicio.tareas.length > 0 ? (
-                        servicio.tareas.map((row: any, index: number) => (
+                    {tareasNormales.length > 0 ? (
+                        tareasNormales.map((row: any, index: number) => (
                             <View key={index} style={styles.tableRow}>
                                 <Text style={[styles.tableCell, { width: '40%' }]}>{row.nombre || '-'}</Text>
                                 <Text style={[styles.tableCell, { width: '20%' }, row.completado ? styles.statusSuccess : styles.statusError]}>
@@ -217,6 +219,28 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                         <Text style={styles.noDataCell}>No hay registros disponibles.</Text>
                     )}
                 </View>
+
+                {tareasExtras.length > 0 && (
+                    <>
+                        <Text style={styles.tableSectionTitle}>Servicios Extras</Text>
+                        <View style={styles.tableContainer}>
+                            <View style={styles.tableHeader}>
+                                <Text style={[styles.tableHeaderCell, { width: '40%' }]}>Tarea</Text>
+                                <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Estado</Text>
+                                <Text style={[styles.tableHeaderCell, { width: '40%' }]}>Observaciones</Text>
+                            </View>
+                            {tareasExtras.map((row: any, index: number) => (
+                                <View key={index} style={styles.tableRow}>
+                                    <Text style={[styles.tableCell, { width: '40%' }]}>{row.nombre || '-'}</Text>
+                                    <Text style={[styles.tableCell, { width: '20%' }, row.completado ? styles.statusSuccess : styles.statusError]}>
+                                        {row.completado ? 'Completado' : 'Pendiente'}
+                                    </Text>
+                                    <Text style={[styles.tableCell, { width: '40%' }]}>{row.observacion || '-'}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </>
+                )}
 
                 {/* TABLAS PARALELAS: REPUESTOS */}
                 <View style={styles.flexRowBetween}>
@@ -232,6 +256,22 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                                     <View key={index} style={styles.tableRow}>
                                         <Text style={[styles.tableCell, { width: '70%' }]}>{row.repuesto || '-'}</Text>
                                         <Text style={[styles.tableCell, { width: '30%' }]}>{row.cantidad ?? '0'}</Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={styles.noDataCell}>No hay registros.</Text>
+                            )}
+                        </View>
+
+                        <Text style={styles.tableSectionTitle}>Cambios siguiente servicio</Text>
+                        <View style={styles.tableContainer}>
+                            <View style={styles.tableHeader}>
+                                <Text style={[styles.tableHeaderCell, { width: '100%' }]}>Item</Text>
+                            </View>
+                            {servicio.cambios_siguiente_servicio && servicio.cambios_siguiente_servicio.length > 0 ? (
+                                servicio.cambios_siguiente_servicio.map((row: any, index: number) => (
+                                    <View key={index} style={styles.tableRow}>
+                                        <Text style={[styles.tableCell, { width: '100%' }]}>{row.item || '-'}</Text>
                                     </View>
                                 ))
                             ) : (
@@ -273,6 +313,7 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                                 <Text style={styles.noDataCell}>No hay registros.</Text>
                             )}
                         </View>
+                            
                     </View>
                 </View>
 

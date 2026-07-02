@@ -6,10 +6,12 @@ import { OpcionServicioRepository } from '../../../opciones-servicio/infrastruct
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { ServicioVehiculo } from '../../domain/interfaces/servicio.interface';
 import type { OpcionServicio } from '../../../opciones-servicio/domain/interfaces/opcion-servicio.interface';
+import { servicioTareaCrearSchema } from '../../domain/schemas/servicio.schema';
 
 type Props = {
     servicio: ServicioVehiculo;
     onUpdate: (servicio: ServicioVehiculo) => void;
+    taskType?: 'normal' | 'extra';
 };
 
 type NewTaskOption = {
@@ -22,13 +24,15 @@ type TaskOption = OpcionServicio | NewTaskOption | string;
 
 const filterOptions = createFilterOptions<TaskOption>();
 
-const ServiceDetailManualTasks: React.FC<Props> = ({ servicio, onUpdate }) => {
+const ServiceDetailManualTasks: React.FC<Props> = ({ servicio, onUpdate, taskType = 'normal' }) => {
     const [opcionesServicio, setOpcionesServicio] = useState<OpcionServicio[]>([]);
     const [loadingOpciones, setLoadingOpciones] = useState(false);
     const [selectedTaskOption, setSelectedTaskOption] = useState<TaskOption | null>(null);
     const [taskInputValue, setTaskInputValue] = useState('');
     const [creatingTask, setCreatingTask] = useState(false);
     const theme = useTheme();
+    const isExtraTask = taskType === 'extra';
+    const tareasFiltradas = (servicio.tareas || []).filter((tarea) => Boolean(tarea.extra) === isExtraTask);
     
 
     useEffect(() => {
@@ -59,22 +63,23 @@ const ServiceDetailManualTasks: React.FC<Props> = ({ servicio, onUpdate }) => {
     const isNewOption = taskLabel !== '' && !isExistingOption;
 
     const handleCreateTask = async () => {
-        if (!taskLabel) {
-            toast.error('El nombre de la tarea es requerido');
+        const validated = servicioTareaCrearSchema.safeParse({ nombre: taskLabel, extra: isExtraTask });
+        if (!validated.success) {
+            toast.error(validated.error.issues[0]?.message || 'Datos inválidos');
             return;
         }
 
         setCreatingTask(true);
         try {
-            await servicioRepository.registrarTarea(servicio.id, { nombre: taskLabel });
+            await servicioRepository.registrarTarea(servicio.id, validated.data);
             const updated = await servicioRepository.obtener(servicio.id);
             onUpdate(updated);
             setSelectedTaskOption(null);
             setTaskInputValue('');
-            toast.success('Tarea manual creada correctamente');
+            toast.success(isExtraTask ? 'Servicio extra creado correctamente' : 'Tarea manual creada correctamente');
         } catch (error) {
             console.error(error);
-            toast.error('No se pudo crear la tarea manual');
+            toast.error(isExtraTask ? 'No se pudo crear el servicio extra' : 'No se pudo crear la tarea manual');
         } finally {
             setCreatingTask(false);
         }
@@ -201,7 +206,7 @@ const ServiceDetailManualTasks: React.FC<Props> = ({ servicio, onUpdate }) => {
                             )
                         }
                     ]}
-                    data={servicio.tareas || []}
+                    data={tareasFiltradas}
                     headerBgColor={theme.palette.primary.main}
                     headerTextColor="#fff"
                 />

@@ -1,5 +1,5 @@
 import type { Paginated } from "@shared/domain/paginated.js";
-import type { ServicioDetalle, ServicioCrear, ServicioActualizar, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple, ServicioTarea } from "./servicio.entity.js";
+import type { ServicioDetalle, ServicioCrear, ServicioActualizar, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple, ServicioTarea, CambioSiguienteServicio } from "./servicio.entity.js";
 
 export interface ListarServiciosParams {
     negocio_id: string;
@@ -42,10 +42,13 @@ export interface ServicioRepository {
     crearRepuestosAtomicos(servicio_id: string, detalles: any[], negocio_id: string, sucursal_id: string): Promise<any[]>;
     crearRepuesto(servicio_id: string, detalle: any, negocio_id: string, sucursal_id: string): Promise<any>;
     eliminarRepuesto(id: string, servicio_id: string, negocio_id: string, sucursal_id: string): Promise<void>;
-    eliminarTareas(servicio_id: string, negocio_id: string): Promise<void>;
+    eliminarTareasNoExtra(servicio_id: string, negocio_id: string): Promise<void>;
     crearTareasDesdeTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string): Promise<void>;
-    crearTarea(servicio_id: string, data: { nombre: string }, negocio_id: string): Promise<ServicioTarea>;
+    crearTarea(servicio_id: string, data: { nombre: string; extra?: boolean }, negocio_id: string): Promise<ServicioTarea>;
     eliminarTarea(id: string, servicio_id: string, negocio_id: string): Promise<void>;
+    listarCambiosSiguienteServicio(servicio_id: string, negocio_id: string): Promise<CambioSiguienteServicio[]>;
+    crearCambioSiguienteServicio(servicio_id: string, data: { item: string }, negocio_id: string): Promise<CambioSiguienteServicio>;
+    eliminarCambioSiguienteServicio(id: string, servicio_id: string, negocio_id: string): Promise<void>;
     actualizarChecklistRespuestasPorTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string): Promise<void>;
     actualizarObservaciones(id: string, negocio_id: string, observaciones: string | null): Promise<ServicioDetalle>;
 }

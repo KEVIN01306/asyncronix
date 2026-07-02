@@ -13,4 +13,13 @@ export const servicioSchema = z.object({
     MetodoPago: z.enum(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO']),
 });
 
+export const servicioTareaCrearSchema = z.object({
+    nombre: z.string().trim().min(1, 'El nombre de la tarea es requerido'),
+    extra: z.boolean().optional()
+});
+
+export const cambioSiguienteServicioCrearSchema = z.object({
+    item: z.string().trim().min(1, 'El item es requerido').max(100, 'El item no puede exceder 100 caracteres')
+});
+
 export type ServicioFormValues = z.infer<typeof servicioSchema>;

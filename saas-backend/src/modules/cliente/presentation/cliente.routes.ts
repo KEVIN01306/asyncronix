@@ -23,6 +23,11 @@ router.get('/nit/:nit',
     clienteController.buscarPorNit
 );
 
+router.get('/dpi/:dpi',
+    authMiddleware.verificarPermiso(['VER_CLIENTES']),
+    clienteController.buscarPorDpi
+);
+
 router.get('/',
     authMiddleware.verificarPermiso(['VER_CLIENTES']),
     validarMiddleware.validarQuery(clienteListQuerySchema),

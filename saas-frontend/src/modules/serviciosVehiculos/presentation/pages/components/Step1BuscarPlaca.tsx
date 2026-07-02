@@ -13,7 +13,7 @@ const schema = z.object({ placa: z.string().min(1) });
 type FormData = z.infer<typeof schema>;
 
 export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehiculoSeleccionado: (v: any) => void }) {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { placa: '' } });
+  const { register, setValue, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { placa: '' } });
   const [vehiculo, setVehiculo] = useState<any | null>(null);
   const [openCrearVehiculo, setOpenCrearVehiculo] = useState(false);
   const [openCrearCliente, setOpenCrearCliente] = useState(false);
@@ -57,7 +57,12 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
         <TextField
           label="Placa"
           placeholder="Ej: ABC-123"
-          {...register('placa')}
+          {...register('placa', {
+            onChange: (event) => {
+              const value = String(event.target.value ?? '').toUpperCase();
+              setValue('placa', value, { shouldValidate: true, shouldDirty: true });
+            }
+          })}
           error={!!errors.placa}
           helperText={errors.placa?.message}
           fullWidth
@@ -122,7 +127,7 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
 export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminada = '' }: any) {
   const [modelos, setModelos] = useState<any[]>([]);
   const [tipos, setTipos] = useState<any[]>([]);
-  const [nit, setNit] = useState('');
+  const [dpi, setDpi] = useState('');
   const [clienteEncontrado, setClienteEncontrado] = useState<any | null>(null);
   const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [clienteError, setClienteError] = useState<string | null>(null);
@@ -147,24 +152,35 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
 
   const schema = z.object({ modelo_id: z.string().uuid(), vehiculo_tipo_id: z.string().uuid(), placa: z.string().min(1) });
   type Form = z.infer<typeof schema>;
-  const { control, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: { modelo_id: '', vehiculo_tipo_id: '', placa: placaPredeterminada } });
+  const { control, handleSubmit, resetField, setValue, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: { modelo_id: '', vehiculo_tipo_id: '', placa: placaPredeterminada } });
+
+  useEffect(() => {
+    if (open) {
+      setValue('placa', placaPredeterminada.toUpperCase(), { shouldDirty: true, shouldValidate: true });
+      setClienteEncontrado(null);
+      setClienteError(null);
+      setDpi('');
+      resetField('modelo_id');
+      resetField('vehiculo_tipo_id');
+    }
+  }, [open, placaPredeterminada, setValue, resetField]);
 
   const buscarCliente = async () => {
-    if (!nit.trim()) {
-      setClienteError('Ingresa un NIT para buscar');
+    if (!dpi.trim()) {
+      setClienteError('Ingresa un DPI para buscar');
       return;
     }
 
     setBuscandoCliente(true);
     setClienteError(null);
     try {
-      const response = await clienteRepository.buscarPorDocumento({ nit: nit.trim() });
+      const response = await clienteRepository.buscarPorDpi(dpi.trim());
       const found = response.data ?? null;
       if (found) {
         setClienteEncontrado(found);
       } else {
         setClienteEncontrado(null);
-        setClienteError('No se encontró cliente con ese NIT. Puedes crearlo.');
+        setClienteError('No se encontró cliente con ese DPI. Puedes crearlo.');
       }
     } catch (error) {
       console.error(error);
@@ -231,7 +247,16 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
               <Controller
                 name="placa"
                 control={control}
-                render={({ field }) => <TextField {...field} label="Placa" fullWidth error={!!errors.placa} helperText={errors.placa?.message} />}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Placa"
+                    fullWidth
+                    error={!!errors.placa}
+                    helperText={errors.placa?.message}
+                    onChange={(event) => field.onChange(String(event.target.value ?? '').toUpperCase())}
+                  />
+                )}
               />
             </Grid>
           </Grid>
@@ -240,9 +265,9 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
             <Typography variant="subtitle1" mb={1}>Asociar propietario</Typography>
             <Stack direction="row" spacing={2} alignItems="flex-end" flexWrap="wrap">
               <TextField
-                label="Buscar cliente por NIT"
-                value={nit}
-                onChange={(e) => setNit(e.target.value)}
+                label="Buscar cliente por DPI"
+                value={dpi}
+                onChange={(e) => setDpi(e.target.value)}
                 fullWidth
               />
               <Button variant="outlined" onClick={buscarCliente} disabled={buscandoCliente}>
@@ -259,7 +284,7 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
                 <Typography><strong>DPI:</strong> {clienteEncontrado.dpi ?? 'Sin DPI'}</Typography>
               </Box>
             ) : (
-              nit.trim() && !clienteEncontrado && (
+              dpi.trim() && !clienteEncontrado && (
                 <Box mt={2}>
                   <Typography>No se encontró cliente. Puedes crearlo.</Typography>
                   <Button sx={{ mt: 1 }} variant="contained" onClick={() => setOpenCrearCliente(true)}>
@@ -291,7 +316,12 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
 export function ModalCrearCliente({ open, onClose, vehiculo, onSuccess }: any) {
     const [creatingCliente, setCreatingCliente] = useState(false);
 
-  const schema = z.object({ nombre: z.string().min(1), nit: z.string().optional().nullable(), dpi: z.string().optional().nullable() }).refine(d => d.nit || d.dpi, { message: 'Se requiere NIT o DPI' });
+  const schema = z.object({
+    nombre: z.string().min(1, 'El nombre es requerido'),
+    dpi: z.string().min(1, 'El DPI es requerido'),
+    telefono: z.string().min(1, 'El teléfono es requerido'),
+    nit: z.string().optional().nullable(),
+  });
   type Form = z.infer<typeof schema>;
   const { register, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema) });
 
@@ -299,22 +329,21 @@ export function ModalCrearCliente({ open, onClose, vehiculo, onSuccess }: any) {
     setCreatingCliente(true);
     try {
       const cleanNit = data.nit?.trim() ?? '';
+      const cleanDpi = data.dpi.trim();
+      const cleanTelefono = data.telefono.trim();
       let cliente = null;
 
-      if (cleanNit) {
-        const response = await clienteRepository.buscarPorDocumento({ nit: cleanNit });
-        cliente = response.data ?? null;
-      }
+      const response = await clienteRepository.buscarPorDpi(cleanDpi);
+      cliente = response.data ?? null;
 
       if (!cliente) {
-        const telefonoFicticio = "";
         const createdRes = await clienteRepository.registrar({
           nombre: data.nombre,
           apellido: null,
-          telefono: telefonoFicticio,
+          telefono: cleanTelefono,
           email: null,
           nit: cleanNit || null,
-          dpi: data.dpi ?? null,
+          dpi: cleanDpi,
         });
         cliente = createdRes.data ?? null;
       }
@@ -344,10 +373,13 @@ export function ModalCrearCliente({ open, onClose, vehiculo, onSuccess }: any) {
               <TextField label="Nombre" fullWidth {...register('nombre')} error={!!errors.nombre} helperText={errors.nombre?.message} />
             </Grid>
             <Grid size={12}>
-              <TextField label="NIT" fullWidth {...register('nit')} error={!!errors.nit} helperText={errors.nit?.message} />
+              <TextField label="DPI" fullWidth {...register('dpi')} error={!!errors.dpi} helperText={errors.dpi?.message} />
             </Grid>
             <Grid size={12}>
-              <TextField label="DPI" fullWidth {...register('dpi')} error={!!errors.dpi} helperText={errors.dpi?.message} />
+              <TextField label="Teléfono" fullWidth {...register('telefono')} error={!!errors.telefono} helperText={errors.telefono?.message} />
+            </Grid>
+            <Grid size={12}>
+              <TextField label="NIT" fullWidth {...register('nit')} error={!!errors.nit} helperText={errors.nit?.message ?? 'Opcional'} />
             </Grid>
           </Grid>
         </Box>
