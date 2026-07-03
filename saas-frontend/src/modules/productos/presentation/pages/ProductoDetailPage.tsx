@@ -182,7 +182,7 @@ const ProductoDetailPage = () => {
                 onDelete={() => setOpenDelete(true)}
             />
 
-            <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 2 }}>
+            <Tabs value={tab} onChange={handleTabChange} sx={{ mb: 2, overflowX: 'auto' }} variant="scrollable" scrollButtons="auto">
                 <Tab label="Información General" />
                 <Tab label="Atributos" />
                 <Tab label="Variantes" />
