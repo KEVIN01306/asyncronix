@@ -30,7 +30,7 @@ interface Props {
     onCreated: (created: Modelo) => void;
 }
 
-const CreateModeloModal = ({ open, onClose, initialText = '', onCreated }: Props) => {
+const CreateModeloModal = ({ open, onClose, onCreated }: Props) => {
     // El nombre del modelo se genera automáticamente en el backend (marca + línea + año)
     const [anio, setAnio] = useState(new Date().getFullYear());
     const [marca, setMarca] = useState<Marca | null>(null);
