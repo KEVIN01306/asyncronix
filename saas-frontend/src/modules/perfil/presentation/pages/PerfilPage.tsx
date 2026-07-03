@@ -6,10 +6,11 @@ import { authRepository } from '../../../auth/infrastructure/repositories/auth.r
 import { perfilRepository } from '../../infrastructure/perfil.repository';
 import { toast } from 'sonner';
 import type { ActualizarPerfilForm, CambiarPasswordForm, Perfil } from '../../domain/interfaces/perfil.interface'
-import type { ActualizarPinCajaFormValues } from '../../domain/schemas/perfil.schema'
+import type { ActualizarPinCajaFormValues, ActualizarPinModeloFormValues } from '../../domain/schemas/perfil.schema'
 import { EditProfileModal } from '../components/EditProfileModal';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { ChangePinCajaModal } from '../components/ChangePinCajaModal';
+import { ChangePinModeloModal } from '../components/ChangePinModeloModal';
 import { EditAvatarModal } from '../components/EditAvatarModal';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
@@ -22,6 +23,7 @@ export const PerfilPage = () => {
     const [openEditProfile, setOpenEditProfile] = useState(false);
     const [openChangePassword, setOpenChangePassword] = useState(false);
     const [openChangePinCaja, setOpenChangePinCaja] = useState(false);
+    const [openChangePinModelo, setOpenChangePinModelo] = useState(false);
     const [openEditAvatar, setOpenEditAvatar] = useState(false);
 
     const AvatarSource = perfil?.avatar_url ? `${import.meta.env.VITE_API_URL}/${perfil.avatar_url}` : undefined;
@@ -107,6 +109,20 @@ export const PerfilPage = () => {
         }
     };
 
+    const handleChangePinModelo = async (data: ActualizarPinModeloFormValues) => {
+        try {
+            await perfilRepository.actualizarPinModelo(data);
+            toast.success("Pin de modelo actualizado con éxito");
+            setOpenChangePinModelo(false);
+            cargarPerfil();
+            const globalUser = await authRepository.getMe();
+            getMeStore(globalUser);
+        } catch (error: any) {
+            console.log(error)
+            toast.error(error.response?.data?.message || "Error al actualizar el pin de modelo");
+        }
+    };
+
     if (loading) return <Loading />;
     
     return (
@@ -189,6 +205,16 @@ export const PerfilPage = () => {
                                         Cambiar Pin de Caja
                                     </Button>
                                 )}
+                                {userStore?.permisos?.includes('ADMIN_MODELO') && (
+                                    <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        startIcon={<VpnKeyIcon />}
+                                        onClick={() => setOpenChangePinModelo(true)}
+                                    >
+                                        Cambiar Pin de Modelo
+                                    </Button>
+                                )}
                             </Box>
                         </Grid>
                     </Grid>
@@ -206,6 +232,12 @@ export const PerfilPage = () => {
                 open={openChangePinCaja}
                 onClose={() => setOpenChangePinCaja(false)}
                 onSubmit={handleChangePinCaja}
+            />
+
+            <ChangePinModeloModal
+                open={openChangePinModelo}
+                onClose={() => setOpenChangePinModelo(false)}
+                onSubmit={handleChangePinModelo}
             />
 
             <EditAvatarModal

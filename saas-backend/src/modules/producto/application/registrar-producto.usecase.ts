@@ -2,55 +2,24 @@ import { UniqueConstraintError } from "@shared/database/errors/UniqueConstraintE
 import type { ProductoDetalle, ProductoCrear } from "../domain/producto.entity.js";
 import type { ProductoRepository } from "../domain/producto.repository.js";
 import type { VarianteRepository } from "../domain/variante.repository.js";
-import type { ObtenerSecuenciaUseCase } from "./obtener-secuencia.usecase.js";
-import { GenerarSku } from "../domain/actions/generarSku.action.js";
-import { crearCodigoSecuencial } from "@shared/infrastructure/codigo-secuencial.util.js";
 import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
 import AppError from "@shared/errors/AppError.js";
 
 export class RegistrarProductoUseCase {
     constructor(
         private readonly repository: ProductoRepository,
-        private readonly varianteRepository: VarianteRepository,
-        private readonly obtenerSecuencia: ObtenerSecuenciaUseCase
+        private readonly varianteRepository: VarianteRepository
     ) { }
 
     async execute(data: ProductoCrear, negocio_id: string): Promise<ProductoDetalle> {
         try {
             const createdProduct = await this.repository.registrar(data, negocio_id);
-            const productoConNegocio = await this.repository.obtener(createdProduct.id, negocio_id);
-            if (!productoConNegocio) throw new AppError('Producto no encontrado', 'PRODUCTO_NOT_FOUND', 404);
-
-            const productoCodigo = data.codigo?.trim() || GenerarSku.ejecutar({
-                negocioCodigo: productoConNegocio.negocio?.slug ?? '',
-                marcaCodigo: productoConNegocio.marca?.marca ?? '',
-                categoriaCodigo: productoConNegocio.categoria?.categoria ?? '',
-                productoCodigo: productoConNegocio.nombre,
-                valores: []
-            });
-
-            if (!data.codigo?.trim()) {
-                await this.repository.actualizar(createdProduct.id, { codigo: productoCodigo }, negocio_id);
-            }
-
-            const skuVariante = GenerarSku.ejecutar({
-                negocioCodigo: productoConNegocio.negocio?.slug ?? '',
-                marcaCodigo: productoConNegocio.marca?.marca ?? '',
-                categoriaCodigo: productoConNegocio.categoria?.categoria ?? '',
-                productoCodigo: productoConNegocio.nombre,
-                valores: []
-            });
-
-            const secuencia = await this.obtenerSecuencia.execute();
-            const codigoSecuencial = crearCodigoSecuencial(secuencia);
 
             await this.varianteRepository.crear({
                 producto_id: createdProduct.id,
                 precio_sugerido: 0,
                 codigo_barras: null,
-                valor_atributo_ids: [],
-                sku: skuVariante,
-                codigo_secuencial: codigoSecuencial
+                valor_atributo_ids: []
             }, negocio_id);
 
             const productoFinal = await this.repository.obtener(createdProduct.id, negocio_id);
@@ -63,6 +32,10 @@ export class RegistrarProductoUseCase {
             }
 
             if (error instanceof DatabaseError) {
+                if (error.message === 'DATABASE_UNAVAILABLE') {
+                    throw new AppError('Base de datos no disponible. Verifica la conexión al servidor MySQL.', 'DATABASE_UNAVAILABLE', 503);
+                }
+
                 throw new AppError('Error en la base de datos', 'DATABASE_ERROR', 500);
             }
 

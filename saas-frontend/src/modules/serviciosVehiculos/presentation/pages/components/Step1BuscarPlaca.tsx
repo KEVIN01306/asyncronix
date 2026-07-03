@@ -7,7 +7,7 @@ import { vehiculoRepository } from '../../../../vehiculos/infrastructure/vehicul
 import { clienteRepository } from '../../../../clientes/infrastructure/clientes.repository';
 import { modelosRepository } from '../../../../modelos/infrastructure/modelos.repository';
 import { vehiculoTipoRepository } from '../../../../vehiculos/infrastructure/vehiculo-tipo.repository';
-
+import CreateModeloModal from '../../../../vehiculos/presentation/components/CreateModeloModal';
 const schema = z.object({ placa: z.string().min(1) });
 
 type FormData = z.infer<typeof schema>;
@@ -126,6 +126,9 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
 
 export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminada = '' }: any) {
   const [modelos, setModelos] = useState<any[]>([]);
+  const [modelosLoading, setModelosLoading] = useState(false);
+  const [modeloInput, setModeloInput] = useState('');
+  const [openCrearModelo, setOpenCrearModelo] = useState(false);
   const [tipos, setTipos] = useState<any[]>([]);
   const [dpi, setDpi] = useState('');
   const [clienteEncontrado, setClienteEncontrado] = useState<any | null>(null);
@@ -137,6 +140,7 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
   useEffect(() => {
     const load = async () => {
       try {
+        setModelosLoading(true);
         const [modelosRes, tiposRes] = await Promise.all([
           modelosRepository.listar(100, 0),
           vehiculoTipoRepository.listar(100, 0),
@@ -145,6 +149,8 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
         setTipos(tiposRes.data);
       } catch (error) {
         console.error(error);
+      } finally {
+        setModelosLoading(false);
       }
     };
     if (open) load();
@@ -162,6 +168,8 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
       setDpi('');
       resetField('modelo_id');
       resetField('vehiculo_tipo_id');
+      setModeloInput('');
+      setOpenCrearModelo(false);
     }
   }, [open, placaPredeterminada, setValue, resetField]);
 
@@ -232,15 +240,59 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
               <Controller
                 name="modelo_id"
                 control={control}
-                render={({ field }) => (
-                  <Autocomplete
-                    options={modelos}
-                    getOptionLabel={(option: any) => option.modelo}
-                    value={modelos.find(m => m.id === field.value) ?? null}
-                    onChange={(_e, v) => field.onChange(v?.id ?? '')}
-                    renderInput={(params) => <TextField {...params} label="Modelo" error={!!errors.modelo_id} helperText={errors.modelo_id?.message} />}
-                  />
-                )}
+                render={({ field }) => {
+                  const createOption: any = {
+                    id: 'create-modelo',
+                    modelo: modeloInput.trim() ? `Crear nuevo modelo "${modeloInput.trim()}"` : 'Crear nuevo modelo',
+                    anio: 0,
+                    marca_id: '',
+                    linea_id: '',
+                    cilindrada_id: '',
+                    created_at: '',
+                    updated_at: '',
+                    isCreate: true,
+                  };
+                  const options = modeloInput.trim() ? [createOption, ...modelos] : modelos;
+
+                  return (
+                    <Autocomplete
+                      options={options}
+                      getOptionLabel={(option: any) => option.modelo}
+                      value={modelos.find((m) => m.id === field.value) ?? null}
+                      onChange={(_e, value) => {
+                        if (value?.id === createOption.id) {
+                          setOpenCrearModelo(true);
+                          return;
+                        }
+                        field.onChange(value?.id ?? '');
+                      }}
+                      inputValue={modeloInput}
+                      onInputChange={(_event, value, reason) => {
+                        if (reason === 'reset') return;
+                        setModeloInput(value);
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Modelo"
+                          error={!!errors.modelo_id}
+                          helperText={errors.modelo_id?.message}
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {modelosLoading ? <span>...</span> : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                      isOptionEqualToValue={(option, value) => option.id === value.id}
+                      filterOptions={(opts) => opts}
+                    />
+                  );
+                }}
               />
             </Grid>
             <Grid size={12}>
@@ -307,6 +359,18 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
         onSuccess={(cliente: any) => {
           setClienteEncontrado(cliente);
           setOpenCrearCliente(false);
+        }}
+      />
+
+      <CreateModeloModal
+        open={openCrearModelo}
+        onClose={() => setOpenCrearModelo(false)}
+        initialText={modeloInput.trim()}
+        onCreated={(created: any) => {
+          setOpenCrearModelo(false);
+          setValue('modelo_id', created.id);
+          setModelos((current) => [created, ...current]);
+          setModeloInput(created.modelo);
         }}
       />
     </Dialog>

@@ -3,8 +3,8 @@ export interface Producto {
     negocio_id: string;
     categoria_id: string;
     marca_id: string;
-    codigo?: string | null;
-    sku?: string;
+    sku: string;
+    correlativo?: string | null;
     nombre: string;
     descripcion?: string | null;
     precio_sugerido: number;
@@ -23,19 +23,20 @@ export interface ImagenProducto {
     updated_at?: Date;
 }
 
+export interface ProductoCategoria {
+    id: string;
+    categoria: string;
+    categoria_padre_id?: string;
+}
+
 export interface ProductoMarca {
     id: string;
     marca: string;
 }
 
-export interface ProductoCategoria {
-    id: string;
-    categoria: string;
-}
+export interface ProductoCrear extends Omit<Producto, "id" | "negocio_id" | "sku" | "correlativo" | "precio_sugerido" | "stock_total" | "activo" | "url_imagen"> { }
 
-export interface ProductoCrear extends Omit<Producto, "id" | "negocio_id" | "sku" | "precio_sugerido" | "stock_total" | "activo" | "url_imagen"> { }
-
-export interface ProductoActualizar extends Partial<Omit<Producto, "id" | "negocio_id" | "sku" | "precio_sugerido" | "stock_total" | "activo" | "url_imagen">> { }
+export interface ProductoActualizar extends Partial<Omit<Producto, "id" | "negocio_id" | "sku" | "correlativo" | "precio_sugerido" | "stock_total" | "activo" | "url_imagen">> { }
 
 export interface ProductoSimple extends Omit<Producto, "negocio_id"> {
     categoria: ProductoCategoria | null;
@@ -45,6 +46,7 @@ export interface ProductoSimple extends Omit<Producto, "negocio_id"> {
 export interface VariantePublic {
     id: string;
     sku: string | undefined;
+    correlativo?: string | null;
     precio_sugerido: number | undefined;
     stock_total: number | undefined;
     codigo_barras: string | null | undefined;

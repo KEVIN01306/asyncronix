@@ -1,13 +1,13 @@
-import type { ApiResponse, PaginatedResponse } from "../../../../core/api/interfaces/api-response.interface";
+import type { ApiResponse, PaginatedResponse } from '../../../../core/api/interfaces/api-response.interface';
 
 export interface ProductoCategoria {
     id: string;
     categoria: string;
+    categoria_padre_id?: string;
 }
 
 export interface VarianteValor {
-    id: string;
-    atributo_id: string;
+    id?: string;
     valor: string;
     atributo?: {
         id: string;
@@ -25,8 +25,8 @@ export interface Variante {
         es_principal: boolean;
     } | null;
     sku?: string;
+    correlativo?: string | null;
     codigo_barras?: string | null;
-    codigo_secuencial?: string | null;
     qr_codigo?: string | null;
     precio_sugerido?: number;
     stock_total?: number;
@@ -53,7 +53,6 @@ export interface Producto {
     categoria_id: string;
     marca_id: string;
     nombre: string;
-    codigo?: string | null;
     sku: string;
     precio_sugerido: number;
     stock_total: number;

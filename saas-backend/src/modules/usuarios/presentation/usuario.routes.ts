@@ -3,7 +3,7 @@ import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { usuarioController } from "../usuario.module.js";
 import { usuariosCrearSchema } from "./validators/usuario.schema.js";
-import { usuarioActualizarSchema, actualizarPerfilSchema, actualizarPinCajaSchema, cambiarPasswordSchema, usuariosListQuerySchema } from "./validators/usuario.schema.js";
+import { usuarioActualizarSchema, actualizarPerfilSchema, actualizarPinCajaSchema, actualizarPinModeloSchema, cambiarPasswordSchema, usuariosListQuerySchema } from "./validators/usuario.schema.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
 import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
 
@@ -41,6 +41,12 @@ router.patch('/me/pin-caja',
     authMiddleware.verificarPermiso(['VENTAS_FORZAR_STOCK']),
     validarMiddleware.validarBody(actualizarPinCajaSchema),
     usuarioController.actualizarPinCaja
+)
+
+router.patch('/me/pin-modelo',
+    authMiddleware.verificarPermiso(['ADMIN_MODELO']),
+    validarMiddleware.validarBody(actualizarPinModeloSchema),
+    usuarioController.actualizarPinModelo
 )
 
 router.get('/:id',

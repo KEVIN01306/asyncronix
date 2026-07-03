@@ -18,5 +18,9 @@ export const modelosRepository = {
     obtener: async (id: string): Promise<ApiResponse<Modelo>> => {
         const response = await api.get<ApiResponse<Modelo>>(`${URL}/${id}`);
         return response as any;
+    },
+    crear: async (payload: { anio: number; marca_id: string; linea_id: string; cilindrada_id: string; vehiculo_tipo_id: string; pin_modelo: string }): Promise<ApiResponse<Modelo>> => {
+        const response = await api.post<ApiResponse<Modelo>>(URL, payload);
+        return response as any;
     }
 };

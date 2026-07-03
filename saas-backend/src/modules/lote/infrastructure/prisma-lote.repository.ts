@@ -82,12 +82,12 @@ export class PrismaLoteRepository implements LoteRepository {
                 where.codigo_lote = { contains: filters.codigo_lote };
             }
 
-            if (filters.producto_codigo) {
-                where.variante = { ...(where.variante ?? {}), producto: { codigo: { contains: filters.producto_codigo } } };
+            if (filters.producto_sku) {
+                where.variante = { ...(where.variante ?? {}), producto: { sku: { contains: filters.producto_sku } } };
             }
 
-            if (filters.codigo_secuencial) {
-                where.variante = { ...(where.variante ?? {}), codigo_secuencial: { contains: filters.codigo_secuencial } };
+            if (filters.variante_correlativo) {
+                where.variante = { ...(where.variante ?? {}), correlativo: { contains: filters.variante_correlativo } };
             }
 
             if (filters.fecha_vencimiento_from || filters.fecha_vencimiento_to) {
@@ -110,7 +110,7 @@ export class PrismaLoteRepository implements LoteRepository {
                     skip: offset,
                     take: perPage,
                     include: {
-                        variante: { select: { id: true, sku: true, codigo_secuencial: true, producto_id: true, producto: { select: { id: true, nombre: true, codigo: true } } } },
+                        variante: { select: { id: true, sku: true, correlativo: true, producto_id: true, producto: { select: { id: true, nombre: true, sku: true } } } },
                         sucursal: { select: { id: true, nombre: true } },
                     },
                 })

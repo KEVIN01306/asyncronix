@@ -18,3 +18,12 @@ export const modeloListQuerySchema = paginacionQuerySchema.extend({
 });
 
 export const modeloIdParamSchema = z.object({ id: z.string().uuid('Modelo inválido') });
+
+export const modeloCrearPorPinSchema = z.object({
+    anio: z.coerce.number().int().min(1900, 'Año inválido').max(2100, 'Año inválido'),
+    marca_id: z.string().uuid('Marca inválida'),
+    linea_id: z.string().uuid('Línea inválida'),
+    cilindrada_id: z.string().uuid('Cilindrada inválida'),
+    vehiculo_tipo_id: z.string().uuid('Tipo de vehículo inválido'),
+    pin_modelo: z.string().regex(/^[0-9]{4,6}$/, { message: 'El PIN debe contener entre 4 y 6 dígitos' }),
+});

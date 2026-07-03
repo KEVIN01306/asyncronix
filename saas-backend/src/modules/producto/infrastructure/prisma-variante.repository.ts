@@ -13,9 +13,6 @@ export class PrismaVarianteRepository implements VarianteRepository {
             const producto = await this.prisma.producto.findFirst({
                 where: { id: variante.producto_id, negocio_id, activo: true },
                 include: {
-                    categoria: true,
-                    marca: true,
-                    negocio: true,
                     imagenes: {
                         where: { es_principal: true },
                         take: 1
@@ -24,18 +21,15 @@ export class PrismaVarianteRepository implements VarianteRepository {
             });
 
             if (!producto) throw new AppError('Producto no encontrado', 'PRODUCTO_NOT_FOUND', 404);
+            if (!producto.sku) throw new AppError('El producto no tiene SKU configurado', 'PRODUCTO_SKU_REQUIRED', 400);
 
             const valores = variante.valor_atributo_ids?.length
                 ? await this.prisma.valorAtributo.findMany({ where: { id: { in: variante.valor_atributo_ids } } })
                 : [];
 
-            const sku = variante.sku ?? GenerarSku.ejecutar({
-                negocioCodigo: producto.negocio.slug,
-                marcaCodigo: producto.marca?.marca ?? '',
-                categoriaCodigo: producto.categoria?.codigo ?? producto.categoria?.categoria ?? '',
-                productoCodigo: producto.nombre,
-                valores: valores.map((valor) => valor.valor)
-            });
+            const correlativo = await this.obtenerSiguienteCorrelativoVariante(negocio_id);
+            const sku = GenerarSku.generarSkuVariante(producto.sku, correlativo);
+            const qr_codigo = GenerarSku.generarCodigoQrVariante(correlativo);
 
             let imagen_id = variante.imagen_id ?? null;
             if (!imagen_id) {
@@ -55,9 +49,9 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 producto_id: variante.producto_id,
                 imagen_id,
                 sku,
+                correlativo: String(correlativo),
                 codigo_barras: variante.codigo_barras ?? null,
-                codigo_secuencial: variante.codigo_secuencial ?? null,
-                qr_codigo: null,
+                qr_codigo,
                 precio_sugerido: variante.precio_sugerido,
                 stock_total: 0,
                 activo: true
@@ -87,7 +81,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
             const existing = await this.prisma.varianteProducto.findFirst({
                 where: { id, producto: { negocio_id }, activo: true },
                 include: {
-                    producto: { include: { categoria: true, marca: true, negocio: true } },
+                    producto: true,
                     valores: { include: { atributo: true } }
                 }
             });
@@ -99,18 +93,9 @@ export class PrismaVarianteRepository implements VarianteRepository {
                 ? await this.prisma.valorAtributo.findMany({ where: { id: { in: valorIds } } })
                 : [];
 
-            const sku = GenerarSku.ejecutar({
-                negocioCodigo: existing.producto.negocio.slug,
-                marcaCodigo: existing.producto.marca?.marca ?? '',
-                categoriaCodigo: existing.producto.categoria?.codigo ?? existing.producto.categoria?.categoria ?? '',
-                productoCodigo: existing.producto.nombre,
-                valores: valores.map((valor) => valor.valor)
-            });
-
             const updateData: any = {
                 codigo_barras: variante.codigo_barras === undefined ? existing.codigo_barras : variante.codigo_barras,
                 precio_sugerido: variante.precio_sugerido ?? existing.precio_sugerido,
-                sku
             };
 
             if (variante.imagen_id !== undefined) {
@@ -186,7 +171,8 @@ export class PrismaVarianteRepository implements VarianteRepository {
                     activo: true,
                     OR: [
                         { codigo_barras: codigo },
-                        { codigo_secuencial: codigo },
+                        { sku: codigo },
+                        { qr_codigo: codigo },
                     ]
                 },
                 include: {
@@ -312,27 +298,6 @@ export class PrismaVarianteRepository implements VarianteRepository {
         }
     }
 
-    async actualizarCodigoSecuencial(id: string, codigo_secuencial: string, negocio_id: string): Promise<VarianteDetalle> {
-        try {
-            const existing = await this.prisma.varianteProducto.findFirst({
-                where: { id, producto: { negocio_id }, activo: true },
-                include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
-            });
-
-            if (!existing) throw new AppError('Variante no encontrada', 'VARIANTE_NOT_FOUND', 404);
-
-            const updated = await this.prisma.varianteProducto.update({
-                where: { id },
-                data: { codigo_secuencial },
-                include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
-            });
-
-            return this.mapToDetalle(updated);
-        } catch (error) {
-            throw PrismaErrorMapper.map(error);
-        }
-    }
-
     async generarQr(id: string, negocio_id: string): Promise<VarianteDetalle> {
         try {
             const existing = await this.prisma.varianteProducto.findFirst({
@@ -341,11 +306,17 @@ export class PrismaVarianteRepository implements VarianteRepository {
             });
 
             if (!existing) throw new AppError('Variante no encontrada', 'VARIANTE_NOT_FOUND', 404);
-            if (!existing.codigo_secuencial) throw new AppError('No existe código secuencial para generar el código QR', 'CODIGO_SECUENCIAL_REQUIRED', 400);
+
+            const correlativo = Number(existing.correlativo ?? 0);
+            if (!Number.isFinite(correlativo) || correlativo <= 0) {
+                throw new AppError('No existe correlativo para generar el código QR', 'CORRELATIVO_REQUIRED', 400);
+            }
+
+            const qrCodigo = GenerarSku.generarCodigoQrVariante(correlativo);
 
             const updated = await this.prisma.varianteProducto.update({
                 where: { id },
-                data: { qr_codigo: existing.codigo_secuencial },
+                data: { qr_codigo: qrCodigo },
                 include: { imagen: true, producto: { select: { id: true, nombre: true } }, valores: { include: { atributo: true } } }
             });
 
@@ -361,8 +332,8 @@ export class PrismaVarianteRepository implements VarianteRepository {
             producto_id: found.producto_id,
             imagen_id: found.imagen_id,
             sku: found.sku,
+            correlativo: found.correlativo,
             codigo_barras: found.codigo_barras,
-            codigo_secuencial: found.codigo_secuencial,
             qr_codigo: found.qr_codigo,
             precio_sugerido: found.precio_sugerido,
             stock_total: found.stock_total,
@@ -386,5 +357,19 @@ export class PrismaVarianteRepository implements VarianteRepository {
         }
 
         return detalle;
+    }
+
+    private async obtenerSiguienteCorrelativoVariante(negocio_id: string): Promise<number> {
+        const variantes = await this.prisma.varianteProducto.findMany({
+            where: { producto: { negocio_id }, correlativo: { not: null } },
+            select: { correlativo: true }
+        });
+
+        const ultimo = variantes.reduce((max, variante) => {
+            const valor = Number(variante.correlativo ?? 0);
+            return Number.isFinite(valor) ? Math.max(max, valor) : max;
+        }, 0);
+
+        return ultimo + 1;
     }
 }

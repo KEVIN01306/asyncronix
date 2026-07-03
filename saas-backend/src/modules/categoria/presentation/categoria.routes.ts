@@ -10,6 +10,10 @@ const categoriaListQuerySchema = paginacionQuerySchema.extend({
     q: z.string().trim().optional()
 });
 
+const categoriasPadresDisponiblesQuerySchema = z.object({
+    categoria_id_excluir: z.string().uuid().optional()
+});
+
 const router = Router();
 const validarMiddleware = new ValidarMiddleware();
 const authMiddleware = new AuthMiddleware();
@@ -22,10 +26,21 @@ router.post("/",
     categoriaController.registrar
 );
 
+router.get("/padres-disponibles", 
+    authMiddleware.verificarPermiso(['CREAR_CATEGORIAS_PRODUCTOS', 'EDITAR_CATEGORIAS_PRODUCTOS']),
+    validarMiddleware.validarQuery(categoriasPadresDisponiblesQuerySchema),
+    categoriaController.obtenerPadresDisponibles
+);
+
 router.get("/", 
     authMiddleware.verificarPermiso(['VER_CATEGORIAS_PRODUCTOS']),
     validarMiddleware.validarQuery(categoriaListQuerySchema), 
     categoriaController.listar
+);
+
+router.get("/:id/jerarquia", 
+    authMiddleware.verificarPermiso(['VER_CATEGORIAS_PRODUCTOS_DETALLE']),
+    categoriaController.obtenerConJerarquia
 );
 
 router.get("/:id", 

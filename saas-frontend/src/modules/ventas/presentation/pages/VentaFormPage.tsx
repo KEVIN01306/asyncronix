@@ -534,7 +534,7 @@ export default function VentaFormPage() {
             }
 
             setSaving(true);
-            const codigo = productoSeleccionado?.codigo_secuencial ?? productoSeleccionado?.codigo_barras ?? productoSeleccionado?.qr_codigo ?? productoSeleccionado?.sku ?? productoSeleccionado?.id;
+            const codigo = productoSeleccionado?.codigo_barras ?? productoSeleccionado?.qr_codigo ?? productoSeleccionado?.sku ?? productoSeleccionado?.id;
             if (!codigo) throw new Error('Código de variante no disponible');
             await ventaRepository.agregarProducto(ventaId, codigo, user!.sucursal_id!, prodInput.cantidad);
             const res = await ventaRepository.obtener(ventaId);

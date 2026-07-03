@@ -6,8 +6,10 @@ export type Cilindrada = { id: string; cilindrada: number; created_at: string; u
 const URL = '/cilindradas';
 
 export const cilindradasRepository = {
-    listar: async (limit: number, offset: number): Promise<PaginatedResponse<Cilindrada>> => {
-        const response = await api.get<PaginatedResponse<Cilindrada>>(URL, { params: { limit, offset } });
+    listar: async (limit: number, offset: number, q?: string, signal?: AbortSignal): Promise<PaginatedResponse<Cilindrada>> => {
+        const params: any = { limit, offset };
+        if (q) params.q = q;
+        const response = await api.get<PaginatedResponse<Cilindrada>>(URL, { params, signal });
         return response as any;
     },
     obtener: async (id: string): Promise<ApiResponse<Cilindrada>> => {

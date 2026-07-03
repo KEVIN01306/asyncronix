@@ -197,7 +197,6 @@ const ProductoDetailPage = () => {
                         {ImageSource ? <Box component="img" src={ImageSource} alt={producto.nombre} sx={{ width: '100%', maxHeight: 320, objectFit: 'contain', borderRadius: 2, border: '1px solid', borderColor: 'divider', mb: 3 }} /> : null}
                         <ProductoDetailsPanel
                             categoria={producto.categoria}
-                            codigo={producto.codigo}
                             sku={producto.sku}
                             precio_sugerido={producto.precio_sugerido}
                             stock_total={producto.stock_total}

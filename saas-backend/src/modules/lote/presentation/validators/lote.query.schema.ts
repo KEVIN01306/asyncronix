@@ -4,8 +4,8 @@ import { paginacionQuerySchema } from '@shared/presentation/validators/paginacio
 export const loteQuerySchema = paginacionQuerySchema.extend({
     q: z.string().optional(),
     codigo_lote: z.string().optional(),
-    producto_codigo: z.string().optional(),
-    codigo_secuencial: z.string().optional(),
+    producto_sku: z.string().optional(),
+    variante_correlativo: z.string().optional(),
     fecha_vencimiento_from: z.string().optional(),
     fecha_vencimiento_to: z.string().optional(),
     created_at_from: z.string().optional(),

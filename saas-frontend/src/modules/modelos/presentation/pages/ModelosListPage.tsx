@@ -1,14 +1,13 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, Paper, TableContainer, useTheme, useMediaQuery, Autocomplete, TextField, Chip, Button, Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
-import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
+import { Box, Paper, TableContainer, useTheme, useMediaQuery, Autocomplete, TextField, Chip, Button, Dialog, DialogContent, DialogTitle, DialogActions, InputAdornment } from '@mui/material';
 import { useDebounce } from '../../../../core/hooks/useDebounce';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import { modelosRepository } from '../../infrastructure/modelos.repository';
 import { marcasRepository } from '../../../marcas/infrastructure/marcas.repository';
 import { lineasRepository } from '../../../lineas/infrastructure/lineas.repository';
 import { cilindradasRepository } from '../../../cilindradas/infrastructure/cilindradas.repository';
-import { Visibility } from '@mui/icons-material';
+import { FilterList, Search, Visibility } from '@mui/icons-material';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const ModelosListPage = () => {
@@ -26,12 +25,18 @@ const ModelosListPage = () => {
     const [marcas, setMarcas] = useState<any[]>([]);
     const [lineas, setLineas] = useState<any[]>([]);
     const [cilindradas, setCilindradas] = useState<any[]>([]);
+    const [marcasLookup, setMarcasLookup] = useState<Record<string, any>>({});
+    const [lineasLookup, setLineasLookup] = useState<Record<string, any>>({});
+    const [cilindradasLookup, setCilindradasLookup] = useState<Record<string, any>>({});
     const [marcaInput, setMarcaInput] = useState('');
     const [lineaInput, setLineaInput] = useState('');
     const [cilindradaInput, setCilindradaInput] = useState('');
     const debouncedMarca = useDebounce(marcaInput, 300);
     const debouncedLinea = useDebounce(lineaInput, 300);
-    const abortableFetch = useAbortableFetch();
+    const debouncedCilindrada = useDebounce(cilindradaInput, 300);
+    const marcaAbortRef = useRef<AbortController | null>(null);
+    const lineaAbortRef = useRef<AbortController | null>(null);
+    const cilindradaAbortRef = useRef<AbortController | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('q') || '');
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [tempMarcaIds, setTempMarcaIds] = useState<string[]>([]);
@@ -40,7 +45,6 @@ const ModelosListPage = () => {
     const [tempAnio, setTempAnio] = useState<string>('');
 
     
-
     const columns = [
         { id: 'modelo', name: 'Modelo' },
         { id: 'anio', name: 'Año' },
@@ -50,6 +54,14 @@ const ModelosListPage = () => {
     ];
 
     const actions = [ { name: 'Ver',icon:  <Visibility fontSize="small" /> , onClick: (row: any) => navigate(`/modelos/${row.id}`) } ];
+
+    const mergeLookup = (prev: Record<string, any>, list: any[]) => {
+        const next = { ...prev };
+        list.forEach((item) => {
+            next[item.id] = item;
+        });
+        return next;
+    };
 
     const fetchLists = useCallback(async () => {
         try {
@@ -61,32 +73,65 @@ const ModelosListPage = () => {
             setMarcas(mRes.data);
             setLineas(lRes.data);
             setCilindradas(cRes.data);
+            setMarcasLookup((prev) => mergeLookup(prev, mRes.data));
+            setLineasLookup((prev) => mergeLookup(prev, lRes.data));
+            setCilindradasLookup((prev) => mergeLookup(prev, cRes.data));
         } catch (error) { console.error(error); }
     }, []);
 
     useEffect(() => {
-        abortableFetch(async (signal) => {
-            try {
-                const res = await marcasRepository.listar(10, 0, debouncedMarca, signal);
-                if (res) setMarcas(res.data);
-            } catch (error) {
-                if (!isAbortError(error)) console.error(error);
-            }
-        });
-    }, [debouncedMarca, abortableFetch]);
+        if (!filterModalOpen) return;
+
+        marcaAbortRef.current?.abort();
+        const controller = new AbortController();
+        marcaAbortRef.current = controller;
+
+        marcasRepository.listar(10, 0, debouncedMarca || undefined, controller.signal)
+            .then((res) => {
+                setMarcas(res.data);
+                setMarcasLookup((prev) => mergeLookup(prev, res.data));
+            })
+            .catch((error) => {
+                if ((error as any)?.name === 'CanceledError' || (error as any)?.code === 'ERR_CANCELED') return;
+                console.error(error);
+            });
+    }, [debouncedMarca, filterModalOpen]);
 
     useEffect(() => {
-        abortableFetch(async (signal) => {
-            try {
-                const res = await lineasRepository.listar(10, 0, debouncedLinea, signal);
-                if (res) setLineas(res.data);
-            } catch (error) {
-                if (!isAbortError(error)) console.error(error);
-            }
-        });
-    }, [debouncedLinea, abortableFetch]);
+        if (!filterModalOpen) return;
 
-    // cilindradas repo doesn't support q/signal; we preload full list on mount
+        lineaAbortRef.current?.abort();
+        const controller = new AbortController();
+        lineaAbortRef.current = controller;
+
+        lineasRepository.listar(10, 0, debouncedLinea || undefined, controller.signal)
+            .then((res) => {
+                setLineas(res.data);
+                setLineasLookup((prev) => mergeLookup(prev, res.data));
+            })
+            .catch((error) => {
+                if ((error as any)?.name === 'CanceledError' || (error as any)?.code === 'ERR_CANCELED') return;
+                console.error(error);
+            });
+    }, [debouncedLinea, filterModalOpen]);
+
+    useEffect(() => {
+        if (!filterModalOpen) return;
+
+        cilindradaAbortRef.current?.abort();
+        const controller = new AbortController();
+        cilindradaAbortRef.current = controller;
+
+        cilindradasRepository.listar(10, 0, debouncedCilindrada || undefined, controller.signal)
+            .then((res) => {
+                setCilindradas(res.data);
+                setCilindradasLookup((prev) => mergeLookup(prev, res.data));
+            })
+            .catch((error) => {
+                if ((error as any)?.name === 'CanceledError' || (error as any)?.code === 'ERR_CANCELED') return;
+                console.error(error);
+            });
+    }, [debouncedCilindrada, filterModalOpen]);
 
     const fetch = useCallback(async () => {
         setLoading(true);
@@ -120,10 +165,12 @@ const ModelosListPage = () => {
 
     return (
         <Box p={isMobile ? 2 : 4}>
-            <Box component={Paper} sx={{ p: 2, mb: 2 }}>Catálogo global de modelos</Box>
-
-            <Box display="flex" gap={2} flexWrap="wrap" mb={2} alignItems="center">
-                <TextField
+            <Box component={Paper} sx={{ p: 2, mb: 2 }}>
+                <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems="center" gap={2} mb={2}
+                        sx={{ bgcolor: 'background.paper', p: 2 }}
+                        component={Paper}
+                    >                
+                    <TextField
                     label="Buscar modelo"
                     placeholder="Buscar por modelo"
                     value={searchQuery}
@@ -137,10 +184,18 @@ const ModelosListPage = () => {
                         next.set('offset', '0');
                         setSearchParams(next);
                     }}
-                    sx={{ minWidth: 220, flex: 1, maxWidth: 360 }}
+                    sx={{ minWidth: 220, flex: 1}}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Search color="primary" />
+                            </InputAdornment>
+                        )
+                    }}
                 />
 
-                <Button variant="outlined" onClick={() => {
+                <Button variant="outlined" startIcon={<FilterList />}
+                    onClick={() => {
                     // initialize temp filters from current params
                     setTempMarcaIds(searchParams.getAll('marca_id'));
                     setTempLineaIds(searchParams.getAll('linea_id'));
@@ -152,15 +207,14 @@ const ModelosListPage = () => {
                     setCilindradaInput('');
                     setFilterModalOpen(true);
                 }}>Más filtros</Button>
-                <Button variant="text" onClick={() => {
-                    // clear all filters (keeps pagination)
-                    const next = new URLSearchParams();
-                    next.set('limit', limit.toString());
-                    next.set('offset', '0');
-                    const q = searchParams.get('q');
-                    if (q) next.set('q', q);
-                    setSearchParams(next);
-                }}>Limpiar filtros</Button>
+                <Button
+                    variant="contained"
+                    onClick={() => navigate('/modelos/nuevo')}
+                    sx={{ textTransform: 'none' }}
+                >
+                    Crear modelo
+                </Button>
+                </Box>
             </Box>
 
             <Dialog open={filterModalOpen} onClose={() => setFilterModalOpen(false)} maxWidth="sm" fullWidth>
@@ -170,39 +224,54 @@ const ModelosListPage = () => {
                         multiple
                         options={marcas}
                         inputValue={marcaInput}
-                        onInputChange={(_e, value) => setMarcaInput(value)}
+                        onInputChange={(_e, value, reason) => {
+                            if (reason === 'input' || reason === 'clear') setMarcaInput(value);
+                        }}
                         getOptionLabel={(option) => option.marca}
-                        value={marcas.filter((m) => tempMarcaIds.includes(m.id))}
+                        value={tempMarcaIds.map((id) => marcasLookup[id]).filter(Boolean)}
                         onChange={(_e, value) => setTempMarcaIds(value.map((v: any) => v.id))}
                         renderTags={(value, getTagProps) => value.map((option, index) => <Chip label={option.marca} {...getTagProps({ index })} />)}
                         renderInput={(params) => <TextField {...params} label="Marca" placeholder="Seleccionar marca" />}
                         isOptionEqualToValue={(option, value) => option.id === value?.id}
+                        filterOptions={(options) => options}
+                        disableCloseOnSelect
+                        clearOnBlur={false}
                     />
                     <Autocomplete
                         multiple
                         options={lineas}
                         inputValue={lineaInput}
-                        onInputChange={(_e, value) => setLineaInput(value)}
+                        onInputChange={(_e, value, reason) => {
+                            if (reason === 'input' || reason === 'clear') setLineaInput(value);
+                        }}
                         getOptionLabel={(option) => option.linea}
-                        value={lineas.filter((l) => tempLineaIds.includes(l.id))}
+                        value={tempLineaIds.map((id) => lineasLookup[id]).filter(Boolean)}
                         onChange={(_e, value) => setTempLineaIds(value.map((v: any) => v.id))}
                         renderTags={(value, getTagProps) => value.map((option, index) => <Chip label={option.linea} {...getTagProps({ index })} />)}
                         renderInput={(params) => <TextField {...params} label="Línea" placeholder="Seleccionar líneas" />}
                         sx={{ mt: 2 }}
                         isOptionEqualToValue={(option, value) => option.id === value?.id}
+                        filterOptions={(options) => options}
+                        disableCloseOnSelect
+                        clearOnBlur={false}
                     />
                     <Autocomplete
                         multiple
                         options={cilindradas}
                         inputValue={cilindradaInput}
-                        onInputChange={(_e, value) => setCilindradaInput(value)}
+                        onInputChange={(_e, value, reason) => {
+                            if (reason === 'input' || reason === 'clear') setCilindradaInput(value);
+                        }}
                         getOptionLabel={(option) => String(option.cilindrada)}
-                        value={cilindradas.filter((c) => tempCilindradaIds.includes(c.id))}
+                        value={tempCilindradaIds.map((id) => cilindradasLookup[id]).filter(Boolean)}
                         onChange={(_e, value) => setTempCilindradaIds(value.map((v: any) => v.id))}
                         renderTags={(value, getTagProps) => value.map((option, index) => <Chip label={option.cilindrada} {...getTagProps({ index })} />)}
                         renderInput={(params) => <TextField {...params} label="Cilindrada" placeholder="Seleccionar cilindradas" />}
                         sx={{ mt: 2 }}
                         isOptionEqualToValue={(option, value) => option.id === value?.id}
+                        filterOptions={(options) => options}
+                        disableCloseOnSelect
+                        clearOnBlur={false}
                     />
                     <TextField
                         label="Año"
@@ -213,7 +282,9 @@ const ModelosListPage = () => {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => {
+                    <Button onClick={() => setFilterModalOpen(false)}>Cancelar</Button>
+
+                    <Button variant="outlined" onClick={() => {
                         const preserved: Record<string, string> = { limit: limit.toString(), offset: '0' };
                         const q = searchParams.get('q') || '';
                         if (q) preserved.q = q;
@@ -224,7 +295,6 @@ const ModelosListPage = () => {
                         setSearchParams(preserved);
                         setFilterModalOpen(false);
                     }}>Limpiar</Button>
-                    <Button onClick={() => setFilterModalOpen(false)}>Cancelar</Button>
                     <Button variant="contained" onClick={() => {
                         const next = new URLSearchParams(searchParams);
                         next.delete('marca_id');

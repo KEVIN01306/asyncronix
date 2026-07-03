@@ -6,6 +6,8 @@ import type { ObtenerCategoriasUseCase } from "../application/obtener-categorias
 import type { RegistrarCategoriaUseCase } from "../application/registrar-categoria.usecase.js";
 import type { ActualizarCategoriaUseCase } from "../application/actualizar-categoria.usecase.js";
 import type { EliminarCategoriaUseCase } from "../application/eliminar-categoria.usecase.js";
+import type { ObtenerCategoriaJerarquiaUseCase } from "../application/obtener-categoria-jerarquia.usecase.js";
+import type { ObtenerCategoriasDisponiblesComoPadreUseCase } from "../application/obtener-categorias-disponibles-como-padre.usecase.js";
 
 export class CategoriaController extends BaseController {
     constructor(
@@ -13,7 +15,9 @@ export class CategoriaController extends BaseController {
         private readonly obtenerCategoriasUseCase: ObtenerCategoriasUseCase,
         private readonly registrarCategoriaUseCase: RegistrarCategoriaUseCase,
         private readonly actualizarCategoriaUseCase: ActualizarCategoriaUseCase,
-        private readonly eliminarCategoriaUseCase: EliminarCategoriaUseCase
+        private readonly eliminarCategoriaUseCase: EliminarCategoriaUseCase,
+        private readonly obtenerCategoriaJerarquiaUseCase: ObtenerCategoriaJerarquiaUseCase,
+        private readonly obtenerCategoriasDisponiblesComoPadreUseCase: ObtenerCategoriasDisponiblesComoPadreUseCase
     ) {
         super();
     }
@@ -24,6 +28,28 @@ export class CategoriaController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             const categoria = await this.obtenerCategoriaUseCase.execute(id, negocio_id);
             res.status(200).json(Respuesta.exito('Categoria obtenida con exito', categoria));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    obtenerConJerarquia = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            const categoria = await this.obtenerCategoriaJerarquiaUseCase.execute(id, negocio_id);
+            res.status(200).json(Respuesta.exito('Categoria obtenida con exito', categoria));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    obtenerPadresDisponibles = async (req: Request<unknown, unknown, unknown, { categoria_id_excluir?: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res);
+            const categoriaIdExcluir = req.query.categoria_id_excluir;
+            const padres = await this.obtenerCategoriasDisponiblesComoPadreUseCase.execute(negocio_id, categoriaIdExcluir);
+            res.status(200).json(Respuesta.exito('Categorias disponibles como padre obtenidas con exito', padres));
         } catch (error) {
             next(error);
         }

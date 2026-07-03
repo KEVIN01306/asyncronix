@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import type { ModeloRepository, ModeloFilters } from "../domain/modelo.repository.js";
 import { ModeloMapper } from "./mappers/modelo.mapper.js";
-import type { ModeloSimple } from "../domain/modelo.entity.js";
+import type { ModeloCrear, ModeloSimple } from "../domain/modelo.entity.js";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
 
 export class PrismaModeloRepository implements ModeloRepository {
@@ -35,6 +35,27 @@ export class PrismaModeloRepository implements ModeloRepository {
             const item = await this.prisma.modelo.findUnique({ where: { id }, include: { marca: true, linea: true, cilindrada: true } });
             if (!item || !item.activo) return null;
             return ModeloMapper.mapSimple(item as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async registrar(data: ModeloCrear): Promise<ModeloSimple> {
+        try {
+            const created = await this.prisma.modelo.create({
+                data: {
+                    modelo: data.modelo,
+                    anio: data.anio,
+                    marca_id: data.marca_id,
+                    linea_id: data.linea_id,
+                    cilindrada_id: data.cilindrada_id,
+                    vehiculo_tipo_id: data.vehiculo_tipo_id,
+                    activo: true,
+                },
+                include: { marca: true, linea: true, cilindrada: true },
+            });
+
+            return ModeloMapper.mapSimple(created as any);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

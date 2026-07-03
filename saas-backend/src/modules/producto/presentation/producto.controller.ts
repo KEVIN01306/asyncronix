@@ -67,14 +67,14 @@ export class ProductoController extends BaseController {
     listar = async (_req: Request, res: Response, next: NextFunction) => {
         try {
             const { negocio_id } = this.obtenerEntorno(res);
-            const { limit, offset, categoria_id, q, codigo } = res.locals.query;
+            const { limit, offset, categoria_id, q, sku } = res.locals.query;
             const page = Math.floor(offset / limit) + 1;
             const { total, data } = await this.obtenerProductosUseCase.execute({
                 negocio_id,
                 pagination: { page, perPage: limit },
                 categoria_id,
                 q,
-                codigo
+                sku
             });
             res.status(200).json(Respuesta.paginacion('Productos obtenidos con exito', data, total, limit, offset));
         } catch (error) {

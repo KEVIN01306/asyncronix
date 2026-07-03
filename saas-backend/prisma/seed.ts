@@ -71,6 +71,8 @@ const permisosData = [
 
     { codigo: "VER_MODELOS" },
     { codigo: "VER_MODELOS_DETALLE" },
+    { codigo: "CREAR_MODELO" },
+    { codigo: "ADMIN_MODELO" },
 
     { codigo: "VER_VEHICULOS" },
     { codigo: "VER_VEHICULOS_DETALLE" },
@@ -178,7 +180,7 @@ const modulosConPermisos = [
     },
     {
         nombre: "MODELOS",
-        permisos: ["VER_MODELOS", "VER_MODELOS_DETALLE"]
+        permisos: ["VER_MODELOS", "VER_MODELOS_DETALLE", "CREAR_MODELO", "ADMIN_MODELO"]
     },
     {
         nombre: "VEHICULOS",
@@ -241,7 +243,7 @@ async function main() {
     }
 
     // 2. CORRECCIÓN: wa_id idénticos en where y create
-    const whatsappId = "50295769927"; // Asegúrate de que este valor sea único para evitar conflictos en el upsert
+    const whatsappId = "50230108703"; // Asegúrate de que este valor sea único para evitar conflictos en el upsert
 
     const negocio = await prisma.negocio.upsert({
         where: { wa_id: whatsappId }, 
@@ -365,6 +367,97 @@ async function main() {
         },
     });
 
+    // 4. Crear categorías default del sistema
+    const categoriasDefault = [
+        {
+            categoria: "Vehículos",
+            codigo: "VEH",
+            subcategorias: [
+                { categoria: "Autos", codigo: "AUT" },
+                { categoria: "Motos", codigo: "MOT" },
+                { categoria: "Camiones", codigo: "CAM" },
+                { categoria: "Camionetas", codigo: "CMNTA" }
+            ]
+        },
+        {
+            categoria: "Repuestos",
+            codigo: "REP",
+            subcategorias: [
+                { categoria: "Motor", codigo: "MOT-RP" },
+                { categoria: "Suspensión", codigo: "SUS" },
+                { categoria: "Frenos", codigo: "FRE" },
+                { categoria: "Electricidad", codigo: "ELE" }
+            ]
+        },
+        {
+            categoria: "Servicios",
+            codigo: "SER",
+            subcategorias: [
+                { categoria: "Mantenimiento", codigo: "MAN" },
+                { categoria: "Reparación", codigo: "REP-SER" },
+                { categoria: "Inspección", codigo: "INS" }
+            ]
+        },
+        {
+            categoria: "Accesorios",
+            codigo: "ACC",
+            subcategorias: [
+                { categoria: "Interiores", codigo: "INT" },
+                { categoria: "Exteriores", codigo: "EXT" },
+                { categoria: "Protección", codigo: "PRO" }
+            ]
+        }
+    ];
+
+    for (const catPrincipal of categoriasDefault) {
+        // Crear categoría principal
+        let categoriaPrincipal = await prisma.categoriaProducto.findFirst({
+            where: {
+                categoria: catPrincipal.categoria,
+                default_categoria: true,
+                negocio_id: null
+            }
+        });
+
+        if (!categoriaPrincipal) {
+            categoriaPrincipal = await prisma.categoriaProducto.create({
+                data: {
+                    categoria: catPrincipal.categoria,
+                    codigo: catPrincipal.codigo,
+                    default_categoria: true,
+                    activo: true,
+                    negocio_id: null
+                }
+            });
+        }
+
+        // Crear subcategorías
+        for (const subcat of catPrincipal.subcategorias) {
+            let subcategoriaExiste = await prisma.categoriaProducto.findFirst({
+                where: {
+                    categoria: subcat.categoria,
+                    default_categoria: true,
+                    negocio_id: null,
+                    categoria_padre_id: categoriaPrincipal.id
+                }
+            });
+
+            if (!subcategoriaExiste) {
+                await prisma.categoriaProducto.create({
+                    data: {
+                        categoria: subcat.categoria,
+                        codigo: subcat.codigo,
+                        default_categoria: true,
+                        activo: true,
+                        negocio_id: null,
+                        categoria_padre_id: categoriaPrincipal.id
+                    }
+                });
+            }
+        }
+    }
+
+    console.log("✅ Categorías default creadas exitosamente");
     console.log("¡Seed ejecutado con éxito!");
 }
 

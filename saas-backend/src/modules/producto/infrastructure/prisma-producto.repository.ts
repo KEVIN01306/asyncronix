@@ -92,7 +92,7 @@ export class PrismaProductoRepository implements ProductoRepository {
         return ProductoMapper.mapDetalle(producto as any);
     }
 
-    async listar(negocio_id: string, pagination: Pagination, categoria_id?: string, q?: string | null, codigo?: string | null): Promise<Paginated<ProductoSimple>> {
+    async listar(negocio_id: string, pagination: Pagination, categoria_id?: string, q?: string | null, sku?: string | null): Promise<Paginated<ProductoSimple>> {
         const { page, perPage } = pagination;
         const offset = (page - 1) * perPage;
 
@@ -103,16 +103,18 @@ export class PrismaProductoRepository implements ProductoRepository {
             where.OR = [
                 { nombre: { contains: q } },
                 { variantes: { some: { codigo_barras: { contains: q } } } },
-                { codigo: { contains: q } }
+                { sku: { contains: q } },
+                { variantes: { some: { sku: { contains: q } } } },
+                { variantes: { some: { qr_codigo: { contains: q } } } }
             ];
         }
 
-        if (codigo) {
+        if (sku) {
             if (where.OR) {
-                where.AND = [{ OR: where.OR }, { codigo: { contains: codigo } }];
+                where.AND = [{ OR: where.OR }, { sku: { contains: sku } }];
                 delete where.OR;
             } else {
-                where.codigo = { contains: codigo };
+                where.sku = { contains: sku };
             }
         }
 
@@ -252,10 +254,21 @@ export class PrismaProductoRepository implements ProductoRepository {
         try {
             const { sku: _sku, precio_sugerido: _precio_sugerido, ...productoData } = producto as any;
 
+            const categoria = await this.prisma.categoriaProducto.findFirst({
+                where: { id: producto.categoria_id, activo: true }
+            });
+
+            if (!categoria) throw new AppError('Categoria no encontrada', 'CATEGORIA_NOT_FOUND', 404);
+
+            const correlativo = await this.obtenerSiguienteCorrelativoProducto(negocio_id);
+            const sku = GenerarSku.generarSkuProducto(categoria.categoria, correlativo);
+
             const createdProduct = await this.prisma.producto.create({
                 data: {
                     ...productoData,
                     negocio_id,
+                    sku,
+                    correlativo: String(correlativo),
                     activo: true
                 },
                 include: {
@@ -283,7 +296,7 @@ export class PrismaProductoRepository implements ProductoRepository {
 
             if (result.count === 0) throw new Error('Producto no encontrado');
 
-            let productoActualizado = await this.prisma.producto.findFirst({
+            const productoActualizado = await this.prisma.producto.findFirst({
                 where: { id, negocio_id },
                 include: {
                     ...this.includeDetail,
@@ -293,59 +306,24 @@ export class PrismaProductoRepository implements ProductoRepository {
 
             if (!productoActualizado) throw new Error('Producto no encontrado');
 
-            let productoCodigo = productoActualizado.codigo?.trim();
-            if (!productoCodigo) {
-                productoCodigo = GenerarSku.ejecutar({
-                    negocioCodigo: productoActualizado.negocio.slug,
-                    marcaCodigo: productoActualizado.marca?.marca ?? '',
-                    categoriaCodigo: productoActualizado.categoria?.codigo ?? productoActualizado.categoria?.categoria ?? '',
-                    productoCodigo: productoActualizado.nombre
-                });
-
-                await this.prisma.producto.update({
-                    where: { id: productoActualizado.id },
-                    data: { codigo: productoCodigo }
-                });
-
-                productoActualizado = await this.prisma.producto.findFirst({
-                    where: { id, negocio_id },
-                    include: {
-                        ...this.includeDetail,
-                        negocio: true
-                    }
-                });
-
-                if (!productoActualizado) throw new Error('Producto no encontrado');
-            }
-
-            await this.actualizarSkusDeVariantes(productoActualizado);
-
             return ProductoMapper.mapDetalle(productoActualizado as any);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
     }
 
-    private async actualizarSkusDeVariantes(producto: any): Promise<void> {
-        const variantes = await this.prisma.varianteProducto.findMany({
-            where: { producto_id: producto.id, activo: true },
-            include: { valores: true }
+    private async obtenerSiguienteCorrelativoProducto(negocio_id: string): Promise<number> {
+        const productos = await this.prisma.producto.findMany({
+            where: { negocio_id, correlativo: { not: null } },
+            select: { correlativo: true }
         });
 
-        await Promise.all(variantes.map((variante) => {
-            const sku = GenerarSku.ejecutar({
-                negocioCodigo: producto.negocio.slug,
-                marcaCodigo: producto.marca?.marca ?? '',
-                categoriaCodigo: producto.categoria?.codigo ?? producto.categoria?.categoria ?? '',
-                productoCodigo: producto.nombre,
-                valores: variante.valores?.map((valor: any) => valor.valor) ?? []
-            });
+        const ultimo = productos.reduce((max, producto) => {
+            const valor = Number(producto.correlativo ?? 0);
+            return Number.isFinite(valor) ? Math.max(max, valor) : max;
+        }, 0);
 
-            return this.prisma.varianteProducto.update({
-                where: { id: variante.id },
-                data: { sku }
-            });
-        }));
+        return ultimo + 1;
     }
 
     async eliminar(id: string, negocio_id: string): Promise<void> {

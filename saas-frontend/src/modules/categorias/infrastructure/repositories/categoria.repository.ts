@@ -1,5 +1,5 @@
 import api from "../../../../core/api/api";
-import type { CategoriasResponse } from "../../domain/interfaces/categoria.interface";
+import type { CategoriasResponse, CategoriaJerarquiaResponse, CategoriasDisponiblesResponse } from "../../domain/interfaces/categoria.interface";
 
 
 const URL_MODULE = '/categorias/'
@@ -16,6 +16,18 @@ export const  CategoriaRepository = {
             signal,
         });
 
+        return response;
+    },
+
+    obtenerConJerarquia: async (id: string): Promise<CategoriaJerarquiaResponse> => {
+        const response = await api.get<CategoriaJerarquiaResponse>(`${URL_MODULE}${id}/jerarquia`)
+        return response;
+    },
+
+    obtenerPadresDisponibles: async (categoriaIdExcluir?: string): Promise<CategoriasDisponiblesResponse> => {
+        const response = await api.get<CategoriasDisponiblesResponse>(`${URL_MODULE}padres-disponibles`, {
+            params: categoriaIdExcluir ? { categoria_id_excluir: categoriaIdExcluir } : undefined
+        })
         return response;
     },
 

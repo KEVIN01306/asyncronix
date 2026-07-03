@@ -147,7 +147,7 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
             id: r.variante.id,
             sku: r.variante.sku,
             codigo_barras: r.variante.codigo_barras,
-            codigo_secuencial: r.variante.codigo_secuencial,
+            correlativo: r.variante.correlativo,
             qr_codigo: r.variante.qr_codigo,
             precio_sugerido: r.variante.precio_sugerido,
             stock_total: r.variante.stock_total,

@@ -19,17 +19,14 @@ import { GenerarQrVarianteUseCase } from "./application/generar-qr-variante.usec
 import { ListarAtributosProductoUseCase } from "./application/listar-atributos-producto.usecase.js";
 import { ActualizarAtributosProductoUseCase } from "./application/actualizar-atributos-producto.usecase.js";
 import { ListarVariantesNegocioUseCase } from "./application/listar-variantes-negocio.usecase.js";
-import { ObtenerSecuenciaUseCase } from "./application/obtener-secuencia.usecase.js";
 import { PrismaProductoRepository } from "./infrastructure/prisma-producto.repository.js";
 import { PrismaVarianteRepository } from "./infrastructure/prisma-variante.repository.js";
-import { PrismaBarcodeSequenceRepository } from "./infrastructure/prisma-barcode-sequence.repository.js";
 import { ProductoController } from "./presentation/producto.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
 import { BuscarVariantePorCodigoUseCase } from "./application/buscar-variante-por-codigo.usecase.js";
 
 const productoRepository = new PrismaProductoRepository(prisma);
 const varianteRepository = new PrismaVarianteRepository(prisma);
-const barcodeSequenceRepository = new PrismaBarcodeSequenceRepository(prisma);
 
 const obtenerProductoUseCase = new ObtenerProductoUseCase(productoRepository);
 const obtenerProductosUseCase = new ObtenerProductosUseCase(productoRepository);
@@ -40,9 +37,8 @@ const actualizarArchivoImagenProductoUseCase = new ActualizarArchivoImagenProduc
 const actualizarDescripcionImagenProductoUseCase = new ActualizarDescripcionImagenProductoUseCase(productoRepository);
 const establecerImagenPrincipalProductoUseCase = new EstablecerImagenPrincipalProductoUseCase(productoRepository);
 const eliminarImagenProductoUseCase = new EliminarImagenProductoUseCase(productoRepository);
-const obtenerSecuenciaUseCase = new ObtenerSecuenciaUseCase(barcodeSequenceRepository);
-const crearVarianteUseCase = new CrearVarianteUseCase(varianteRepository, obtenerSecuenciaUseCase);
-const registrarProductoUseCase = new RegistrarProductoUseCase(productoRepository, varianteRepository, obtenerSecuenciaUseCase);
+const crearVarianteUseCase = new CrearVarianteUseCase(varianteRepository);
+const registrarProductoUseCase = new RegistrarProductoUseCase(productoRepository, varianteRepository);
 const actualizarProductoUseCase = new ActualizarProductoUseCase(productoRepository);
 const listarAtributosProductoUseCase = new ListarAtributosProductoUseCase(productoRepository);
 const actualizarAtributosProductoUseCase = new ActualizarAtributosProductoUseCase(productoRepository);

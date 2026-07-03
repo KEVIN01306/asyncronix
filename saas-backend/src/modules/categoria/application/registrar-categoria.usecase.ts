@@ -9,10 +9,18 @@ export class RegistrarCategoriaUseCase {
 
     async execute(data: CategoriaCrear, negocio_id: string): Promise<CategoriaSimple> {
         try {
+            if (!data.categoria_padre_id) {
+                throw new AppError('La categoria padre es obligatoria', 'INVALID_DATA', 400);
+            }
             
             const categoriaExiste = await this.repository.obtenerDefaultPorCategoria(data.categoria)
 
             if (categoriaExiste) throw new AppError('La Categoria ya existe por default', 'DATA_ALREADY_EXISTS', 409)
+
+            const categoriaPadre = await this.repository.obtener(data.categoria_padre_id, negocio_id);
+            if (!categoriaPadre) {
+                throw new AppError('La categoria padre no existe', 'DATA_NOT_FOUND', 404);
+            }
 
             return await this.repository.registrar(data, negocio_id);
 

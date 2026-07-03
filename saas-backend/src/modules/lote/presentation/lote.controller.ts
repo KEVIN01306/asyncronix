@@ -51,8 +51,8 @@ export class LoteController extends BaseController {
             const filters = {
                 q: query.q,
                 codigo_lote: query.codigo_lote,
-                producto_codigo: query.producto_codigo,
-                codigo_secuencial: query.codigo_secuencial,
+                producto_sku: query.producto_sku,
+                variante_correlativo: query.variante_correlativo,
                 fecha_vencimiento_from: query.fecha_vencimiento_from,
                 fecha_vencimiento_to: query.fecha_vencimiento_to,
                 created_at_from: query.created_at_from,

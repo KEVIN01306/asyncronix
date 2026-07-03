@@ -12,6 +12,8 @@ export class UsuarioMapper {
             email: usuario.email,
             telefono: usuario.telefono,
             pin_caja: usuario.pin_caja,
+            pin_modelo: usuario.pin_modelo,
+            pin_modelo: usuario.pin_modelo,
             roles: usuario.roles?.map((rol: any) => {return { id: rol.id, nombre: rol.nombre }}) || [],
             verificado: usuario.verificado,
             sucursal: usuario.sucursal ? {

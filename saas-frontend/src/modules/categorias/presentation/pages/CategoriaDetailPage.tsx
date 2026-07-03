@@ -1,47 +1,65 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-    Box, Typography, Paper, Button, Divider, Stack, Grid, Chip, Breadcrumbs, Link,Avatar, Card, CardContent,
+import {
+    Box,
+    Typography,
+    Paper,
+    Button,
+    Divider,
+    Stack,
+    Grid,
+    Chip,
+    Breadcrumbs,
+    Link,
+    Avatar,
+    Card,
+    CardContent,
     Alert
 } from '@mui/material';
-import { 
-    Edit, Delete, Category, Description, ArrowBack, Inventory2 
-} from '@mui/icons-material';
+import { Edit, Delete, Category, Description, ArrowBack, Inventory2 } from '@mui/icons-material';
 import { toast } from 'sonner';
 
 import ConfirmDialog from '../../../../shared/components/ui/dialog/ConfirmDialog';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 import { CategoriaRepository } from '../../infrastructure/repositories/categoria.repository';
-import type { Categoria } from '../../domain/interfaces/categoria.interface';
-//import { useAuthStore } from '../../../../core/store/authStore';
+import { useRutaCategoria } from '../hooks/useJerarquiaTexto';
+import type { CategoriaConJerarquiaCompleta } from '../../domain/interfaces/categoria.interface';
 
 const CategoriaDetailPage = () => {
     const { id } = useParams();
-    const navigate = useNavigate();    
-    const [categoria, setCategoria] = useState<Categoria | null>(null);
+    const navigate = useNavigate();
+    const [categoria, setCategoria] = useState<CategoriaConJerarquiaCompleta | null>(null);
     const [loading, setLoading] = useState(true);
     const [openDelete, setOpenDelete] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    //const user = useAuthStore((state) => state.user);
+    const rutaCompleta = useRutaCategoria(categoria?.jerarquia);
+
     const fetchCategoria = useCallback(async () => {
+        if (!id) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            const data = await CategoriaRepository.Obtener(String(id));
-            setCategoria(data);
+            const data = await CategoriaRepository.obtenerConJerarquia(id);
+            setCategoria(data.data);
         } catch (error) {
             console.error(error);
+            setCategoria(null);
         } finally {
             setLoading(false);
         }
     }, [id]);
 
     useEffect(() => {
-        if (id) fetchCategoria();
-    }, [id, fetchCategoria]);
+        fetchCategoria();
+    }, [fetchCategoria]);
 
     const handleDelete = async () => {
         if (!id) return;
+
         setIsDeleting(true);
         try {
             await CategoriaRepository.eliminar(id);
@@ -57,17 +75,19 @@ const CategoriaDetailPage = () => {
     };
 
     if (loading) return <Loading />;
-    if (!categoria) return <ErrorPageLoading text="Categoría no encontrada" navigate={() => navigate('/categorias')} />;
+    if (!categoria) {
+        return <ErrorPageLoading text="Categoría no encontrada" navigate={() => navigate('/categorias')} />;
+    }
 
     return (
         <Box p={{ xs: 2, md: 4 }}>
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="flex-start" mb={4} spacing={2}>
                 <Box>
                     <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
-                        <Link 
-                            underline="hover" 
-                            color="inherit" 
-                            sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }} 
+                        <Link
+                            underline="hover"
+                            color="inherit"
+                            sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }}
                             onClick={() => navigate('/categorias')}
                         >
                             <ArrowBack sx={{ fontSize: 16 }} /> Categorías
@@ -81,20 +101,20 @@ const CategoriaDetailPage = () => {
 
                 <Stack direction="row" spacing={1} width={{ xs: '100%', sm: 'auto' }}>
                     {!categoria.default_categoria && (
-                        <Button 
-                            variant="outlined" 
+                        <Button
+                            variant="outlined"
                             sx={{ width: { xs: '100%', sm: 'auto' } }}
-                            startIcon={<Edit />} 
+                            startIcon={<Edit />}
                             onClick={() => navigate(`/categorias/${id}/editar`)}
                         >
                             Editar
                         </Button>
                     )}
-                    <Button 
-                        variant="contained" 
-                        color="error" 
+                    <Button
+                        variant="contained"
+                        color="error"
                         sx={{ width: { xs: '100%', sm: 'auto' } }}
-                        startIcon={<Delete />} 
+                        startIcon={<Delete />}
                         onClick={() => setOpenDelete(true)}
                     >
                         Eliminar
@@ -112,10 +132,18 @@ const CategoriaDetailPage = () => {
                             <Box>
                                 <Typography variant="overline" color="primary" fontWeight={700}>Módulo de Inventario</Typography>
                                 <Typography variant="h5" fontWeight={700}>{categoria.categoria}</Typography>
-                                <Chip variant='outlined' label={categoria.activo ? 'Activo' : 'Inactivo'} color={categoria.activo ? 'success' : 'default'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
+                                <Chip
+                                    variant="outlined"
+                                    label={categoria.activo ? 'Activo' : 'Inactivo'}
+                                    color={categoria.activo ? 'success' : 'default'}
+                                    size="small"
+                                    sx={{ mt: 0.5, fontWeight: 600 }}
+                                />
                             </Box>
                         </Box>
+
                         <Divider sx={{ my: 3 }} />
+
                         <Grid container spacing={4}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Stack spacing={1}>
@@ -123,13 +151,63 @@ const CategoriaDetailPage = () => {
                                         <Description sx={{ fontSize: 16 }} /> ESTADO DE LA CATEGORÍA
                                     </Typography>
                                     <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
-                                        {categoria.default_categoria ? 'Esta categoría no es editable ni elimineable ya que esta integrada por default.' : 'Esta categoría ha sido creada por el negocio.'}
+                                        {categoria.default_categoria
+                                            ? 'Esta categoría no es editable ni eliminable porque pertenece al catálogo default.'
+                                            : 'Esta categoría ha sido creada por el negocio.'}
                                     </Typography>
                                 </Stack>
                             </Grid>
+
+                            {rutaCompleta.length > 0 && (
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <Stack spacing={1}>
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, letterSpacing: 1 }}>
+                                            <Category sx={{ fontSize: 16 }} /> RUTA JERÁRQUICA
+                                        </Typography>
+                                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                                            {rutaCompleta.map((nivel, idx) => (
+                                                <Box key={nivel.id} display="flex" alignItems="center" gap={1}>
+                                                    <Chip
+                                                        label={nivel.categoria}
+                                                        size="small"
+                                                        variant={idx === 0 ? 'filled' : 'outlined'}
+                                                        color={idx === 0 ? 'primary' : 'default'}
+                                                    />
+                                                    {idx < rutaCompleta.length - 1 && (
+                                                        <Typography variant="body2" color="text.secondary">›</Typography>
+                                                    )}
+                                                </Box>
+                                            ))}
+                                        </Stack>
+                                    </Stack>
+                                </Grid>
+                            )}
                         </Grid>
+
+                        {categoria.subcategorias && categoria.subcategorias.length > 0 && (
+                            <>
+                                <Divider sx={{ my: 3 }} />
+                                <Stack spacing={2}>
+                                    <Typography variant="subtitle2" fontWeight={700}>Subcategorías Creadas</Typography>
+                                    <Stack direction="column" spacing={1}>
+                                        {categoria.subcategorias.map((sub) => (
+                                            <Button
+                                                key={sub.id}
+                                                variant="outlined"
+                                                fullWidth
+                                                onClick={() => navigate(`/categorias/${sub.id}`)}
+                                                sx={{ justifyContent: 'flex-start', textTransform: 'none' }}
+                                            >
+                                                {sub.categoria}
+                                            </Button>
+                                        ))}
+                                    </Stack>
+                                </Stack>
+                            </>
+                        )}
                     </Paper>
                 </Grid>
+
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Stack spacing={3}>
                         <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -153,13 +231,13 @@ const CategoriaDetailPage = () => {
                     </Stack>
                 </Grid>
             </Grid>
-            
+
             <ConfirmDialog
                 open={openDelete}
                 title="¿Eliminar categoría?"
                 description={
                     <Typography variant="body2">
-                        Estás a punto de eliminar <strong>{categoria.categoria}</strong>. 
+                        Estás a punto de eliminar <strong>{categoria.categoria}</strong>.
                         Esta acción es irreversible y los productos bajo esta categoría quedarán sin clasificación.
                     </Typography>
                 }

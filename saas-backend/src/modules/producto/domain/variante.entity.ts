@@ -13,8 +13,8 @@ export interface VarianteDetalle {
     producto_id: string;
     imagen_id?: string | null;
     sku: string;
+    correlativo?: string | null;
     codigo_barras?: string | null;
-    codigo_secuencial?: string | null;
     qr_codigo?: string | null;
     precio_sugerido: number;
     stock_total: number;
@@ -38,8 +38,6 @@ export interface VarianteCrear {
     precio_sugerido: number;
     codigo_barras?: string | null;
     valor_atributo_ids?: string[];
-    sku?: string;
-    codigo_secuencial?: string | null;
 }
 
 export interface VarianteActualizar {

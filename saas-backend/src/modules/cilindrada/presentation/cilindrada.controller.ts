@@ -10,11 +10,13 @@ export class CilindradaController extends BaseController {
         private readonly obtenerCilindradasUseCase: ObtenerCilindradasUseCase
     ) { super(); }
 
-    listar = async (_req: Request, res: Response, next: NextFunction) => {
+    listar = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { limit, offset } = res.locals.query;
+            const q = (req.query.q as string | undefined)?.trim();
             const page = Math.floor(offset / limit) + 1;
-            const { total, data } = await this.obtenerCilindradasUseCase.execute(page, limit as number) as any;
+            const filters = q ? { q } : undefined;
+            const { total, data } = await this.obtenerCilindradasUseCase.execute(page, limit as number, filters) as any;
             res.status(200).json(Respuesta.paginacion('Cilindradas obtenidas con éxito', data, total, limit as number, offset as number));
         } catch (error) {
             next(error);

@@ -1,40 +1,46 @@
 
-
-interface GenerarSkuParams {
-    negocioCodigo?: string;
-    marcaCodigo?: string;
-    categoriaCodigo: string;
-    productoCodigo: string;
-    valores?: string[];
-}
+const DIGITOS_MIN_PRODUCTO = 5;
+const DIGITOS_MIN_VARIANTE = 2;
+const LONGITUD_QR = 13;
+const PREFIJO_QR = '2';
 
 export class GenerarSku {
+    private static normalizarCategoria(categoria: string): string {
+        const limpio = categoria
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, '');
 
-    public static ejecutar(params: GenerarSkuParams): string {
-        const normalizar = (valor: string): string => {
-            return valor
-                .trim()
-                .toUpperCase()
-                .replace(/\s+/g, '-')
-                .replace(/[^A-Z0-9-]/g, '');
-        };
+        if (!limpio) return 'GEN';
+        return limpio.slice(0, 3).padEnd(3, 'X');
+    }
 
-        const obtenerPrefijoNegocio = (codigo?: string): string => {
-            const normalizado = normalizar(codigo ?? 'ASC');
-            return normalizado.substring(0, 3) || 'ASC';
-        };
+    private static formatearCorrelativo(valor: number, minDigits: number): string {
+        const correlativo = Math.max(1, Math.trunc(valor));
+        const bruto = String(correlativo);
+        return bruto.length >= minDigits ? bruto : bruto.padStart(minDigits, '0');
+    }
 
-        const segmentoNegocio = obtenerPrefijoNegocio(params.negocioCodigo);
-        const segmentoMarca = params.marcaCodigo ? normalizar(params.marcaCodigo).substring(0, 5) : undefined;
-        const segmentoCategoria = normalizar(params.categoriaCodigo).substring(0, 4) || 'CAT';
-        const primerProducto = params.productoCodigo.trim().split(/\s+/)[0] ?? '';
-        const segmentoProducto = normalizar(primerProducto) || 'PROD';
-        const segmentoValores = (params.valores ?? [])
-            .map(normalizar)
-            .filter(Boolean);
+    static generarSkuProducto(categoria: string, correlativo: number): string {
+        const prefijo = this.normalizarCategoria(categoria);
+        return `${prefijo}-${this.formatearCorrelativo(correlativo, DIGITOS_MIN_PRODUCTO)}`;
+    }
 
-        return [segmentoNegocio, segmentoMarca, segmentoCategoria, segmentoProducto, ...segmentoValores]
-            .filter(Boolean)
-            .join('-');
+    static generarSkuVariante(skuProducto: string, correlativoVariante: number): string {
+        return `${skuProducto}-${this.formatearCorrelativo(correlativoVariante, DIGITOS_MIN_VARIANTE)}`;
+    }
+
+    static generarCodigoQrVariante(correlativoVariante: number): string {
+        const valor = String(Math.max(1, Math.trunc(correlativoVariante)));
+        if (valor.length > LONGITUD_QR - 1) {
+            throw new Error('VARIANTE_CORRELATIVO_TOO_LARGE_FOR_QR');
+        }
+
+        const cuerpo = valor.length >= LONGITUD_QR - 1
+            ? valor
+            : valor.padStart(LONGITUD_QR - 1, '0');
+
+        return `${PREFIJO_QR}${cuerpo}`;
     }
 }

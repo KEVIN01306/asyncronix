@@ -3,11 +3,13 @@ import BaseController from "../../../shared/presentation/base.controller.js";
 import Respuesta from "../../../app/http/respuesta.js";
 import type { ObtenerModelosUseCase } from "../application/obtener-modelos.usecase.js";
 import type { ObtenerModeloUseCase } from "../application/obtener-modelo.usecase.js";
+import type { CrearModeloPorPinUseCase } from "../application/crear-modelo-por-pin.usecase.js";
 
 export class ModeloController extends BaseController {
     constructor(
         private readonly obtenerModeloUseCase: ObtenerModeloUseCase,
-        private readonly obtenerModelosUseCase: ObtenerModelosUseCase
+        private readonly obtenerModelosUseCase: ObtenerModelosUseCase,
+        private readonly crearModeloPorPinUseCase: CrearModeloPorPinUseCase,
     ) { super(); }
 
     listar = async (req: Request, res: Response, next: NextFunction) => {
@@ -41,6 +43,16 @@ export class ModeloController extends BaseController {
             const { id } = req.params;
             const modelo = await this.obtenerModeloUseCase.execute(id);
             res.status(200).json(Respuesta.exito('Modelo obtenido con éxito', modelo));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    crearPorPin = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const created = await this.crearModeloPorPinUseCase.execute(req.body, { negocio_id, sucursal_id });
+            res.status(201).json(Respuesta.exito('Modelo creado con éxito', created));
         } catch (error) {
             next(error);
         }

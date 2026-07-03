@@ -27,3 +27,9 @@ export const actualizarPinCajaSchema = z.object({
 });
 
 export type ActualizarPinCajaFormValues = z.infer<typeof actualizarPinCajaSchema>;
+
+export const actualizarPinModeloSchema = z.object({
+  pin_modelo: z.string().regex(/^[0-9]{4,6}$/, { message: 'El pin debe contener entre 4 y 6 dígitos' }),
+});
+
+export type ActualizarPinModeloFormValues = z.infer<typeof actualizarPinModeloSchema>;

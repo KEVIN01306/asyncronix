@@ -641,8 +641,8 @@ const BuscarProductosPage = () => {
                                             <Typography variant="body2" fontWeight={600}>{activeVariant.sku ?? activeVariant.id}</Typography>
                                         </Grid>
                                         <Grid size={{ xs: 6 }}>
-                                            <Typography variant="caption" color="text.secondary" display="block">CÓDIGO SECUENCIAL</Typography>
-                                            <Typography variant="body2" fontWeight={600}>{activeVariant.codigo_secuencial ?? 'N/A'}</Typography>
+                                            <Typography variant="caption" color="text.secondary" display="block">CORRELATIVO</Typography>
+                                            <Typography variant="body2" fontWeight={600}>{activeVariant.correlativo ?? 'N/A'}</Typography>
                                         </Grid>
                                         <Grid size={{ xs: 6 }}>
                                             <Typography variant="caption" color="text.secondary" display="block">CÓDIGO QR</Typography>

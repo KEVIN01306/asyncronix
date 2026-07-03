@@ -14,6 +14,11 @@ import { modelosRepository } from '../../../modelos/infrastructure/modelos.repos
 import type { VehiculoTipo } from '../../domain/interfaces/vehiculo-tipo.interface';
 import type { Modelo } from '../../../modelos/domain/interface/modelo.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
+import { useDebounce } from '../../../../core/hooks/useDebounce';
+import CreateModeloModal from '../components/CreateModeloModal.tsx';
+
+type CreateModeloOption = Modelo & { isCreate?: boolean };
 
 const VehiculoFormPage = () => {
     const { id } = useParams();
@@ -22,6 +27,12 @@ const VehiculoFormPage = () => {
     const [loading, setLoading] = useState(isEdit);
     const [tipos, setTipos] = useState<VehiculoTipo[]>([]);
     const [modelos, setModelos] = useState<Modelo[]>([]);
+    const [modelosLoading, setModelosLoading] = useState(false);
+    const [modeloInput, setModeloInput] = useState('');
+    const [openCrearModelo, setOpenCrearModelo] = useState(false);
+
+    const debouncedModeloInput = useDebounce(modeloInput, 300);
+    const abortableFetch = useAbortableFetch();
 
     const { register, control, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<VehiculoFormValues>({
         resolver: zodResolver(vehiculoSchema),
@@ -59,6 +70,22 @@ const VehiculoFormPage = () => {
 
         load();
     }, [id, isEdit, setValue]);
+
+    useEffect(() => {
+        if (!debouncedModeloInput.trim()) return;
+        setModelosLoading(true);
+
+        abortableFetch(async (signal) => {
+            try {
+                const res = await modelosRepository.listar(50, 0, { q: debouncedModeloInput }, signal);
+                setModelos(res?.data ?? []);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setModelosLoading(false);
+            }
+        });
+    }, [abortableFetch, debouncedModeloInput]);
 
     const onSubmit = async (data: VehiculoFormValues) => {
         try {
@@ -116,23 +143,48 @@ const VehiculoFormPage = () => {
                             <Controller
                                 name="modelo_id"
                                 control={control}
-                                render={({ field }) => (
-                                    <Autocomplete
-                                        options={modelos}
-                                        getOptionLabel={(option) => option.modelo}
-                                        value={modelos.find((modelo) => modelo.id === field.value) ?? null}
-                                        onChange={(_event, value) => field.onChange(value?.id ?? '')}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                label="Modelo"
-                                                error={!!errors.modelo_id}
-                                                helperText={errors.modelo_id?.message}
-                                            />
-                                        )}
-                                        isOptionEqualToValue={(option, value) => option.id === value.id}
-                                    />
-                                )}
+                                render={({ field }) => {
+                                    const createOption: CreateModeloOption = { id: 'create-modelo', modelo: `Crear nuevo modelo "${modeloInput.trim()}"`, anio: 0, marca_id: '', linea_id: '', cilindrada_id: '', created_at: '', updated_at: '', isCreate: true };
+                                    const options: CreateModeloOption[] = modeloInput.trim() ? [createOption, ...modelos] : modelos;
+
+                                    return (
+                                        <Autocomplete<CreateModeloOption, false, false, false>
+                                            options={options}
+                                            getOptionLabel={(option) => option.modelo}
+                                            value={modelos.find((modelo) => modelo.id === field.value) ?? null}
+                                            onChange={(_event, value) => {
+                                                if (value?.id === createOption.id) {
+                                                    setOpenCrearModelo(true);
+                                                    return;
+                                                }
+                                                field.onChange(value?.id ?? '');
+                                            }}
+                                            inputValue={modeloInput}
+                                            onInputChange={(_event, value, reason) => {
+                                                if (reason === 'reset') return;
+                                                setModeloInput(value);
+                                            }}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label="Modelo"
+                                                    error={!!errors.modelo_id}
+                                                    helperText={errors.modelo_id?.message}
+                                                    InputProps={{
+                                                        ...params.InputProps,
+                                                        endAdornment: (
+                                                            <>
+                                                                {modelosLoading ? <span>...</span> : null}
+                                                                {params.InputProps.endAdornment}
+                                                            </>
+                                                        )
+                                                    }}
+                                                />
+                                            )}
+                                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                                        />
+                                    );
+                                }}
                             />
                         </Grid>
                         <Grid size={{ xs: 12 }}>
@@ -154,6 +206,18 @@ const VehiculoFormPage = () => {
                         </Grid>
                     </Grid>
                 </Box>
+                <CreateModeloModal
+                    open={openCrearModelo}
+                    onClose={() => setOpenCrearModelo(false)}
+                    initialText={modeloInput.trim()}
+                    onCreated={(created: Modelo) => {
+                        setOpenCrearModelo(false);
+                        setValue('modelo_id', created.id);
+                        setModelos((current) => [created, ...current]);
+                        setModeloInput(created.modelo);
+                        toast.success('Modelo creado y seleccionado');
+                    }}
+                />
             </Paper>
         </Box>
     );

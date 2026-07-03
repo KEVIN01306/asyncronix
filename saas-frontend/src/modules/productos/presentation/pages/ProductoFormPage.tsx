@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Paper, TextField, Stack, Button, MenuItem } from '@mui/material';
+import { Box, Typography, Paper, TextField, Stack, Button, MenuItem, Autocomplete } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
@@ -14,16 +14,21 @@ import { marcasRepository } from '../../../marcas/infrastructure/marcas.reposito
 import type { Categoria } from '../../../categorias/domain/interfaces/categoria.interface';
 import type { Marca } from '../../../marcas/domain/interface/marca.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { formatearJerarquiaTexto } from '../../../categorias/presentation/hooks/useJerarquiaTexto';
+
+interface CategoriaConRuta extends Categoria {
+    ruta: string;
+}
 
 const ProductoFormPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEdit = Boolean(id);
     const [loading, setLoading] = useState(isEdit);
-    const [categorias, setCategorias] = useState<Categoria[]>([]);
+    const [categorias, setCategorias] = useState<CategoriaConRuta[]>([]);
     const [marcas, setMarcas] = useState<Marca[]>([]);
 
-    const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<ProductoFormValues>({
+    const { register, control, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<ProductoFormValues>({
         resolver: zodResolver(productoSchema),
         defaultValues: {
             categoria_id: '',
@@ -40,7 +45,19 @@ const ProductoFormPage = () => {
                     CategoriaRepository.listar(100, 0),
                     marcasRepository.listar(100, 0)
                 ]);
-                setCategorias(categoriaResponse.data);
+                const categoriasConRuta = await Promise.all(
+                    categoriaResponse.data.map(async (categoria) => {
+                        try {
+                            const jerarquia = await CategoriaRepository.obtenerConJerarquia(categoria.id);
+                            const ruta = formatearJerarquiaTexto(jerarquia.data.jerarquia) || categoria.categoria;
+                            return { ...categoria, ruta };
+                        } catch {
+                            return { ...categoria, ruta: categoria.categoria };
+                        }
+                    })
+                );
+
+                setCategorias(categoriasConRuta);
                 setMarcas(marcaResponse.data);
             } catch (error) {
                 console.error("Error al listar categorías o marcas:", error);
@@ -49,7 +66,6 @@ const ProductoFormPage = () => {
             if (isEdit && id) {
                 try {
                     const product = await ProductoRepository.obtener(id);
-                    console.log(product)
                     setValue('categoria_id', product.categoria_id);
                     setValue('marca_id', product.marca_id);
                     setValue('nombre', product.nombre);
@@ -104,21 +120,27 @@ const ProductoFormPage = () => {
 
                 <Box component="form" onSubmit={handleSubmit(onSubmit)}>
                     <Stack spacing={3}>
-                        <TextField
-                            select
-                            label="Categoría"
-                            fullWidth
-                            {...register('categoria_id')}
-                            error={!!errors.categoria_id}
-                            helperText={errors.categoria_id?.message}
-                        >
-                            <MenuItem value="">Selecciona una categoría</MenuItem>
-                            {categorias.map((categoria) => (
-                                <MenuItem key={categoria.id} value={categoria.id}>
-                                    {categoria.categoria}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                        <Controller
+                            name="categoria_id"
+                            control={control}
+                            render={({ field }) => (
+                                <Autocomplete
+                                    options={categorias}
+                                    value={categorias.find((categoria) => categoria.id === field.value) ?? null}
+                                    onChange={(_event, value) => field.onChange(value?.id ?? '')}
+                                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                                    getOptionLabel={(option) => option.ruta}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Categoría"
+                                            error={!!errors.categoria_id}
+                                            helperText={errors.categoria_id?.message}
+                                        />
+                                    )}
+                                />
+                            )}
+                        />
 
                         <TextField
                             select

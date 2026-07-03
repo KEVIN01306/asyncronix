@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
-import { ModelosListPage, ModeloDetailPage } from './modelos.lazy';
+import { ModelosListPage, ModeloDetailPage, ModelosCreatePage } from './modelos.lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 
 export const modelosRoutes: RouteObject[] = [
@@ -9,6 +9,11 @@ export const modelosRoutes: RouteObject[] = [
             { index: true, element: (
                 <RouteProtector requiredPermission="VER_MODELOS">
                     <ModelosListPage />
+                </RouteProtector>
+            )},
+            { path: 'nuevo', element: (
+                <RouteProtector requiredPermission="CREAR_MODELO">
+                    <ModelosCreatePage />
                 </RouteProtector>
             )},
             { path: ':id', element: (

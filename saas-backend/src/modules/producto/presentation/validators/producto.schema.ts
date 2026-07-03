@@ -4,7 +4,6 @@ const productoBaseSchema = z.object({
     categoria_id: z.string().uuid({ message: 'Selecciona una categoría válida' }),
     marca_id: z.string().uuid({ message: 'Selecciona una marca válida' }),
     nombre: z.string().min(3, 'El nombre del producto es obligatorio').max(150),
-    codigo: z.string().max(100).optional().nullable(),
 });
 
 export const productoCrearSchema = productoBaseSchema;
@@ -23,5 +22,5 @@ export const productoListarQuerySchema = z.object({
     offset: z.coerce.number().min(0).optional().default(0),
     categoria_id: z.string().uuid().optional(),
     q: z.string().trim().optional(),
-    codigo: z.string().trim().optional(),
+    sku: z.string().trim().optional(),
 });

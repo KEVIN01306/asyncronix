@@ -27,10 +27,10 @@ const ProductosListPage = () => {
     const [loading, setLoading] = useState(true);
     const [tabIndex, setTabIndex] = useState(0);
     const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('q') || '');
-    const [codigoFilter, setCodigoFilter] = useState<string>(() => searchParams.get('codigo') || '');
+    const [skuFilter, setSkuFilter] = useState<string>(() => searchParams.get('sku') || '');
     const [categoriaFilter, setCategoriaFilter] = useState<string>(() => searchParams.get('categoria_id') || '');
     const [filterModalOpen, setFilterModalOpen] = useState(false);
-    const [tempCodigoFilter, setTempCodigoFilter] = useState(codigoFilter);
+    const [tempSkuFilter, setTempSkuFilter] = useState(skuFilter);
     const [tempCategoriaFilter, setTempCategoriaFilter] = useState(categoriaFilter);
 
     const limit = parseInt(searchParams.get('limit') || '10', 10);
@@ -39,6 +39,7 @@ const ProductosListPage = () => {
     const abortableFetch = useAbortableFetch();
 
     const columns = [
+        { id: 'sku', name: 'SKU' },
         { id: 'nombre', name: 'Nombre' },
         {
             id: 'categoria',
@@ -84,7 +85,7 @@ const ProductosListPage = () => {
     const fetchProductos = useCallback(async (signal: AbortSignal) => {
         setLoading(true);
         try {
-            const response = await ProductoRepository.listar(limit, offset, categoriaFilter || undefined, debouncedSearchQuery || undefined, codigoFilter || undefined, signal);
+            const response = await ProductoRepository.listar(limit, offset, categoriaFilter || undefined, debouncedSearchQuery || undefined, skuFilter || undefined, signal);
             setProductos(response.data);
             setTotal(response.meta.total);
         } catch (error) {
@@ -95,7 +96,7 @@ const ProductosListPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [limit, offset, categoriaFilter, debouncedSearchQuery, codigoFilter]);
+    }, [limit, offset, categoriaFilter, debouncedSearchQuery, skuFilter]);
 
     useEffect(() => {
         fetchCategorias();
@@ -113,19 +114,19 @@ const ProductosListPage = () => {
     }, [searchParams, searchQuery]);
 
     const handleApplyFilters = () => {
-        setCodigoFilter(tempCodigoFilter);
+        setSkuFilter(tempSkuFilter);
         setCategoriaFilter(tempCategoriaFilter);
         const params: any = { limit: limit.toString(), offset: '0' };
         if (tempCategoriaFilter) params.categoria_id = tempCategoriaFilter;
         if (debouncedSearchQuery) params.q = debouncedSearchQuery;
-        if (tempCodigoFilter) params.codigo = tempCodigoFilter;
+        if (tempSkuFilter) params.sku = tempSkuFilter;
         setSearchParams(params);
         setFilterModalOpen(false);
     };
 
     const handleClearFilters = () => {
-        setTempCodigoFilter('');
-        setCodigoFilter('');
+        setTempSkuFilter('');
+        setSkuFilter('');
         setTempCategoriaFilter('');
         setCategoriaFilter('');
         setSearchQuery('');
@@ -155,7 +156,7 @@ const ProductosListPage = () => {
                             fullWidth
                             value={searchQuery}
                             label="Buscar productos"
-                            placeholder="Nombre o código"
+                            placeholder="Nombre o SKU"
                             onChange={(event) => {
                                 const value = event.target.value;
                                 setSearchQuery(value);
@@ -164,7 +165,7 @@ const ProductosListPage = () => {
                                 if (value.trim().length > 0) {
                                     params.q = value;
                                 }
-                                if (codigoFilter) params.codigo = codigoFilter;
+                                if (skuFilter) params.sku = skuFilter;
                                 setSearchParams(params);
                             }}
                             InputProps={{
@@ -219,10 +220,10 @@ const ProductosListPage = () => {
                             </TextField>
                             <TextField
                                 fullWidth
-                                label="Código del producto"
-                                value={tempCodigoFilter}
-                                onChange={(e) => setTempCodigoFilter(e.target.value)}
-                                placeholder="Ingresa el código..."
+                                label="SKU del producto"
+                                value={tempSkuFilter}
+                                onChange={(e) => setTempSkuFilter(e.target.value)}
+                                placeholder="Ingresa el SKU..."
                                 margin="normal"
                             />
                         </DialogContent>
@@ -252,14 +253,14 @@ const ProductosListPage = () => {
                                         const params: any = { limit: limit.toString(), offset: newOffset.toString() };
                                         if (categoriaFilter) params.categoria_id = categoriaFilter;
                                         if (debouncedSearchQuery) params.q = debouncedSearchQuery;
-                                        if (codigoFilter) params.codigo = codigoFilter;
+                                        if (skuFilter) params.sku = skuFilter;
                                         setSearchParams(params);
                                     },
                                     onRowsPerPageChange: (newLimit) => {
                                         const params: any = { limit: newLimit.toString(), offset: '0' };
                                         if (categoriaFilter) params.categoria_id = categoriaFilter;
                                         if (debouncedSearchQuery) params.q = debouncedSearchQuery;
-                                        if (codigoFilter) params.codigo = codigoFilter;
+                                        if (skuFilter) params.sku = skuFilter;
                                         setSearchParams(params);
                                     }
                                 }}

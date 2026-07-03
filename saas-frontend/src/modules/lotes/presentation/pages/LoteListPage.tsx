@@ -20,8 +20,8 @@ const LoteListPage = () => {
 
     // Temp staged filters for modal
     const [tempCodigoLote, setTempCodigoLote] = useState('');
-    const [tempProductoCodigo, setTempProductoCodigo] = useState('');
-    const [tempCodigoSecuencial, setTempCodigoSecuencial] = useState('');
+    const [tempProductoSku, setTempProductoSku] = useState('');
+    const [tempVarianteCorrelativo, setTempVarianteCorrelativo] = useState('');
     const [tempFechaVencimientoDesde, setTempFechaVencimientoDesde] = useState('');
     const [tempFechaVencimientoHasta, setTempFechaVencimientoHasta] = useState('');
     const [tempCreatedAtDesde, setTempCreatedAtDesde] = useState('');
@@ -57,8 +57,8 @@ const LoteListPage = () => {
             const filters: Record<string, any> = {};
             if (paramsObj.q) filters.q = paramsObj.q;
             if (paramsObj.codigo_lote) filters.codigo_lote = paramsObj.codigo_lote;
-            if (paramsObj.producto_codigo) filters.producto_codigo = paramsObj.producto_codigo;
-            if (paramsObj.codigo_secuencial) filters.codigo_secuencial = paramsObj.codigo_secuencial;
+            if (paramsObj.producto_sku) filters.producto_sku = paramsObj.producto_sku;
+            if (paramsObj.variante_correlativo) filters.variante_correlativo = paramsObj.variante_correlativo;
             if (paramsObj.fecha_vencimiento_from) filters.fecha_vencimiento_from = paramsObj.fecha_vencimiento_from;
             if (paramsObj.fecha_vencimiento_to) filters.fecha_vencimiento_to = paramsObj.fecha_vencimiento_to;
             if (paramsObj.created_at_from) filters.created_at_from = paramsObj.created_at_from;
@@ -121,8 +121,8 @@ const LoteListPage = () => {
                     <Button variant="outlined" startIcon={<FilterList />} onClick={() => {
                         const params = Object.fromEntries(searchParams.entries());
                         setTempCodigoLote(params.codigo_lote || '');
-                        setTempProductoCodigo(params.producto_codigo || '');
-                        setTempCodigoSecuencial(params.codigo_secuencial || '');
+                        setTempProductoSku(params.producto_sku || '');
+                        setTempVarianteCorrelativo(params.variante_correlativo || '');
                         setTempFechaVencimientoDesde(params.fecha_vencimiento_from || '');
                         setTempFechaVencimientoHasta(params.fecha_vencimiento_to || '');
                         setTempCreatedAtDesde(params.created_at_from || '');
@@ -170,8 +170,8 @@ const LoteListPage = () => {
                 <DialogContent>
                     <Box display="flex" flexDirection="column" gap={2} mt={1}>
                         <TextField label="Código lote" value={tempCodigoLote} onChange={(e) => setTempCodigoLote(e.target.value)} />
-                        <TextField label="Código producto" value={tempProductoCodigo} onChange={(e) => setTempProductoCodigo(e.target.value)} />
-                        <TextField label="Código secuencial (variante)" value={tempCodigoSecuencial} onChange={(e) => setTempCodigoSecuencial(e.target.value)} />
+                        <TextField label="SKU producto" value={tempProductoSku} onChange={(e) => setTempProductoSku(e.target.value)} />
+                        <TextField label="Correlativo variante" value={tempVarianteCorrelativo} onChange={(e) => setTempVarianteCorrelativo(e.target.value)} />
 
                         <Box display="flex" gap={2}>
                             <TextField label="Vencimiento desde" type="date" value={tempFechaVencimientoDesde} onChange={(e) => setTempFechaVencimientoDesde(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
@@ -189,8 +189,8 @@ const LoteListPage = () => {
                     <Button onClick={() => {
                         // clear temp and applied filters
                         setTempCodigoLote('');
-                        setTempProductoCodigo('');
-                        setTempCodigoSecuencial('');
+                        setTempProductoSku('');
+                        setTempVarianteCorrelativo('');
                         setTempFechaVencimientoDesde('');
                         setTempFechaVencimientoHasta('');
                         setTempCreatedAtDesde('');
@@ -207,8 +207,8 @@ const LoteListPage = () => {
                         const params: Record<string, string> = { limit: limit.toString(), offset: '0' };
                         if (current.q) params.q = current.q;
                         if (tempCodigoLote) params.codigo_lote = tempCodigoLote;
-                        if (tempProductoCodigo) params.producto_codigo = tempProductoCodigo;
-                        if (tempCodigoSecuencial) params.codigo_secuencial = tempCodigoSecuencial;
+                        if (tempProductoSku) params.producto_sku = tempProductoSku;
+                        if (tempVarianteCorrelativo) params.variante_correlativo = tempVarianteCorrelativo;
                         if (tempFechaVencimientoDesde) params.fecha_vencimiento_from = tempFechaVencimientoDesde;
                         if (tempFechaVencimientoHasta) params.fecha_vencimiento_to = tempFechaVencimientoHasta;
                         if (tempCreatedAtDesde) params.created_at_from = tempCreatedAtDesde;

@@ -2,13 +2,19 @@ import { Router } from "express";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { modeloController } from "../modelo.module.js";
-import { modeloListQuerySchema } from "./validators/modelo.schema.js";
+import { modeloListQuerySchema, modeloCrearPorPinSchema } from "./validators/modelo.schema.js";
 
 const router = Router();
 const validar = new ValidarMiddleware();
 const auth = new AuthMiddleware();
 
 router.use(auth.protegerRuta);
+
+router.post(
+    "/",
+    validar.validarBody(modeloCrearPorPinSchema),
+    modeloController.crearPorPin
+);
 
 router.get("/",
     auth.verificarPermiso(['VER_MODELOS']),
