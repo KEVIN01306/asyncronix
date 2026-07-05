@@ -12,6 +12,11 @@ export class NegocioRepository {
         const response = await api.put('/negocios/me', data);
         return response.data;
     }
+
+    async cambiarMoneda(moneda_id: string): Promise<Negocio> {
+        const response = await api.put('/negocios/me/moneda', { moneda_id });
+        return response.data;
+    }
 }
 
 export const negocioRepository = new NegocioRepository();   

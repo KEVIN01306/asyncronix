@@ -16,8 +16,20 @@ class JwtProvider {
         this.issuer = process.env.JWT_ISS;
         this.audience = process.env.JWT_AUD;
     }
-    async generateTokens(userId: string, roles: string[], permisos: string[], negocio_id: string, sucursal_id: string) {
-        const accessToken = await new SignJWT({ roles, permisos, negocio_id, sucursal_id })
+    async generateTokens(
+        userId: string,
+        roles: string[],
+        permisos: string[],
+        negocio_id: string,
+        sucursal_id: string | null,
+        pais: any | null = null,
+        moneda: any | null = null
+    ) {
+        const payload: any = { roles, permisos, negocio_id, sucursal_id };
+        if (pais) payload.pais = pais;
+        if (moneda) payload.moneda = moneda;
+
+        const accessToken = await new SignJWT(payload)
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
             .setIssuer(this.issuer!)

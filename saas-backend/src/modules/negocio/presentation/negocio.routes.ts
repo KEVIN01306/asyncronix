@@ -3,7 +3,7 @@ import { negocioController } from "../negocio.module.js";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
-import { negocioActualizarSchema, negocioCrearSchema } from "./validators/negocio.validator.js";
+import { negocioActualizarSchema, negocioCrearSchema, negocioCambiarMonedaSchema } from "./validators/negocio.validator.js";
 
 const router = Router()
 
@@ -22,6 +22,12 @@ router.put("/me",
     FileUploadMiddleware.single('logo', 'negocios'),
     validarMiddleware.validarBody(negocioActualizarSchema),
     negocioController.editMe
+);
+
+router.put("/me/moneda",
+    authMiddleware.verificarPermiso(['NEGOCIOS_CAMBIAR_MONEDA']),
+    validarMiddleware.validarBody(negocioCambiarMonedaSchema),
+    negocioController.cambiarMoneda
 );
 
 router.get("/:id",

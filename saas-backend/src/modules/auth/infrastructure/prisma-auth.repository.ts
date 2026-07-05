@@ -49,6 +49,30 @@ export class PrismaAuthRespository implements AuthRepository {
                         id: true,
                         nombre_comercial: true,
                         logo_url: true,
+                        pais: {
+                            select: {
+                                id: true,
+                                codigo_iso: true,
+                                nombre: true,
+                                codigo_tel: true,
+                                moneda_id: true,
+                                locale: true,
+                                activo: true,
+                                created_at: true,
+                                updated_at: true,
+                            }
+                        },
+                        moneda: {
+                            select: {
+                                id: true,
+                                codigo: true,
+                                nombre: true,
+                                simbolo: true,
+                                activo: true,
+                                created_at: true,
+                                updated_at: true,
+                            }
+                        },
                     }
                 },
             }
@@ -76,7 +100,31 @@ export class PrismaAuthRespository implements AuthRepository {
                     select: {
                         id: true,
                         nombre_comercial: true,
-                        logo_url: true
+                        logo_url: true,
+                        pais: {
+                            select: {
+                                id: true,
+                                codigo_iso: true,
+                                nombre: true,
+                                codigo_tel: true,
+                                moneda_id: true,
+                                locale: true,
+                                activo: true,
+                                created_at: true,
+                                updated_at: true,
+                            }
+                        },
+                        moneda: {
+                            select: {
+                                id: true,
+                                codigo: true,
+                                nombre: true,
+                                simbolo: true,
+                                activo: true,
+                                created_at: true,
+                                updated_at: true,
+                            }
+                        },
                     }
                 }
             }

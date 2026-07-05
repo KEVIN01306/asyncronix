@@ -8,8 +8,33 @@ export interface Negocio {
     slogan: string | null;
     slug: string;
     datos_facturacion_json: any | null;
-    activo: boolean
+    pais_id: string | null;
+    moneda_id: string | null;
+    instagram_id: string | null;
+    facebook_id: string | null;
+    activo: boolean;
     fecha_registro: Date | null;
+    created_at: Date;
+    updated_at: Date;
+    pais?: {
+        id: string;
+        codigo_iso: string;
+        nombre: string;
+        codigo_tel: string;
+        moneda_id: string;
+        activo: boolean;
+        created_at: Date;
+        updated_at: Date;
+    } | null;
+    moneda?: {
+        id: string;
+        codigo: string;
+        nombre: string;
+        simbolo: string;
+        activo: boolean;
+        created_at: Date;
+        updated_at: Date;
+    } | null;
 }
 
 export interface NegocioSimple {

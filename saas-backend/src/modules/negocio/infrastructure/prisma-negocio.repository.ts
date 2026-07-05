@@ -13,6 +13,10 @@ export class PrismaNegocioRepository implements NegocioRepository {
                 data: {
                     ...data,
                     fecha_registro: new Date()
+                },
+                include: {
+                    pais: true,
+                    moneda: true,
                 }
             });
 
@@ -26,7 +30,11 @@ export class PrismaNegocioRepository implements NegocioRepository {
         try {
             const negocio = await this.prisma.negocio.update({
                 where: { id },
-                data
+                data,
+                include: {
+                    pais: true,
+                    moneda: true,
+                }
             });
 
             return NegocioMapper.mapDetalle(negocio);
@@ -38,7 +46,11 @@ export class PrismaNegocioRepository implements NegocioRepository {
     async obtener(id: string): Promise<NegocioObtenidoDetalle | null> {
         try {
             const negocio = await this.prisma.negocio.findUnique({
-                where: { id }
+                where: { id },
+                include: {
+                    pais: true,
+                    moneda: true,
+                }
             });
 
             if (!negocio) return null;
@@ -52,7 +64,11 @@ export class PrismaNegocioRepository implements NegocioRepository {
     async obtenerPorWaId(wa_id: string): Promise<NegocioObtenidoDetalle | null> {
         try {
             const negocio = await this.prisma.negocio.findUnique({
-                where: { wa_id }
+                where: { wa_id },
+                include: {
+                    pais: true,
+                    moneda: true,
+                }
             });
 
             if (!negocio) return null;
@@ -66,10 +82,31 @@ export class PrismaNegocioRepository implements NegocioRepository {
     async listar(wa_id: string): Promise<NegocioObtenidoDetalle | null> {
         try {
             const negocio = await this.prisma.negocio.findUnique({
-                where: { wa_id }
+                where: { wa_id },
+                include: {
+                    pais: true,
+                    moneda: true,
+                }
             });
 
             if (!negocio) return null;
+
+            return NegocioMapper.mapDetalle(negocio);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async cambiarMoneda(id: string, moneda_id: string): Promise<NegocioObtenidoDetalle> {
+        try {
+            const negocio = await this.prisma.negocio.update({
+                where: { id },
+                data: { moneda_id },
+                include: {
+                    pais: true,
+                    moneda: true,
+                }
+            });
 
             return NegocioMapper.mapDetalle(negocio);
         } catch (error) {

@@ -8,6 +8,44 @@ datasource db {
 }
 
 // ==============================================================
+// ADICIÓN: GEOGRAFÍA E INTERNACIONALIZACIÓN (GLOBAL)
+// ==============================================================
+
+model Pais {
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  codigo_iso String   @unique // Ej: "GT", "MX", "HN", "US"
+  nombre     String   @db.VarChar(100)
+  codigo_tel String   @db.VarChar(10) // Ej: "+502", "+52"
+  moneda_id  String   @db.Char(36)
+  locale     String?   @db.VarChar(10) // Ej: "es-GT", "es-MX", "en-US"
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  moneda   Moneda    @relation(fields: [moneda_id], references: [id])
+  negocios Negocio[]
+
+  @@map("paises")
+}
+
+model Moneda {
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  codigo     String   @unique // Ej: "GTQ", "USD", "MXN", "HNL"
+  nombre     String   @db.VarChar(50)
+  simbolo    String   @db.VarChar(10) // Ej: "Q", "$", "L"
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  paises            Pais[]
+  cuentas_bancarias CuentaBancaria[]
+  transacciones     Transaccion[]
+  negocios          Negocio[]
+
+  @@map("monedas")
+}
+
+// ==============================================================
 // 1. NÚCLEO SAAS, MÓDULOS Y AUTENTICACIÓN
 // ==============================================================
 
@@ -43,6 +81,8 @@ model Permiso {
 
 model Negocio {
   id                     String    @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  pais_id                String?   @db.Char(36)
+  moneda_id              String?   @db.Char(36)
   nombre                 String
   codigo                 String?   @db.VarChar(10)
   slug                   String    @unique
@@ -61,28 +101,31 @@ model Negocio {
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
 
-  modulos       Modulo[]
-  permisos      Permiso[]           @relation("NegocioPermisos")
-  sucursales    Sucursal[]
-  usuarios      Usuario[]
-  clientes      Cliente[]
-  roles         Rol[]
-  motos         Vehiculo[]
-  categorias    CategoriaProducto[]
-  productos     Producto[]
-  lotes         Lote[]
-  ventas        Venta[]
-  pre_ventas    PreVenta[]
-  servicios     Servicio[]
-  citas         Cita[]
-  tipos_serv    TipoServicio[]
-  opciones_serv OpcionServicio[]
-  checklist     ChecklistItem[]
-  proveedores   Proveedor[]
+  modulos              Modulo[]
+  permisos             Permiso[]              @relation("NegocioPermisos")
+  sucursales           Sucursal[]
+  usuarios             Usuario[]
+  clientes             Cliente[]
+  roles                Rol[]
+  motos                Vehiculo[]
+  categorias           CategoriaProducto[]
+  productos            Producto[]
+  lotes                Lote[]
+  ventas               Venta[]
+  pre_ventas           PreVenta[]
+  servicios            Servicio[]
+  citas                Cita[]
+  tipos_serv           TipoServicio[]
+  opciones_serv        OpcionServicio[]
+  checklist            ChecklistItem[]
+  proveedores          Proveedor[]
   cajas                Caja[]
   cuentas_bancarias    CuentaBancaria[]
   categorias_trans_neg CategoriaTransaccion[]
   transacciones        Transaccion[]
+  pais                 Pais?                  @relation(fields: [pais_id], references: [id])
+  moneda               Moneda?                @relation(fields: [moneda_id], references: [id])
+
   @@map("negocios")
 }
 
@@ -97,18 +140,18 @@ model Sucursal {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  negocio          Negocio           @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  usuarios         Usuario[]
-  ventas           Venta[]
-  pre_ventas       PreVenta[]
-  servicios        Servicio[]
-  citas            Cita[]
-  lotes            Lote[]
-  cajas            Caja[]
+  negocio           Negocio                  @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  usuarios          Usuario[]
+  ventas            Venta[]
+  pre_ventas        PreVenta[]
+  servicios         Servicio[]
+  citas             Cita[]
+  lotes             Lote[]
+  cajas             Caja[]
   cuentas_bancarias SucursalCuentaBancaria[]
-  transacciones    Transaccion[]
-  trasladosOrigen  Traslado[]        @relation("SucursalOrigen")
-  trasladosDestino Traslado[]        @relation("SucursalDestino")
+  transacciones     Transaccion[]
+  trasladosOrigen   Traslado[]               @relation("SucursalOrigen")
+  trasladosDestino  Traslado[]               @relation("SucursalDestino")
 
   @@index([negocio_id])
   @@map("sucursales")
@@ -157,14 +200,14 @@ model Usuario {
   sessions Session?
 
   // Relaciones inversas corregidas
-  servicios_mecanico ServicioVehiculo[] @relation(name: "ServicioMecanico")
-  ventas_vendedor    Venta[]    @relation(name: "VentaVendedor")
-  trasladosCreados  Traslado[] @relation(name: "TrasladosCreados")
-  trasladosRecibidos Traslado[] @relation(name: "TrasladosRecibidos")
-  servicios_recepcionista Servicio[] @relation(name: "ServicioRecepcionista")
-  ventas_autorizadas Venta[] @relation("VentaAutorizador")
-  pre_ventas PreVenta[] @relation("PreVentaUsuario")
-  transacciones_hechas Transaccion[] @relation("TransaccionesUsuario")
+  servicios_mecanico      ServicioVehiculo[] @relation(name: "ServicioMecanico")
+  ventas_vendedor         Venta[]            @relation(name: "VentaVendedor")
+  trasladosCreados        Traslado[]         @relation(name: "TrasladosCreados")
+  trasladosRecibidos      Traslado[]         @relation(name: "TrasladosRecibidos")
+  servicios_recepcionista Servicio[]         @relation(name: "ServicioRecepcionista")
+  ventas_autorizadas      Venta[]            @relation("VentaAutorizador")
+  pre_ventas              PreVenta[]         @relation("PreVentaUsuario")
+  transacciones_hechas    Transaccion[]      @relation("TransaccionesUsuario")
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -184,11 +227,11 @@ model Cliente {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  negocio   Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  motos     Vehiculo[]
-  citas     Cita[]     @relation("CitaCliente")
-  servicios Servicio[] @relation("ServicioCliente")
-  ventas    Venta[]    @relation("VentaCliente")
+  negocio    Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  motos      Vehiculo[]
+  citas      Cita[]     @relation("CitaCliente")
+  servicios  Servicio[] @relation("ServicioCliente")
+  ventas     Venta[]    @relation("VentaCliente")
   pre_ventas PreVenta[] @relation("PreVentaCliente")
 
   @@unique([negocio_id, telefono])
@@ -219,13 +262,13 @@ model Rol {
 // ==============================================================
 
 model Marca {
-  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  marca      String   @unique
-  activo     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id         String     @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  marca      String     @unique
+  activo     Boolean    @default(true)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
   modelos    Modelo[]
-  Productos   Producto[]
+  Productos  Producto[]
 
   @@map("marcas")
 }
@@ -290,12 +333,12 @@ model Vehiculo {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  negocio       Negocio      @relation(fields: [negocio_id], references: [id])
-  modelo        Modelo       @relation(fields: [modelo_id], references: [id])
-  cliente       Cliente?     @relation(fields: [cliente_id], references: [id])
-  vehiculo_tipo VehiculoTipo @relation(fields: [vehiculo_tipo_id], references: [id])
-  servicioVehiculo     ServicioVehiculo[]
-  citas         Cita[]
+  negocio          Negocio            @relation(fields: [negocio_id], references: [id])
+  modelo           Modelo             @relation(fields: [modelo_id], references: [id])
+  cliente          Cliente?           @relation(fields: [cliente_id], references: [id])
+  vehiculo_tipo    VehiculoTipo       @relation(fields: [vehiculo_tipo_id], references: [id])
+  servicioVehiculo ServicioVehiculo[]
+  citas            Cita[]
 
   @@unique([negocio_id, placa])
   @@map("vehiculos")
@@ -343,30 +386,30 @@ model Cita {
 }
 
 model Servicio {
-  id                  String         @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id          String         @db.Char(36)
-  sucursal_id         String         @db.Char(36)
-  cliente_id          String?        @db.Char(36)
-  tipo_servicio_id    String?        @db.Char(36)
-  recepcionista_id    String?        @db.Char(36)
-  descripcion         String?        @db.Text
-  diagnostico         String?        @db.Text
-  observaciones       String?        @db.Text
-  firma_entrada       String?        @db.Text
-  firma_salida        String?        @db.Text
-  fecha_entrada       DateTime       @default(now())
-  fecha_salida        DateTime?
-  total               Float          @default(0)
-  documento_extra     String?        @db.VarChar(20)
-  nombre_extra        String?        @db.VarChar(255)
-  numero_extra        String?        @db.VarChar(20)  
-  activo              Boolean        @default(true)
-  efectivo_recibido   Float?
-  vuelto              Float?
-  MetodoPago          MetodoPago?     @default(EFECTIVO)
-  servicio_tipo       ServicioTipo   @default(VEHICULO)
-  created_at          DateTime       @default(now())
-  updated_at          DateTime       @updatedAt
+  id                String       @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id        String       @db.Char(36)
+  sucursal_id       String       @db.Char(36)
+  cliente_id        String?      @db.Char(36)
+  tipo_servicio_id  String?      @db.Char(36)
+  recepcionista_id  String?      @db.Char(36)
+  descripcion       String?      @db.Text
+  diagnostico       String?      @db.Text
+  observaciones     String?      @db.Text
+  firma_entrada     String?      @db.Text
+  firma_salida      String?      @db.Text
+  fecha_entrada     DateTime     @default(now())
+  fecha_salida      DateTime?
+  total             Float        @default(0)
+  documento_extra   String?      @db.VarChar(20)
+  nombre_extra      String?      @db.VarChar(255)
+  numero_extra      String?      @db.VarChar(20)
+  activo            Boolean      @default(true)
+  efectivo_recibido Float?
+  vuelto            Float?
+  MetodoPago        MetodoPago?  @default(EFECTIVO)
+  servicio_tipo     ServicioTipo @default(VEHICULO)
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
 
   negocio       Negocio       @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal      @relation(fields: [sucursal_id], references: [id])
@@ -374,32 +417,31 @@ model Servicio {
   recepcionista Usuario?      @relation(name: "ServicioRecepcionista", fields: [recepcionista_id], references: [id])
   tipo_servicio TipoServicio? @relation(fields: [tipo_servicio_id], references: [id])
 
-  servicioVehiculo ServicioVehiculo? @relation(name: "ServicioServicioVehiculo")
-  imagenes                Imagen[]
-  checklist               ChecklistRespuesta[]
-  tareas                  ServicioTarea[]
-  repuestos               ServicioRepuesto[]
-  ServicioRepuestoCliente ServicioRepuestoCliente[]
-  CambiosSiguienteServicio   CambiosSiguienteServicio[]
-  
+  servicioVehiculo         ServicioVehiculo?          @relation(name: "ServicioServicioVehiculo")
+  imagenes                 Imagen[]
+  checklist                ChecklistRespuesta[]
+  tareas                   ServicioTarea[]
+  repuestos                ServicioRepuesto[]
+  ServicioRepuestoCliente  ServicioRepuestoCliente[]
+  CambiosSiguienteServicio CambiosSiguienteServicio[]
+
   @@map("servicios")
 }
 
-
 model ServicioVehiculo {
   id                 String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  servicio_id         String   @unique @db.Char(36)
-  vehiculo_id         String   @db.Char(36)
-  mecanico_id           String?   @db.Char(36)
+  servicio_id        String   @unique @db.Char(36)
+  vehiculo_id        String   @db.Char(36)
+  mecanico_id        String?  @db.Char(36)
   kilometraje        Int
   proximoKilometraje Int?
-  created_at          DateTime       @default(now())
-  updated_at          DateTime       @updatedAt
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
-  estado             EstadoServicioVehiculo @default(RECEPCION)
-  servicio           Servicio @relation(name: "ServicioServicioVehiculo", fields: [servicio_id], references: [id], onDelete: Cascade)
-  vehiculo           Vehiculo @relation(fields: [vehiculo_id], references: [id], onDelete: Cascade)
-  mecanico           Usuario? @relation(name: "ServicioMecanico", fields: [mecanico_id], references: [id], onDelete: Cascade)
+  estado   EstadoServicioVehiculo @default(RECEPCION)
+  servicio Servicio               @relation(name: "ServicioServicioVehiculo", fields: [servicio_id], references: [id], onDelete: Cascade)
+  vehiculo Vehiculo               @relation(fields: [vehiculo_id], references: [id], onDelete: Cascade)
+  mecanico Usuario?               @relation(name: "ServicioMecanico", fields: [mecanico_id], references: [id], onDelete: Cascade)
 
   @@map("servicio_vehiculo")
 }
@@ -539,19 +581,19 @@ model Proveedor {
 }
 
 model CategoriaProducto {
-  id                String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id        String?  @db.Char(36)
-  categoria         String
-  default_categoria Boolean  @default(false)
-  activo            Boolean  @default(true)
-  categoria_padre_id      String?   @db.Char(36)
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  id                 String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id         String?  @db.Char(36)
+  categoria          String
+  default_categoria  Boolean  @default(false)
+  activo             Boolean  @default(true)
+  categoria_padre_id String?  @db.Char(36)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
-  categoria_padre    CategoriaProducto?  @relation("CategoriaHijos", fields: [categoria_padre_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  subcategorias      CategoriaProducto[] @relation("CategoriaHijos")  
-  negocio   Negocio?   @relation(fields: [negocio_id], references: [id])
-  productos Producto[]
+  categoria_padre CategoriaProducto?  @relation("CategoriaHijos", fields: [categoria_padre_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subcategorias   CategoriaProducto[] @relation("CategoriaHijos")
+  negocio         Negocio?            @relation(fields: [negocio_id], references: [id])
+  productos       Producto[]
 
   @@unique([negocio_id, categoria])
   @@map("categorias_producto")
@@ -560,8 +602,8 @@ model CategoriaProducto {
 model Producto {
   id           String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id   String   @db.Char(36)
-  sku       String?  @db.VarChar(100)
-  correlativo String?  @db.VarChar(20)
+  sku          String?  @db.VarChar(100)
+  correlativo  String?  @db.VarChar(20)
   categoria_id String   @db.Char(36)
   marca_id     String?  @db.Char(36)
   nombre       String   @db.VarChar(100)
@@ -572,41 +614,40 @@ model Producto {
 
   negocio           Negocio            @relation(fields: [negocio_id], references: [id])
   categoria         CategoriaProducto  @relation(fields: [categoria_id], references: [id])
-  marca             Marca?              @relation(fields: [marca_id], references: [id])
+  marca             Marca?             @relation(fields: [marca_id], references: [id])
   variantes         VarianteProducto[]
   productoAtributos ProductoAtributo[]
 
-  imagenes          ImagenProducto[]
-  
+  imagenes ImagenProducto[]
+
   @@unique([negocio_id, sku])
   @@map("productos")
 }
 
-
 model ImagenProducto {
-  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  producto_id String   @db.Char(36)
-  url         String   @db.Text
-  descripcion String?  @db.VarChar(255)
-  es_principal Boolean @default(false) 
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id           String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  producto_id  String   @db.Char(36)
+  url          String   @db.Text
+  descripcion  String?  @db.VarChar(255)
+  es_principal Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
-  producto    Producto @relation(fields: [producto_id], references: [id], onDelete: Cascade)
-  
-  variantes   VarianteProducto[]
+  producto Producto @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+
+  variantes VarianteProducto[]
 
   @@index([producto_id])
   @@map("imagenes_producto")
 }
 
 model Atributo {
-  id                String              @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id        String              @db.Char(36)
-  nombre            String              // Ej. "Viscosidad", "Talla", "Medida"
-  activo            Boolean             @default(true)
-  created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id String   @db.Char(36)
+  nombre     String // Ej. "Viscosidad", "Talla", "Medida"
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   valores           ValorAtributo[]
   productoAtributos ProductoAtributo[]
@@ -634,7 +675,7 @@ model VarianteProducto {
   producto_id     String   @db.Char(36)
   imagen_id       String?  @db.Char(36)
   sku             String   @db.VarChar(100)
-  correlativo     String? @unique @db.VarChar(20)
+  correlativo     String?  @unique @db.VarChar(20)
   codigo_barras   String?  @unique
   qr_codigo       String?  @unique
   precio_sugerido Float
@@ -643,18 +684,19 @@ model VarianteProducto {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  producto       Producto           @relation(fields: [producto_id], references: [id], onDelete: Cascade)
-  imagen         ImagenProducto?    @relation(fields: [imagen_id], references: [id], onDelete: SetNull)
-  valores        ValorAtributo[]
-  lotes          Lote[]
-  repuestos      ServicioRepuesto[]
-  venta_detalles VentaDetalle[]
+  producto           Producto           @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  imagen             ImagenProducto?    @relation(fields: [imagen_id], references: [id], onDelete: SetNull)
+  valores            ValorAtributo[]
+  lotes              Lote[]
+  repuestos          ServicioRepuesto[]
+  venta_detalles     VentaDetalle[]
   pre_venta_detalles PreVentaDetalle[]
 
-  @@index([producto_id])
   @@unique([producto_id, sku])
+  @@index([producto_id])
   @@map("variantes_producto")
 }
+
 model ValorAtributo {
   id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   atributo_id String   @db.Char(36)
@@ -691,8 +733,8 @@ model Lote {
   sucursal  Sucursal         @relation(fields: [sucursal_id], references: [id])
   proveedor Proveedor        @relation(fields: [proveedor_id], references: [id])
 
-  repuestos ServicioRepuesto[]
-  detalles  VentaDetalle[]
+  repuestos        ServicioRepuesto[]
+  detalles         VentaDetalle[]
   detallesTraslado DetalleTraslado[]
 
   @@index([variante_id])
@@ -712,20 +754,20 @@ model ServicioRepuesto {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
-  servicio Servicio          @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
-  lote     Lote?             @relation(fields: [lote_id], references: [id])
-  variante VarianteProducto  @relation(fields: [variante_id], references: [id])
+  servicio Servicio         @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
+  lote     Lote?            @relation(fields: [lote_id], references: [id])
+  variante VarianteProducto @relation(fields: [variante_id], references: [id])
 
   @@index([variante_id])
   @@map("servicio_repuestos")
 }
 
 model CambiosSiguienteServicio {
-  id                 String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  servicio_id        String   @db.Char(36)
-  item String   @db.VarChar(100)
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  servicio_id String   @db.Char(36)
+  item        String   @db.VarChar(100)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   servicio Servicio @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
 
@@ -733,33 +775,33 @@ model CambiosSiguienteServicio {
 }
 
 model Traslado {
-  id               String             @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  consecutivo      Int               @unique @default(autoincrement())
-  origen_id         String  @db.Char(36)
-  destino_id        String  @db.Char(36)
-  creador_id        String   @db.Char(36)
-  recibidor_id      String?  @db.Char(36)
-  estado           EstadoTraslado    @default(PENDIENTE) // PENDIENTE, COMPLETADO, CANCELADO
-  fecha_recibido    DateTime?
-  comentarios       String?            @db.Text
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  id             String         @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  consecutivo    Int            @unique @default(autoincrement())
+  origen_id      String         @db.Char(36)
+  destino_id     String         @db.Char(36)
+  creador_id     String         @db.Char(36)
+  recibidor_id   String?        @db.Char(36)
+  estado         EstadoTraslado @default(PENDIENTE) // PENDIENTE, COMPLETADO, CANCELADO
+  fecha_recibido DateTime?
+  comentarios    String?        @db.Text
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
 
-  creador          Usuario            @relation("TrasladosCreados", fields: [creador_id], references: [id])
-  recibidor        Usuario?           @relation("TrasladosRecibidos", fields: [recibidor_id], references: [id])
-  origen           Sucursal          @relation("SucursalOrigen", fields: [origen_id], references: [id])
-  destino          Sucursal          @relation("SucursalDestino", fields: [destino_id], references: [id])
-  detalles         DetalleTraslado[]
+  creador   Usuario           @relation("TrasladosCreados", fields: [creador_id], references: [id])
+  recibidor Usuario?          @relation("TrasladosRecibidos", fields: [recibidor_id], references: [id])
+  origen    Sucursal          @relation("SucursalOrigen", fields: [origen_id], references: [id])
+  destino   Sucursal          @relation("SucursalDestino", fields: [destino_id], references: [id])
+  detalles  DetalleTraslado[]
 }
 
 model DetalleTraslado {
-  id               String            @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  traslado_id       String  @db.Char(36)
-  lote_id           String  @db.Char(36)            // Lote de ORIGEN
-  cantidad         Int               // Cantidad que se va a mover
+  id          String @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  traslado_id String @db.Char(36)
+  lote_id     String @db.Char(36) // Lote de ORIGEN
+  cantidad    Int // Cantidad que se va a mover
 
-  traslado         Traslado          @relation(fields: [traslado_id], references: [id], onDelete: Cascade)
-  lote             Lote              @relation(fields: [lote_id], references: [id])
+  traslado Traslado @relation(fields: [traslado_id], references: [id], onDelete: Cascade)
+  lote     Lote     @relation(fields: [lote_id], references: [id])
 }
 
 // ==============================================================
@@ -767,29 +809,29 @@ model DetalleTraslado {
 // ==============================================================
 
 model Venta {
-  id          String      @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id  String      @db.Char(36)
-  sucursal_id String      @db.Char(36)
-  usuario_id  String      @db.Char(36)
-  cliente_id  String?     @db.Char(36)
-  autorizador_id  String?  @db.Char(36)
-  total       Float
-  total_costo Float
-  comentarios String?     @db.Text
-  efectivo_recibido      Float?
-  vuelto      Float?
-  estado      EstadoVenta @default(PENDIENTE)
-  activo      Boolean     @default(true)
-  metodo_pago MetodoPago  @default(EFECTIVO)
-  created_at  DateTime    @default(now())
-  updated_at  DateTime    @updatedAt
+  id                String      @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id        String      @db.Char(36)
+  sucursal_id       String      @db.Char(36)
+  usuario_id        String      @db.Char(36)
+  cliente_id        String?     @db.Char(36)
+  autorizador_id    String?     @db.Char(36)
+  total             Float
+  total_costo       Float
+  comentarios       String?     @db.Text
+  efectivo_recibido Float?
+  vuelto            Float?
+  estado            EstadoVenta @default(PENDIENTE)
+  activo            Boolean     @default(true)
+  metodo_pago       MetodoPago  @default(EFECTIVO)
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
 
-  negocio  Negocio        @relation(fields: [negocio_id], references: [id])
-  sucursal Sucursal       @relation(fields: [sucursal_id], references: [id])
-  usuario  Usuario        @relation("VentaVendedor", fields: [usuario_id], references: [id])
-  cliente  Cliente?       @relation("VentaCliente", fields: [cliente_id], references: [id])
-  autorizador  Usuario?   @relation("VentaAutorizador", fields: [autorizador_id], references: [id])
-  detalles VentaDetalle[]
+  negocio     Negocio        @relation(fields: [negocio_id], references: [id])
+  sucursal    Sucursal       @relation(fields: [sucursal_id], references: [id])
+  usuario     Usuario        @relation("VentaVendedor", fields: [usuario_id], references: [id])
+  cliente     Cliente?       @relation("VentaCliente", fields: [cliente_id], references: [id])
+  autorizador Usuario?       @relation("VentaAutorizador", fields: [autorizador_id], references: [id])
+  detalles    VentaDetalle[]
 
   @@map("ventas")
 }
@@ -815,37 +857,35 @@ model VentaDetalle {
   @@map("venta_detalles")
 }
 
-
-
 model PreVenta {
-  id          String           @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id  String           @db.Char(36)
-  sucursal_id String           @db.Char(36)
-  usuario_id  String           @db.Char(36)
-  cliente_id  String?          @db.Char(36)
-  activo      Boolean          @default(true)
-  created_at  DateTime         @default(now())
-  updated_at  DateTime         @updatedAt
+  id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id  String   @db.Char(36)
+  sucursal_id String   @db.Char(36)
+  usuario_id  String   @db.Char(36)
+  cliente_id  String?  @db.Char(36)
+  activo      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
-  negocio     Negocio          @relation(fields: [negocio_id], references: [id])
-  sucursal    Sucursal         @relation(fields: [sucursal_id], references: [id])
-  usuario     Usuario          @relation("PreVentaUsuario", fields: [usuario_id], references: [id])
-  cliente     Cliente?         @relation("PreVentaCliente", fields: [cliente_id], references: [id])
-  detalles    PreVentaDetalle[]
+  negocio  Negocio           @relation(fields: [negocio_id], references: [id])
+  sucursal Sucursal          @relation(fields: [sucursal_id], references: [id])
+  usuario  Usuario           @relation("PreVentaUsuario", fields: [usuario_id], references: [id])
+  cliente  Cliente?          @relation("PreVentaCliente", fields: [cliente_id], references: [id])
+  detalles PreVentaDetalle[]
 
   @@map("pre_ventas")
 }
 
 model PreVentaDetalle {
-  id           String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  pre_venta_id String   @db.Char(36)
-  variante_id  String   @db.Char(36)
+  id           String @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  pre_venta_id String @db.Char(36)
+  variante_id  String @db.Char(36)
   descripcion  String
   cantidad     Int
   precio       Float
 
-  pre_venta    PreVenta         @relation(fields: [pre_venta_id], references: [id], onDelete: Cascade)
-  variante     VarianteProducto @relation(fields: [variante_id], references: [id])
+  pre_venta PreVenta         @relation(fields: [pre_venta_id], references: [id], onDelete: Cascade)
+  variante  VarianteProducto @relation(fields: [variante_id], references: [id])
 
   @@map("pre_venta_detalles")
 }
@@ -865,30 +905,31 @@ model Imagen {
 }
 
 model Banco {
-  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  nombre     String   @unique
-  activo     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id               String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  nombre_comercial String   @unique
+  razon_social     String   @unique
+  activo           Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
-  cuentas    CuentaBancaria[]
+  cuentas CuentaBancaria[]
 
-  @@map("bancos") 
+  @@map("bancos")
 }
 
 model Caja {
   id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id  String   @db.Char(36)
   sucursal_id String   @db.Char(36)
-  nombre      String   // Ej: "Caja Principal", "Caja Virtual Efectivo"
+  nombre      String // Ej: "Caja Principal", "Caja Virtual Efectivo"
   tipo        TipoCaja @default(FISICA)
   saldo       Float    @default(0)
   activo      Boolean  @default(true)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  negocio     Negocio  @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  sucursal    Sucursal @relation(fields: [sucursal_id], references: [id], onDelete: Cascade)
+  negocio  Negocio  @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  sucursal Sucursal @relation(fields: [sucursal_id], references: [id], onDelete: Cascade)
 
   // Relaciones para auditoría de movimientos
   transaccionesOrigen  Transaccion[] @relation("OrigenCaja")
@@ -898,24 +939,27 @@ model Caja {
 }
 
 model CuentaBancaria {
-  id             String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id     String   @db.Char(36)
-  banco_id       String   @db.Char(36)
+  id             String             @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id     String             @db.Char(36)
+  banco_id       String             @db.Char(36)
+  moneda_id      String?            @db.Char(36)
   numero_cuenta  String
   nombre_titular String
-  saldo          Float    @default(0)
-  activo         Boolean  @default(true)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  tipo           TipoCuentaBancaria @default(MONETARIA)
+  saldo          Float              @default(0)
+  activo         Boolean            @default(true)
+  created_at     DateTime           @default(now())
+  updated_at     DateTime           @updatedAt
 
-  negocio        Negocio  @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  banco          Banco    @relation(fields: [banco_id], references: [id])
-  
+  negocio Negocio @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  banco   Banco   @relation(fields: [banco_id], references: [id])
+
   // Relación Muchos a Muchos implícita o explícita con sucursales
-  sucursales     SucursalCuentaBancaria[]
+  sucursales SucursalCuentaBancaria[]
 
   transaccionesOrigen  Transaccion[] @relation("OrigenCuenta")
   transaccionesDestino Transaccion[] @relation("DestinoCuenta")
+  moneda               Moneda?       @relation(fields: [moneda_id], references: [id])
 
   @@unique([negocio_id, numero_cuenta])
   @@map("cuentas_bancarias")
@@ -935,15 +979,15 @@ model SucursalCuentaBancaria {
 }
 
 model CategoriaTransaccion {
-  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id String?  @db.Char(36) // null si es una categoría global del sistema
-  nombre     String   // Ej: "Pago de Planilla", "Compra de Suministros", "Venta de Repuestos"
+  id         String         @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id String?        @db.Char(36) // null si es una categoría global del sistema
+  nombre     String // Ej: "Pago de Planilla", "Compra de Suministros", "Venta de Repuestos"
   tipo       TipoMovimiento
-  activo     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  activo     Boolean        @default(true)
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
 
-  negocio    Negocio? @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  negocio       Negocio?      @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   transacciones Transaccion[]
 
   @@unique([negocio_id, nombre])
@@ -951,40 +995,43 @@ model CategoriaTransaccion {
 }
 
 model Transaccion {
-  id                     String                @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id             String                @db.Char(36)
-  sucursal_id            String                @db.Char(36)
-  categoria_id           String?               @db.Char(36)
-  usuario_id             String                @db.Char(36) // Quién ejecutó el movimiento
-  
-  tipo_movimiento        TipoMovimiento
-  origen_tipo            TipoOrigenTransaccion @default(INGRESO_EGRESO)
-  origen_id              String?               @db.Char(36) // ID de la Venta, Servicio o registro de Gasto externo
+  id           String  @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id   String  @db.Char(36)
+  sucursal_id  String  @db.Char(36)
+  categoria_id String? @db.Char(36)
+  usuario_id   String  @db.Char(36)
 
-  monto                  Float
-  descripcion            String?               @db.Text
-  
-  // Control de Flujo de Fondos (Polimorfismo limpio mediante llaves foráneas opcionales)
-  origen_entidad         TipoEntidadFinanciera?
-  origen_caja_id         String?               @db.Char(36)
-  origen_cuenta_id       String?               @db.Char(36)
+  tipo_movimiento TipoMovimiento
+  origen_tipo     TipoOrigenTransaccion @default(INGRESO_EGRESO)
+  origen_id       String?               @db.Char(36)
 
-  destino_entidad        TipoEntidadFinanciera?
-  destino_caja_id        String?               @db.Char(36)
-  destino_cuenta_id      String?               @db.Char(36)
+  moneda_id         String @db.Char(36)
+  monto_original    Float
+  tipo_cambio       Float  @default(1.0)
+  monto_moneda_base Float
 
-  fecha_transaccion      DateTime              @default(now())
-  created_at             DateTime              @default(now())
+  descripcion String? @db.Text
 
-  negocio          Negocio               @relation(fields: [negocio_id], references: [id])
-  sucursal         Sucursal              @relation(fields: [sucursal_id], references: [id])
-  categoria        CategoriaTransaccion? @relation(fields: [categoria_id], references: [id])
-  usuario          Usuario               @relation("TransaccionesUsuario", fields: [usuario_id], references: [id])
+  origen_entidad    TipoEntidadFinanciera?
+  origen_caja_id    String?                @db.Char(36)
+  origen_cuenta_id  String?                @db.Char(36)
+  destino_entidad   TipoEntidadFinanciera?
+  destino_caja_id   String?                @db.Char(36)
+  destino_cuenta_id String?                @db.Char(36)
 
-  origen_caja      Caja?                 @relation("OrigenCaja", fields: [origen_caja_id], references: [id])
-  origen_cuenta    CuentaBancaria?       @relation("OrigenCuenta", fields: [origen_cuenta_id], references: [id])
-  destino_caja     Caja?                 @relation("DestinoCaja", fields: [destino_caja_id], references: [id])
-  destino_cuenta   CuentaBancaria?       @relation("DestinoCuenta", fields: [destino_cuenta_id], references: [id])
+  fecha_transaccion DateTime @default(now())
+  created_at        DateTime @default(now())
+
+  negocio   Negocio               @relation(fields: [negocio_id], references: [id])
+  sucursal  Sucursal              @relation(fields: [sucursal_id], references: [id])
+  categoria CategoriaTransaccion? @relation(fields: [categoria_id], references: [id])
+  usuario   Usuario               @relation("TransaccionesUsuario", fields: [usuario_id], references: [id])
+  moneda    Moneda                @relation(fields: [moneda_id], references: [id])
+
+  origen_caja    Caja?           @relation("OrigenCaja", fields: [origen_caja_id], references: [id])
+  origen_cuenta  CuentaBancaria? @relation("OrigenCuenta", fields: [origen_cuenta_id], references: [id])
+  destino_caja   Caja?           @relation("DestinoCaja", fields: [destino_caja_id], references: [id])
+  destino_cuenta CuentaBancaria? @relation("DestinoCuenta", fields: [destino_cuenta_id], references: [id])
 
   @@map("transacciones")
 }
@@ -1013,6 +1060,14 @@ enum TipoOrigenTransaccion {
   SERVICIO
   INGRESO_EGRESO // Gastos, pagos a personal, etc.
   MOVIMIENTO_INTERNO // Transferencia entre cajas/cuentas, depósitos, retiros
+}
+
+enum TipoCuentaBancaria {
+  MONETARIA
+  AHORRO
+  PLANILLA
+  CORRIENTE
+  PLAZO_FIJO
 }
 
 enum MetodoPago {
@@ -1055,13 +1110,11 @@ enum EstadoChecklist {
   NO_APLICA
 }
 
-
 enum EstadoTraslado {
   PENDIENTE
   COMPLETADO
   CANCELADO
 }
-
 
 enum ServicioTipo {
   VEHICULO

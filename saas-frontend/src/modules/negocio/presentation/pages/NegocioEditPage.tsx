@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
     Box,
@@ -17,6 +17,8 @@ import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
 import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
 import { negocioEditSchema, type NegocioEditFormValues } from '../../domain/negocio.schema';
 import { negocioRepository } from '../../infrastructure/repositories/negocio.repository';
+import { PaisAutocomplete } from '../../../paises/presentation/components/PaisAutocomplete';
+import type { Pais } from '../../../paises/domain/interface/pais.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
 const NegocioEditPage = () => {
@@ -24,14 +26,16 @@ const NegocioEditPage = () => {
     const [loading, setLoading] = useState(true);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [selectedPais, setSelectedPais] = useState<Pais | null>(null);
 
-    const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<NegocioEditFormValues>({
+    const { register, control, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<NegocioEditFormValues>({
         resolver: zodResolver(negocioEditSchema),
         defaultValues: {
             nombre: '',
             nombre_comercial: null,
             nit_rut: null,
             slogan: null,
+            pais_id: null,
             instagram_id: null,
             facebook_id: null,
         }
@@ -43,20 +47,22 @@ const NegocioEditPage = () => {
             try {
                 const negocio = await negocioRepository.obtenerMiNegocio();
 
-                setValue('nombre', negocio.nombre);
-                setValue('nombre_comercial', negocio.nombre_comercial ?? null);
-                setValue('nit_rut', negocio.nit_rut ?? null);
-                setValue('slogan', negocio.slogan ?? null);
-                setValue('instagram_id', negocio.instagram_id ?? null);
-                setValue('facebook_id', negocio.facebook_id ?? null);
-                setLogoPreview(negocio.logo_url ? `${import.meta.env.VITE_API_URL}/${negocio.logo_url}` : null);
-            } catch (error) {
-                console.error(error);
-                toast.error('No se pudieron cargar los datos');
-            } finally {
-                setLoading(false);
-            }
-        };
+            setValue('nombre', negocio.nombre);
+            setValue('nombre_comercial', negocio.nombre_comercial ?? null);
+            setValue('nit_rut', negocio.nit_rut ?? null);
+            setValue('slogan', negocio.slogan ?? null);
+            setValue('pais_id', negocio.pais_id ?? null);
+            setSelectedPais(negocio.pais ?? null);
+            setValue('instagram_id', negocio.instagram_id ?? null);
+            setValue('facebook_id', negocio.facebook_id ?? null);
+            setLogoPreview(negocio.logo_url ? `${import.meta.env.VITE_API_URL}/${negocio.logo_url}` : null);
+        } catch (error) {
+            console.error(error);
+            toast.error('No se pudieron cargar los datos');
+        } finally {
+            setLoading(false);
+        }
+    };
 
         fetchData();
     }, [setValue]);
@@ -84,6 +90,7 @@ const NegocioEditPage = () => {
             formData.append('nombre_comercial', data.nombre_comercial ?? '');
             formData.append('nit_rut', data.nit_rut ?? '');
             formData.append('slogan', data.slogan ?? '');
+            formData.append('pais_id', data.pais_id ?? '');
             formData.append('instagram_id', data.instagram_id ?? '');
             formData.append('facebook_id', data.facebook_id ?? '');
             if (logoFile) {
@@ -140,6 +147,27 @@ const NegocioEditPage = () => {
                                 error={!!errors.nombre_comercial}
                                 helperText={errors.nombre_comercial?.message}
                             />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Controller
+                                name="pais_id"
+                                control={control}
+                                render={({ field }) => (
+                                    <PaisAutocomplete
+                                        value={selectedPais}
+                                        onChange={(pais) => {
+                                            setSelectedPais(pais);
+                                            field.onChange(pais?.id ?? null);
+                                        }}
+                                    />
+                                )}
+                            />
+                            {errors.pais_id && (
+                                <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                                    {errors.pais_id.message}
+                                </Typography>
+                            )}
                         </Grid>
 
                         <Grid size={{ xs: 12, md: 6 }}>

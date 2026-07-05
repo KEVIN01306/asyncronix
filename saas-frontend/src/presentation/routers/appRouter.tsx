@@ -28,6 +28,8 @@ import { trasladosRoutes } from "../../modules/traslados/presentation/traslado.r
 import { clientesRoutes } from "../../modules/clientes/presentation/clientes.routes";
 import { proveedoresRoutes } from "../../modules/proveedores/presentation/proveedores.routes";
 import { customRoutes } from "../../modules/custom/presentation/custom.routes";
+import { paisesRoutes } from "../../modules/paises/presentation/paises.routes";
+import { monedasRoutes } from "../../modules/monedas/presentation/monedas.routes";
 import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
 
 const appRouter = createBrowserRouter([
@@ -79,6 +81,8 @@ const appRouter = createBrowserRouter([
                     ...clientesRoutes,
                     ...proveedoresRoutes,
                     ...customRoutes,
+                    ...paisesRoutes,
+                    ...monedasRoutes,
                     {
                         path: "acceso-denegado",
                         element: <AccesoDenegadoPage />

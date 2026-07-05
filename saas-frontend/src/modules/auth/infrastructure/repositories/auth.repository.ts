@@ -1,8 +1,9 @@
 import api from '../../../../core/api/api';
 import type { LoginFormValues } from '../../domain/schemas/login.schema';
+import type { LoginResponse } from '../../domain/interfaces/auth-response.interface';
 
 export const authRepository = {
-    signIn: async (credentials: LoginFormValues) => {
+    signIn: async (credentials: LoginFormValues): Promise<LoginResponse> => {
         const response = await api.post('/auth/login', credentials);
         return response.data;
     },

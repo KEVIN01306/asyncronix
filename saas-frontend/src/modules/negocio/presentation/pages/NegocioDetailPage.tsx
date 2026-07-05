@@ -15,20 +15,25 @@ import {
     Card,
     CardContent,
 } from '@mui/material';
-import { ArrowBack, Edit, Business, Instagram, Facebook } from '@mui/icons-material';
+import { ArrowBack, Edit, Business, Instagram, Facebook, CurrencyExchange } from '@mui/icons-material';
 import { toast } from 'sonner';
+import { useAuthStore } from '../../../../core/store/authStore';
 
 import { negocioRepository } from '../../infrastructure/repositories/negocio.repository';
 import type { Negocio } from '../../domain/interfaces/negocio.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
+import CambiarMonedaModal from '../components/CambiarMonedaModal';
 
 const NegocioDetailPage = () => {
     const navigate = useNavigate();
+    const user = useAuthStore(state => state.user);
     const [negocio, setNegocio] = useState<Negocio | null>(null);
     const [loading, setLoading] = useState(true);
+    const [openCambiarMoneda, setOpenCambiarMoneda] = useState(false);
 
     const logoSource = negocio?.logo_url ? `${import.meta.env.VITE_API_URL}/${negocio.logo_url}` : undefined;
+    const canCambiarMoneda = user?.permisos.includes('NEGOCIOS_CAMBIAR_MONEDA') ?? false;
 
     const fetchNegocio = useCallback(async () => {
         try {
@@ -123,9 +128,9 @@ const NegocioDetailPage = () => {
 
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Box>
-                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>SLUG</Typography>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>PAÍS</Typography>
                                     <Typography variant="body1" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                                        {negocio.slug}
+                                        {negocio.pais?.nombre || 'No especificado'}
                                     </Typography>
                                 </Box>
                             </Grid>
@@ -205,28 +210,71 @@ const NegocioDetailPage = () => {
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 4 }}>
-                    <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                        <CardContent>
-                            <Typography variant="subtitle2" gutterBottom fontWeight={700}>Resumen del Negocio</Typography>
-                            <Divider sx={{ mb: 2 }} />
-                            <Stack spacing={2}>
-                                <Box display="flex" justifyContent="space-between">
-                                    <Typography variant="body2" color="text.secondary">Estado</Typography>
-                                    <Chip variant='outlined' label={negocio.activo ? 'Activo' : 'Inactivo'} color={negocio.activo ? 'success' : 'error'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
-                                </Box>
-                                <Box display="flex" justifyContent="space-between">
-                                    <Typography variant="body2" color="text.secondary">Fecha de Registro</Typography>
-                                    <Typography variant="body2">{negocio.fecha_registro ? new Date(negocio.fecha_registro).toLocaleDateString() : 'N/A'}</Typography>
-                                </Box>
-                                <Box display="flex" justifyContent="space-between">
-                                    <Typography variant="body2" color="text.secondary">Actualizado</Typography>
-                                    <Typography variant="body2">{new Date(negocio.updated_at).toLocaleDateString()}</Typography>
-                                </Box>
-                            </Stack>
-                        </CardContent>
-                    </Card>
+                    <Stack spacing={3}>
+                        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                            <CardContent>
+                                <Typography variant="subtitle2" gutterBottom fontWeight={700}>Resumen del Negocio</Typography>
+                                <Divider sx={{ mb: 2 }} />
+                                <Stack spacing={2}>
+                                    <Box display="flex" justifyContent="space-between">
+                                        <Typography variant="body2" color="text.secondary">Estado</Typography>
+                                        <Chip variant='outlined' label={negocio.activo ? 'Activo' : 'Inactivo'} color={negocio.activo ? 'success' : 'error'} size="small" sx={{ mt: 0.5, fontWeight: 600 }} />
+                                    </Box>
+                                    <Box display="flex" justifyContent="space-between">
+                                        <Typography variant="body2" color="text.secondary">Fecha de Registro</Typography>
+                                        <Typography variant="body2">{negocio.fecha_registro ? new Date(negocio.fecha_registro).toLocaleDateString() : 'N/A'}</Typography>
+                                    </Box>
+                                    <Box display="flex" justifyContent="space-between">
+                                        <Typography variant="body2" color="text.secondary">Actualizado</Typography>
+                                        <Typography variant="body2">{new Date(negocio.updated_at).toLocaleDateString()}</Typography>
+                                    </Box>
+                                </Stack>
+                            </CardContent>
+                        </Card>
+
+                        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                            <CardContent>
+                                <Typography variant="subtitle2" gutterBottom fontWeight={700}>Moneda</Typography>
+                                <Divider sx={{ mb: 2 }} />
+                                <Stack spacing={2}>
+                                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                                        <Stack spacing={0.5} flex={1}>
+                                            <Typography variant="body2" fontWeight={700}>
+                                                {negocio.moneda?.nombre || 'Sin asignar'} 
+                                            </Typography>
+                                            {negocio.moneda && (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {negocio.moneda.simbolo} ({negocio.moneda.codigo})
+                                                </Typography>
+                                            )}
+                                        </Stack>
+                                    </Box>
+                                    {canCambiarMoneda && (
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            startIcon={<CurrencyExchange />}
+                                            onClick={() => setOpenCambiarMoneda(true)}
+                                            fullWidth
+                                        >
+                                            Cambiar moneda
+                                        </Button>
+                                    )}
+                                </Stack>
+                            </CardContent>
+                        </Card>
+                    </Stack>
                 </Grid>
             </Grid>
+
+            <CambiarMonedaModal
+                open={openCambiarMoneda}
+                onClose={() => setOpenCambiarMoneda(false)}
+                onSuccess={() => {
+                    fetchNegocio();
+                    setOpenCambiarMoneda(false);
+                }}
+            />
         </Box>
     );
 };

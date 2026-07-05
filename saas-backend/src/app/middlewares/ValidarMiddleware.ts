@@ -31,4 +31,18 @@ export class ValidarMiddleware {
             }
         };
     }
+
+    public validarParams(schema: ZodTypeAny) {
+        return (req: Request, res: Response, next: NextFunction) => {
+            try {
+                req.params = schema.parse(req.params);
+                next();
+            } catch (error) {
+                if (error instanceof ZodError) {
+                    return res.status(400).json(Respuesta.validacion(error));
+                }
+                next(error);
+            }
+        };
+    }
 }

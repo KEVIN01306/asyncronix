@@ -6,4 +6,5 @@ export interface NegocioRepository {
     obtener(id: string): Promise<NegocioObtenidoDetalle | null>;
     obtenerPorWaId(wa_id: string): Promise<NegocioObtenidoDetalle | null>;
     listar(wa_id: string): Promise<NegocioObtenidoDetalle | null>;
+    cambiarMoneda(id: string, moneda_id: string): Promise<NegocioObtenidoDetalle>;
 }

@@ -26,6 +26,8 @@ const permisosData = [
     //{ codigo: "CREAR_NEGOCIOS" },
     { codigo: "VER_NEGOCIOS_DETALLE_ME" },
     { codigo: "EDITAR_NEGOCIOS" },
+    { codigo: "NEGOCIOS_CAMBIAR_MONEDA" },
+
     { codigo: "VER_PERMISOS" },
     { codigo: "EDITAR_PERMISOS" },
     { codigo: "ASIGNAR_PERMISOS_ROL" },
@@ -122,7 +124,14 @@ const permisosData = [
     { codigo: "VER_TRASLADO_DETALLE" },
     { codigo: "CREAR_TRASLADO" },
     { codigo: "CANCELAR_TRASLADO" },
-    { codigo: "RECIBIR_TRASLADO" }
+    { codigo: "RECIBIR_TRASLADO" },
+
+    { codigo: "VER_PAISES" },
+    { codigo: "VER_DETALLE_PAIS" },
+
+    { codigo: "VER_MONEDAS" },
+    { codigo: "VER_DETALLE_MONEDA" },
+
 ];
 
 const modulosConPermisos = [
@@ -140,7 +149,15 @@ const modulosConPermisos = [
     },
     {
         nombre: "NEGOCIOS",
-        permisos: [/*"VER_NEGOCIOS", "VER_NEGOCIOS_DETALLE",*/ "VER_NEGOCIOS_DETALLE_ME",/* "CREAR_NEGOCIOS",*/ "EDITAR_NEGOCIOS"]
+        permisos: [/*"VER_NEGOCIOS", "VER_NEGOCIOS_DETALLE",*/ "VER_NEGOCIOS_DETALLE_ME",/* "CREAR_NEGOCIOS",*/ "EDITAR_NEGOCIOS", "NEGOCIOS_CAMBIAR_MONEDA"]
+    },
+    {
+        nombre: "PAISES",
+        permisos: ["VER_PAISES", "VER_DETALLE_PAIS"]
+    },
+    {
+        nombre: "MONEDAS",
+        permisos: ["VER_MONEDAS", "VER_DETALLE_MONEDA"]
     },
     {
         nombre: "PERMISOS",
@@ -221,6 +238,78 @@ const modulosConPermisos = [
 ];
 async function main() {
 
+    // 0. Crear monedas y países iniciales
+    console.log("Seeding Monedas...");
+    const quetzal = await prisma.moneda.upsert({
+        where: { codigo: 'GTQ' },
+        update: {},
+        create: {
+            codigo: 'GTQ',
+            nombre: 'Quetzal',
+            simbolo: 'Q',
+            activo: true
+        }
+    });
+
+    const dollar = await prisma.moneda.upsert({
+        where: { codigo: 'USD' },
+        update: {},
+        create: {
+            codigo: 'USD',
+            nombre: 'Dólar estadounidense',
+            simbolo: '$',
+            activo: true
+        }
+    });
+
+    const peso = await prisma.moneda.upsert({
+        where: { codigo: 'MXN' },
+        update: {},
+        create: {
+            codigo: 'MXN',
+            nombre: 'Peso mexicano',
+            simbolo: '$',
+            activo: true
+        }
+    });
+
+    console.log("Seeding Países...");
+    const guatemala = await prisma.pais.upsert({
+        where: { codigo_iso: 'GT' },
+        update: {},
+        create: {
+            codigo_iso: 'GT',
+            nombre: 'Guatemala',
+            codigo_tel: '+502',
+            moneda_id: quetzal.id,
+            activo: true
+        }
+    });
+
+    const mexico = await prisma.pais.upsert({
+        where: { codigo_iso: 'MX' },
+        update: {},
+        create: {
+            codigo_iso: 'MX',
+            nombre: 'México',
+            codigo_tel: '+52',
+            moneda_id: peso.id,
+            activo: true
+        }
+    });
+
+    const usa = await prisma.pais.upsert({
+        where: { codigo_iso: 'US' },
+        update: {},
+        create: {
+            codigo_iso: 'US',
+            nombre: 'Estados Unidos',
+            codigo_tel: '+1',
+            moneda_id: dollar.id,
+            activo: true
+        }
+    });
+
     // 1. Asegurar la creación de módulos y sus permisos
     for (const m of modulosConPermisos) {
         await prisma.modulo.upsert({
@@ -246,14 +335,16 @@ async function main() {
     const whatsappId = "50230108703"; // Asegúrate de que este valor sea único para evitar conflictos en el upsert
 
     const negocio = await prisma.negocio.upsert({
-        where: { wa_id: whatsappId }, 
+        where: { wa_id: whatsappId },
         update: {
             permisos: {
                 connect: permisosData.map(p => ({ codigo: p.codigo }))
             },
             modulos: {
                 connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
-            }
+            },
+            pais_id: guatemala.id,
+            moneda_id: quetzal.id
         },
         create: {
             nombre: "Motoservicio VM",
@@ -267,7 +358,9 @@ async function main() {
             },
             modulos: {
                 connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
-            }
+            },
+            pais_id: guatemala.id,
+            moneda_id: quetzal.id
         }
     });
     /*
@@ -318,9 +411,9 @@ async function main() {
             }
         }
     });
-    
-    const passwordHash = await hashProvider.hash("12345678");
     /*
+    const passwordHash = await hashProvider.hash("12345678");
+    
     const usuarioAdmin = await prisma.usuario.upsert({
         where: { 
             negocio_id_email: { 
@@ -343,13 +436,13 @@ async function main() {
             }
         },
     });
-    */
+    /*
     const usuarioAdmin = await prisma.usuario.upsert({
-        where: { 
-            negocio_id_email: { 
-                negocio_id: negocio.id, 
-                email: " Motoserviciovm9793@gmail.com" 
-            } 
+        where: {
+            negocio_id_email: {
+                negocio_id: negocio.id,
+                email: " Motoserviciovm9793@gmail.com"
+            }
         },
         update: {},
         create: {
@@ -366,7 +459,7 @@ async function main() {
             }
         },
     });
-
+    /*
     // 4. Crear categorías default del sistema
     const categoriasDefault = [
         {
@@ -455,8 +548,8 @@ async function main() {
                 });
             }
         }
-    }
-
+    }   
+    */
     console.log("✅ Categorías default creadas exitosamente");
     console.log("¡Seed ejecutado con éxito!");
 }
