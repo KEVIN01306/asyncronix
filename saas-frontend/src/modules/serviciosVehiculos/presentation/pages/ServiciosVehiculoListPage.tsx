@@ -1,6 +1,6 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { Add, Article, Edit, FilterList, Search, Visibility } from '@mui/icons-material';
-import { Autocomplete, Box, Button, Chip, Paper, TextField, TableContainer, useTheme, AlertTitle, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Stack, InputAdornment } from '@mui/material';
+import { Autocomplete, Box, Button, Chip, Paper, TextField, TableContainer, useTheme, AlertTitle, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Stack, InputAdornment, MenuItem } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
@@ -305,11 +305,10 @@ const ServiciosListPage = () => {
                             value={tempEstado}
                             focused
                             onChange={(event) => setTempEstado(event.target.value)}
-                            SelectProps={{ native: true }}
                         >
-                            <option value="">Todos</option>
+                            <MenuItem value="">Todos</MenuItem>
                             {Object.values(ESTADO_SERVICIO_VEHICULO).map((estadoOption) => (
-                                <option key={estadoOption} value={estadoOption}>{estadoOption}</option>
+                                <MenuItem key={estadoOption} value={estadoOption}>{estadoOption}</MenuItem>
                             ))}
                         </TextField>
                         <Autocomplete

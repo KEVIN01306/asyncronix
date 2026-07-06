@@ -8,6 +8,7 @@ import { ActualizarAvatarUseCase } from "./application/actualizar-avatar.usecase
 import { CambiarPasswordUseCase } from "./application/cambiar-password.usecase.js";
 import { ActualizarPinCajaUseCase } from "./application/actualizar-pin-caja.usecase.js";
 import { ActualizarPinModeloUseCase } from "./application/actualizar-pin-modelo.usecase.js";
+import { ActualizarPinSucursalUseCase } from "./application/actualizar-pin-sucursal.usecase.js";
 import { PrismaUsuarioRepository } from "./infrastructure/prisma-usuario.repository.js";
 import { UsuarioController } from "./presentation/usuario.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
@@ -27,6 +28,7 @@ const actualizarAvatarUseCase = new ActualizarAvatarUseCase(usuarioRepository)
 const cambiarPasswordUseCase = new CambiarPasswordUseCase(usuarioRepository, hashProvider)
 const actualizarPinCajaUseCase = new ActualizarPinCajaUseCase(usuarioRepository, hashProvider)
 const actualizarPinModeloUseCase = new ActualizarPinModeloUseCase(usuarioRepository, hashProvider)
+const actualizarPinSucursalUseCase = new ActualizarPinSucursalUseCase(usuarioRepository, hashProvider)
 
 export const usuarioController = new UsuarioController(
     obtenerUsuarioUseCase,
@@ -38,5 +40,6 @@ export const usuarioController = new UsuarioController(
     actualizarAvatarUseCase,
     cambiarPasswordUseCase,
     actualizarPinCajaUseCase,
-    actualizarPinModeloUseCase
+    actualizarPinModeloUseCase,
+    actualizarPinSucursalUseCase
 );

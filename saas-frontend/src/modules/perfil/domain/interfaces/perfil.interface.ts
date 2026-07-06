@@ -22,6 +22,10 @@ export interface ActualizarPinCajaForm {
     pin_caja: string;
 }
 
+export interface ActualizarPinSucursalForm {
+    pin_sucursal: string;
+}
+
 export interface CambiarPasswordForm {
     password: string;
     confirm_password: string;

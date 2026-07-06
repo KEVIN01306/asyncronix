@@ -111,6 +111,9 @@ export class PrismaSucursalRepository implements SucursalRepository {
                     tipo: caja.tipo,
                     saldo: caja.saldo,
                     activo: caja.activo,
+                    ip_autorizada: caja.ip_autorizada ?? null,
+                    asociacion_id: caja.asociacion_id ?? null,
+                    token_autorizado: caja.token_autorizado ?? null,
                     created_at: caja.created_at,
                     updated_at: caja.updated_at,
                 })),
@@ -148,25 +151,20 @@ export class PrismaSucursalRepository implements SucursalRepository {
                 return null;
             }
 
-            const existing = await this.prisma.sucursalCuentaBancaria.findUnique({
+            await this.prisma.sucursalCuentaBancaria.deleteMany({
                 where: {
-                    sucursal_id_cuenta_bancaria_id_metodo_pago: {
-                        sucursal_id,
-                        cuenta_bancaria_id,
-                        metodo_pago,
-                    },
+                    sucursal_id,
+                    metodo_pago,
                 },
             });
 
-            if (!existing) {
-                await this.prisma.sucursalCuentaBancaria.create({
-                    data: {
-                        sucursal_id,
-                        cuenta_bancaria_id,
-                        metodo_pago,
-                    },
-                });
-            }
+            await this.prisma.sucursalCuentaBancaria.create({
+                data: {
+                    sucursal_id,
+                    cuenta_bancaria_id,
+                    metodo_pago,
+                },
+            });
 
             return this.obtenerMiSucursal(negocio_id, sucursal_id);
         } catch (error) {

@@ -274,4 +274,28 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         }
     }
 
+    async actualizarPinSucursal(id: Usuario["id"], negocio_id: Usuario["negocio_id"], pin_sucursal: string): Promise<void> {
+        try {
+            await this.db.usuario.update({
+                where: { id, negocio_id, activo: true },
+                data: { pin_sucursal }
+            })
+        } catch (error) {
+            throw PrismaErrorMapper.map(error)
+        }
+    }
+
+    async obtenerPinSucursal(id: Usuario["id"], negocio_id: Usuario["negocio_id"]): Promise<string | null> {
+        try {
+            const usuario = await this.db.usuario.findFirst({
+                where: { id, negocio_id, activo: true },
+                select: { pin_sucursal: true }
+            });
+
+            return usuario?.pin_sucursal ?? null;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error)
+        }
+    }
+
 }

@@ -61,6 +61,52 @@ export class PrismaCajaRepository implements CajaRepository {
         }
     }
 
+    async asociarDispositivo(id: string, negocio_id: string, sucursal_id: string, token: string, ip: string, asociacionId: string): Promise<CajaObtenidoDetalle> {
+        try {
+            const existing = await this.prisma.caja.findFirst({ where: { id, negocio_id, sucursal_id } });
+            if (!existing) {
+                throw new Error('NOT_FOUND');
+            }
+
+            const updated = await this.prisma.caja.update({
+                where: { id },
+                data: {
+                    token_autorizado: token,
+                    ip_autorizada: ip || null,
+                    asociacion_id: asociacionId,
+                },
+            });
+
+            return CajaMapper.mapSimple(updated as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async desasociarDispositivo(id: string, negocio_id: string, sucursal_id: string, token?: string | null): Promise<void> {
+        try {
+            const normalizedToken = token?.trim();
+            const existing = normalizedToken
+                ? await this.prisma.caja.findFirst({ where: { id, negocio_id, sucursal_id, token_autorizado: normalizedToken } })
+                : await this.prisma.caja.findFirst({ where: { id, negocio_id, sucursal_id } });
+
+            if (!existing) {
+                throw new Error('NOT_FOUND');
+            }
+
+            await this.prisma.caja.update({
+                where: { id },
+                data: {
+                    token_autorizado: null,
+                    ip_autorizada: null,
+                    asociacion_id: null,
+                },
+            });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
     async listar(negocio_id: string, sucursal_id: string, pagination: Pagination, q?: string): Promise<Paginated<CajaSimple>> {
         try {
             const { page, perPage } = pagination;

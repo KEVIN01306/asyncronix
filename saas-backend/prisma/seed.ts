@@ -21,6 +21,7 @@ const permisosData = [
     { codigo: "CREAR_SUCURSALES" },
     { codigo: "EDITAR_SUCURSALES" },
     { codigo: "ELIMINAR_SUCURSALES" },
+    { codigo: "ADMIN_SUCURSAL" },
     //{ codigo: "VER_NEGOCIOS" },
     //{ codigo: "VER_NEGOCIOS_DETALLE" },
     //{ codigo: "CREAR_NEGOCIOS" },
@@ -160,7 +161,7 @@ const modulosConPermisos = [
     },
     {
         nombre: "SUCURSALES",
-        permisos: ["VER_SUCURSALES", "VER_SUCURSALES_DETALLE", "CREAR_SUCURSALES", "EDITAR_SUCURSALES", "ELIMINAR_SUCURSALES"]
+        permisos: ["VER_SUCURSALES", "VER_SUCURSALES_DETALLE", "CREAR_SUCURSALES", "EDITAR_SUCURSALES", "ELIMINAR_SUCURSALES", "ADMIN_SUCURSAL"]
     },
     {
         nombre: "NEGOCIOS",

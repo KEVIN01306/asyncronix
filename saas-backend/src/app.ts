@@ -11,7 +11,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
+app.set('trust proxy', true);
 // Increase body size limits to accept base64 image payloads (adjust if needed)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));

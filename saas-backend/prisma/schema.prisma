@@ -189,6 +189,7 @@ model Usuario {
   telefono      String
   pin_caja      String?  @db.Text
   pin_modelo    String?  @db.Text
+  pin_sucursal  String?  @db.Text
   verificado    Boolean  @default(false)
   activo        Boolean  @default(true)
   created_at    DateTime @default(now())
@@ -924,6 +925,10 @@ model Caja {
   nombre      String // Ej: "Caja Principal", "Caja Virtual Efectivo"
   tipo        TipoCaja @default(FISICA)
   saldo       Float    @default(0)
+
+  ip_autorizada String?  @db.VarChar(45)
+  asociacion_id   String?  @db.Char(36) // Para cajas virtuales asociadas a un usuario o a un negocio externo
+  token_autorizado String?  @db.VarChar(255)
   activo      Boolean  @default(true)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt

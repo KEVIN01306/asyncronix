@@ -22,6 +22,11 @@ export const perfilRepository = {
         return response.data;
     },
 
+    actualizarPinSucursal: async (data: { pin_sucursal: string }) => {
+        const response = await api.patch('/usuarios/me/pin-sucursal', data);
+        return response.data;
+    },
+
     actualizarAvatar: async (file: File) => {
         const formData = new FormData();
         formData.append('avatar', file);

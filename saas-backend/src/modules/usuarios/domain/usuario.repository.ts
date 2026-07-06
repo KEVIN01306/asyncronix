@@ -15,4 +15,6 @@ export interface UsuarioRepository {
     cambiarPassword(id: Usuario['id'], negocio_id: Usuario['negocio_id'], password_hash: string): Promise<void>
     actualizarPinCaja(id: Usuario['id'], negocio_id: Usuario['negocio_id'], pin_caja: string): Promise<void>
     actualizarPinModelo(id: Usuario['id'], negocio_id: Usuario['negocio_id'], pin_modelo: string): Promise<void>
+    actualizarPinSucursal(id: Usuario['id'], negocio_id: Usuario['negocio_id'], pin_sucursal: string): Promise<void>
+    obtenerPinSucursal(id: Usuario['id'], negocio_id: Usuario['negocio_id']): Promise<string | null>
 }

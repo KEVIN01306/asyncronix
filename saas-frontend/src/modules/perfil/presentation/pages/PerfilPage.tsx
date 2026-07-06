@@ -6,11 +6,12 @@ import { authRepository } from '../../../auth/infrastructure/repositories/auth.r
 import { perfilRepository } from '../../infrastructure/perfil.repository';
 import { toast } from 'sonner';
 import type { ActualizarPerfilForm, CambiarPasswordForm, Perfil } from '../../domain/interfaces/perfil.interface'
-import type { ActualizarPinCajaFormValues, ActualizarPinModeloFormValues } from '../../domain/schemas/perfil.schema'
+import type { ActualizarPinCajaFormValues, ActualizarPinModeloFormValues, ActualizarPinSucursalFormValues } from '../../domain/schemas/perfil.schema'
 import { EditProfileModal } from '../components/EditProfileModal';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { ChangePinCajaModal } from '../components/ChangePinCajaModal';
 import { ChangePinModeloModal } from '../components/ChangePinModeloModal';
+import { ChangePinSucursalModal } from '../components/ChangePinSucursalModal.tsx';
 import { EditAvatarModal } from '../components/EditAvatarModal';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 
@@ -24,6 +25,7 @@ export const PerfilPage = () => {
     const [openChangePassword, setOpenChangePassword] = useState(false);
     const [openChangePinCaja, setOpenChangePinCaja] = useState(false);
     const [openChangePinModelo, setOpenChangePinModelo] = useState(false);
+    const [openChangePinSucursal, setOpenChangePinSucursal] = useState(false);
     const [openEditAvatar, setOpenEditAvatar] = useState(false);
 
     const AvatarSource = perfil?.avatar_url ? `${import.meta.env.VITE_API_URL}/${perfil.avatar_url}` : undefined;
@@ -123,6 +125,20 @@ export const PerfilPage = () => {
         }
     };
 
+    const handleChangePinSucursal = async (data: ActualizarPinSucursalFormValues) => {
+        try {
+            await perfilRepository.actualizarPinSucursal(data);
+            toast.success("Pin de sucursal actualizado con éxito");
+            setOpenChangePinSucursal(false);
+            cargarPerfil();
+            const globalUser = await authRepository.getMe();
+            getMeStore(globalUser);
+        } catch (error: any) {
+            console.log(error)
+            toast.error(error.response?.data?.message || "Error al actualizar el pin de sucursal");
+        }
+    };
+
     if (loading) return <Loading />;
     
     return (
@@ -205,6 +221,16 @@ export const PerfilPage = () => {
                                         Cambiar Pin de Caja
                                     </Button>
                                 )}
+                                {userStore?.permisos?.includes('ADMIN_SUCURSAL') && (
+                                    <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        startIcon={<VpnKeyIcon />}
+                                        onClick={() => setOpenChangePinSucursal(true)}
+                                    >
+                                        Cambiar Pin de Sucursal
+                                    </Button>
+                                )}
                                 {userStore?.permisos?.includes('ADMIN_MODELO') && (
                                     <Button
                                         variant="outlined"
@@ -232,6 +258,12 @@ export const PerfilPage = () => {
                 open={openChangePinCaja}
                 onClose={() => setOpenChangePinCaja(false)}
                 onSubmit={handleChangePinCaja}
+            />
+
+            <ChangePinSucursalModal
+                open={openChangePinSucursal}
+                onClose={() => setOpenChangePinSucursal(false)}
+                onSubmit={handleChangePinSucursal}
             />
 
             <ChangePinModeloModal

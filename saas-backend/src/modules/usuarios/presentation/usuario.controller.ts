@@ -11,6 +11,7 @@ import type { ActualizarAvatarUseCase } from "../application/actualizar-avatar.u
 import type { CambiarPasswordUseCase } from "../application/cambiar-password.usecase.js";
 import type { ActualizarPinCajaUseCase } from "../application/actualizar-pin-caja.usecase.js";
 import type { ActualizarPinModeloUseCase } from "../application/actualizar-pin-modelo.usecase.js";
+import type { ActualizarPinSucursalUseCase } from "../application/actualizar-pin-sucursal.usecase.js";
 import AppError from "../../../shared/errors/AppError.js";
 
 export class UsuarioController extends BaseController {
@@ -25,7 +26,8 @@ export class UsuarioController extends BaseController {
         private readonly actualizarAvatarUseCase: ActualizarAvatarUseCase,
         private readonly cambiarPasswordUseCase: CambiarPasswordUseCase,
         private readonly actualizarPinCajaUseCase: ActualizarPinCajaUseCase,
-        private readonly actualizarPinModeloUseCase: ActualizarPinModeloUseCase
+        private readonly actualizarPinModeloUseCase: ActualizarPinModeloUseCase,
+        private readonly actualizarPinSucursalUseCase: ActualizarPinSucursalUseCase
     ) {
         super()
     }
@@ -151,6 +153,17 @@ export class UsuarioController extends BaseController {
             const { pin_modelo } = req.body
             await this.actualizarPinModeloUseCase.execute(id, negocio_id, pin_modelo)
             res.status(200).json(Respuesta.exito('Pin de modelo actualizado con exito', null))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    actualizarPinSucursal = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id, negocio_id } = this.obtenerEntorno(res)
+            const { pin_sucursal } = req.body
+            await this.actualizarPinSucursalUseCase.execute(id, negocio_id, pin_sucursal)
+            res.status(200).json(Respuesta.exito('Pin de sucursal actualizado con exito', null))
         } catch (error) {
             next(error)
         }

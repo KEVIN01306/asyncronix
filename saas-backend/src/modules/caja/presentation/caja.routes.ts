@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AuthMiddleware } from '@app/middlewares/AuthMiddleware.js';
 import { ValidarMiddleware } from '@app/middlewares/ValidarMiddleware.js';
 import { cajaController } from '../caja.module.js';
-import { cajaCrearSchema, cajaActualizarSchema, cajaIdParamSchema, cajaListQuerySchema } from './validators/caja.schema.js';
+import { cajaCrearSchema, cajaActualizarSchema, cajaIdParamSchema, cajaListQuerySchema, asociarDispositivoCajaSchema, desasociarDispositivoCajaSchema } from './validators/caja.schema.js';
 
 const router = Router();
 const auth = new AuthMiddleware();
@@ -26,6 +26,20 @@ router.post('/',
     auth.verificarPermiso(['CREAR_CAJAS']),
     validar.validarBody(cajaCrearSchema),
     cajaController.registrar
+);
+
+router.post('/:id/asociar-dispositivo',
+    auth.verificarPermiso(['EDITAR_CAJAS']),
+    validar.validarParams(cajaIdParamSchema),
+    validar.validarBody(asociarDispositivoCajaSchema),
+    cajaController.asociarDispositivo
+);
+
+router.post('/:id/desasociar-dispositivo',
+    auth.verificarPermisoSome(['EDITAR_CAJAS', 'ADMIN_SUCURSAL']),
+    validar.validarParams(cajaIdParamSchema),
+    validar.validarBody(desasociarDispositivoCajaSchema),
+    cajaController.desasociarDispositivo
 );
 
 router.put('/:id',

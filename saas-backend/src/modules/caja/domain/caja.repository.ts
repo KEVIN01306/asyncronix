@@ -7,5 +7,7 @@ export interface CajaRepository {
     actualizar(id: string, negocio_id: string, sucursal_id: string, data: CajaActualizar): Promise<CajaObtenidoDetalle>;
     eliminar(id: string, negocio_id: string, sucursal_id: string): Promise<void>;
     obtener(id: string, negocio_id: string, sucursal_id: string): Promise<CajaObtenidoDetalle | null>;
+    asociarDispositivo(id: string, negocio_id: string, sucursal_id: string, token: string, ip: string, asociacionId: string): Promise<CajaObtenidoDetalle>;
+    desasociarDispositivo(id: string, negocio_id: string, sucursal_id: string, token?: string | null): Promise<void>;
     listar(negocio_id: string, sucursal_id: string, pagination: Pagination, q?: string): Promise<Paginated<CajaSimple>>;
 }

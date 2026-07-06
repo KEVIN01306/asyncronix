@@ -5,6 +5,9 @@ export interface Caja {
     nombre: string;
     tipo: 'FISICA' | 'EN_LINEA';
     saldo: number;
+    ip_autorizada?: string | null;
+    asociacion_id?: string | null;
+    token_autorizado?: string | null;
     activo: boolean;
     created_at: Date;
     updated_at: Date;

@@ -8,6 +8,21 @@ export class Argon2HashProvider implements HashProvider {
     }
 
     async compare(payload: string, hashed: string): Promise<boolean> {
-        return bcrypt.verify(hashed, payload);
+        const plainValue = payload.trim();
+        const storedValue = hashed.trim();
+
+        if (!storedValue) {
+            return false;
+        }
+
+        if (!storedValue.startsWith('$')) {
+            return storedValue === plainValue;
+        }
+
+        try {
+            return await bcrypt.verify(storedValue, plainValue);
+        } catch {
+            return false;
+        }
     }
 }

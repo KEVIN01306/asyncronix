@@ -4,6 +4,9 @@ export interface Caja {
     tipo: 'FISICA' | 'EN_LINEA';
     saldo: number;
     activo: boolean;
+    ip_autorizada?: string | null;
+    asociacion_id?: string | null;
+    token_autorizado?: string | null;
     created_at: string;
     updated_at: string;
 }

@@ -21,6 +21,14 @@ export const cajaRepository = {
         const response = await api.put<ApiResponse<Caja>>(`${URL_MODULE}/${id}`, data);
         return response as any;
     },
+    asociarDispositivo: async (id: string, pin_sucursal: string): Promise<ApiResponse<Caja>> => {
+        const response = await api.post<ApiResponse<Caja>>(`${URL_MODULE}/${id}/asociar-dispositivo`, { pin_sucursal });
+        return response as any;
+    },
+    desasociarDispositivo: async (id: string, token_autorizado?: string | null): Promise<ApiResponse<null>> => {
+        const response = await api.post<ApiResponse<null>>(`${URL_MODULE}/${id}/desasociar-dispositivo`, { token_autorizado: token_autorizado ?? '' });
+        return response as any;
+    },
     eliminar: async (id: string): Promise<ApiResponse<null>> => {
         const response = await api.delete<ApiResponse<null>>(`${URL_MODULE}/${id}`);
         return response as any;
