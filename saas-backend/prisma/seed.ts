@@ -132,6 +132,21 @@ const permisosData = [
     { codigo: "VER_MONEDAS" },
     { codigo: "VER_DETALLE_MONEDA" },
 
+    { codigo: "VER_CUENTA_BANCARIA" },
+    { codigo: "VER_CUENTA_BANCARIA_DETALLE" },
+    { codigo: "CREAR_CUENTA_BANCARIA" },
+    { codigo: "EDITAR_CUENTA_BANCARIA" },
+    { codigo: "ELIMINAR_CUENTA_BANCARIA" },
+
+    { codigo: "VER_CAJAS" },
+    { codigo: "VER_CAJAS_DETALLE" },
+    { codigo: "CREAR_CAJAS" },
+    { codigo: "EDITAR_CAJAS" },
+    { codigo: "ELIMINAR_CAJAS" },
+
+    { codigo: "VER_BANCOS" },
+    { codigo: "VER_BANCOS_DETALLE" }
+
 ];
 
 const modulosConPermisos = [
@@ -234,11 +249,24 @@ const modulosConPermisos = [
     {
         nombre: "TRASLADOS",
         permisos: ["VER_TRASLADO", "VER_TRASLADO_DETALLE", "CREAR_TRASLADO", "CANCELAR_TRASLADO", "RECIBIR_TRASLADO"]
+    },
+    {
+        nombre: "CUENTAS BANCARIAS",
+        permisos: ["VER_CUENTA_BANCARIA", "VER_CUENTA_BANCARIA_DETALLE", "CREAR_CUENTA_BANCARIA", "EDITAR_CUENTA_BANCARIA", "ELIMINAR_CUENTA_BANCARIA"]
+    },
+    {
+        nombre: "CAJAS",
+        permisos: ["VER_CAJAS", "VER_CAJAS_DETALLE", "CREAR_CAJAS", "EDITAR_CAJAS", "ELIMINAR_CAJAS"]
+    },
+    {
+        nombre: "BANCOS",
+        permisos: ["VER_BANCOS", "VER_BANCOS_DETALLE"]
     }
 ];
 async function main() {
 
     // 0. Crear monedas y países iniciales
+    /*
     console.log("Seeding Monedas...");
     const quetzal = await prisma.moneda.upsert({
         where: { codigo: 'GTQ' },
@@ -309,6 +337,7 @@ async function main() {
             activo: true
         }
     });
+    */
 
     // 1. Asegurar la creación de módulos y sus permisos
     for (const m of modulosConPermisos) {
@@ -343,8 +372,10 @@ async function main() {
             modulos: {
                 connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
             },
+            /*
             pais_id: guatemala.id,
             moneda_id: quetzal.id
+            */
         },
         create: {
             nombre: "Motoservicio VM",
@@ -359,8 +390,10 @@ async function main() {
             modulos: {
                 connect: modulosConPermisos.map(m => ({ nombre: m.nombre }))
             },
+            /*
             pais_id: guatemala.id,
             moneda_id: quetzal.id
+            */
         }
     });
     /*

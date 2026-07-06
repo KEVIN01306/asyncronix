@@ -2,7 +2,7 @@ import { Router } from "express";
 import { sucursalController } from "../sucursal.module.js";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
-import { sucursalActualizarSchema, sucursalCrearSchema } from "./validators/sucursal.validator.js";
+import { sucursalActualizarSchema, sucursalCrearSchema, sucursalCuentaBancariaAsignarSchema } from "./validators/sucursal.validator.js";
 import { paginacionQuerySchema } from "@shared/presentation/validators/paginacion.query.schema.js";
 import { z } from 'zod';
 
@@ -17,6 +17,17 @@ router.get('/',
     authMiddleware.verificarPermiso(['VER_SUCURSALES']),
     validarMiddleware.validarQuery(paginacionQuerySchema.extend({ q: z.string().optional() })),
     sucursalController.listar
+);
+
+router.get('/me',
+    authMiddleware.verificarPermiso(['VER_SUCURSALES_DETALLE']),
+    sucursalController.me
+);
+
+router.post('/me/cuentas-bancarias',
+    authMiddleware.verificarPermiso(['EDITAR_SUCURSALES']),
+    validarMiddleware.validarBody(sucursalCuentaBancariaAsignarSchema),
+    sucursalController.asignarCuentaBancaria
 );
 
 router.get('/:id',

@@ -10,3 +10,8 @@ export const sucursalSchema = z.object({
 export const sucursalCrearSchema = sucursalSchema.omit({ id: true, negocio_id: true});
 
 export const sucursalActualizarSchema = sucursalCrearSchema.partial();
+
+export const sucursalCuentaBancariaAsignarSchema = z.object({
+    cuenta_bancaria_id: z.string().uuid('Cuenta bancaria inválida'),
+    metodo_pago: z.enum(['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'OTRO']),
+});

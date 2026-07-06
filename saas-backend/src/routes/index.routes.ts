@@ -33,6 +33,9 @@ router.use('/notifications', (await import('../modules/notificacion/presentation
 router.use('/proveedores', (await import('../modules/proveedor/presentation/proveedor.routes.js')).default)
 router.use('/paises', (await import('../modules/pais/presentation/pais.routes.js')).default)
 router.use('/monedas', (await import('../modules/moneda/presentation/moneda.routes.js')).default)
+router.use('/bancos', (await import('../modules/banco/presentation/banco.routes.js')).default)
+router.use('/cajas', (await import('../modules/caja/presentation/caja.routes.js')).default)
+router.use('/cuentas-bancarias', (await import('../modules/cuenta-bancaria/presentation/cuenta-bancaria.routes.js')).default)
 
 router.use(errorMiddleware)
 

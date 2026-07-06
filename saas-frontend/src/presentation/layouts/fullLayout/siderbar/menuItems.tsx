@@ -13,6 +13,7 @@ import {
   ViewHeadlineRounded,
   MoveDownRounded,
   QrCodeScanner,
+  AccountBalance,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -33,6 +34,12 @@ const MenuItems: MenuItem[] = [
   { name: "Ventas", icon: PointOfSale, link: "/ventas", permiso: "VER_VENTAS" },
   { name: "Clientes", icon: AccountCircleOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
   { group: "modulos"},
+  {
+    module: "finanzas", name: "Finanzas", icon: AccountBalance, children: [
+      { name: "Cajas", link: "/cajas", icon: ViewHeadlineRounded, permiso: "VER_CAJAS" },
+      { name: "Cuentas bancarias", link: "/cuentas-bancarias", icon: ViewHeadlineRounded, permiso: "VER_CUENTA_BANCARIA" },
+    ]
+  },
   { 
     module: "traslados", name: "Traslados", icon: MoveDownRounded, children: [
       { name: "Salidas", link: "/traslados/salidas", icon: ViewHeadlineRounded, permiso: "VER_TRASLADO" },
@@ -68,6 +75,7 @@ const MenuItems: MenuItem[] = [
     module: "configuracion", name: "Configuración", icon: SettingsSuggest, children: [
       { name: "Usuarios", link: "/usuarios", icon: AdminPanelSettingsOutlined, permiso: "VER_USUARIOS" },
       { name: "Roles", link: "/roles", icon: AdminPanelSettingsOutlined, permiso: "VER_ROLES" },
+      { name: "Mi Sucursal", link: "/sucursal/me", icon: StoreMallDirectory, permiso: "VER_SUCURSALES_DETALLE" },
       { name: "Sucursales", link: "/sucursales", icon: StoreMallDirectory, permiso: "VER_SUCURSALES" },
       { name: "Negocio", link: "/negocio", icon: AdminPanelSettingsOutlined, permiso: "VER_NEGOCIOS_DETALLE_ME" },
     ]

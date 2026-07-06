@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
-import { SucursalDetailPage, SucursalesListPage, SucursalFormPage } from './sucursal-lazy';
+import { MiSucursalPage, SucursalDetailPage, SucursalesListPage, SucursalFormPage } from './sucursal-lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 
 export const sucursalRoutes: RouteObject[] = [
@@ -40,4 +40,17 @@ export const sucursalRoutes: RouteObject[] = [
             }
         ]
     },
+    {
+        path: 'sucursal',
+        children: [
+            {
+                path: "me",
+                element: (
+                    <RouteProtector requiredPermission="VER_SUCURSALES_DETALLE">
+                        <MiSucursalPage/>
+                    </RouteProtector>
+                )
+            }
+        ]
+    }
 ];

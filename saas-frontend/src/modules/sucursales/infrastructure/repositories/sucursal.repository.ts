@@ -1,7 +1,6 @@
 import api from "../../../../core/api/api";
-import type { Sucursal, SucursalDetailResponse, SucursalesResponse } from "../../domain/interfaces/sucursal.interface";
+import type { Sucursal, SucursalDetailResponse, SucursalMiDetalle, SucursalMiDetalleResponse, SucursalesResponse } from "../../domain/interfaces/sucursal.interface";
 import type { SucursalFormValues } from "../../domain/schemas/sucursal.schema";
-
 
 const URL_MODULO = '/sucursales/';
 
@@ -16,6 +15,16 @@ export const sucursalRepository = {
 
     obtener: async (id: string): Promise<Sucursal> => {
         const response = await api.get<SucursalDetailResponse>(`${URL_MODULO}${id}`);
+        return response.data;
+    },
+
+    obtenerMiSucursal: async (): Promise<SucursalMiDetalle> => {
+        const response = await api.get<SucursalMiDetalleResponse>(`${URL_MODULO}me`);
+        return response.data;
+    },
+
+    asignarCuentaBancaria: async (payload: { cuenta_bancaria_id: string; metodo_pago: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' | 'OTRO' }): Promise<SucursalMiDetalle> => {
+        const response = await api.post<SucursalMiDetalleResponse>(`${URL_MODULO}me/cuentas-bancarias`, payload);
         return response.data;
     },
 

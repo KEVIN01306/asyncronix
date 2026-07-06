@@ -30,6 +30,8 @@ import { proveedoresRoutes } from "../../modules/proveedores/presentation/provee
 import { customRoutes } from "../../modules/custom/presentation/custom.routes";
 import { paisesRoutes } from "../../modules/paises/presentation/paises.routes";
 import { monedasRoutes } from "../../modules/monedas/presentation/monedas.routes";
+import { cajaRoutes } from "../../modules/caja/presentation/caja.routes";
+import { cuentasBancariasRoutes } from "../../modules/cuenta-bancaria/presentation/cuenta-bancaria.routes";
 import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
 
 const appRouter = createBrowserRouter([
@@ -80,6 +82,8 @@ const appRouter = createBrowserRouter([
                     trasladosRoutes,
                     ...clientesRoutes,
                     ...proveedoresRoutes,
+                    ...cajaRoutes,
+                    ...cuentasBancariasRoutes,
                     ...customRoutes,
                     ...paisesRoutes,
                     ...monedasRoutes,

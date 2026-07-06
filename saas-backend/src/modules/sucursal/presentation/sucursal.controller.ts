@@ -2,6 +2,8 @@ import type { NextFunction, Request, Response } from "express";
 import BaseController from "@shared/presentation/base.controller.js";
 import Respuesta from "@app/http/respuesta.js";
 import type { ObtenerSucursalUseCase } from "../application/obtener-sucurrsal.usecase.js";
+import type { ObtenerMiSucursalUseCase } from "../application/obtener-mi-sucursal.usecase.js";
+import type { AsignarCuentaBancariaSucursalUseCase } from "../application/asignar-cuenta-bancaria-sucursal.usecase.js";
 import type { RegistrarSucursalUseCase } from "../application/registrar-sucurrsal.usecase.js";
 import type { ActualizarSucursalUseCase } from "../application/actualizar-sucurrsal.usecase.js";
 import type { EliminarSucursalUseCase } from "../application/eliminar-sucursal.usecase.js";
@@ -12,6 +14,8 @@ export class SucursalController extends BaseController {
 
     constructor(
         private readonly obtenerSucursalUseCase: ObtenerSucursalUseCase,
+        private readonly obtenerMiSucursalUseCase: ObtenerMiSucursalUseCase,
+        private readonly asignarCuentaBancariaSucursalUseCase: AsignarCuentaBancariaSucursalUseCase,
         private readonly obtenerSucursalesUseCase: ObtenerSucursalesUseCase,
         private readonly registrarSucursalUseCase: RegistrarSucursalUseCase,
         private readonly actualizarSucursalUseCase: ActualizarSucursalUseCase,
@@ -49,6 +53,38 @@ export class SucursalController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res)
             const sucursal = await this.registrarSucursalUseCase.execute(req.body, negocio_id)
             res.status(201).json(Respuesta.exito('Sucursal creada con éxito', sucursal))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    me = async (_req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res)
+            if (!sucursal_id) {
+                throw new Error('SUCURSAL_REQUERIDA')
+            }
+            const sucursal = await this.obtenerMiSucursalUseCase.execute(negocio_id, sucursal_id)
+            res.status(200).json(Respuesta.exito('Sucursal obtenida con éxito', sucursal))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    asignarCuentaBancaria = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res)
+            if (!sucursal_id) {
+                throw new Error('SUCURSAL_REQUERIDA')
+            }
+            const { cuenta_bancaria_id, metodo_pago } = req.body
+            const sucursal = await this.asignarCuentaBancariaSucursalUseCase.execute(
+                negocio_id,
+                sucursal_id,
+                cuenta_bancaria_id,
+                metodo_pago
+            )
+            res.status(200).json(Respuesta.exito('Cuenta bancaria asignada con éxito', sucursal))
         } catch (error) {
             next(error)
         }

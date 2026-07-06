@@ -9,7 +9,12 @@ import prisma from "@infrastructure/config/prisma.js";
 
 const sucursalRepository = new PrismaSucursalRepository(prisma);
 
+import { ObtenerMiSucursalUseCase } from "./application/obtener-mi-sucursal.usecase.js";
+import { AsignarCuentaBancariaSucursalUseCase } from "./application/asignar-cuenta-bancaria-sucursal.usecase.js";
+
 const obtenerSucursalUseCase = new ObtenerSucursalUseCase(sucursalRepository);
+const obtenerMiSucursalUseCase = new ObtenerMiSucursalUseCase(sucursalRepository);
+const asignarCuentaBancariaSucursalUseCase = new AsignarCuentaBancariaSucursalUseCase(sucursalRepository);
 const obtenerSucursalesUseCase = new ObtenerSucursalesUseCase(sucursalRepository);
 const registrarSucursalUseCase = new RegistrarSucursalUseCase(sucursalRepository);
 const actualizarSucursalUseCase = new ActualizarSucursalUseCase(sucursalRepository);
@@ -17,6 +22,8 @@ const eliminarSucursalUseCase = new EliminarSucursalUseCase(sucursalRepository);
 
 export const sucursalController = new SucursalController(
     obtenerSucursalUseCase,
+    obtenerMiSucursalUseCase,
+    asignarCuentaBancariaSucursalUseCase,
     obtenerSucursalesUseCase,
     registrarSucursalUseCase,
     actualizarSucursalUseCase,

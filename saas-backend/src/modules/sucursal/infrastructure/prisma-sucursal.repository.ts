@@ -1,9 +1,10 @@
 import type { PrismaClient } from "@prisma/client";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
 import type { Paginated } from "@shared/domain/paginated.js";
-import type { SucursalActualizar, SucursalCrear, SucursalCrearPersistencia, SucursalObtenidoDetalle, SucursalSimple } from "../domain/sucursal.entity.js";
+import type { SucursalActualizar, SucursalCrear, SucursalCrearPersistencia, SucursalMiDetalle, SucursalObtenidoDetalle, SucursalSimple } from "../domain/sucursal.entity.js";
 import type { SucursalRepository } from "../domain/sucursal.repository.js";
 import { SucursalMapper } from "./mappers/sucursal.mapper.js";
+import { CuentaBancariaMapper } from "../../cuenta-bancaria/infrastructure/mappers/cuenta-bancaria.mapper.js";
 import type { Pagination } from "@shared/domain/pagination.js";
 
 export class PrismaSucursalRepository implements SucursalRepository {
@@ -59,7 +60,7 @@ export class PrismaSucursalRepository implements SucursalRepository {
 
     async obtener(id: string, negocio_id: string): Promise<SucursalObtenidoDetalle | null> {
         try {
-            const sucursal = await this.prisma.sucursal.findUnique({
+            const sucursal = await this.prisma.sucursal.findFirst({
                 where: { id, negocio_id },
                 include: { negocio: true },
             });
@@ -69,6 +70,105 @@ export class PrismaSucursalRepository implements SucursalRepository {
             }
 
             return SucursalMapper.mapDetalle(sucursal);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async obtenerMiSucursal(negocio_id: string, sucursal_id: string): Promise<SucursalMiDetalle | null> {
+        try {
+            const sucursal = await this.prisma.sucursal.findFirst({
+                where: { id: sucursal_id, negocio_id },
+                include: {
+                    cajas: true,
+                    cuentas_bancarias: {
+                        include: {
+                            cuenta_bancaria: {
+                                include: {
+                                    banco: true,
+                                    moneda: true,
+                                },
+                            },
+                        },
+                    },
+                    usuarios: {
+                        select: {
+                            id: true,
+                        },
+                    },
+                },
+            });
+
+            if (!sucursal) {
+                return null;
+            }
+
+            return {
+                ...SucursalMapper.mapDetalle(sucursal as any),
+                cajas: sucursal.cajas.map((caja) => ({
+                    id: caja.id,
+                    nombre: caja.nombre,
+                    tipo: caja.tipo,
+                    saldo: caja.saldo,
+                    activo: caja.activo,
+                    created_at: caja.created_at,
+                    updated_at: caja.updated_at,
+                })),
+                cuentas_bancarias: sucursal.cuentas_bancarias.map((item) => ({
+                    metodo_pago: item.metodo_pago,
+                    cuenta_bancaria: CuentaBancariaMapper.mapSimple(item.cuenta_bancaria as any),
+                })),
+                usuarios_count: sucursal.usuarios?.length ?? 0,
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async asignarCuentaBancaria(
+        negocio_id: string,
+        sucursal_id: string,
+        cuenta_bancaria_id: string,
+        metodo_pago: 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA' | 'OTRO'
+    ): Promise<SucursalMiDetalle | null> {
+        try {
+            const sucursal = await this.prisma.sucursal.findFirst({
+                where: { id: sucursal_id, negocio_id },
+            });
+
+            if (!sucursal) {
+                return null;
+            }
+
+            const cuentaBancaria = await this.prisma.cuentaBancaria.findFirst({
+                where: { id: cuenta_bancaria_id, negocio_id },
+            });
+
+            if (!cuentaBancaria) {
+                return null;
+            }
+
+            const existing = await this.prisma.sucursalCuentaBancaria.findUnique({
+                where: {
+                    sucursal_id_cuenta_bancaria_id_metodo_pago: {
+                        sucursal_id,
+                        cuenta_bancaria_id,
+                        metodo_pago,
+                    },
+                },
+            });
+
+            if (!existing) {
+                await this.prisma.sucursalCuentaBancaria.create({
+                    data: {
+                        sucursal_id,
+                        cuenta_bancaria_id,
+                        metodo_pago,
+                    },
+                });
+            }
+
+            return this.obtenerMiSucursal(negocio_id, sucursal_id);
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

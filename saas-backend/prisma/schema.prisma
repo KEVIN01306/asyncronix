@@ -967,14 +967,15 @@ model CuentaBancaria {
 
 // Tabla intermedia explícita para poder asignar una cuenta a varias sucursales
 model SucursalCuentaBancaria {
-  sucursal_id        String   @db.Char(36)
-  cuenta_bancaria_id String   @db.Char(36)
-  created_at         DateTime @default(now())
+  sucursal_id        String     @db.Char(36)
+  cuenta_bancaria_id String     @db.Char(36)
+  metodo_pago        MetodoPago 
+  created_at         DateTime   @default(now())
 
   sucursal        Sucursal       @relation(fields: [sucursal_id], references: [id], onDelete: Cascade)
   cuenta_bancaria CuentaBancaria @relation(fields: [cuenta_bancaria_id], references: [id], onDelete: Cascade)
 
-  @@id([sucursal_id, cuenta_bancaria_id])
+  @@id([sucursal_id, cuenta_bancaria_id, metodo_pago])
   @@map("sucursal_cuentas_bancarias")
 }
 
