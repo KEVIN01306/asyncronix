@@ -146,7 +146,14 @@ const permisosData = [
     { codigo: "ELIMINAR_CAJAS" },
 
     { codigo: "VER_BANCOS" },
-    { codigo: "VER_BANCOS_DETALLE" }
+    { codigo: "VER_BANCOS_DETALLE" },
+
+
+    { codigo: "VER_CATEGORIAS_TRANSACCION" },
+    { codigo: "VER_CATEGORIAS_TRANSACCION_DETALLE" },
+    { codigo: "CREAR_CATEGORIAS_TRANSACCION" },
+    { codigo: "EDITAR_CATEGORIAS_TRANSACCION" },
+    { codigo: "ELIMINAR_CATEGORIAS_TRANSACCION" }
 
 ];
 
@@ -262,6 +269,10 @@ const modulosConPermisos = [
     {
         nombre: "BANCOS",
         permisos: ["VER_BANCOS", "VER_BANCOS_DETALLE"]
+    },
+    {
+        nombre: "CATEGORIAS TRANSACCION",
+        permisos: ["VER_CATEGORIAS_TRANSACCION", "VER_CATEGORIAS_TRANSACCION_DETALLE", "CREAR_CATEGORIAS_TRANSACCION", "EDITAR_CATEGORIAS_TRANSACCION", "ELIMINAR_CATEGORIAS_TRANSACCION"]
     }
 ];
 async function main() {

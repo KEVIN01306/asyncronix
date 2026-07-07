@@ -32,6 +32,8 @@ import { paisesRoutes } from "../../modules/paises/presentation/paises.routes";
 import { monedasRoutes } from "../../modules/monedas/presentation/monedas.routes";
 import { cajaRoutes } from "../../modules/caja/presentation/caja.routes";
 import { cuentasBancariasRoutes } from "../../modules/cuenta-bancaria/presentation/cuenta-bancaria.routes";
+import { categoriasTransaccionRoutes } from "../../modules/categorias-transaccion/presentation/categorias-transaccion.routes";
+import { movimientoRoutes } from "../../modules/movimientos/presentation/movimiento.routes";
 import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
 
 const appRouter = createBrowserRouter([
@@ -84,6 +86,8 @@ const appRouter = createBrowserRouter([
                     ...proveedoresRoutes,
                     ...cajaRoutes,
                     ...cuentasBancariasRoutes,
+                    ...categoriasTransaccionRoutes,
+                    ...movimientoRoutes,
                     ...customRoutes,
                     ...paisesRoutes,
                     ...monedasRoutes,

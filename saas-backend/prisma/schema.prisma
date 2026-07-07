@@ -1009,7 +1009,6 @@ model Transaccion {
 
   tipo_movimiento TipoMovimiento
   origen_tipo     TipoOrigenTransaccion @default(INGRESO_EGRESO)
-  origen_id       String?               @db.Char(36)
 
   moneda_id         String @db.Char(36)
   monto_original    Float

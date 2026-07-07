@@ -1,0 +1,26 @@
+import AppError from '@shared/errors/AppError.js';
+import { DatabaseError } from '@shared/database/errors/DatabaseError.js';
+import type { TransaccionDetalle } from '../domain/transaccion.entity.js';
+import type { TransaccionRepository } from '../domain/transaccion.repository.js';
+
+export class ObtenerDetalleMovimientoUseCase {
+    constructor(private readonly transaccionRepository: TransaccionRepository) {}
+
+    async execute(id: string, negocio_id: string, sucursal_id: string): Promise<TransaccionDetalle> {
+        try {
+            const transaccion = await this.transaccionRepository.obtenerDetalle(id, negocio_id, sucursal_id);
+            if (!transaccion) {
+                throw new AppError('Movimiento no encontrado', 'MOVIMIENTO_NOT_FOUND', 404);
+            }
+            return transaccion;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            if (error instanceof DatabaseError) {
+                throw new AppError('Error en base de datos', 'DATABASE_ERROR', 500);
+            }
+            throw error;
+        }
+    }
+}
