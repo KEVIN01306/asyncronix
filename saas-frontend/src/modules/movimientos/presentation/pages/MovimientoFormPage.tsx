@@ -10,30 +10,24 @@ import {
 import { AccountBalanceWallet, DateRange, Description, Receipt } from '@mui/icons-material';
 import { toast } from 'sonner';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
-import api from '../../../../core/api/api';
 import { useAuthStore } from '../../../../core/store/authStore';
 import movimientoRepository from '../../infrastructure/movimiento.repository';
+import { cajaRepository } from '../../../caja/infrastructure/caja.repository';
+import { cuentaBancariaRepository } from '../../../cuenta-bancaria/infrastructure/cuenta-bancaria.repository';
+import { categoriaTransaccionRepository } from '../../../categorias-transaccion/infrastructure/categoria-transaccion.repository';
+import type { Caja } from '../../../caja/domain/interfaces/caja.interface';
+import type { CuentaBancaria } from '../../../cuenta-bancaria/domain/interfaces/cuenta-bancaria.interface';
+import type { CategoriaTransaccion } from '../../../categorias-transaccion/domain/interfaces/categoria-transaccion.interface';
 import type { MovimientoFormValues } from '../../domain/interfaces/movimiento.interface';
 import { movimientoSchema } from '../../domain/interfaces/movimiento.schema';
-
-interface CajaOption { id: string; nombre: string; }
-interface CategoriaOption { id: string; nombre: string; tipo: 'INGRESO' | 'EGRESO'; }
-interface CuentaOption {
-    id: string;
-    numero_cuenta: string;
-    nombre_titular: string;
-    banco: { nombre_comercial: string; };
-    moneda_id: string | null;
-    moneda?: { codigo: string; };
-}
 
 export default function MovimientoFormPage() {
     const navigate = useNavigate();
     const user = useAuthStore((state) => state.user);
-    const [cajas, setCajas] = useState<CajaOption[]>([]);
-    const [cuentas, setCuentas] = useState<CuentaOption[]>([]);
-    const [categorias, setCategorias] = useState<CategoriaOption[]>([]);
-    const [selectedCuenta, setSelectedCuenta] = useState<CuentaOption | null>(null);
+    const [cajas, setCajas] = useState<Caja[]>([]);
+    const [cuentas, setCuentas] = useState<CuentaBancaria[]>([]);
+    const [categorias, setCategorias] = useState<CategoriaTransaccion[]>([]);
+    const [selectedCuenta, setSelectedCuenta] = useState<CuentaBancaria | null>(null);
     const [monedaSeleccionada, setMonedaSeleccionada] = useState<'base' | 'cuenta'>('base');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -63,8 +57,8 @@ export default function MovimientoFormPage() {
         const loadData = async () => {
             try {
                 const [cajasRes, cuentasRes] = await Promise.all([
-                    api.get('/cajas', { params: { limit: 99, offset: 0 } }),
-                    api.get('/cuentas-bancarias', { params: { limit: 99, offset: 0 } }),
+                    cajaRepository.listar(99, 0),
+                    cuentaBancariaRepository.listar(99, 0),
                 ]);
                 setCajas(cajasRes.data || []);
                 setCuentas(cuentasRes.data || []);
@@ -85,9 +79,7 @@ export default function MovimientoFormPage() {
                 return;
             }
             try {
-                const res = await api.get('/categoria-transaccion', {
-                    params: { limit: 99, offset: 0, tipo: tipoMovimiento },
-                });
+                const res = await categoriaTransaccionRepository.listar(99, 0, undefined, tipoMovimiento);
                 setCategorias(res.data || []);
             } catch (error) {
                 console.error(error);
@@ -275,7 +267,7 @@ export default function MovimientoFormPage() {
                                                         ))
                                                         : cuentas.map((cuenta) => (
                                                             <MenuItem key={cuenta.id} value={cuenta.id}>
-                                                                {`${cuenta.numero_cuenta} - ${cuenta.banco.nombre_comercial} (${cuenta.moneda?.codigo})`}
+                                                                {`${cuenta.numero_cuenta} - ${cuenta.banco?.nombre_comercial ?? 'Sin banco'} (${cuenta.moneda?.codigo ?? 'N/A'})`}
                                                             </MenuItem>
                                                         ))}
                                                 </TextField>

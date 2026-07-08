@@ -16,7 +16,7 @@ import { SidebarHeader } from './components/SidebarHeader';
 import { SidebarItem } from './components/SidebarItem';
 import { SidebarGroup } from './components/SidebarGroup';
 import { SidebarFooter } from './components/SidebarFooter';
-import { Add, ChevronLeft } from '@mui/icons-material';
+import { Add, FlipOutlined } from '@mui/icons-material';
 
 export interface MenuItem {
   name?: string;
@@ -187,7 +187,7 @@ const Sidebar = ({ open, onClose, isMobile, drawerWidth, menuItems, onOpen, onCo
               sx={{ color: 'primary.main', ml: collapsed ? 0 : 1 }}
               aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
             >
-              {collapsed ? <Add fontSize="small" /> : <ChevronLeft fontSize="small" />}
+              {collapsed ? <Add fontSize="small" /> : <FlipOutlined fontSize="small" />}
             </IconButton>
           ) : null}
         </Box>
