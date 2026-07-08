@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Grid, useTheme, useMediaQuery, Alert, AlertTitle } from '@mui/material';
+import { Grid, useTheme, Alert, AlertTitle } from '@mui/material';
 import { Box, Card, CardContent, Typography, Button, Chip, Divider, Paper, Stack } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Print as PrintIcon, ShoppingBag, Receipt, Person, CalendarToday, CreditCard } from '@mui/icons-material';
 import { toast } from 'sonner';
@@ -17,7 +17,6 @@ export default function VentaDetallePage() {
     const [venta, setVenta] = useState<Venta | null>(null);
     const user = useAuthStore(state => state.user);
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     useEffect(() => {
         if (id) {
