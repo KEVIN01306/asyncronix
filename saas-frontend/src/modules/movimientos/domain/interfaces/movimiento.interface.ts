@@ -9,6 +9,7 @@ export interface Transaccion {
     usuario_id: string;
     usuario_nombre?: string;
     moneda_id: string;
+    moneda_actual_codigo?: string;
     moneda_codigo?: string;
     monto_original: number;
     tipo_cambio: number;
@@ -37,6 +38,12 @@ export interface TransaccionDetalle extends Transaccion {
         nombre: string;
     };
     moneda?: {
+        id: string;
+        codigo: string;
+        nombre: string;
+        simbolo: string;
+    };
+    moneda_actual?: {
         id: string;
         codigo: string;
         nombre: string;

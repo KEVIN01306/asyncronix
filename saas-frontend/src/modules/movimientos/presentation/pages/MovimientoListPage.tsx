@@ -1,361 +1,268 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Add, FilterList, Search, Visibility } from '@mui/icons-material';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '../../../shared/components/ui/table';
-import { Button } from '../../../shared/components/ui/button';
-import { Input } from '../../../shared/components/ui/input';
-import {
+    Alert,
+    AlertTitle,
+    Box,
+    Button,
     Dialog,
+    DialogActions,
     DialogContent,
-    DialogHeader,
     DialogTitle,
-} from '../../../shared/components/ui/dialog';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '../../../shared/components/ui/select';
+    InputAdornment,
+    MenuItem,
+    Paper,
+    Stack,
+    TableContainer,
+    TextField,
+    useMediaQuery,
+    useTheme,
+} from '@mui/material';
+import { toast } from 'sonner';
+import ListTable from '../../../../shared/components/ui/tables/ListTable';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { useAbortableFetch, isAbortError } from '../../../../core/hooks/useAbortableFetch';
+import { useDebounce } from '../../../../core/hooks/useDebounce';
 import movimientoRepository from '../../infrastructure/movimiento.repository';
-import { format } from 'date-fns';
 import type { Transaccion } from '../../domain/interfaces/movimiento.interface';
-import api from '../../../core/api/api';
+import { formatMoney } from '../../../../core/utils/formatMoney';
 
-export default function MovimientoListPage() {
+type TipoMovimientoFilter = '' | 'INGRESO' | 'EGRESO';
+type EntidadTipoFilter = '' | 'CAJA' | 'CUENTA';
+
+const MovimientoListPage = () => {
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [searchParams, setSearchParams] = useSearchParams();
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+    const [tipoMovimiento, setTipoMovimiento] = useState<TipoMovimientoFilter>(
+        (searchParams.get('tipo_movimiento') as TipoMovimientoFilter) || ''
+    );
+    const [entidadTipo, setEntidadTipo] = useState<EntidadTipoFilter>(
+        (searchParams.get('entidad_tipo') as EntidadTipoFilter) || ''
+    );
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
+    const abortableFetch = useAbortableFetch();
     const [movimientos, setMovimientos] = useState<Transaccion[]>([]);
-    const [loading, setLoading] = useState(false);
     const [total, setTotal] = useState(0);
-    const [page, setPage] = useState(1);
-    const limit = 10;
-    const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-    const [showFilters, setShowFilters] = useState(false);
-    const [categorias, setCategorias] = useState<any[]>([]);
-    const [cajas, setCajas] = useState<any[]>([]);
-    const [cuentas, setCuentas] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const [modalTipoMovimiento, setModalTipoMovimiento] = useState<TipoMovimientoFilter>('');
+    const [modalEntidadTipo, setModalEntidadTipo] = useState<EntidadTipoFilter>('');
 
-    // Filters
-    const [filtros, setFiltros] = useState({
-        tipo_movimiento: searchParams.get('tipo_movimiento') || '',
-        categoria_id: searchParams.get('categoria_id') || '',
-        entidad_tipo: searchParams.get('entidad_tipo') || '',
-        entidad_id: searchParams.get('entidad_id') || '',
-        fecha_inicio: searchParams.get('fecha_inicio') || '',
-        fecha_fin: searchParams.get('fecha_fin') || '',
-    });
+    const columns = useMemo(
+        () => [
+            {
+                id: 'fecha_transaccion',
+                name: 'Fecha',
+                format: (value: string) => new Date(value).toLocaleDateString('es-ES'),
+            },
+            {
+                id: 'tipo_movimiento',
+                name: 'Tipo',
+                format: (value: string) => (value === 'INGRESO' ? 'Ingreso' : 'Egreso'),
+            },
+            { id: 'categoria_nombre', name: 'Categoría' },
+            { id: 'entidad_nombre', name: 'Entidad' },
+            { id: 'moneda_codigo', name: 'Moneda' },
+            { id: 'monto_original', name: 'Monto', format: (_value: number, row: Transaccion) => formatMoney(row.monto_original, row.moneda_codigo) },
+            { id: 'usuario_nombre', name: 'Usuario' },
+        ],
+        []
+    );
 
-    // Load movimientos
-    useEffect(() => {
-        const loadMovimientos = async () => {
+    const actions = [
+        {
+            name: 'Ver',
+            icon: <Visibility fontSize="small" />,
+            color: 'info',
+            onClick: (row: Transaccion) => navigate(`/movimientos/${row.id}`),
+        },
+    ];
+
+    const updateSearchParams = (override: {
+        limit?: string;
+        offset?: string;
+        q?: string;
+        tipo_movimiento?: string;
+        entidad_tipo?: string;
+    }) => {
+        const params: Record<string, string> = {
+            limit: override.limit ?? limit.toString(),
+            offset: override.offset ?? offset.toString(),
+        };
+
+        const q = override.q ?? searchQuery;
+        const tipo = override.tipo_movimiento ?? tipoMovimiento;
+        const entidad = override.entidad_tipo ?? entidadTipo;
+
+        if (q.trim()) params.q = q;
+        if (tipo) params.tipo_movimiento = tipo;
+        if (entidad) params.entidad_tipo = entidad;
+
+        setSearchParams(params);
+    };
+
+    const fetchMovimientos = useCallback(
+        async (signal: AbortSignal) => {
+            setLoading(true);
             try {
-                setLoading(true);
-                const offset = (page - 1) * limit;
-                const result = await movimientoRepository.listar({
-                    limit,
-                    offset,
-                    q: searchTerm || undefined,
-                    tipo_movimiento: (filtros.tipo_movimiento || undefined) as any,
-                    categoria_id: filtros.categoria_id || undefined,
-                    entidad_tipo: (filtros.entidad_tipo || undefined) as any,
-                    entidad_id: filtros.entidad_id || undefined,
-                    fecha_inicio: filtros.fecha_inicio || undefined,
-                    fecha_fin: filtros.fecha_fin || undefined,
-                });
-                setMovimientos(result.data || []);
-                setTotal(result.total || 0);
+                const response = await movimientoRepository.listar(
+                    {
+                        limit,
+                        offset,
+                        q: debouncedSearchQuery || undefined,
+                        tipo_movimiento: tipoMovimiento || undefined,
+                        entidad_tipo: entidadTipo || undefined,
+                    },
+                    signal
+                );
+
+                setMovimientos(response.data || []);
+                setTotal(response.meta.total);
             } catch (error) {
-                console.error('Error loading movimientos:', error);
+                if (isAbortError(error)) return;
+                toast.error('No se pudieron cargar los movimientos');
+                console.error(error);
             } finally {
                 setLoading(false);
             }
-        };
-        loadMovimientos();
-    }, [page, searchTerm, filtros]);
+        },
+        [debouncedSearchQuery, entidadTipo, limit, offset, tipoMovimiento]
+    );
 
-    // Load filter options
     useEffect(() => {
-        const loadOptions = async () => {
-            try {
-                const [catRes, cajasRes, cuentasRes] = await Promise.all([
-                    api.get('/categoria-transaccion', { params: { limit: 999, offset: 0 } }),
-                    api.get('/cajas', { params: { limit: 999, offset: 0 } }),
-                    api.get('/cuentas-bancarias', { params: { limit: 999, offset: 0 } }),
-                ]);
-                setCategorias(catRes.data || []);
-                setCajas(cajasRes.data || []);
-                setCuentas(cuentasRes.data || []);
-            } catch (error) {
-                console.error('Error loading options:', error);
-            }
-        };
-        loadOptions();
-    }, []);
+        const q = searchParams.get('q') || '';
+        const tipo = (searchParams.get('tipo_movimiento') as TipoMovimientoFilter) || '';
+        const entidad = (searchParams.get('entidad_tipo') as EntidadTipoFilter) || '';
 
-    const handleSearch = (term: string) => {
-        setSearchTerm(term);
-        setPage(1);
+        // Sync local state from URL params only when params change.
+        // Do NOT include local state in deps to avoid overwriting user selections while interacting with the UI.
+        setSearchQuery(q);
+        setTipoMovimiento(tipo);
+        setEntidadTipo(entidad);
+    }, [searchParams]);
+
+    useEffect(() => {
+        abortableFetch(fetchMovimientos);
+    }, [abortableFetch, fetchMovimientos]);
+
+    const handleSearchChange = (value: string) => {
+        setSearchQuery(value);
+        updateSearchParams({ offset: '0', q: value });
     };
-
-    const handleFilterChange = (key: string, value: string) => {
-        setFiltros((prev) => ({ ...prev, [key]: value }));
-        setPage(1);
-    };
-
-    const clearFilters = () => {
-        setFiltros({
-            tipo_movimiento: '',
-            categoria_id: '',
-            entidad_tipo: '',
-            entidad_id: '',
-            fecha_inicio: '',
-            fecha_fin: '',
-        });
-        setSearchTerm('');
-        setPage(1);
-    };
-
-    const getTipoLabel = (tipo: string) => (tipo === 'INGRESO' ? '+ Ingreso' : '- Egreso');
-    const getTipoColor = (tipo: string) =>
-        tipo === 'INGRESO' ? 'text-green-600' : 'text-red-600';
-
-    const pageCount = Math.ceil(total / limit);
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold">Movimientos</h1>
-                    <p className="text-gray-500">Gestiona ingresos y egresos de tu negocio</p>
-                </div>
-                <Button onClick={() => navigate('/finanzas/movimientos/nuevo')}>
-                    + Nuevo Movimiento
-                </Button>
-            </div>
+        <Box p={isMobile ? 2 : 4}>
+            <Alert severity="info" sx={{ mb: 3, boxShadow: 'none', border: (theme) => `1px solid ${theme.palette.divider}` }}>
+                <AlertTitle>Movimientos</AlertTitle>
+                Registra y revisa los ingresos y egresos de tu negocio.
+            </Alert>
 
-            {/* Search and Filter Bar */}
-            <div className="space-y-4">
-                <div className="flex gap-2">
-                    <Input
-                        placeholder="Buscar movimientos..."
-                        value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        className="flex-1"
+            <Paper sx={{ bgcolor: 'background.paper', p: 2, mb: 2 }}>
+                <Stack direction={isMobile ? 'column' : 'row'} spacing={2} alignItems="center">
+                    <TextField
+                        fullWidth
+                        label="Buscar movimientos"
+                        placeholder="Ej: nómina, caja, cuenta"
+                        value={searchQuery}
+                        onChange={(event) => handleSearchChange(event.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Search color="primary" />
+                                </InputAdornment>
+                            ),
+                        }}
                     />
-                    <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-                        Más filtros
+                    <Stack direction={isMobile ? 'column' : 'row'} spacing={1} sx={{ width: isMobile ? '100%' : 'auto' }}>
+                        <Button
+                            variant="outlined"
+                            onClick={() => {
+                                setModalTipoMovimiento(tipoMovimiento);
+                                setModalEntidadTipo(entidadTipo);
+                                setFiltersOpen(true);
+                            }}
+                            startIcon={<FilterList />}
+                        >
+                            Más filtros
+                        </Button>
+                        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/movimientos/nuevo')}>
+                            Nuevo movimiento
+                        </Button>
+                    </Stack>
+                </Stack>
+            </Paper>
+
+            <TableContainer>
+                {loading ? (
+                    <Loading />
+                ) : (
+                    <ListTable
+                        data={movimientos}
+                        columns={columns}
+                        actions={actions}
+                        pagination={{
+                            total,
+                            limit,
+                            offset,
+                            onPageChange: (newPage) => updateSearchParams({ offset: (newPage * limit).toString() }),
+                            onRowsPerPageChange: (newLimit) => updateSearchParams({ limit: newLimit.toString(), offset: '0' }),
+                        }}
+                    />
+                )}
+            </TableContainer>
+
+            <Dialog open={filtersOpen} onClose={() => setFiltersOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Más filtros</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1}>
+                        <TextField
+                            select
+                            fullWidth
+                            label="Tipo de movimiento"
+                            value={modalTipoMovimiento}
+                            onChange={(event) => setModalTipoMovimiento(event.target.value as TipoMovimientoFilter)}
+                        >
+                            <MenuItem value="">Todos</MenuItem>
+                            <MenuItem value="INGRESO">Ingreso</MenuItem>
+                            <MenuItem value="EGRESO">Egreso</MenuItem>
+                        </TextField>
+
+                        <TextField
+                            select
+                            fullWidth
+                            label="Entidad"
+                            value={modalEntidadTipo}
+                            onChange={(event) => setModalEntidadTipo(event.target.value as EntidadTipoFilter)}
+                        >
+                            <MenuItem value="">Todas</MenuItem>
+                            <MenuItem value="CAJA">Caja</MenuItem>
+                            <MenuItem value="CUENTA">Cuenta</MenuItem>
+                        </TextField>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        // clear modal selections only
+                        setModalTipoMovimiento('');
+                        setModalEntidadTipo('');
+                    }}>Limpiar</Button>
+                    <Button variant="contained" onClick={() => {
+                        // apply modal selections to global filters and trigger fetch
+                        updateSearchParams({ offset: '0', q: searchQuery, tipo_movimiento: modalTipoMovimiento, entidad_tipo: modalEntidadTipo });
+                        setFiltersOpen(false);
+                    }}>
+                        Aplicar
                     </Button>
-                </div>
-
-                {/* Filter Modal */}
-                <Dialog open={showFilters} onOpenChange={setShowFilters}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Filtros Avanzados</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-sm font-medium">Tipo de Movimiento</label>
-                                <Select
-                                    value={filtros.tipo_movimiento}
-                                    onValueChange={(val) =>
-                                        handleFilterChange('tipo_movimiento', val)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Todos" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="">Todos</SelectItem>
-                                        <SelectItem value="INGRESO">Ingreso</SelectItem>
-                                        <SelectItem value="EGRESO">Egreso</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium">Categoría</label>
-                                <Select
-                                    value={filtros.categoria_id}
-                                    onValueChange={(val) =>
-                                        handleFilterChange('categoria_id', val)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Todas" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="">Todas</SelectItem>
-                                        {categorias.map((cat) => (
-                                            <SelectItem key={cat.id} value={cat.id}>
-                                                {cat.nombre}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium">Tipo de Entidad</label>
-                                <Select
-                                    value={filtros.entidad_tipo}
-                                    onValueChange={(val) =>
-                                        handleFilterChange('entidad_tipo', val)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Todas" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="">Todas</SelectItem>
-                                        <SelectItem value="CAJA">Caja</SelectItem>
-                                        <SelectItem value="CUENTA">Cuenta</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium">Fecha Inicio</label>
-                                <Input
-                                    type="date"
-                                    value={filtros.fecha_inicio}
-                                    onChange={(e) =>
-                                        handleFilterChange('fecha_inicio', e.target.value)
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium">Fecha Fin</label>
-                                <Input
-                                    type="date"
-                                    value={filtros.fecha_fin}
-                                    onChange={(e) =>
-                                        handleFilterChange('fecha_fin', e.target.value)
-                                    }
-                                />
-                            </div>
-
-                            <div className="flex gap-2 pt-4">
-                                <Button
-                                    variant="outline"
-                                    onClick={clearFilters}
-                                    className="flex-1"
-                                >
-                                    Limpiar
-                                </Button>
-                                <Button onClick={() => setShowFilters(false)} className="flex-1">
-                                    Aplicar
-                                </Button>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            {/* Table */}
-            <div className="border rounded-lg overflow-hidden">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Fecha</TableHead>
-                            <TableHead>Tipo</TableHead>
-                            <TableHead>Categoría</TableHead>
-                            <TableHead>Entidad</TableHead>
-                            <TableHead>Moneda</TableHead>
-                            <TableHead className="text-right">Monto</TableHead>
-                            <TableHead>Usuario</TableHead>
-                            <TableHead></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={8} className="text-center py-8">
-                                    Cargando...
-                                </TableCell>
-                            </TableRow>
-                        ) : movimientos.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={8} className="text-center py-8">
-                                    No hay movimientos
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            movimientos.map((mov) => (
-                                <TableRow
-                                    key={mov.id}
-                                    className="cursor-pointer hover:bg-gray-50"
-                                    onClick={() =>
-                                        navigate(`/finanzas/movimientos/${mov.id}`)
-                                    }
-                                >
-                                    <TableCell>
-                                        {format(
-                                            new Date(mov.fecha_transaccion),
-                                            'dd/MM/yyyy'
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className={getTipoColor(mov.tipo_movimiento)}>
-                                            {getTipoLabel(mov.tipo_movimiento)}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>{mov.categoria_nombre}</TableCell>
-                                    <TableCell>{mov.entidad_nombre}</TableCell>
-                                    <TableCell>{mov.moneda_codigo}</TableCell>
-                                    <TableCell className="text-right">
-                                        {mov.monto_original.toFixed(2)}
-                                    </TableCell>
-                                    <TableCell>{mov.usuario_nombre}</TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/finanzas/movimientos/${mov.id}`);
-                                            }}
-                                        >
-                                            Ver
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-
-            {/* Pagination */}
-            {pageCount > 1 && (
-                <div className="flex justify-center items-center gap-2">
-                    <Button
-                        variant="outline"
-                        disabled={page === 1}
-                        onClick={() => setPage(page - 1)}
-                    >
-                        Anterior
-                    </Button>
-                    <span>
-                        Página {page} de {pageCount}
-                    </span>
-                    <Button
-                        variant="outline"
-                        disabled={page === pageCount}
-                        onClick={() => setPage(page + 1)}
-                    >
-                        Siguiente
-                    </Button>
-                </div>
-            )}
-        </div>
+                </DialogActions>
+            </Dialog>
+        </Box>
     );
-}
+};
+
+export default MovimientoListPage;

@@ -62,6 +62,7 @@ export class CrearMovimientoUseCase {
                 processedData = {
                     ...data,
                     moneda_id: negocio.moneda_id,
+                    moneda_actual_id: negocio.moneda_id,
                     tipo_cambio: 1.0,
                     monto_moneda_base: data.monto_original,
                 };
@@ -87,6 +88,7 @@ export class CrearMovimientoUseCase {
                     processedData = {
                         ...data,
                         moneda_id: negocio.moneda_id,
+                        moneda_actual_id: negocio.moneda_id,
                         tipo_cambio: 1.0,
                         monto_moneda_base: data.monto_original,
                     };
@@ -115,6 +117,7 @@ export class CrearMovimientoUseCase {
                     processedData = {
                         ...data,
                         moneda_id: cuentaMonedaId,
+                        moneda_actual_id: negocio.moneda_id,
                         tipo_cambio: exchangeRate.rate,
                         monto_original,
                         monto_moneda_base,

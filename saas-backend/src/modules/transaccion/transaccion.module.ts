@@ -13,7 +13,7 @@ const exchangeRateProvider = new FrankfurterExchangeRateProvider();
 const obtenerCaja = async (id: string) => {
     return await (prisma as any).caja.findUnique({
         where: { id },
-        select: { id: true, moneda_id: true },
+        select: { id: true },
     });
 };
 

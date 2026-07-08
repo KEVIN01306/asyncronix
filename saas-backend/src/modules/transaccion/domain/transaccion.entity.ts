@@ -11,6 +11,8 @@ export interface Transaccion {
     tipo_movimiento: TipoMovimiento;
     origen_tipo: TipoOrigenTransaccion;
     moneda_id: string;
+    moneda_actual_id: string | null;
+    moneda_actual_codigo?: string;
     monto_original: number;
     tipo_cambio: number;
     monto_moneda_base: number;
@@ -36,9 +38,10 @@ export interface TransaccionCrear {
     monto_moneda_base?: number; // Si aplica conversión
     descripcion?: string;
     fecha_transaccion?: Date;
+    moneda_actual_id?: string;
 }
 
-export interface TransaccionDetalle extends Transaccion {
+export interface TransaccionDetalle extends Omit<Transaccion, 'moneda_actual_id'> {
     categoria?: {
         id: string;
         nombre: string;
@@ -52,7 +55,13 @@ export interface TransaccionDetalle extends Transaccion {
         codigo: string;
         nombre: string;
         simbolo: string;
-    };
+    } | null;
+    moneda_actual?: {
+        id: string;
+        codigo: string;
+        nombre: string;
+        simbolo: string;
+    } | null;
     negocio?: {
         id: string;
         moneda_id: string;
@@ -74,7 +83,7 @@ export interface TransaccionDetalle extends Transaccion {
     } | null;
 }
 
-export interface TransaccionSimple extends Omit<Transaccion, 'negocio_id' | 'sucursal_id'> {
+export interface TransaccionSimple extends Omit<Transaccion, 'negocio_id' | 'sucursal_id' | 'moneda_actual_id'> {
     categoria_nombre?: string;
     usuario_nombre?: string;
     moneda_codigo?: string;

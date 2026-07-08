@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Add, Delete, Edit, Search, Visibility } from '@mui/icons-material';
+import { Add, Delete, Edit, FilterList, Search, Visibility } from '@mui/icons-material';
 import { Alert, AlertTitle, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, MenuItem, Paper, Stack, TableContainer, TextField, useMediaQuery, useTheme } from '@mui/material';
 import { toast } from 'sonner';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
@@ -115,7 +115,7 @@ const CategoriaTransaccionListPage = () => {
           InputProps={{ startAdornment: <InputAdornment position="start"><Search color="primary" /></InputAdornment> }}
         />
         <Stack direction={isMobile ? 'column' : 'row'} spacing={1} sx={{ width: isMobile ? '100%' : 'auto' }}>
-          <Button variant="outlined" onClick={() => setFiltersOpen(true)}>
+          <Button variant="outlined" onClick={() => setFiltersOpen(true)} startIcon={<FilterList />}>
             Más filtros
           </Button>
           <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/categorias-transaccion/nuevo')}>

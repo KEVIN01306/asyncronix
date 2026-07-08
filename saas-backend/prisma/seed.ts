@@ -153,7 +153,11 @@ const permisosData = [
     { codigo: "VER_CATEGORIAS_TRANSACCION_DETALLE" },
     { codigo: "CREAR_CATEGORIAS_TRANSACCION" },
     { codigo: "EDITAR_CATEGORIAS_TRANSACCION" },
-    { codigo: "ELIMINAR_CATEGORIAS_TRANSACCION" }
+    { codigo: "ELIMINAR_CATEGORIAS_TRANSACCION" },
+
+    { codigo: "VER_MOVIMIENTOS" },
+    { codigo: "VER_MOVIMIENTOS_DETALLE" },
+    { codigo: "CREAR_MOVIMIENTOS" }
 
 ];
 
@@ -273,6 +277,10 @@ const modulosConPermisos = [
     {
         nombre: "CATEGORIAS TRANSACCION",
         permisos: ["VER_CATEGORIAS_TRANSACCION", "VER_CATEGORIAS_TRANSACCION_DETALLE", "CREAR_CATEGORIAS_TRANSACCION", "EDITAR_CATEGORIAS_TRANSACCION", "ELIMINAR_CATEGORIAS_TRANSACCION"]
+    },
+    {
+        nombre: "MOVIMIENTOS",
+        permisos: ["VER_MOVIMIENTOS", "VER_MOVIMIENTOS_DETALLE", "CREAR_MOVIMIENTOS"]
     }
 ];
 async function main() {

@@ -48,7 +48,8 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
                     usuario_id,
                     tipo_movimiento: data.tipo_movimiento as any,
                     origen_tipo: 'INGRESO_EGRESO',
-                    moneda_id: data.moneda_id || negocio_id,
+                    moneda_id: data.moneda_id!,
+                    moneda_actual_id: data.moneda_actual_id ?? null,
                     monto_original: data.monto_original,
                     tipo_cambio: data.tipo_cambio || 1.0,
                     monto_moneda_base: data.monto_moneda_base || data.monto_original,
@@ -69,6 +70,9 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
                         select: { id: true, nombre: true },
                     },
                     moneda: {
+                        select: { id: true, codigo: true, nombre: true, simbolo: true },
+                    },
+                    moneda_actual: {
                         select: { id: true, codigo: true, nombre: true, simbolo: true },
                     },
                     negocio: {
@@ -136,6 +140,9 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
                         select: { id: true, nombre: true },
                     },
                     moneda: {
+                        select: { id: true, codigo: true, nombre: true, simbolo: true },
+                    },
+                    moneda_actual: {
                         select: { id: true, codigo: true, nombre: true, simbolo: true },
                     },
                     negocio: {
@@ -251,6 +258,9 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
                             select: { nombre: true },
                         },
                         moneda: {
+                            select: { codigo: true },
+                        },
+                        moneda_actual: {
                             select: { codigo: true },
                         },
                         origen_caja: {

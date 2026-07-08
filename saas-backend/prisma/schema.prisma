@@ -40,6 +40,7 @@ model Moneda {
   paises            Pais[]
   cuentas_bancarias CuentaBancaria[]
   transacciones     Transaccion[]
+  transacciones_origen Transaccion[] @relation("MonedaActual")
   negocios          Negocio[]
 
   @@map("monedas")
@@ -1010,6 +1011,7 @@ model Transaccion {
   tipo_movimiento TipoMovimiento
   origen_tipo     TipoOrigenTransaccion @default(INGRESO_EGRESO)
 
+  moneda_actual_id  String? @db.Char(36)
   moneda_id         String @db.Char(36)
   monto_original    Float
   tipo_cambio       Float  @default(1.0)
@@ -1032,6 +1034,7 @@ model Transaccion {
   categoria CategoriaTransaccion? @relation(fields: [categoria_id], references: [id])
   usuario   Usuario               @relation("TransaccionesUsuario", fields: [usuario_id], references: [id])
   moneda    Moneda                @relation(fields: [moneda_id], references: [id])
+  moneda_actual Moneda?            @relation("MonedaActual", fields: [moneda_actual_id], references: [id])
 
   origen_caja    Caja?           @relation("OrigenCaja", fields: [origen_caja_id], references: [id])
   origen_cuenta  CuentaBancaria? @relation("OrigenCuenta", fields: [origen_cuenta_id], references: [id])

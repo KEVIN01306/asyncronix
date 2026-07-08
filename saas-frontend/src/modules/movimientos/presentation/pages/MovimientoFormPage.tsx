@@ -1,95 +1,57 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '../../../shared/components/ui/button';
-import { Input } from '../../../shared/components/ui/input';
-import { Label } from '../../../shared/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '../../../shared/components/ui/select';
-import { format } from 'date-fns';
-import api from '../../../core/api/api';
+import { 
+    Alert, Box, Button, Card, CardContent, FormControl, 
+    FormControlLabel, FormLabel, MenuItem, Radio, RadioGroup, 
+    Stack, TextField, Typography, Grid, Divider, Paper 
+} from '@mui/material';
+import { AccountBalanceWallet, DateRange, Description, Receipt } from '@mui/icons-material';
+import { toast } from 'sonner';
+import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import api from '../../../../core/api/api';
+import { useAuthStore } from '../../../../core/store/authStore';
 import movimientoRepository from '../../infrastructure/movimiento.repository';
 import type { MovimientoFormValues } from '../../domain/interfaces/movimiento.interface';
+import { movimientoSchema } from '../../domain/interfaces/movimiento.schema';
 
-const movimientoSchema = z.object({
-    categoria_id: z.string().min(1, 'Categoría requerida'),
-    tipo_movimiento: z.enum(['INGRESO', 'EGRESO'], {
-        errorMap: () => ({ message: 'Tipo de movimiento requerido' }),
-    }),
-    entidad_tipo: z.enum(['CAJA', 'CUENTA'], {
-        errorMap: () => ({ message: 'Tipo de entidad requerida' }),
-    }),
-    entidad_id: z.string().min(1, 'Entidad requerida'),
-    moneda_id: z.string().optional(),
-    monto_original: z.number().positive('Monto debe ser positivo').optional(),
-    monto_moneda_base: z.number().positive('Monto debe ser positivo').optional(),
-    tipo_cambio: z.number().positive().optional(),
-    descripcion: z.string().optional(),
-    fecha_transaccion: z.string().optional(),
-});
-
-interface CajaOption {
-    id: string;
-    nombre: string;
-}
-
+interface CajaOption { id: string; nombre: string; }
+interface CategoriaOption { id: string; nombre: string; tipo: 'INGRESO' | 'EGRESO'; }
 interface CuentaOption {
     id: string;
     numero_cuenta: string;
     nombre_titular: string;
-    banco: {
-        nombre_comercial: string;
-    };
+    banco: { nombre_comercial: string; };
     moneda_id: string | null;
-    moneda?: {
-        codigo: string;
-    };
-}
-
-interface CategoriaOption {
-    id: string;
-    nombre: string;
-    tipo: 'INGRESO' | 'EGRESO';
-}
-
-interface NegocioData {
-    moneda_id: string;
-    moneda?: {
-        codigo: string;
-    };
+    moneda?: { codigo: string; };
 }
 
 export default function MovimientoFormPage() {
     const navigate = useNavigate();
+    const user = useAuthStore((state) => state.user);
     const [cajas, setCajas] = useState<CajaOption[]>([]);
     const [cuentas, setCuentas] = useState<CuentaOption[]>([]);
     const [categorias, setCategorias] = useState<CategoriaOption[]>([]);
-    const [negocio, setNegocio] = useState<NegocioData | null>(null);
     const [selectedCuenta, setSelectedCuenta] = useState<CuentaOption | null>(null);
-    const [monedaSeleccionada, setMonedaSeleccionada] = useState<'base' | 'cuenta' | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+    const [monedaSeleccionada, setMonedaSeleccionada] = useState<'base' | 'cuenta'>('base');
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
 
     const {
         control,
         handleSubmit,
         watch,
+        setValue,
+        clearErrors,
         formState: { errors },
-        reset,
     } = useForm<MovimientoFormValues>({
         resolver: zodResolver(movimientoSchema),
         defaultValues: {
             tipo_movimiento: undefined,
             entidad_tipo: undefined,
-            fecha_transaccion: format(new Date(), 'yyyy-MM-dd'),
+            fecha_transaccion: new Date().toISOString().slice(0, 10),
         },
     });
 
@@ -97,26 +59,25 @@ export default function MovimientoFormPage() {
     const entidadTipo = watch('entidad_tipo');
     const entidadId = watch('entidad_id');
 
-    // Load initial data
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [cajasRes, cuentasRes, negocioRes] = await Promise.all([
-                    api.get('/cajas', { params: { limit: 999, offset: 0 } }),
-                    api.get('/cuentas-bancarias', { params: { limit: 999, offset: 0 } }),
-                    api.get('/negocios/actual'),
+                const [cajasRes, cuentasRes] = await Promise.all([
+                    api.get('/cajas', { params: { limit: 99, offset: 0 } }),
+                    api.get('/cuentas-bancarias', { params: { limit: 99, offset: 0 } }),
                 ]);
                 setCajas(cajasRes.data || []);
                 setCuentas(cuentasRes.data || []);
-                setNegocio(negocioRes.data || null);
-            } catch (err) {
-                setError('Error cargando datos iniciales');
+            } catch (error) {
+                console.error(error);
+                setFormError('Error cargando parámetros de tesorería');
+            } finally {
+                setLoading(false);
             }
         };
         loadData();
     }, []);
 
-    // Load categorias based on tipo_movimiento
     useEffect(() => {
         const loadCategorias = async () => {
             if (!tipoMovimiento) {
@@ -125,340 +86,304 @@ export default function MovimientoFormPage() {
             }
             try {
                 const res = await api.get('/categoria-transaccion', {
-                    params: {
-                        limit: 999,
-                        offset: 0,
-                        tipo: tipoMovimiento,
-                    },
+                    params: { limit: 99, offset: 0, tipo: tipoMovimiento },
                 });
                 setCategorias(res.data || []);
-            } catch (err) {
-                setError('Error cargando categorías');
+            } catch (error) {
+                console.error(error);
+                setFormError('Error cargando catálogo de cuentas/categorías');
             }
         };
         loadCategorias();
     }, [tipoMovimiento]);
 
-    // Fetch exchange rate when cuenta changes
-    useEffect(() => {
-        const fetchExchangeRate = async () => {
-            if (
-                entidadTipo === 'CUENTA' &&
-                entidadId &&
-                selectedCuenta &&
-                selectedCuenta.moneda_id &&
-                negocio?.moneda?.codigo &&
-                selectedCuenta.moneda?.codigo
-            ) {
-                if (selectedCuenta.moneda_id === negocio.moneda_id) {
-                    setExchangeRate(1.0);
-                    setMonedaSeleccionada(null);
-                } else {
-                    try {
-                        const res = await api.get(
-                            `https://api.frankfurter.dev/v2/rate/${negocio.moneda.codigo}/${selectedCuenta.moneda.codigo}`
-                        );
-                        setExchangeRate(res.rate);
-                        setMonedaSeleccionada(null);
-                    } catch (err) {
-                        setError('Error obteniendo tipo de cambio');
-                    }
-                }
-            }
-        };
-        fetchExchangeRate();
-    }, [entidadTipo, entidadId, selectedCuenta, negocio]);
+    const isDifferentCurrency =
+        entidadTipo === 'CUENTA' &&
+        selectedCuenta?.moneda_id &&
+        user?.negocio?.moneda?.id &&
+        selectedCuenta.moneda_id !== user.negocio.moneda.id;
 
-    // Update selected cuenta
     useEffect(() => {
         if (entidadTipo === 'CUENTA' && entidadId) {
             const cuenta = cuentas.find((c) => c.id === entidadId);
             setSelectedCuenta(cuenta || null);
+        } else {
+            setSelectedCuenta(null);
         }
     }, [entidadTipo, entidadId, cuentas]);
 
+    useEffect(() => {
+        setValue('monto_original', undefined);
+        setValue('monto_moneda_base', undefined);
+        clearErrors(['monto_original', 'monto_moneda_base']);
+        setMonedaSeleccionada('base');
+    }, [entidadTipo, entidadId, setValue, clearErrors]);
+
+    useEffect(() => {
+        if (!isDifferentCurrency) {
+            setMonedaSeleccionada('base');
+            return;
+        }
+        if (monedaSeleccionada === 'base') {
+            setValue('monto_original', undefined);
+            clearErrors('monto_original');
+        } else {
+            setValue('monto_moneda_base', undefined);
+            clearErrors('monto_moneda_base');
+        }
+    }, [isDifferentCurrency, monedaSeleccionada, setValue, clearErrors]);
+
+    const amountFieldName =
+        entidadTipo === 'CAJA' || (entidadTipo === 'CUENTA' && !isDifferentCurrency)
+            ? 'monto_original'
+            : monedaSeleccionada === 'cuenta'
+                ? 'monto_original'
+                : 'monto_moneda_base';
+
+    const amountCurrency =
+        amountFieldName === 'monto_original'
+            ? isDifferentCurrency && entidadTipo === 'CUENTA'
+                ? selectedCuenta?.moneda?.codigo
+                : user?.negocio?.moneda?.codigo
+            : user?.negocio?.moneda?.codigo;
+
+    const amountLabel = `Importe Líquido (${amountCurrency || 'N/A'})`;
+
     const onSubmit = async (data: MovimientoFormValues) => {
+        setSaving(true);
+        setFormError(null);
         try {
-            setLoading(true);
-            setError(null);
-            await movimientoRepository.crear(data);
-            navigate('/finanzas/movimientos');
+            const payload = { ...data } as MovimientoFormValues;
+            if (amountFieldName === 'monto_original') {
+                delete payload.monto_moneda_base;
+            } else {
+                delete payload.monto_original;
+            }
+            await movimientoRepository.crear(payload);
+            toast.success('Asiento contable indexado con éxito');
+            navigate('/movimientos');
         } catch (err: any) {
-            setError(err.message || 'Error creando movimiento');
+            setFormError(err.message || 'Fallo de validación en servidor');
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     };
 
-    const isCuentaDiferentMoneda =
-        entidadTipo === 'CUENTA' &&
-        selectedCuenta &&
-        exchangeRate &&
-        exchangeRate !== 1.0;
+    if (loading) return <Box py={8}><Loading /></Box>;
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold">Nuevo Movimiento</h1>
-                <p className="text-gray-500">Registra ingresos o egresos de tu negocio</p>
-            </div>
+        <Box py={4} px={{ xs: 2, sm: 4 }} maxWidth="900px" margin="auto">
+            <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                
+                {/* Cabecera del Formulario */}
+                <Box p={3} borderBottom="1px solid" borderColor="divider">
+                    <Typography variant="h6" fontWeight={700}>
+                        Apertura de Asiento / Movimiento Financiero
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        Complete los datos del formulario para registrar la transacción en el libro diario.
+                    </Typography>
+                </Box>
 
-            {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded text-red-700">
-                    {error}
-                </div>
-            )}
+                <CardContent sx={{ p: 3 }}>
+                    <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+                        <Stack spacing={3.5}>
+                            
+                            {formError && <Alert severity="error" variant="outlined">{formError}</Alert>}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 max-w-2xl">
-                {/* 1. Tipo de Movimiento */}
-                <div className="space-y-2">
-                    <Label htmlFor="tipo_movimiento">Tipo de Movimiento</Label>
-                    <Controller
-                        name="tipo_movimiento"
-                        control={control}
-                        render={({ field }) => (
-                            <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger id="tipo_movimiento">
-                                    <SelectValue placeholder="Selecciona un tipo" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="INGRESO">Ingreso</SelectItem>
-                                    <SelectItem value="EGRESO">Egreso</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        )}
-                    />
-                    {errors.tipo_movimiento && (
-                        <span className="text-red-500">{errors.tipo_movimiento.message}</span>
-                    )}
-                </div>
-
-                {/* 2. Categoría */}
-                {tipoMovimiento && (
-                    <div className="space-y-2">
-                        <Label htmlFor="categoria_id">Categoría</Label>
-                        <Controller
-                            name="categoria_id"
-                            control={control}
-                            render={({ field }) => (
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger id="categoria_id">
-                                        <SelectValue placeholder="Selecciona una categoría" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categorias.map((cat) => (
-                                            <SelectItem key={cat.id} value={cat.id}>
-                                                {cat.nombre}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
-                        {errors.categoria_id && (
-                            <span className="text-red-500">{errors.categoria_id.message}</span>
-                        )}
-                    </div>
-                )}
-
-                {/* 3. Tipo de Entidad Financiera */}
-                {tipoMovimiento && (
-                    <div className="space-y-2">
-                        <Label htmlFor="entidad_tipo">Entidad Financiera</Label>
-                        <Controller
-                            name="entidad_tipo"
-                            control={control}
-                            render={({ field }) => (
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger id="entidad_tipo">
-                                        <SelectValue placeholder="Selecciona tipo" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="CAJA">Caja</SelectItem>
-                                        <SelectItem value="CUENTA">Cuenta Bancaria</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
-                        {errors.entidad_tipo && (
-                            <span className="text-red-500">{errors.entidad_tipo.message}</span>
-                        )}
-                    </div>
-                )}
-
-                {/* 4. Entidad (Caja o Cuenta) */}
-                {entidadTipo && (
-                    <div className="space-y-2">
-                        <Label htmlFor="entidad_id">
-                            {entidadTipo === 'CAJA' ? 'Caja' : 'Cuenta Bancaria'}
-                        </Label>
-                        <Controller
-                            name="entidad_id"
-                            control={control}
-                            render={({ field }) => (
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger id="entidad_id">
-                                        <SelectValue
-                                            placeholder={`Selecciona una ${
-                                                entidadTipo === 'CAJA' ? 'caja' : 'cuenta'
-                                            }`}
+                            {/* SECCIÓN 1: Clasificación de Operación */}
+                            <Box>
+                                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                                    <Receipt fontSize="small" color="action" />
+                                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">Clasificación Básica</Typography>
+                                </Box>
+                                <Grid container spacing={2}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Controller
+                                            name="tipo_movimiento"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    select size="small" fullWidth label="Naturaleza del Flujo"
+                                                    {...field} error={Boolean(errors.tipo_movimiento)}
+                                                    helperText={errors.tipo_movimiento?.message}
+                                                >
+                                                    <MenuItem value="INGRESO">Ingreso (Crédito / +)</MenuItem>
+                                                    <MenuItem value="EGRESO">Egreso (Débito / -)</MenuItem>
+                                                </TextField>
+                                            )}
                                         />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {entidadTipo === 'CAJA'
-                                            ? cajas.map((caja) => (
-                                                  <SelectItem key={caja.id} value={caja.id}>
-                                                      {caja.nombre}
-                                                  </SelectItem>
-                                              ))
-                                            : cuentas.map((cuenta) => (
-                                                  <SelectItem key={cuenta.id} value={cuenta.id}>
-                                                      <div className="flex flex-col">
-                                                          <span>
-                                                              {cuenta.numero_cuenta} -{' '}
-                                                              {cuenta.banco.nombre_comercial}{' '}
-                                                              {cuenta.moneda?.codigo}
-                                                          </span>
-                                                          <span className="text-xs text-gray-500">
-                                                              Titular: {cuenta.nombre_titular}
-                                                          </span>
-                                                      </div>
-                                                  </SelectItem>
-                                              ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
-                        {errors.entidad_id && (
-                            <span className="text-red-500">{errors.entidad_id.message}</span>
-                        )}
-                    </div>
-                )}
+                                    </Grid>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Controller
+                                            name="categoria_id"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    select size="small" fullWidth label="Categoría Contable"
+                                                    {...field} error={Boolean(errors.categoria_id)}
+                                                    helperText={errors.categoria_id?.message} disabled={!tipoMovimiento}
+                                                >
+                                                    {categorias.map((cat) => (
+                                                        <MenuItem key={cat.id} value={cat.id}>{cat.nombre}</MenuItem>
+                                                    ))}
+                                                </TextField>
+                                            )}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Box>
 
-                {/* 5. Selección de Moneda (si aplica) */}
-                {isCuentaDiferentMoneda && (
-                    <div className="space-y-3 p-4 bg-blue-50 rounded border border-blue-200">
-                        <p className="text-sm font-semibold">
-                            Moneda de la cuenta diferente a la del negocio
-                        </p>
-                        <p className="text-xs text-gray-600">
-                            Tipo de cambio: 1 {negocio?.moneda?.codigo} = {exchangeRate}{' '}
-                            {selectedCuenta?.moneda?.codigo}
-                        </p>
-                        <div className="space-y-2">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="moneda_entrada"
-                                    value="base"
-                                    checked={monedaSeleccionada === 'base'}
-                                    onChange={() => setMonedaSeleccionada('base')}
-                                    className="w-4 h-4"
+                            <Divider />
+
+                            {/* SECCIÓN 2: Origen y Destino de Fondos */}
+                            <Box>
+                                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                                    <AccountBalanceWallet fontSize="small" color="action" />
+                                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">Instrumentación de Fondos</Typography>
+                                </Box>
+                                <Grid container spacing={2}>
+                                    <Grid size={{ xs: 12, sm: 4 }}>
+                                        <Controller
+                                            name="entidad_tipo"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    select size="small" fullWidth label="Tipo de Instrumento"
+                                                    {...field} error={Boolean(errors.entidad_tipo)}
+                                                    helperText={errors.entidad_tipo?.message} disabled={!tipoMovimiento}
+                                                >
+                                                    <MenuItem value="CAJA">Caja General / Efectivo</MenuItem>
+                                                    <MenuItem value="CUENTA">Cuenta Bancaria</MenuItem>
+                                                </TextField>
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 12, sm: 8 }}>
+                                        <Controller
+                                            name="entidad_id"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    select size="small" fullWidth label="Entidad Asignada"
+                                                    {...field} error={Boolean(errors.entidad_id)}
+                                                    helperText={errors.entidad_id?.message} disabled={!entidadTipo}
+                                                >
+                                                    {entidadTipo === 'CAJA'
+                                                        ? cajas.map((caja) => (
+                                                            <MenuItem key={caja.id} value={caja.id}>{caja.nombre}</MenuItem>
+                                                        ))
+                                                        : cuentas.map((cuenta) => (
+                                                            <MenuItem key={cuenta.id} value={cuenta.id}>
+                                                                {`${cuenta.numero_cuenta} - ${cuenta.banco.nombre_comercial} (${cuenta.moneda?.codigo})`}
+                                                            </MenuItem>
+                                                        ))}
+                                                </TextField>
+                                            )}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Box>
+
+                            <Divider />
+
+                            {/* SECCIÓN 3: Cuantía y Fecha */}
+                            <Box>
+                                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                                    <DateRange fontSize="small" color="action" />
+                                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">Liquidación e Importe</Typography>
+                                </Box>
+
+                                <Grid container spacing={2} alignItems="flex-start">
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Controller
+                                            name="fecha_transaccion"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    label="Fecha Valor" type="date" size="small"
+                                                    {...field} InputLabelProps={{ shrink: true }} fullWidth
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Controller
+                                            name={amountFieldName}
+                                            control={control}
+                                            render={({ field }) => (
+                                                <TextField
+                                                    label={amountLabel} type="number" size="small"
+                                                    inputProps={{ step: '0.01', min: '0', style: { fontFamily: 'monospace', fontWeight: 600 } }}
+                                                    {...field}
+                                                    onChange={(event) =>
+                                                        field.onChange(event.target.value === '' ? undefined : parseFloat(event.target.value))
+                                                    }
+                                                    fullWidth error={Boolean(errors[amountFieldName as keyof typeof errors])}
+                                                    helperText={errors[amountFieldName as keyof typeof errors]?.message as string || undefined}
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                </Grid>
+
+                                {/* Manejo Dinámico Multidivisa en Contenedor Dedicado */}
+                                {isDifferentCurrency && (
+                                    <Paper sx={{ p: 2, mt: 2, bgcolor: 'action.hover', borderRadius: 1.5, border: '1px dashed', borderColor: 'divider' }}>
+                                        <FormControl component="fieldset">
+                                            <FormLabel component="legend" sx={{ fontSize: '0.75rem', fontWeight: 600 }}>Paridad Monetaria de Registro</FormLabel>
+                                            <RadioGroup
+                                                row value={monedaSeleccionada}
+                                                onChange={(event) => setMonedaSeleccionada(event.target.value as 'base' | 'cuenta')}
+                                            >
+                                                <FormControlLabel
+                                                    value="base" control={<Radio size="small" />}
+                                                    label={<Typography variant="body2">Divisa Base ({user?.negocio?.moneda?.codigo})</Typography>}
+                                                />
+                                                <FormControlLabel
+                                                    value="cuenta" control={<Radio size="small" />}
+                                                    label={<Typography variant="body2">Divisa Cuenta ({selectedCuenta?.moneda?.codigo})</Typography>}
+                                                />
+                                            </RadioGroup>
+                                        </FormControl>
+                                    </Paper>
+                                )}
+                            </Box>
+
+                            <Divider />
+
+                            {/* SECCIÓN 4: Auditoría y Comentarios */}
+                            <Box>
+                                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                                    <Description fontSize="small" color="action" />
+                                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">Documentación de Respaldo</Typography>
+                                </Box>
+                                <Controller
+                                    name="descripcion"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <TextField
+                                            label="Concepto General / Glosa" multiline minRows={2} size="small"
+                                            placeholder="Detalle los motivos del movimiento..." {...field} fullWidth
+                                        />
+                                    )}
                                 />
-                                <span className="text-sm">
-                                    Ingresar monto en {negocio?.moneda?.codigo}
-                                </span>
-                            </label>
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="moneda_entrada"
-                                    value="cuenta"
-                                    checked={monedaSeleccionada === 'cuenta'}
-                                    onChange={() => setMonedaSeleccionada('cuenta')}
-                                    className="w-4 h-4"
-                                />
-                                <span className="text-sm">
-                                    Ingresar monto en {selectedCuenta?.moneda?.codigo}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                )}
+                            </Box>
 
-                {/* 6. Monto */}
-                {entidadId && (
-                    <div className="space-y-2">
-                        <Label htmlFor="monto">
-                            Monto{' '}
-                            {monedaSeleccionada === 'cuenta'
-                                ? `(${selectedCuenta?.moneda?.codigo})`
-                                : monedaSeleccionada === 'base'
-                                  ? `(${negocio?.moneda?.codigo})`
-                                  : ''}
-                        </Label>
-                        <Controller
-                            name={
-                                monedaSeleccionada === 'cuenta'
-                                    ? 'monto_original'
-                                    : 'monto_moneda_base'
-                            }
-                            control={control}
-                            render={({ field }) => (
-                                <Input
-                                    {...field}
-                                    id="monto"
-                                    type="number"
-                                    placeholder="0.00"
-                                    step="0.01"
-                                    min="0"
-                                    onChange={(e) =>
-                                        field.onChange(parseFloat(e.target.value) || 0)
-                                    }
-                                />
-                            )}
-                        />
-                    </div>
-                )}
+                            {/* Acciones del Formulario */}
+                            <Box display="flex" justifyContent="flex-end" gap={2} pt={2}>
+                                <Button variant="text" color="inherit" size="medium" onClick={() => navigate('/movimientos')} sx={{ textTransform: 'none' }}>
+                                    Descartar
+                                </Button>
+                                <Button variant="contained" type="submit" size="medium" disableElevation disabled={saving} sx={{ textTransform: 'none', px: 3, fontWeight: 600 }}>
+                                    {saving ? 'Procesando Asiento...' : 'Confirmar Registro'}
+                                </Button>
+                            </Box>
 
-                {/* 7. Fecha */}
-                <div className="space-y-2">
-                    <Label htmlFor="fecha">Fecha</Label>
-                    <Controller
-                        name="fecha_transaccion"
-                        control={control}
-                        render={({ field }) => (
-                            <Input
-                                {...field}
-                                id="fecha"
-                                type="date"
-                                defaultValue={format(new Date(), 'yyyy-MM-dd')}
-                            />
-                        )}
-                    />
-                </div>
-
-                {/* 8. Descripción */}
-                <div className="space-y-2">
-                    <Label htmlFor="descripcion">Descripción (Opcional)</Label>
-                    <Controller
-                        name="descripcion"
-                        control={control}
-                        render={({ field }) => (
-                            <Input
-                                {...field}
-                                id="descripcion"
-                                placeholder="Describe el movimiento"
-                                maxLength={500}
-                            />
-                        )}
-                    />
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-4 pt-6">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => navigate('/finanzas/movimientos')}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button type="submit" disabled={loading}>
-                        {loading ? 'Guardando...' : 'Guardar Movimiento'}
-                    </Button>
-                </div>
-            </form>
-        </div>
+                        </Stack>
+                    </Box>
+                </CardContent>
+            </Card>
+        </Box>
     );
 }
