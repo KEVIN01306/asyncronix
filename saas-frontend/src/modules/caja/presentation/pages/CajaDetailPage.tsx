@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Button, Paper, Typography, Grid, Stack, Divider, Chip } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, PointOfSale, Label, Tag, Layers, CheckCircle, Cancel } from '@mui/icons-material';
+import { Box, Button, Paper, Typography, Grid, Stack, Divider, IconButton, Chip } from '@mui/material';
+import { 
+    ArrowBack as ArrowBackIcon, 
+    Print as PrintIcon,
+    KeyboardArrowUp as KeyboardArrowUpIcon,
+    CheckCircle, 
+    Cancel,
+    PointOfSale as CashIcon,
+    Label as LabelIcon,
+    Layers as LayersIcon
+} from '@mui/icons-material';
 import { cajaRepository } from '../../infrastructure/caja.repository';
 import type { Caja } from '../../domain/interfaces/caja.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
@@ -28,8 +37,8 @@ export default function CajaDetailPage() {
     return (
         <Box py={4} px={{ xs: 2, md: 4 }} maxWidth="1000px" margin="auto">
             
-            {/* Control Superior de Navegación y Estado */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            {/* Control Superior */}
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
                 <Button 
                     variant="text"
                     color="inherit"
@@ -39,115 +48,165 @@ export default function CajaDetailPage() {
                 >
                     Volver al control de cajas
                 </Button>
-                
-                <Chip
-                    icon={caja.activo ? <CheckCircle fontSize="small" /> : <Cancel fontSize="small" />}
-                    label={caja.activo ? "Abierta / Operativa" : "Cerrada / Inactiva"}
-                    color={caja.activo ? "success" : "default"}
-                    variant="outlined"
-                    size="small"
-                    sx={{ borderRadius: '6px', fontWeight: 600 }}
-                />
-            </Box>
+                <Button
+                    variant="text"
+                    color="secondary"
+                    endIcon={<PrintIcon fontSize="small" />}
+                    onClick={() => window.print()}
+                    sx={{ textTransform: 'none', fontSize: '0.85rem' }}
+                >
+                    Imprimir arqueo
+                </Button>
+            </Stack>
 
-            {/* Layout en Dos Columnas Asimétricas */}
-            <Grid container spacing={3}>
+            {/* Título de la sección */}
+            <Typography variant="h1" mb={4}>
+                Detalle de Caja
+            </Typography>
+
+            {/* CONTENEDOR PRINCIPAL ESTILO HOME BANKING / MAC OS */}
+            <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
                 
-                {/* Panel Izquierdo: Resumen de Fondos en Efectivo */}
-                <Grid size={{ xs: 12, md: 5 }}>
-                    <Paper 
-                        variant="outlined"
-                        sx={{ 
-                            p: 3, 
-                            borderRadius: 3,
-                            background: (theme) => `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${theme.palette.action.hover} 100%)`,
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            minHeight: '200px',
-                            border: '1px solid',
-                            borderColor: 'divider'
-                        }}
+                {/* Encabezado del contenedor (Mantiene la franja corporativa premium) */}
+                <Box 
+                    sx={{ 
+                        backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#10141E' : '#0A2540',
+                        color: '#FFFFFF',
+                        px: 3,
+                        py: 1.5,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}
+                >
+                    <Typography variant="body2" fontWeight={600} sx={{ color: 'inherit', letterSpacing: '0.05em' }}>
+                        {caja.tipo?.toUpperCase() || 'CAJA GENERAL'}
+                    </Typography>
+                    
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        <Chip
+                            icon={caja.activo ? <CheckCircle fontSize="small" style={{ color: '#10A37F' }} /> : <Cancel fontSize="small" style={{ color: '#EF4444' }} />}
+                            label={caja.activo ? "Abierta" : "Cerrada"}
+                            size="small"
+                            sx={{ 
+                                borderRadius: '6px', 
+                                fontWeight: 600, 
+                                backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                                color: '#FFFFFF',
+                                border: 'none',
+                                '.MuiChip-icon': { marginLeft: '4px' }
+                            }}
+                        />
+                        <IconButton size="small" sx={{ color: '#FFFFFF' }}>
+                            <KeyboardArrowUpIcon fontSize="small" />
+                        </IconButton>
+                    </Stack>
+                </Box>
+
+                {/* Cuerpo de la Información */}
+                <Box p={{ xs: 3, md: 4 }}>
+                    
+                    {/* Información de Identificación */}
+                    <Typography 
+                        variant="body2" 
+                        fontWeight={600} 
+                        color="text.secondary" 
+                        sx={{ letterSpacing: '0.02em', mb: 3 }}
                     >
-                        <Box>
-                            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                                <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1, fontWeight: 700 }}>
-                                    EFECTIVO NETO EN CAJA
-                                </Typography>
-                                <PointOfSale color="action" fontSize="small" />
-                            </Stack>
-                            <Typography variant="h3" component="div" fontWeight={700} sx={{ letterSpacing: -0.5 }}>
+                        {caja.nombre}
+                    </Typography>
+
+                    {/* Grid de Fondos y Datos Clave */}
+                    <Grid container spacing={4} alignItems="flex-start">
+                        
+                        {/* Importe Principal: Efectivo Disponible */}
+                        <Grid size={{ xs: 12, md: 7 }}>
+                            <Typography variant="body2" color="text.secondary" mb={0.5}>
+                                Efectivo neto disponible
+                            </Typography>
+                            <Typography 
+                                variant="h1" 
+                                component="div" 
+                                sx={{ 
+                                    fontSize: { xs: '2.5rem', md: '3.5rem' }, 
+                                    fontWeight: 500,
+                                    letterSpacing: '-0.03em',
+                                    lineHeight: 1,
+                                    color: 'text.primary'
+                                }}
+                            >
                                 {formatMoney(caja.saldo)}
                             </Typography>
-                        </Box>
-
-                        <Box mt={4}>
-                            <Typography variant="caption" color="text.disabled" display="block" sx={{ fontFamily: 'monospace' }}>
-                                PROPÓSITO / ASIGNACIÓN
+                            <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                                Fondos físicos en custodia inmediata para operaciones contables
                             </Typography>
-                            <Typography variant="body2" fontWeight={600} color="text.secondary">
-                                {caja.tipo?.toUpperCase() || 'CAJA GENERAL'}
-                            </Typography>
-                        </Box>
-                    </Paper>
-                </Grid>
+                        </Grid>
 
-                {/* Panel Derecho: Metadatos y Desglose Operacional */}
-                <Grid size={{ xs: 12, md: 7 }}>
-                    <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
-                        <Typography variant="subtitle2" fontWeight={700} mb={3} color="text.primary">
-                            Estructura del Centro de Costo / Caja
-                        </Typography>
-                        
-                        <Stack spacing={2.5}>
-                            {/* Nombre de la caja */}
-                            <Box display="flex" alignItems="flex-start" gap={2}>
-                                <Label color="action" sx={{ mt: 0.3 }} fontSize="small" />
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary" display="block">
-                                        Denominación de la Caja
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight={600}>
-                                        {caja.nombre}
-                                    </Typography>
-                                </Box>
+                        {/* Estructura del Centro de Costo en bloque lateral */}
+                        <Grid size={{ xs: 12, md: 5 }}>
+                            <Box sx={{ pl: { md: 4 }, borderLeft: { md: `1px solid` }, borderColor: { md: 'divider' } }}>
+                                <Typography variant="caption" fontWeight={700} color="text.secondary" display="block" mb={2}>
+                                    Información Operacional
+                                </Typography>
+                                
+                                <Stack spacing={2}>
+                                    {/* Denominación */}
+                                    <Stack direction="row" spacing={1.5} alignItems="center">
+                                        <LabelIcon fontSize="small" color="secondary" />
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" display="block">Denominación</Typography>
+                                            <Typography variant="body2" fontWeight={600}>{caja.nombre}</Typography>
+                                        </Box>
+                                    </Stack>
+
+                                    {/* Categorización */}
+                                    <Stack direction="row" spacing={1.5} alignItems="center">
+                                        <LayersIcon fontSize="small" color="secondary" />
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" display="block">Asignación de Operación</Typography>
+                                            <Typography variant="body2" fontWeight={600}>
+                                                {caja.tipo || 'Caja Chica / Operaciones Locales'}
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+                                </Stack>
                             </Box>
+                        </Grid>
+                    </Grid>
 
-                            <Divider />
-
-                            {/* Tipo de flujo contable */}
-                            <Box display="flex" alignItems="flex-start" gap={2}>
-                                <Layers color="action" sx={{ mt: 0.3 }} fontSize="small" />
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary" display="block">
-                                        Nivel / Categorización de Operación
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight={500}>
-                                        {caja.tipo || 'Caja Chica / Operaciones Locales'}
-                                    </Typography>
-                                </Box>
-                            </Box>
-
-                            <Divider />
-
-                            {/* UUID de Registro */}
-                            <Box display="flex" alignItems="flex-start" gap={2}>
-                                <Tag color="action" sx={{ mt: 0.3 }} fontSize="small" />
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary" display="block">
-                                        Código Único Interno (UUID)
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                                        {id}
-                                    </Typography>
-                                </Box>
-                            </Box>
+                    {/* ACCIONES INFERIORES ÚNICAS DE FLUJO DE CAJA */}
+                    <Box mt={5} pt={2} borderTop={`1px solid`} borderColor="divider">
+                        <Stack 
+                            direction="row" 
+                            spacing={4} 
+                            divider={<Divider orientation="vertical" flexItem />}
+                        >
+                            <Button 
+                                variant="text" 
+                                color="primary" 
+                                startIcon={<CashIcon fontSize="small" />}
+                                sx={{ p: 0, fontSize: '0.9rem', '&:hover': { transform: 'none' }, border: 'none' }}
+                            >
+                                Ingreso de Efectivo
+                            </Button>
+                            <Button 
+                                variant="text" 
+                                color="primary" 
+                                startIcon={<CashIcon fontSize="small" />}
+                                sx={{ p: 0, fontSize: '0.9rem', '&:hover': { transform: 'none' }, border: 'none' }}
+                            >
+                                Egreso / Gasto
+                            </Button>
                         </Stack>
-                    </Paper>
-                </Grid>
+                    </Box>
 
-            </Grid>
+                </Box>
+            </Paper>
+
+            {/* Identificador técnico */}
+            <Typography variant="caption" color="text.disabled" display="block" mt={3} sx={{ fontFamily: 'monospace' }}>
+                ID de Registro (UUID): {id}
+            </Typography>
         </Box>
     );
 }

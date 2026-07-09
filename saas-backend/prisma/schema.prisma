@@ -1066,8 +1066,8 @@ enum TipoMovimiento {
 enum TipoOrigenTransaccion {
   VENTA
   SERVICIO
-  INGRESO_EGRESO // Gastos, pagos a personal, etc.
-  MOVIMIENTO_INTERNO // Transferencia entre cajas/cuentas, depósitos, retiros
+  INGRESO_EGRESO
+  MOVIMIENTO_INTERNO
 }
 
 enum TipoCuentaBancaria {

@@ -8,8 +8,6 @@ import {
     Chip,
     Divider,
     Button,
-    Card,
-    CardContent,
     Tabs,
     Tab,
     Dialog,
@@ -29,6 +27,8 @@ import {
     StoreMallDirectoryOutlined,
     CreditCard,
     SwapHoriz,
+    Link as LinkIcon,
+    LinkOff as LinkOffIcon,
 } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
@@ -42,7 +42,8 @@ import type { SucursalMiDetalle } from '../../domain/interfaces/sucursal.interfa
 import type { CuentaBancaria } from '../../../cuenta-bancaria/domain/interfaces/cuenta-bancaria.interface';
 import { cajaRepository } from '../../../caja/infrastructure/caja.repository';
 import type { Caja } from '../../../caja/domain/interfaces/caja.interface';
-import { formatMoney } from '../../../../core/utils/formatMoney';
+import CajaCardItem from '../../../caja/presentation/components/CajaCardItem';
+import CuentaBancariaCardItem from '../../../cuenta-bancaria/presentation/components/CuentaBancariaCardItem';
 
 const paymentMethods = [
     { value: 'TARJETA', label: 'Tarjeta', icon: <CreditCard fontSize="small" /> },
@@ -55,7 +56,6 @@ const MiSucursalPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchParams, setSearchParams] = useSearchParams();
     const [accounts, setAccounts] = useState<CuentaBancaria[]>([]);
-    const [accountsLoading, setAccountsLoading] = useState(true);
     const [assigning, setAssigning] = useState(false);
     const [openAssignModal, setOpenAssignModal] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'TARJETA' | 'TRANSFERENCIA'>('TARJETA');
@@ -72,7 +72,6 @@ const MiSucursalPage = () => {
     const user = useAuthStore((state) => state.user);
     const canCreateCaja = user?.permisos.includes('CREAR_CAJAS') ?? false;
     const canAdminSucursal = user?.permisos.includes('ADMIN_SUCURSAL') ?? false;
-    const deviceToken = useDeviceStore((state) => state.token);
     const deviceCajaId = useDeviceStore((state) => state.cajaId);
     const deviceCajaNombre = useDeviceStore((state) => state.cajaNombre);
     const deviceAsociacionId = useDeviceStore((state) => state.asociacionId);
@@ -99,22 +98,9 @@ const MiSucursalPage = () => {
         }
     }, []);
 
-    const fetchAccounts = useCallback(async () => {
-        try {
-            const response = await cuentaBancariaRepository.listar(1000, 0);
-            setAccounts(response.data ?? []);
-        } catch (error) {
-            console.error(error);
-            toast.error('No se pudieron cargar las cuentas bancarias');
-        } finally {
-            setAccountsLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
         fetchSucursal();
-        fetchAccounts();
-    }, [fetchSucursal, fetchAccounts]);
+    }, [fetchSucursal]);
 
     useEffect(() => {
         if (!sucursal || !deviceAsociacionId) {
@@ -145,10 +131,22 @@ const MiSucursalPage = () => {
         setSearchParams(nextParams, { replace: true });
     };
 
-    const handleOpenAssignModal = (paymentMethod: 'TARJETA' | 'TRANSFERENCIA') => {
+    const handleOpenAssignModal = async (paymentMethod: 'TARJETA' | 'TRANSFERENCIA') => {
         setSelectedPaymentMethod(paymentMethod);
         setSelectedAccountId(null);
         setOpenAssignModal(true);
+
+        if (accounts.length > 0) {
+            return;
+        }
+
+        try {
+            const response = await cuentaBancariaRepository.listar(1000, 0);
+            setAccounts(response.data ?? []);
+        } catch (error) {
+            console.error(error);
+            toast.error('No se pudieron cargar las cuentas bancarias');
+        }
     };
 
     const handleCloseAssignModal = () => {
@@ -328,7 +326,7 @@ const MiSucursalPage = () => {
         }
     };
 
-    if (loading || accountsLoading) {
+    if (loading) {
         return <Loading />;
     }
 
@@ -441,77 +439,31 @@ const MiSucursalPage = () => {
                             </Paper>
                         </Grid>
                     )}
-                    {sucursal.cajas.map((caja) => (
-                        <Grid size={{ xs: 12, md: 6 }} key={caja.id}>
-                            <Card
-                                variant="outlined"
-                                sx={{
-                                    borderRadius: 2,
-                                    opacity: conflictModalOpen ? 0.6 : 1,
-                                    pointerEvents: conflictModalOpen ? 'none' : 'auto',
-                                    transition: 'opacity 200ms ease',
-                                }}
-                            >
-                                <CardContent>
-                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                        {caja.tipo}
-                                    </Typography>
-                                    <Typography variant="h5" fontWeight={700}>
-                                        {caja.nombre}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" mt={1}>
-                                        Saldo: <strong>{formatMoney(caja.saldo)}</strong>
-                                    </Typography>
-                                    <Chip label={caja.activo ? 'Activo' : 'Inactivo'} size="small" sx={{ mt: 2 }} />
-                                    <Box display="flex" flexDirection="column" gap={1} mt={2}>
-                                        {caja.token_autorizado ? (
-                                            <>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    Dispositivo autorizado
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    IP autorizada: {caja.ip_autorizada ?? 'No disponible'}
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {caja.token_autorizado === deviceToken
-                                                        ? 'Este dispositivo está actualmente autorizado'
-                                                        : 'Esta caja está autorizada en otro dispositivo'}
-                                                </Typography>
-                                            </>
-                                        ) : (
-                                            <Typography variant="body2" color="text.secondary">
-                                                Esta caja no está asociada a un dispositivo.
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                    <Box display="flex" justifyContent="flex-end" mt={2}>
-                                        {!conflictModalOpen ? (
-                                            ((deviceAsociacionId && caja.asociacion_id && caja.asociacion_id === deviceAsociacionId) || (!deviceAsociacionId && caja.id === deviceCajaId) || (canAdminSucursal && caja.token_autorizado)) ? (
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    color="error"
-                                                    onClick={() => handleRequestDissociateDevice(caja)}
-                                                    disabled={deviceActionLoading}
-                                                >
-                                                    Desasociar dispositivo
-                                                </Button>
-                                            ) : caja.tipo === 'EN_LINEA' ? null : deviceCajaId ? null : caja.token_autorizado ? null : (
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    onClick={() => handleOpenDeviceModal(caja)}
-                                                    disabled={deviceActionLoading}
-                                                >
-                                                    Asociar dispositivo
-                                                </Button>
-                                            )
-                                        ) : null}
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
+                    {sucursal.cajas.map((caja) => {
+                        const actions = [
+                            {
+                                name: 'Vincular dispositivo',
+                                icon: <LinkIcon fontSize="small" />,
+                                onClick: (row: Caja) => handleOpenDeviceModal(row),
+                                visible: (row: Caja) => !conflictModalOpen && row.tipo !== 'EN_LINEA' && !deviceCajaId && !row.token_autorizado && !((deviceAsociacionId && row.asociacion_id && row.asociacion_id === deviceAsociacionId) || (!deviceAsociacionId && row.id === deviceCajaId)),
+                            },
+                            {
+                                name: 'Desvincular dispositivo',
+                                icon: <LinkOffIcon fontSize="small" />,
+                                color: 'error',
+                                onClick: (row: Caja) => handleRequestDissociateDevice(row),
+                                visible: (row: Caja) => !conflictModalOpen && ((deviceAsociacionId && row.asociacion_id && row.asociacion_id === deviceAsociacionId) || (!deviceAsociacionId && row.id === deviceCajaId) || (canAdminSucursal && Boolean(row.token_autorizado))),
+                            },
+                        ];
+
+                        return (
+                            <Grid size={{ xs: 12, md: 6 }} key={caja.id}>
+                                <Box sx={{ opacity: conflictModalOpen ? 0.6 : 1, pointerEvents: conflictModalOpen ? 'none' : 'auto', transition: 'opacity 200ms ease' }}>
+                                    <CajaCardItem caja={caja} actions={actions} />
+                                </Box>
+                            </Grid>
+                        );
+                    })}
                     {sucursal.cajas.length === 0 && (
                         <Grid size={{ xs: 12 }}>
                             <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
@@ -575,97 +527,42 @@ const MiSucursalPage = () => {
                         <Grid container spacing={2}>
                             {paymentMethods.map((method) => {
                                 const assigned = sucursal.cuentas_bancarias.find((item) => item.metodo_pago === method.value);
+                                const actions = [
+                                    {
+                                        name: 'Cambiar cuenta',
+                                        icon: <SwapHoriz fontSize="small" />,
+                                        onClick: () => handleOpenAssignModal(method.value),
+                                    },
+                                ];
+
                                 return (
                                     <Grid size={{ xs: 12, md: 6 }} key={method.value}>
-                                        <Card variant="outlined" sx={{ borderRadius: 2, height: '100%' }}>
-                                            <CardContent>
-                                                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                                                    <Box display="flex" alignItems="center" gap={1}>
-                                                        {method.icon}
-                                                        <Typography variant="subtitle1" fontWeight={700}>
-                                                            {method.label}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Button size="small" variant="contained" onClick={() => handleOpenAssignModal(method.value)}>
-                                                        {assigned ? 'Cambiar' : 'Asignar'}
-                                                    </Button>
-                                                </Box>
-
-                                                {assigned ? (
+                                        <Box sx={{ height: '100%' }}>
+                                            <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                                {method.icon}
+                                                <Typography variant="subtitle1" fontWeight={700}>
+                                                    {method.label}
+                                                </Typography>
+                                            </Box>
+                                            {assigned ? (
+                                                <CuentaBancariaCardItem cuenta={assigned.cuenta_bancaria} actions={actions} />
+                                            ) : (
+                                                <Paper elevation={0} variant="outlined" sx={{ borderRadius: 2, p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 2 }}>
                                                     <Box>
                                                         <Typography variant="body2" color="text.secondary">
-                                                            Banco
-                                                        </Typography>
-                                                        <Typography variant="body1" fontWeight={600}>
-                                                            {assigned.cuenta_bancaria.banco?.nombre_comercial ?? assigned.cuenta_bancaria.banco_id}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="text.secondary" mt={1}>
-                                                            Moneda
-                                                        </Typography>
-                                                        <Typography variant="body1" fontWeight={600}>
-                                                            {assigned.cuenta_bancaria.moneda?.codigo ?? 'N/A'}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="text.secondary" mt={1}>
-                                                            Cuenta
-                                                        </Typography>
-                                                        <Typography variant="body1" fontWeight={600}>
-                                                            {assigned.cuenta_bancaria.numero_cuenta}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="text.secondary" mt={1}>
-                                                            Titular
-                                                        </Typography>
-                                                        <Typography variant="body1" fontWeight={600}>
-                                                            {assigned.cuenta_bancaria.nombre_titular}
+                                                            Ninguna cuenta asignada aún para este método.
                                                         </Typography>
                                                     </Box>
-                                                ) : (
-                                                    <Typography color="text.secondary">
-                                                        Ninguna cuenta asignada aún para este método.
-                                                    </Typography>
-                                                )}
-                                            </CardContent>
-                                        </Card>
+                                                    <Button variant="contained" onClick={() => handleOpenAssignModal(method.value)}>
+                                                        Asignar cuenta
+                                                    </Button>
+                                                </Paper>
+                                            )}
+                                        </Box>
                                     </Grid>
                                 );
                             })}
                         </Grid>
-                    </Grid>
-
-                    <Grid size={{ xs: 12 }}>
-                        <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                Todas las cuentas bancarias disponibles
-                            </Typography>
-                            <Divider sx={{ mb: 3 }} />
-                            <Grid container spacing={2}>
-                                {accounts.map((account) => (
-                                    <Grid size={{ xs: 12, md: 6 }} key={account.id}>
-                                        <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                                            <CardContent>
-                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                                    {account.banco?.nombre_comercial ?? account.banco_id} • {account.moneda?.codigo ?? 'N/A'}
-                                                </Typography>
-                                                <Typography variant="h6" fontWeight={700}>
-                                                    {account.numero_cuenta}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary" mt={1}>
-                                                    Titular: {account.nombre_titular}
-                                                </Typography>
-                                                <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-                                                    <Chip label={account.tipo} size="small" />
-                                                    <Chip label={account.activo ? 'Activo' : 'Inactivo'} size="small" color={account.activo ? 'success' : 'default'} />
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                ))}
-                                {accounts.length === 0 && (
-                                    <Grid size={{ xs: 12 }}>
-                                        <Typography>No hay cuentas bancarias registradas.</Typography>
-                                    </Grid>
-                                )}
-                            </Grid>
-                        </Paper>
                     </Grid>
                 </Grid>
             )}
