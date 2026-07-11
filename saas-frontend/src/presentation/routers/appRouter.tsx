@@ -33,8 +33,8 @@ import { monedasRoutes } from "../../modules/monedas/presentation/monedas.routes
 import { cajaRoutes } from "../../modules/caja/presentation/caja.routes";
 import { cuentasBancariasRoutes } from "../../modules/cuenta-bancaria/presentation/cuenta-bancaria.routes";
 import { categoriasTransaccionRoutes } from "../../modules/categorias-transaccion/presentation/categorias-transaccion.routes";
-import { movimientoRoutes } from "../../modules/movimientos/presentation/movimiento.routes";
 import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
+import { ingresoEgresoRoutes } from "../../modules/ingresos-egresos/presentation/ingresoEgreso.routes";
 
 const appRouter = createBrowserRouter([
     {
@@ -50,17 +50,17 @@ const appRouter = createBrowserRouter([
     },
     {
         path: '/',
-        element: ( 
+        element: (
             <Suspense fallback={<FullPageLoader />}>
                 <ProtectedRoute />
             </Suspense>
-            ),
+        ),
         children: [
             {
-                element: 
-                <Suspense fallback={<FullPageLoader />}>
-                    <FullLayout />
-                </Suspense>,
+                element:
+                    <Suspense fallback={<FullPageLoader />}>
+                        <FullLayout />
+                    </Suspense>,
                 children: [
                     ...dahsboardRoutes,
                     ...categoriaRoutes,
@@ -87,7 +87,7 @@ const appRouter = createBrowserRouter([
                     ...cajaRoutes,
                     ...cuentasBancariasRoutes,
                     ...categoriasTransaccionRoutes,
-                    ...movimientoRoutes,
+                    ...ingresoEgresoRoutes,
                     ...customRoutes,
                     ...paisesRoutes,
                     ...monedasRoutes,

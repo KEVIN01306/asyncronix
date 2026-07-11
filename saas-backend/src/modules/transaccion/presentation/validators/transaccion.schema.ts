@@ -1,20 +1,20 @@
 import { z } from 'zod';
 
-export const crearMovimientoSchema = z
+export const crearIngresoEgresoSchema = z
     .object({
         categoria_id: z.string().uuid('Categoría inválida'),
         tipo_movimiento: z.enum(['INGRESO', 'EGRESO'], {
-            errorMap: () => ({ message: 'Tipo de movimiento inválido' }),
+            message: 'Tipo de movimiento inválido',
         }),
         entidad_tipo: z.enum(['CAJA', 'CUENTA'], {
-            errorMap: () => ({ message: 'Tipo de entidad inválido' }),
+            message: 'Tipo de entidad inválido',
         }),
         entidad_id: z.string().uuid('Entidad inválida'),
         moneda_id: z.string().uuid('Moneda inválida').optional(),
         monto_original: z.number().positive('El monto debe ser positivo').optional(),
-        tipo_cambio: z.number().positive().optional(),
         monto_moneda_base: z.number().positive('El monto debe ser positivo').optional(),
-        descripcion: z.string().max(500, 'Descripción muy larga').optional().nullable(),
+        tipo_cambio: z.number().positive('El tipo de cambio debe ser positivo').optional(),
+        descripcion: z.string().optional(),
         fecha_transaccion: z.coerce.date().optional(),
     })
     .superRefine((data, ctx) => {
@@ -32,18 +32,18 @@ export const crearMovimientoSchema = z
         }
     });
 
-export const movimientoIdParamSchema = z.object({
+export const ingresoEgresoIdParamSchema = z.object({
     id: z.string().uuid('Movimiento inválido'),
 });
 
-export const listarMovimientosQuerySchema = z.object({
-    limit: z.coerce.number().int().positive().default(10),
-    offset: z.coerce.number().int().min(0).default(0),
-    q: z.string().trim().optional(),
+export const listarIngresosEgresosQuerySchema = z.object({
+    limit: z.coerce.number().min(1).default(10),
+    offset: z.coerce.number().min(0).default(0),
+    q: z.string().optional(),
     tipo_movimiento: z.enum(['INGRESO', 'EGRESO']).optional(),
-    categoria_id: z.string().uuid().optional(),
+    categoria_id: z.string().uuid('Categoría inválida').optional(),
     entidad_tipo: z.enum(['CAJA', 'CUENTA']).optional(),
-    entidad_id: z.string().uuid().optional(),
-    fecha_inicio: z.coerce.date().optional(),
-    fecha_fin: z.coerce.date().optional(),
+    entidad_id: z.string().uuid('Entidad inválida').optional(),
+    fecha_inicio: z.string().datetime().optional(),
+    fecha_fin: z.string().datetime().optional(),
 });

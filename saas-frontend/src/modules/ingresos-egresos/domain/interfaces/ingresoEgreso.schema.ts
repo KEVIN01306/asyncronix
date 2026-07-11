@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const movimientoSchema = z
+export const ingresoEgresoSchema = z
     .object({
         categoria_id: z.string().min(1, 'Categoría requerida'),
         tipo_movimiento: z.enum(['INGRESO', 'EGRESO'] as const).refine((value) => !!value, {

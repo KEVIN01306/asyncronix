@@ -1,6 +1,6 @@
 import AppError from '@shared/errors/AppError.js';
 import { DatabaseError } from '@shared/database/errors/DatabaseError.js';
-import type { TransaccionCrear, TransaccionDetalle } from '../domain/transaccion.entity.js';
+import type { TransaccionCrear, IngresoEgresoEntity } from '../domain/transaccion.entity.js';
 import type { TransaccionRepository } from '../domain/transaccion.repository.js';
 import type { ExchangeRateProvider } from '@shared/domain/providers/ExchangeRateProvider.js';
 
@@ -22,7 +22,7 @@ interface MonedaData {
     codigo: string;
 }
 
-export class CrearMovimientoUseCase {
+export class CrearIngresoEgresoUseCase {
     constructor(
         private readonly transaccionRepository: TransaccionRepository,
         private readonly exchangeRateProvider: ExchangeRateProvider,
@@ -37,7 +37,7 @@ export class CrearMovimientoUseCase {
         negocio_id: string,
         sucursal_id: string,
         usuario_id: string
-    ): Promise<TransaccionDetalle> {
+    ): Promise<IngresoEgresoEntity> {
         try {
             const negocio = await this.obtenerNegocio(negocio_id);
             if (!negocio) {
@@ -58,7 +58,7 @@ export class CrearMovimientoUseCase {
                     throw new AppError('Caja no encontrada', 'CAJA_NOT_FOUND', 404);
                 }
 
-                // Las cajas siempre usan la moneda del negocio
+                // Cajas always use the business base currency
                 processedData = {
                     ...data,
                     moneda_id: negocio.moneda_id,
@@ -83,8 +83,8 @@ export class CrearMovimientoUseCase {
                     throw new AppError('Moneda del negocio no válida', 'MONEDA_INVALID', 400);
                 }
 
-                // Si monedas son iguales
                 if (cuentaMonedaId === negocio.moneda_id) {
+                    // Same currency — no conversion needed
                     processedData = {
                         ...data,
                         moneda_id: negocio.moneda_id,
@@ -93,7 +93,7 @@ export class CrearMovimientoUseCase {
                         monto_moneda_base: data.monto_original,
                     };
                 } else {
-                    // Monedas diferentes - aplicar conversión
+                    // Different currencies — apply FX conversion
                     const exchangeRate = await this.exchangeRateProvider.getRate(
                         negocioMoneda.codigo,
                         cuentaMoneda.codigo
@@ -103,11 +103,11 @@ export class CrearMovimientoUseCase {
                     let monto_moneda_base: number;
 
                     if (data.monto_moneda_base !== undefined) {
-                        // Usuario ingresó monto en moneda base
+                        // User entered amount in base currency
                         monto_moneda_base = data.monto_moneda_base;
                         monto_original = monto_moneda_base * exchangeRate.rate;
                     } else if (data.monto_original !== undefined) {
-                        // Usuario ingresó monto en moneda de cuenta
+                        // User entered amount in account currency
                         monto_original = data.monto_original;
                         monto_moneda_base = monto_original / exchangeRate.rate;
                     } else {

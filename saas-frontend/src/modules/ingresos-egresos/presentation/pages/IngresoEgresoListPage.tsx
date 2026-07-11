@@ -6,6 +6,7 @@ import {
     AlertTitle,
     Box,
     Button,
+    Chip,
     Dialog,
     DialogActions,
     DialogContent,
@@ -16,6 +17,7 @@ import {
     Stack,
     TableContainer,
     TextField,
+    Typography,
     useMediaQuery,
     useTheme,
 } from '@mui/material';
@@ -24,14 +26,14 @@ import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { useAbortableFetch, isAbortError } from '../../../../core/hooks/useAbortableFetch';
 import { useDebounce } from '../../../../core/hooks/useDebounce';
-import movimientoRepository from '../../infrastructure/movimiento.repository';
-import type { Transaccion } from '../../domain/interfaces/movimiento.interface';
+import ingresoEgresoRepository from '../../infrastructure/ingresoEgreso.repository';
+import type { IngresoEgreso } from '../../domain/interfaces/ingresoEgreso.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 
 type TipoMovimientoFilter = '' | 'INGRESO' | 'EGRESO';
 type EntidadTipoFilter = '' | 'CAJA' | 'CUENTA';
 
-const MovimientoListPage = () => {
+const IngresoEgresoListPage = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -47,7 +49,7 @@ const MovimientoListPage = () => {
     );
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const abortableFetch = useAbortableFetch();
-    const [movimientos, setMovimientos] = useState<Transaccion[]>([]);
+    const [movimientos, setMovimientos] = useState<IngresoEgreso[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [filtersOpen, setFiltersOpen] = useState(false);
@@ -57,20 +59,57 @@ const MovimientoListPage = () => {
     const columns = useMemo(
         () => [
             {
-                id: 'fecha_transaccion',
-                name: 'Fecha',
-                format: (value: string) => new Date(value).toLocaleDateString('es-ES'),
+                id: 'codigo',
+                name: 'Código',
+                format: (value: string) => (
+                    <Typography variant="caption" fontFamily="monospace" fontWeight={700} color="text.secondary">
+                        {value}
+                    </Typography>
+                ),
             },
             {
-                id: 'tipo_movimiento',
-                name: 'Tipo',
-                format: (value: string) => (value === 'INGRESO' ? 'Ingreso' : 'Egreso'),
+                id: 'fechas',
+                name: 'Fecha',
+                format: (_value: IngresoEgreso['fechas']) =>
+                    new Date(_value?.transaccion).toLocaleDateString('es-ES'),
             },
-            { id: 'categoria_nombre', name: 'Categoría' },
-            { id: 'entidad_nombre', name: 'Entidad' },
-            { id: 'moneda_codigo', name: 'Moneda' },
-            { id: 'monto_original', name: 'Monto', format: (_value: number, row: Transaccion) => formatMoney(row.monto_original, row.moneda_codigo) },
-            { id: 'usuario_nombre', name: 'Usuario' },
+            {
+                id: 'tipo',
+                name: 'Tipo',
+                format: (value: string) =>
+                    value === 'INGRESO' ? (
+                        <Chip label="Ingreso" color="success" size="small" sx={{ fontWeight: 600 }} />
+                    ) : (
+                        <Chip label="Egreso" color="error" size="small" sx={{ fontWeight: 600 }} />
+                    ),
+            },
+            {
+                id: 'categoria',
+                name: 'Categoría',
+                format: (value: IngresoEgreso['categoria']) => value?.nombre ?? '—',
+            },
+            {
+                id: 'entidad',
+                name: 'Entidad',
+                format: (value: IngresoEgreso['entidad']) => value?.nombre ?? '—',
+            },
+            {
+                id: 'moneda',
+                name: 'Moneda',
+                format: (value: IngresoEgreso['moneda']) => value?.codigo ?? '—',
+            },
+            {
+                id: 'monto',
+                name: 'Monto',
+                format: (value: IngresoEgreso['monto'], row: IngresoEgreso) =>
+                    formatMoney(value?.original, row.moneda?.codigo),
+            },
+            {
+                id: 'usuario',
+                name: 'Usuario',
+                format: (value: IngresoEgreso['usuario']) =>
+                    value?.apellido ? `${value.nombre} ${value.apellido}` : value?.nombre ?? '—',
+            },
         ],
         []
     );
@@ -80,7 +119,7 @@ const MovimientoListPage = () => {
             name: 'Ver',
             icon: <Visibility fontSize="small" />,
             color: 'info',
-            onClick: (row: Transaccion) => navigate(`/movimientos/${row.id}`),
+            onClick: (row: IngresoEgreso) => navigate(`/ingresos-egresos/${row.id}`),
         },
     ];
 
@@ -111,7 +150,7 @@ const MovimientoListPage = () => {
         async (signal: AbortSignal) => {
             setLoading(true);
             try {
-                const response = await movimientoRepository.listar(
+                const response = await ingresoEgresoRepository.listar(
                     {
                         limit,
                         offset,
@@ -159,7 +198,7 @@ const MovimientoListPage = () => {
     return (
         <Box p={isMobile ? 2 : 4}>
             <Alert severity="info" sx={{ mb: 3, boxShadow: 'none', border: (theme) => `1px solid ${theme.palette.divider}` }}>
-                <AlertTitle>Movimientos</AlertTitle>
+                <AlertTitle>Ingresos y Egresos</AlertTitle>
                 Registra y revisa los ingresos y egresos de tu negocio.
             </Alert>
 
@@ -191,7 +230,7 @@ const MovimientoListPage = () => {
                         >
                             Más filtros
                         </Button>
-                        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/movimientos/nuevo')}>
+                        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/ingresos-egresos/nuevo')}>
                             Nuevo movimiento
                         </Button>
                     </Stack>
@@ -265,4 +304,4 @@ const MovimientoListPage = () => {
     );
 };
 
-export default MovimientoListPage;
+export default IngresoEgresoListPage;

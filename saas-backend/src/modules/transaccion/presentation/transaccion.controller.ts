@@ -1,16 +1,16 @@
 import type { NextFunction, Request, Response } from 'express';
 import BaseController from '@shared/presentation/base.controller.js';
 import Respuesta from '@app/http/respuesta.js';
-import type { CrearMovimientoUseCase } from '../application/crear-movimiento.usecase.js';
-import type { ObtenerDetalleMovimientoUseCase } from '../application/obtener-detalle-movimiento.usecase.js';
-import type { ListarMovimientosUseCase } from '../application/listar-movimientos.usecase.js';
+import type { CrearIngresoEgresoUseCase } from '../application/crear-ingreso-egreso.usecase.js';
+import type { ObtenerDetalleIngresoEgresoUseCase } from '../application/obtener-detalle-ingreso-egreso.usecase.js';
+import type { ListarIngresosEgresosUseCase } from '../application/listar-ingresos-egresos.usecase.js';
 import type { ListarTransaccionesMovimientosFilters } from '../domain/transaccion.repository.js';
 
 export class TransaccionController extends BaseController {
     constructor(
-        private readonly crearMovimientoUseCase: CrearMovimientoUseCase,
-        private readonly obtenerDetalleMovimientoUseCase: ObtenerDetalleMovimientoUseCase,
-        private readonly listarMovimientosUseCase: ListarMovimientosUseCase
+        private readonly crearIngresoEgresoUseCase: CrearIngresoEgresoUseCase,
+        private readonly obtenerDetalleIngresoEgresoUseCase: ObtenerDetalleIngresoEgresoUseCase,
+        private readonly listarIngresosEgresosUseCase: ListarIngresosEgresosUseCase
     ) {
         super();
     }
@@ -32,7 +32,7 @@ export class TransaccionController extends BaseController {
             if (query.fecha_inicio) filters.fecha_inicio = query.fecha_inicio;
             if (query.fecha_fin) filters.fecha_fin = query.fecha_fin;
 
-            const result = await this.listarMovimientosUseCase.execute(
+            const result = await this.listarIngresosEgresosUseCase.execute(
                 negocio_id,
                 sucursal_id,
                 page,
@@ -42,7 +42,7 @@ export class TransaccionController extends BaseController {
 
             res.status(200).json(
                 Respuesta.paginacion(
-                    'Movimientos obtenidos con éxito',
+                    'Ingresos y Egresos obtenidos con éxito',
                     result.data,
                     result.total,
                     query.limit,
@@ -59,13 +59,13 @@ export class TransaccionController extends BaseController {
             const { id } = req.params;
             const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
 
-            const movimiento = await this.obtenerDetalleMovimientoUseCase.execute(
+            const ingresoEgreso = await this.obtenerDetalleIngresoEgresoUseCase.execute(
                 id,
                 negocio_id,
                 sucursal_id
             );
 
-            res.status(200).json(Respuesta.exito('Movimiento obtenido con éxito', movimiento));
+            res.status(200).json(Respuesta.exito('Ingreso/Egreso obtenido con éxito', ingresoEgreso));
         } catch (error) {
             next(error);
         }
@@ -75,14 +75,14 @@ export class TransaccionController extends BaseController {
         try {
             const { negocio_id, sucursal_id, id: usuario_id } = this.obtenerEntorno(res);
 
-            const movimiento = await this.crearMovimientoUseCase.execute(
+            const ingresoEgreso = await this.crearIngresoEgresoUseCase.execute(
                 req.body,
                 negocio_id,
                 sucursal_id,
                 usuario_id
             );
 
-            res.status(201).json(Respuesta.exito('Movimiento creado con éxito', movimiento));
+            res.status(201).json(Respuesta.exito('Ingreso/Egreso creado con éxito', ingresoEgreso));
         } catch (error) {
             next(error);
         }

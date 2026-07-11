@@ -1,12 +1,12 @@
 import AppError from '@shared/errors/AppError.js';
 import { DatabaseError } from '@shared/database/errors/DatabaseError.js';
-import type { TransaccionDetalle } from '../domain/transaccion.entity.js';
+import type { IngresoEgresoEntity } from '../domain/transaccion.entity.js';
 import type { TransaccionRepository } from '../domain/transaccion.repository.js';
 
-export class ObtenerDetalleMovimientoUseCase {
+export class ObtenerDetalleIngresoEgresoUseCase {
     constructor(private readonly transaccionRepository: TransaccionRepository) {}
 
-    async execute(id: string, negocio_id: string, sucursal_id: string): Promise<TransaccionDetalle> {
+    async execute(id: string, negocio_id: string, sucursal_id: string): Promise<IngresoEgresoEntity> {
         try {
             const transaccion = await this.transaccionRepository.obtenerDetalle(id, negocio_id, sucursal_id);
             if (!transaccion) {

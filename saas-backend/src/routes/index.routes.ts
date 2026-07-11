@@ -37,7 +37,7 @@ router.use('/bancos', (await import('../modules/banco/presentation/banco.routes.
 router.use('/cajas', (await import('../modules/caja/presentation/caja.routes.js')).default)
 router.use('/cuentas-bancarias', (await import('../modules/cuenta-bancaria/presentation/cuenta-bancaria.routes.js')).default)
 router.use('/categoria-transaccion', (await import('../modules/categoria-transaccion/presentation/categoria-transaccion.routes.js')).default)
-router.use('/movimientos', (await import('../modules/transaccion/presentation/transaccion.routes.js')).default)
+router.use('/ingresos-egresos', (await import('../modules/transaccion/presentation/transaccion.routes.js')).default)
 
 router.use(errorMiddleware)
 

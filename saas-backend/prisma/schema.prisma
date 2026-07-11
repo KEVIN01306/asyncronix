@@ -17,7 +17,7 @@ model Pais {
   nombre     String   @db.VarChar(100)
   codigo_tel String   @db.VarChar(10) // Ej: "+502", "+52"
   moneda_id  String   @db.Char(36)
-  locale     String?   @db.VarChar(10) // Ej: "es-GT", "es-MX", "en-US"
+  locale     String?  @db.VarChar(10) // Ej: "es-GT", "es-MX", "en-US"
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -37,11 +37,11 @@ model Moneda {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  paises            Pais[]
-  cuentas_bancarias CuentaBancaria[]
-  transacciones     Transaccion[]
-  transacciones_origen Transaccion[] @relation("MonedaActual")
-  negocios          Negocio[]
+  paises               Pais[]
+  cuentas_bancarias    CuentaBancaria[]
+  transacciones        Transaccion[]
+  transacciones_origen Transaccion[]    @relation("MonedaActual")
+  negocios             Negocio[]
 
   @@map("monedas")
 }
@@ -927,12 +927,12 @@ model Caja {
   tipo        TipoCaja @default(FISICA)
   saldo       Float    @default(0)
 
-  ip_autorizada String?  @db.VarChar(45)
-  asociacion_id   String?  @db.Char(36) // Para cajas virtuales asociadas a un usuario o a un negocio externo
+  ip_autorizada    String?  @db.VarChar(45)
+  asociacion_id    String?  @db.Char(36) // Para cajas virtuales asociadas a un usuario o a un negocio externo
   token_autorizado String?  @db.VarChar(255)
-  activo      Boolean  @default(true)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  activo           Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
   negocio  Negocio  @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   sucursal Sucursal @relation(fields: [sucursal_id], references: [id], onDelete: Cascade)
@@ -975,7 +975,7 @@ model CuentaBancaria {
 model SucursalCuentaBancaria {
   sucursal_id        String     @db.Char(36)
   cuenta_bancaria_id String     @db.Char(36)
-  metodo_pago        MetodoPago 
+  metodo_pago        MetodoPago
   created_at         DateTime   @default(now())
 
   sucursal        Sucursal       @relation(fields: [sucursal_id], references: [id], onDelete: Cascade)
@@ -1008,13 +1008,16 @@ model Transaccion {
   categoria_id String? @db.Char(36)
   usuario_id   String  @db.Char(36)
 
+  correlativo Int    @default(1)
+  codigo      String
+
   tipo_movimiento TipoMovimiento
   origen_tipo     TipoOrigenTransaccion @default(INGRESO_EGRESO)
 
   moneda_actual_id  String? @db.Char(36)
-  moneda_id         String @db.Char(36)
+  moneda_id         String  @db.Char(36)
   monto_original    Float
-  tipo_cambio       Float  @default(1.0)
+  tipo_cambio       Float   @default(1.0)
   monto_moneda_base Float
 
   descripcion String? @db.Text
@@ -1029,12 +1032,12 @@ model Transaccion {
   fecha_transaccion DateTime @default(now())
   created_at        DateTime @default(now())
 
-  negocio   Negocio               @relation(fields: [negocio_id], references: [id])
-  sucursal  Sucursal              @relation(fields: [sucursal_id], references: [id])
-  categoria CategoriaTransaccion? @relation(fields: [categoria_id], references: [id])
-  usuario   Usuario               @relation("TransaccionesUsuario", fields: [usuario_id], references: [id])
-  moneda    Moneda                @relation(fields: [moneda_id], references: [id])
-  moneda_actual Moneda?            @relation("MonedaActual", fields: [moneda_actual_id], references: [id])
+  negocio       Negocio               @relation(fields: [negocio_id], references: [id])
+  sucursal      Sucursal              @relation(fields: [sucursal_id], references: [id])
+  categoria     CategoriaTransaccion? @relation(fields: [categoria_id], references: [id])
+  usuario       Usuario               @relation("TransaccionesUsuario", fields: [usuario_id], references: [id])
+  moneda        Moneda                @relation(fields: [moneda_id], references: [id])
+  moneda_actual Moneda?               @relation("MonedaActual", fields: [moneda_actual_id], references: [id])
 
   origen_caja    Caja?           @relation("OrigenCaja", fields: [origen_caja_id], references: [id])
   origen_cuenta  CuentaBancaria? @relation("OrigenCuenta", fields: [origen_cuenta_id], references: [id])

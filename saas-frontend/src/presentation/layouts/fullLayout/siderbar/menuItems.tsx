@@ -39,7 +39,7 @@ const MenuItems: MenuItem[] = [
       { name: "Cajas", link: "/cajas", icon: ViewHeadlineRounded, permiso: "VER_CAJAS" },
       { name: "Cuentas bancarias", link: "/cuentas-bancarias", icon: ViewHeadlineRounded, permiso: "VER_CUENTA_BANCARIA" },
       { name: "Categorías de transacción", link: "/categorias-transaccion", icon: ViewHeadlineRounded, permiso: "VER_CATEGORIAS_TRANSACCION" },
-      { name: "Movimientos", link: "/movimientos", icon: ViewHeadlineRounded, permiso: "VER_MOVIMIENTOS" },
+      { name: "Ingresos y Egresos", link: "/ingresos-egresos", icon: ViewHeadlineRounded, permiso: "VER_INGRESOS_EGRESOS" },
     ]
   },
   { 

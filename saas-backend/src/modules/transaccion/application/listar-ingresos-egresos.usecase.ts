@@ -1,11 +1,10 @@
 import AppError from '@shared/errors/AppError.js';
 import { DatabaseError } from '@shared/database/errors/DatabaseError.js';
 import type { Paginated } from '@shared/domain/paginated.js';
-import type { Pagination } from '@shared/domain/pagination.js';
-import type { TransaccionSimple } from '../domain/transaccion.entity.js';
+import type { IngresoEgresoEntity } from '../domain/transaccion.entity.js';
 import type { TransaccionRepository, ListarTransaccionesMovimientosFilters } from '../domain/transaccion.repository.js';
 
-export class ListarMovimientosUseCase {
+export class ListarIngresosEgresosUseCase {
     constructor(private readonly transaccionRepository: TransaccionRepository) {}
 
     async execute(
@@ -14,15 +13,12 @@ export class ListarMovimientosUseCase {
         page: number,
         limit: number,
         filters?: ListarTransaccionesMovimientosFilters
-    ): Promise<Paginated<TransaccionSimple>> {
+    ): Promise<Paginated<IngresoEgresoEntity>> {
         try {
-            const offset = (page - 1) * limit;
-            const pagination: Pagination = { limit, offset };
-            
             return await this.transaccionRepository.listarMovimientos(
                 negocio_id,
                 sucursal_id,
-                pagination,
+                { page, perPage: limit },
                 filters
             );
         } catch (error) {

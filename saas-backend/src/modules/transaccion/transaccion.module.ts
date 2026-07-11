@@ -1,8 +1,9 @@
 import { PrismaTransaccionRepository } from './infrastructure/prisma-transaccion.repository.js';
 import { TransaccionController } from './presentation/transaccion.controller.js';
-import { CrearMovimientoUseCase } from './application/crear-movimiento.usecase.js';
-import { ObtenerDetalleMovimientoUseCase } from './application/obtener-detalle-movimiento.usecase.js';
-import { ListarMovimientosUseCase } from './application/listar-movimientos.usecase.js';
+import { CrearTransaccionUseCase } from './application/crear-transaccion.usecase.js';
+import { CrearIngresoEgresoUseCase } from './application/crear-ingreso-egreso.usecase.js';
+import { ObtenerDetalleIngresoEgresoUseCase } from './application/obtener-detalle-ingreso-egreso.usecase.js';
+import { ListarIngresosEgresosUseCase } from './application/listar-ingresos-egresos.usecase.js';
 import prisma from '@infrastructure/config/prisma.js';
 import { FrankfurterExchangeRateProvider } from '@shared/infrastructure/frankfurter.provider.js';
 
@@ -38,7 +39,11 @@ const obtenerMoneda = async (id: string) => {
     });
 };
 
-const crearMovimientoUseCase = new CrearMovimientoUseCase(
+// Generic transaction use case (for internal use by other modules)
+export const crearTransaccionUseCase = new CrearTransaccionUseCase(transaccionRepository);
+
+// Ingresos-Egresos use cases
+const crearIngresoEgresoUseCase = new CrearIngresoEgresoUseCase(
     transaccionRepository,
     exchangeRateProvider,
     obtenerCaja,
@@ -47,11 +52,11 @@ const crearMovimientoUseCase = new CrearMovimientoUseCase(
     obtenerMoneda
 );
 
-const obtenerDetalleMovimientoUseCase = new ObtenerDetalleMovimientoUseCase(transaccionRepository);
-const listarMovimientosUseCase = new ListarMovimientosUseCase(transaccionRepository);
+const obtenerDetalleIngresoEgresoUseCase = new ObtenerDetalleIngresoEgresoUseCase(transaccionRepository);
+const listarIngresosEgresosUseCase = new ListarIngresosEgresosUseCase(transaccionRepository);
 
 export const transaccionController = new TransaccionController(
-    crearMovimientoUseCase,
-    obtenerDetalleMovimientoUseCase,
-    listarMovimientosUseCase
+    crearIngresoEgresoUseCase,
+    obtenerDetalleIngresoEgresoUseCase,
+    listarIngresosEgresosUseCase
 );

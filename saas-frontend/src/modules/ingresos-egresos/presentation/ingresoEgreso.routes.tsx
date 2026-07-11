@@ -1,32 +1,32 @@
 import type { RouteObject } from 'react-router-dom';
-import { MovimientoListPage, MovimientoFormPage, MovimientoDetailPage } from './movimiento.lazy';
+import { IngresoEgresoListPage, IngresoEgresoFormPage, IngresoEgresoDetailPage } from './ingresoEgreso.lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 
-export const movimientoRoutes: RouteObject[] = [
+export const ingresoEgresoRoutes: RouteObject[] = [
     {
-        path: 'movimientos',
+        path: 'ingresos-egresos',
         children: [
             {
                 index: true,
                 element: (
-                    <RouteProtector requiredPermission="VER_MOVIMIENTOS">
-                        <MovimientoListPage />
+                    <RouteProtector requiredPermission="VER_INGRESOS_EGRESOS">
+                        <IngresoEgresoListPage />
                     </RouteProtector>
                 )
             },
             {
                 path: 'nuevo',
                 element: (
-                    <RouteProtector requiredPermission="CREAR_MOVIMIENTOS">
-                        <MovimientoFormPage />
+                    <RouteProtector requiredPermission="CREAR_INGRESOS_EGRESOS">
+                        <IngresoEgresoFormPage />
                     </RouteProtector>
                 )
             },
             {
                 path: ':id',
                 element: (
-                    <RouteProtector requiredPermission="VER_MOVIMIENTOS_DETALLE">
-                        <MovimientoDetailPage />
+                    <RouteProtector requiredPermission="VER_INGRESOS_EGRESOS_DETALLE">
+                        <IngresoEgresoDetailPage />
                     </RouteProtector>
                 )
             }

@@ -2,26 +2,26 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { 
-    Alert, Box, Button, Card, CardContent, FormControl, 
-    FormControlLabel, FormLabel, MenuItem, Radio, RadioGroup, 
-    Stack, TextField, Typography, Grid, Divider, Paper 
+import {
+    Alert, Box, Button, Card, CardContent, FormControl,
+    FormControlLabel, FormLabel, MenuItem, Radio, RadioGroup,
+    Stack, TextField, Typography, Grid, Divider, Paper
 } from '@mui/material';
 import { AccountBalanceWallet, DateRange, Description, Receipt } from '@mui/icons-material';
 import { toast } from 'sonner';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { useAuthStore } from '../../../../core/store/authStore';
-import movimientoRepository from '../../infrastructure/movimiento.repository';
+import ingresoEgresoRepository from '../../infrastructure/ingresoEgreso.repository';
 import { cajaRepository } from '../../../caja/infrastructure/caja.repository';
 import { cuentaBancariaRepository } from '../../../cuenta-bancaria/infrastructure/cuenta-bancaria.repository';
 import { categoriaTransaccionRepository } from '../../../categorias-transaccion/infrastructure/categoria-transaccion.repository';
 import type { Caja } from '../../../caja/domain/interfaces/caja.interface';
 import type { CuentaBancaria } from '../../../cuenta-bancaria/domain/interfaces/cuenta-bancaria.interface';
 import type { CategoriaTransaccion } from '../../../categorias-transaccion/domain/interfaces/categoria-transaccion.interface';
-import type { MovimientoFormValues } from '../../domain/interfaces/movimiento.interface';
-import { movimientoSchema } from '../../domain/interfaces/movimiento.schema';
+import type { IngresoEgresoFormValues } from '../../domain/interfaces/ingresoEgreso.interface';
+import { ingresoEgresoSchema } from '../../domain/interfaces/ingresoEgreso.schema';
 
-export default function MovimientoFormPage() {
+export default function IngresoEgresoFormPage() {
     const navigate = useNavigate();
     const user = useAuthStore((state) => state.user);
     const [cajas, setCajas] = useState<Caja[]>([]);
@@ -40,8 +40,8 @@ export default function MovimientoFormPage() {
         setValue,
         clearErrors,
         formState: { errors },
-    } = useForm<MovimientoFormValues>({
-        resolver: zodResolver(movimientoSchema),
+    } = useForm<IngresoEgresoFormValues>({
+        resolver: zodResolver(ingresoEgresoSchema),
         defaultValues: {
             tipo_movimiento: undefined,
             entidad_tipo: undefined,
@@ -141,19 +141,19 @@ export default function MovimientoFormPage() {
 
     const amountLabel = `Importe Líquido (${amountCurrency || 'N/A'})`;
 
-    const onSubmit = async (data: MovimientoFormValues) => {
+    const onSubmit = async (data: IngresoEgresoFormValues) => {
         setSaving(true);
         setFormError(null);
         try {
-            const payload = { ...data } as MovimientoFormValues;
+            const payload = { ...data } as IngresoEgresoFormValues;
             if (amountFieldName === 'monto_original') {
                 delete payload.monto_moneda_base;
             } else {
                 delete payload.monto_original;
             }
-            await movimientoRepository.crear(payload);
+            await ingresoEgresoRepository.crear(payload);
             toast.success('Asiento contable indexado con éxito');
-            navigate('/movimientos');
+            navigate('/ingresos-egresos');
         } catch (err: any) {
             setFormError(err.message || 'Fallo de validación en servidor');
         } finally {
@@ -166,7 +166,7 @@ export default function MovimientoFormPage() {
     return (
         <Box py={4} px={{ xs: 2, sm: 4 }} maxWidth="900px" margin="auto">
             <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                
+
                 {/* Cabecera del Formulario */}
                 <Box p={3} borderBottom="1px solid" borderColor="divider">
                     <Typography variant="h6" fontWeight={700}>
@@ -180,7 +180,7 @@ export default function MovimientoFormPage() {
                 <CardContent sx={{ p: 3 }}>
                     <Box component="form" onSubmit={handleSubmit(onSubmit)}>
                         <Stack spacing={3.5}>
-                            
+
                             {formError && <Alert severity="error" variant="outlined">{formError}</Alert>}
 
                             {/* SECCIÓN 1: Clasificación de Operación */}
@@ -364,7 +364,7 @@ export default function MovimientoFormPage() {
 
                             {/* Acciones del Formulario */}
                             <Box display="flex" justifyContent="flex-end" gap={2} pt={2}>
-                                <Button variant="text" color="inherit" size="medium" onClick={() => navigate('/movimientos')} sx={{ textTransform: 'none' }}>
+                                <Button variant="text" color="inherit" size="medium" onClick={() => navigate('/ingresos-egresos')} sx={{ textTransform: 'none' }}>
                                     Descartar
                                 </Button>
                                 <Button variant="contained" type="submit" size="medium" disableElevation disabled={saving} sx={{ textTransform: 'none', px: 3, fontWeight: 600 }}>
