@@ -11,7 +11,6 @@ import {
     useMediaQuery,
     useTheme,
     Divider,
-    Button
 } from '@mui/material';
 import { ArrowBack, ArrowDownward, ArrowUpward, AccessTime } from '@mui/icons-material';
 import { toast } from 'sonner';
@@ -61,7 +60,7 @@ const CajaHistorialPage = () => {
         abortableFetch(fetchHistorial);
     }, [abortableFetch, fetchHistorial]);
 
-    const handlePageChange = (event: unknown, newPage: number) => {
+    const handlePageChange = (_event: unknown, newPage: number) => {
         searchParams.set('offset', (newPage * limit).toString());
         setSearchParams(searchParams);
     };
