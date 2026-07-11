@@ -5,12 +5,12 @@ import type { CuentaBancariaObtenidoDetalle } from '../../cuenta-bancaria/domain
 export class AcreditarCuentaBancariaUseCase {
     constructor(private readonly cuentaBancariaRepository: CuentaBancariaRepository) {}
 
-    async execute(id: string, negocio_id: string, monto: number): Promise<CuentaBancariaObtenidoDetalle> {
+    async execute(id: string, negocio_id: string, monto: number, options?: { tx?: any }): Promise<CuentaBancariaObtenidoDetalle> {
         if (monto <= 0) {
             throw new AppError('El monto a acreditar debe ser mayor a cero', 'MONTO_INVALIDO', 400);
         }
 
-        const cuenta = await this.cuentaBancariaRepository.obtener(id, negocio_id);
+        const cuenta = await this.cuentaBancariaRepository.obtener(id, negocio_id, options);
         if (!cuenta) {
             throw new AppError('La cuenta bancaria no existe', 'CUENTA_BANCARIA_NOT_FOUND', 404);
         }
@@ -20,6 +20,6 @@ export class AcreditarCuentaBancariaUseCase {
 
         const nuevoSaldo = cuenta.saldo + monto;
         
-        return await this.cuentaBancariaRepository.actualizarSaldo(id, negocio_id, nuevoSaldo);
+        return await this.cuentaBancariaRepository.actualizarSaldo(id, negocio_id, nuevoSaldo, options);
     }
 }

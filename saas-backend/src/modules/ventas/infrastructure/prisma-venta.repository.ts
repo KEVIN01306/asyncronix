@@ -162,9 +162,9 @@ export class PrismaVentaRepository implements VentaRepository {
         }
     }
 
-    async finalizarVenta(ventaId: string, negocio_id: string, sucursal_id: string, metodo_pago?: MetodoPago): Promise<VentaSimple> {
+    async finalizarVenta(ventaId: string, negocio_id: string, sucursal_id: string, metodo_pago?: MetodoPago, options?: { tx?: any }): Promise<VentaSimple> {
         try {
-            return await this.db.$transaction(async (tx) => {
+            const operation = async (tx: any) => {
                 const ventaActual = await tx.venta.findFirst({ where: { id: ventaId, negocio_id, sucursal_id, activo: true } });
                 if (!ventaActual) throw new VentaNotFoundPersistenceError();
                 if (ventaActual.estado !== 'PENDIENTE') throw new Error('VENTA_NO_PENDIENTE');
@@ -176,7 +176,13 @@ export class PrismaVentaRepository implements VentaRepository {
                 });
 
                 return VentaMapper.mapSimple(ventaUpdated);
-            });
+            };
+
+            if (options?.tx) {
+                return await operation(options.tx);
+            } else {
+                return await this.db.$transaction(operation);
+            }
         } catch (error: any) {
             throw PrismaErrorMapper.map(error);
         }

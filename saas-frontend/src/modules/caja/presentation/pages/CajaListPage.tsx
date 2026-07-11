@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, Paper, TextField, InputAdornment, useTheme, useMediaQuery, Grid, Typography } from '@mui/material';
-import { Add, Info, Search, PointOfSaleOutlined } from '@mui/icons-material';
+import { Add, Info, Search, PointOfSaleOutlined, History } from '@mui/icons-material';
 import { cajaRepository } from '../../infrastructure/caja.repository';
 import { useDebounce } from '../../../../core/hooks/useDebounce';
 import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
@@ -53,6 +53,12 @@ const CajaListPage = () => {
     }, [limit, offset, debouncedSearchQuery]);
 
     const actions = [
+        {
+            name: 'Historial',
+            icon: <History fontSize="small" />,
+            color: 'secondary',
+            onClick: (row: Caja) => navigate(`/cajas/${row.id}/historial`),
+        },
         {
             name: 'Detalle',
             icon: <Info fontSize="small" />, 

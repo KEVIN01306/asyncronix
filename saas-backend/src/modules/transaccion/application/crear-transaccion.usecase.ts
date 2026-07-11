@@ -16,15 +16,16 @@ import type { TransaccionRepository } from '../domain/transaccion.repository.js'
 export class CrearTransaccionUseCase {
     constructor(private readonly transaccionRepository: TransaccionRepository) {}
 
-    async execute(data: TransaccionCrearDirecta): Promise<Transaccion> {
+    async execute(data: TransaccionCrearDirecta, options?: { tx?: any }): Promise<Transaccion> {
         try {
-            return await this.transaccionRepository.crearTransaccion(data);
+            return await this.transaccionRepository.crearTransaccion(data, options);
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
             }
             if (error instanceof DatabaseError) {
-                throw new AppError('Error al registrar la transacción', 'DATABASE_ERROR', 500);
+                console.error('Error interno al crear transacción:', error.message, error.stack);
+                throw new AppError(`Error al registrar la transacción: ${error.message}`, 'DATABASE_ERROR', 500);
             }
             throw error;
         }

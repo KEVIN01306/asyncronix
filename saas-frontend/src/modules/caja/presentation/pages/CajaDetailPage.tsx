@@ -9,7 +9,8 @@ import {
     Cancel,
     PointOfSale as CashIcon,
     Label as LabelIcon,
-    Layers as LayersIcon
+    Layers as LayersIcon,
+    History as HistoryIcon
 } from '@mui/icons-material';
 import { cajaRepository } from '../../infrastructure/caja.repository';
 import type { Caja } from '../../domain/interfaces/caja.interface';
@@ -196,6 +197,15 @@ export default function CajaDetailPage() {
                                 sx={{ p: 0, fontSize: '0.9rem', '&:hover': { transform: 'none' }, border: 'none' }}
                             >
                                 Egreso / Gasto
+                            </Button>
+                            <Button 
+                                variant="text" 
+                                color="primary" 
+                                startIcon={<HistoryIcon fontSize="small" />}
+                                sx={{ p: 0, fontSize: '0.9rem', '&:hover': { transform: 'none' }, border: 'none' }}
+                                onClick={() => navigate(`/cajas/${id}/historial`)}
+                            >
+                                Ver Historial
                             </Button>
                         </Stack>
                     </Box>

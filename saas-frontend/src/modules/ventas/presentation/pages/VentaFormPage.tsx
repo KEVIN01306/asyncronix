@@ -5,6 +5,7 @@ import { Grid, Button, Card, CardContent, Divider, IconButton, TextField, Typogr
 import { ArrowBack as ArrowBackIcon, QrCodeScanner as QrCodeScannerIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
+import { useDeviceStore } from '../../../../core/store/deviceStore';
 import { ventaRepository } from '../../infrastructure/venta.repository';
 import SaleClientModal from '../components/SaleClientModal';
 import SalePaymentModal from '../components/SalePaymentModal';
@@ -16,6 +17,7 @@ import SaleProductsTable from '../components/SaleProductsTable';
 import SaleSummary from '../components/SaleSummary';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import QrProductScanner from '../components/lectorSkuQr';
+import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMismatchModal';
 
 type FormValues = {
     cliente_id: string;
@@ -53,6 +55,11 @@ export default function VentaFormPage() {
     const [addingProductLoading, setAddingProductLoading] = useState(false);
     const [clienteNombre, setClienteNombre] = useState('Consumidor Final');
     const [clientSelected, setClientSelected] = useState(false);
+    const [showCajaMismatchModal, setShowCajaMismatchModal] = useState(false);
+    const [cajaMismatchPayload, setCajaMismatchPayload] = useState<{ metodo: string; efectivo_recibido: number | null; vuelto: number | null } | null>(null);
+
+    const { cajaId, cajaNombre, token: cajaToken } = useDeviceStore();
+
     const { setValue, watch } = useForm<FormValues>({
         defaultValues: {
             cliente_id: '',
@@ -363,25 +370,39 @@ export default function VentaFormPage() {
         setValue('cliente_id', '');
         setValue('metodo_pago', 'EFECTIVO');
         setValue('estado', 'PENDIENTE');
+        setShowCajaMismatchModal(false);
+        setCajaMismatchPayload(null);
     };
 
-    const finalizarPreVentaConPayload = async (preventaIdValue: string, payload: { metodo: string; efectivo_recibido: number | null; vuelto: number | null }, overrideStock = false, pinCaja?: string) => {
+    const finalizarPreVentaConPayload = async (preventaIdValue: string, payload: { metodo: string; efectivo_recibido: number | null; vuelto: number | null }, overrideStock = false, pinCaja?: string, forceEnLinea = false) => {
+        let cajaOptions = {};
+        if (payload.metodo === 'EFECTIVO' && !forceEnLinea) {
+            if (!cajaId) {
+                throw new Error('Esta PC no tiene ninguna caja enlazada. Configura la caja en los ajustes.');
+            }
+            cajaOptions = {
+                caja_id: cajaId,
+                token_autorizado: cajaToken || ''
+            };
+        }
         return ventaRepository.finalizarPreVenta(preventaIdValue, {
             metodo_pago: payload.metodo,
             comentarios: null,
             efectivo_recibido: payload.efectivo_recibido,
             vuelto: payload.vuelto,
             override_stock: overrideStock,
-            pin_caja: pinCaja
+            pin_caja: pinCaja,
+            ...cajaOptions,
+            forzar_caja_en_linea: forceEnLinea
         });
     };
 
-    const handlePaymentConfirm = async (payload: { metodo: string; efectivo_recibido: number | null; vuelto: number | null }) => {
+    const handlePaymentConfirm = async (payload: { metodo: string; efectivo_recibido: number | null; vuelto: number | null }, forceEnLinea = false) => {
         if (!user?.sucursal_id) return;
         try {
             setSaving(true);
             if (!ventaId && preventaIdState) {
-                const result = await finalizarPreVentaConPayload(preventaIdState, payload);
+                const result = await finalizarPreVentaConPayload(preventaIdState, payload, false, undefined, forceEnLinea);
                 const resultData = (result as any)?.data ?? result;
                 if (resultData?.faltantes?.length) {
                     setStockIssue(resultData);
@@ -404,7 +425,7 @@ export default function VentaFormPage() {
                     items: productosSeleccionados.map((producto) => ({ variante_id: producto.producto_id, cantidad: producto.cantidad, precio: producto.precio_sugerido ?? 0, descripcion: producto.nombre }))
                 });
                 const preventaCreated = createRes.data;
-                const result = await finalizarPreVentaConPayload(preventaCreated.id, payload);
+                const result = await finalizarPreVentaConPayload(preventaCreated.id, payload, false, undefined, forceEnLinea);
                 const resultData = (result as any)?.data ?? result;
                 if (resultData?.faltantes?.length) {
                     setStockIssue(resultData);
@@ -424,15 +445,42 @@ export default function VentaFormPage() {
                 return;
             }
 
-            await ventaRepository.finalizarVenta(ventaId, user.sucursal_id, payload.metodo);
+            let cajaOptions = {};
+            if (payload.metodo === 'EFECTIVO' && !forceEnLinea) {
+                if (!cajaId) {
+                    toast.error('Esta PC no tiene ninguna caja enlazada. Configura la caja en los ajustes.');
+                    setSaving(false);
+                    return;
+                }
+                cajaOptions = {
+                    caja_id: cajaId,
+                    token_autorizado: cajaToken || ''
+                };
+            }
+
+            await ventaRepository.finalizarVenta(ventaId, user.sucursal_id, payload.metodo, { ...cajaOptions, forzar_caja_en_linea: forceEnLinea });
             toast.success('Venta finalizada');
             resetForm();
             navigate('/ventas/nuevo');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Error al finalizar la venta');
+            if (error.response?.data?.code === 'CAJA_TOKEN_MISMATCH') {
+                setCajaMismatchPayload(payload);
+                setShowPaymentModal(false);
+                setShowCajaMismatchModal(true);
+            } else if (error.message && !error.response) {
+                toast.error(error.message);
+            } else {
+                toast.error(error.response?.data?.message || 'Error al finalizar la venta');
+            }
         } finally {
             setSaving(false);
-            setShowPaymentModal(false);
+        }
+    };
+
+    const handleForceCajaEnLinea = async () => {
+        if (cajaMismatchPayload) {
+            await handlePaymentConfirm(cajaMismatchPayload, true);
+            setShowCajaMismatchModal(false);
         }
     };
 
@@ -617,13 +665,23 @@ export default function VentaFormPage() {
                 </Button>
             </Grid>
 
-            <Box sx={{ mb: 1 }}>
-                <Typography variant="overline" color="text.secondary" sx={{ display: 'block', letterSpacing: 1 }}>
-                    Gestión de Ventas
-                </Typography>
-                <Typography variant="h5" fontWeight={600}>
-                    {isEdit ? 'Continuar con la venta' : 'Iniciar nueva venta'}
-                </Typography>
+            <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Box>
+                    <Typography variant="overline" color="text.secondary" sx={{ display: 'block', letterSpacing: 1 }}>
+                        Gestión de Ventas
+                    </Typography>
+                    <Typography variant="h5" fontWeight={600}>
+                        {isEdit ? 'Continuar con la venta' : 'Iniciar nueva venta'}
+                    </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', letterSpacing: 1, textTransform: 'uppercase' }}>
+                        Caja Física
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600} color={cajaId ? 'primary.main' : 'warning.main'}>
+                        {cajaNombre ? `Asignada: ${cajaNombre}` : 'Conectado a caja virtual o en línea'}
+                    </Typography>
+                </Box>
             </Box>
 
             <Dialog open={showStockDialog} onClose={() => {
@@ -672,6 +730,13 @@ export default function VentaFormPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <CajaMismatchModal
+                open={showCajaMismatchModal}
+                onClose={() => setShowCajaMismatchModal(false)}
+                onForce={handleForceCajaEnLinea}
+                loading={isSaving}
+            />
 
             <Grid size={{ xs: 12 }} container spacing={3}>
                 <Grid size={{ xs: 12, md: 12 }}>

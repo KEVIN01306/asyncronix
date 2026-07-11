@@ -25,17 +25,44 @@ import { ValidarPinCajaUseCase } from "./application/validar-pin.usecase.js";
 import { AgregarDetallePreVentaUseCase } from "./application/agregar-detalle-preventa.usecase.js";
 import { ActualizarClientePreVentaUseCase } from "./application/actualizar-cliente-preventa.usecase.js";
 import { EliminarDetallePreVentaUseCase } from "./application/eliminar-detalle-preventa.usecase.js";
+import { PrismaTransactionManager } from "../../shared/database/prisma/PrismaTransactionManager.js";
+import { PrismaSucursalRepository } from "../sucursal/infrastructure/prisma-sucursal.repository.js";
+import { PrismaCajaRepository } from "../caja/infrastructure/prisma-caja.repository.js";
+import { PrismaCuentaBancariaRepository } from "../cuenta-bancaria/infrastructure/prisma-cuenta-bancaria.repository.js";
+import { PrismaTransaccionRepository } from "../transaccion/infrastructure/prisma-transaccion.repository.js";
+import { AcreditarCajaUseCase } from "../transaccion/application/acreditar-caja.usecase.js";
+import { AcreditarCuentaBancariaUseCase } from "../transaccion/application/acreditar-cuenta-bancaria.usecase.js";
+import { CrearTransaccionUseCase } from "../transaccion/application/crear-transaccion.usecase.js";
+import { FrankfurterExchangeRateProvider } from "../../shared/infrastructure/frankfurter.provider.js";
 
 const ventaRepository = new PrismaVentaRepository(prisma);
 const loteRepository = new PrismaLoteRepository(prisma);
 const varianteRepository = new PrismaVarianteRepository(prisma);
 const clienteRepository = new PrismaClienteRepository(prisma);
 
+const transactionManager = new PrismaTransactionManager(prisma);
+const sucursalRepository = new PrismaSucursalRepository(prisma);
+const cajaRepository = new PrismaCajaRepository(prisma);
+const cuentaBancariaRepository = new PrismaCuentaBancariaRepository(prisma);
+const transaccionRepository = new PrismaTransaccionRepository(prisma);
+
+const acreditarCajaUseCase = new AcreditarCajaUseCase(cajaRepository);
+const acreditarCuentaBancariaUseCase = new AcreditarCuentaBancariaUseCase(cuentaBancariaRepository);
+const crearTransaccionUseCase = new CrearTransaccionUseCase(transaccionRepository);
+
 const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository, varianteRepository);
 const agregarProductoUseCase = new AgregarProductoUseCase(ventaRepository, loteRepository, varianteRepository);
 const buscarProductoPorCodigoUseCase = new BuscarProductoPorCodigoUseCase(varianteRepository);
 const eliminarDetalleVentaUseCase = new EliminarDetalleVentaUseCase(ventaRepository);
-const finalizarVentaUseCase = new FinalizarVentaUseCase(ventaRepository);
+const finalizarVentaUseCase = new FinalizarVentaUseCase(
+    ventaRepository,
+    transactionManager,
+    sucursalRepository,
+    acreditarCajaUseCase,
+    acreditarCuentaBancariaUseCase,
+    crearTransaccionUseCase,
+    new FrankfurterExchangeRateProvider()
+);
 const actualizarVentaUseCase = new ActualizarVentaUseCase(ventaRepository);
 const anularVentaUseCase = new AnularVentaUseCase(ventaRepository);
 const obtenerVentaUseCase = new ObtenerVentaUseCase(ventaRepository);
@@ -47,7 +74,15 @@ const obtenerPreVentasUseCase = new ObtenerPreVentasUseCase(prisma);
 const obtenerPreVentaUseCase = new ObtenerPreVentaUseCase(prisma);
 const actualizarCantidadPreVentaUseCase = new ActualizarCantidadPreVentaUseCase(prisma);
 const hashProvider = new Argon2HashProvider();
-const finalizarPreVentaUseCase = new FinalizarPreVentaUseCase(prisma, hashProvider);
+const finalizarPreVentaUseCase = new FinalizarPreVentaUseCase(
+    prisma, 
+    hashProvider,
+    sucursalRepository,
+    acreditarCajaUseCase,
+    acreditarCuentaBancariaUseCase,
+    crearTransaccionUseCase,
+    new FrankfurterExchangeRateProvider()
+);
 const validarPinCajaUseCase = new ValidarPinCajaUseCase(prisma, hashProvider);
 const agregarDetallePreVentaUseCase = new AgregarDetallePreVentaUseCase(prisma);
 const actualizarClientePreVentaUseCase = new ActualizarClientePreVentaUseCase(prisma);

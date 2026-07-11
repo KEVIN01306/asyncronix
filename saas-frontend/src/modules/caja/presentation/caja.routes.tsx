@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
 import { CajaListPage, CajaFormPage, CajaDetailPage } from './caja.lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
+import HistorialEntidadPage from './pages/CajaHistorialPage';
 
 export const cajaRoutes: RouteObject[] = [
     {
@@ -35,6 +36,14 @@ export const cajaRoutes: RouteObject[] = [
                 element: (
                     <RouteProtector requiredPermission="EDITAR_CAJAS">
                         <CajaFormPage />
+                    </RouteProtector>
+                )
+            },
+            {
+                path: ':id/historial',
+                element: (
+                    <RouteProtector requiredPermission="VER_CAJAS">
+                        <HistorialEntidadPage />
                     </RouteProtector>
                 )
             }

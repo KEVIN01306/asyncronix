@@ -22,6 +22,20 @@ router.get(
 );
 
 router.get(
+    '/caja/:id/historial',
+    auth.verificarPermisoSome(['VER_CAJAS', 'VER_INGRESOS_EGRESOS']), // User either needs to see Cajas or Transactions
+    validar.validarQuery(listarIngresosEgresosQuerySchema),
+    transaccionController.historialCaja
+);
+
+router.get(
+    '/cuenta/:id/historial',
+    auth.verificarPermisoSome(['VER_CUENTAS_BANCARIAS', 'VER_INGRESOS_EGRESOS']),
+    validar.validarQuery(listarIngresosEgresosQuerySchema),
+    transaccionController.historialCuenta
+);
+
+router.get(
     '/:id',
     auth.verificarPermiso(['VER_INGRESOS_EGRESOS_DETALLE']),
     validar.validarParams(ingresoEgresoIdParamSchema),

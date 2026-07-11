@@ -4,6 +4,7 @@ import { CrearTransaccionUseCase } from './application/crear-transaccion.usecase
 import { CrearIngresoEgresoUseCase } from './application/crear-ingreso-egreso.usecase.js';
 import { ObtenerDetalleIngresoEgresoUseCase } from './application/obtener-detalle-ingreso-egreso.usecase.js';
 import { ListarIngresosEgresosUseCase } from './application/listar-ingresos-egresos.usecase.js';
+import { ListarHistorialEntidadUseCase } from './application/listar-historial.usecase.js';
 import { PrismaCajaRepository } from '../caja/infrastructure/prisma-caja.repository.js';
 import { PrismaCuentaBancariaRepository } from '../cuenta-bancaria/infrastructure/prisma-cuenta-bancaria.repository.js';
 import { AcreditarCajaUseCase } from './application/acreditar-caja.usecase.js';
@@ -71,9 +72,11 @@ const crearIngresoEgresoUseCase = new CrearIngresoEgresoUseCase(
 
 const obtenerDetalleIngresoEgresoUseCase = new ObtenerDetalleIngresoEgresoUseCase(transaccionRepository);
 const listarIngresosEgresosUseCase = new ListarIngresosEgresosUseCase(transaccionRepository);
+const listarHistorialEntidadUseCase = new ListarHistorialEntidadUseCase(transaccionRepository);
 
 export const transaccionController = new TransaccionController(
     crearIngresoEgresoUseCase,
     obtenerDetalleIngresoEgresoUseCase,
-    listarIngresosEgresosUseCase
+    listarIngresosEgresosUseCase,
+    listarHistorialEntidadUseCase
 );

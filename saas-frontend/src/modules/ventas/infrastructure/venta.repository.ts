@@ -57,8 +57,12 @@ export const ventaRepository = {
         const response = await api.delete(`/ventas/${ventaId}/detalles/${detalleId}`, { data: { sucursal_id } });
         return response as any;
     },
-    finalizarVenta: async (ventaId: string, sucursal_id: string, metodo_pago?: string): Promise<{ data: Venta }> => {
-        const response = await api.patch<{ data: Venta }>(`/ventas/${ventaId}/finalizar`, { sucursal_id, metodo_pago });
+    finalizarVenta: async (ventaId: string, sucursal_id: string, metodo_pago?: string, cajaOpciones?: { caja_id?: string; token_autorizado?: string; forzar_caja_en_linea?: boolean }): Promise<{ data: Venta }> => {
+        const response = await api.patch<{ data: Venta }>(`/ventas/${ventaId}/finalizar`, { 
+            sucursal_id, 
+            metodo_pago,
+            ...(cajaOpciones || {})
+        });
         return response as any;
     },
     crearPreVenta: async (data: PreVentaCreateForm): Promise<{ data: PreVenta }> => {
@@ -81,7 +85,7 @@ export const ventaRepository = {
         const response = await api.delete(`/ventas/pre-ventas/detalles/${detalleId}`);
         return response as any;
     },
-    finalizarPreVenta: async (id: string, payload?: { metodo_pago?: string; comentarios?: string | null; override_stock?: boolean; pin_caja?: string; efectivo_recibido?: number | null; vuelto?: number | null }): Promise<any> => {
+    finalizarPreVenta: async (id: string, payload?: { metodo_pago?: string; comentarios?: string | null; override_stock?: boolean; pin_caja?: string; efectivo_recibido?: number | null; vuelto?: number | null; caja_id?: string; token_autorizado?: string; forzar_caja_en_linea?: boolean }): Promise<any> => {
         const response = await api.patch(`/ventas/pre-ventas/${id}/finalizar`, payload ?? {});
         return response as any;
     },

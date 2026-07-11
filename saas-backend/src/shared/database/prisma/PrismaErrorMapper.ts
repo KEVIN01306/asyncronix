@@ -3,12 +3,17 @@ import { DatabaseError } from "../errors/DatabaseError.js"
 import { NotFoundPersistenceError } from "../errors/NotFoundPersistenceError.js"
 import type { PersistenceError } from "../errors/PersistenceError.js"
 import { UniqueConstraintError } from "../errors/UniqueConstraintError.js"
+import AppError from "../../errors/AppError.js"
 
 
 
 export class PrismaErrorMapper {
-    static map(error: unknown): PersistenceError {
+    static map(error: unknown): PersistenceError | AppError | Error {
         console.error("PrismaErrorMapper caught error:", error);
+
+        if (error instanceof AppError) {
+            return error;
+        }
 
         if (error instanceof Prisma.PrismaClientInitializationError) {
             const message = error.message?.includes("Can't reach database server")

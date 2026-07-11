@@ -29,6 +29,13 @@ router.get(
     cuentaBancariaController.obtener
 );
 
+router.get(
+    '/:id/historial',
+    auth.verificarPermiso(['VER_CUENTA_BANCARIA']),
+    validar.validarParams(cuentaBancariaIdParamSchema),
+    cuentaBancariaController.historial
+);
+
 router.post(
     '/',
     auth.verificarPermiso(['CREAR_CUENTA_BANCARIA']),

@@ -8,7 +8,8 @@ import {
     SyncAlt as TransferIcon,
     Atm as WithdrawIcon,
     Person as PersonIcon,
-    CreditCard as CardIcon
+    CreditCard as CardIcon,
+    History as HistoryIcon
 } from '@mui/icons-material';
 import { cuentaBancariaRepository } from '../../infrastructure/cuenta-bancaria.repository';
 import type { CuentaBancaria } from '../../domain/interfaces/cuenta-bancaria.interface';
@@ -176,6 +177,15 @@ export default function CuentaBancariaDetailPage() {
                                 sx={{ p: 0, fontSize: '0.9rem', '&:hover': { transform: 'none' }, border: 'none' }}
                             >
                                 Retirar a caja
+                            </Button>
+                            <Button 
+                                variant="text" 
+                                color="primary" 
+                                startIcon={<HistoryIcon fontSize="small" />}
+                                sx={{ p: 0, fontSize: '0.9rem', '&:hover': { transform: 'none' }, border: 'none' }}
+                                onClick={() => navigate(`/cuentas-bancarias/${id}/historial`)}
+                            >
+                                Ver Historial
                             </Button>
                         </Stack>
                     </Box>

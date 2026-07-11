@@ -225,9 +225,10 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
         }
     }
 
-    async actualizar(id: string, negocio_id: string, data: ServicioActualizar) {
+    async actualizar(id: string, negocio_id: string, data: ServicioActualizar, options?: { tx?: any }) {
         try {
-            const currentServicio = await this.prisma.servicio.findFirst({ where: { id, negocio_id, activo: true } });
+            const tx = options?.tx || this.prisma;
+            const currentServicio = await tx.servicio.findFirst({ where: { id, negocio_id, activo: true } });
             if (!currentServicio) throw new Error('Servicio no encontrado');
 
             const servicioData: any = {
@@ -244,7 +245,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
                 MetodoPago: data.MetodoPago ?? undefined
             };
 
-            await this.prisma.servicio.update({ where: { id }, data: servicioData });
+            await tx.servicio.update({ where: { id }, data: servicioData });
 
             const servicioVehiculoData: any = {};
             if (data.vehiculo_id !== undefined) servicioVehiculoData.vehiculo_id = data.vehiculo_id;
@@ -254,10 +255,10 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             if (data.estado !== undefined) servicioVehiculoData.estado = data.estado as any;
 
             if (Object.keys(servicioVehiculoData).length > 0) {
-                await this.prisma.servicioVehiculo.update({ where: { servicio_id: id }, data: servicioVehiculoData });
+                await tx.servicioVehiculo.update({ where: { servicio_id: id }, data: servicioVehiculoData });
             }
 
-            const sv = await this.prisma.servicioVehiculo.findFirst({ where: { servicio_id: id }, include: { servicio: { include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } }, tipo_servicio: true } }, vehiculo: { include: { modelo: true } }, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } } });
+            const sv = await tx.servicioVehiculo.findFirst({ where: { servicio_id: id }, include: { servicio: { include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } }, tipo_servicio: true } }, vehiculo: { include: { modelo: true } }, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } } });
             if (!sv) throw new Error('Servicio no encontrado');
             return mapServicioVehiculoToServicioDetalle(sv as any);
         } catch (error) {

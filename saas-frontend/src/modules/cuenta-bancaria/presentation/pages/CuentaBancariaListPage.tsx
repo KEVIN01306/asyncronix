@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, Paper, TextField, InputAdornment, useTheme, useMediaQuery, Grid, Typography } from '@mui/material';
-import { Add, Info, Search, AccountBalanceWalletOutlined } from '@mui/icons-material';
+import { Add, Info, Search, AccountBalanceWalletOutlined, History } from '@mui/icons-material';
 import { cuentaBancariaRepository } from '../../infrastructure/cuenta-bancaria.repository';
 import { useDebounce } from '../../../../core/hooks/useDebounce';
 import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
@@ -53,6 +53,12 @@ const CuentaBancariaListPage = () => {
     }, [limit, offset, debouncedSearchQuery]);
 
     const actions = [
+        {
+            name: 'Historial',
+            icon: <History fontSize="small" />,
+            color: 'secondary',
+            onClick: (row: CuentaBancaria) => navigate(`/cuentas-bancarias/${row.id}/historial`),
+        },
         {
             name: 'Detalle',
             icon: <Info fontSize="small" />,

@@ -47,13 +47,14 @@ export class PrismaCuentaBancariaRepository implements CuentaBancariaRepository 
         }
     }
 
-    async actualizarSaldo(id: string, negocio_id: string, nuevoSaldo: number): Promise<CuentaBancariaObtenidoDetalle> {
+    async actualizarSaldo(id: string, negocio_id: string, nuevoSaldo: number, options?: { tx?: any }): Promise<CuentaBancariaObtenidoDetalle> {
         try {
-            const existing = await this.prisma.cuentaBancaria.findFirst({ where: { id, negocio_id } });
+            const db = options?.tx || this.prisma;
+            const existing = await db.cuentaBancaria.findFirst({ where: { id, negocio_id } });
             if (!existing) {
                 throw new Error('NOT_FOUND');
             }
-            const updated = await this.prisma.cuentaBancaria.update({
+            const updated = await db.cuentaBancaria.update({
                 where: { id },
                 data: { saldo: nuevoSaldo },
                 include: {
@@ -79,9 +80,10 @@ export class PrismaCuentaBancariaRepository implements CuentaBancariaRepository 
         }
     }
 
-    async obtener(id: string, negocio_id: string): Promise<CuentaBancariaObtenidoDetalle | null> {
+    async obtener(id: string, negocio_id: string, options?: { tx?: any }): Promise<CuentaBancariaObtenidoDetalle | null> {
         try {
-            const found = await this.prisma.cuentaBancaria.findFirst({
+            const db = options?.tx || this.prisma;
+            const found = await db.cuentaBancaria.findFirst({
                 where: { id, negocio_id },
                 include: {
                     banco: true,

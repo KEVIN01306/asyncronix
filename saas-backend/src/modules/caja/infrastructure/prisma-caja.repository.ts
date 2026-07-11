@@ -40,13 +40,14 @@ export class PrismaCajaRepository implements CajaRepository {
         }
     }
 
-    async actualizarSaldo(id: string, negocio_id: string, sucursal_id: string, nuevoSaldo: number): Promise<CajaObtenidoDetalle> {
+    async actualizarSaldo(id: string, negocio_id: string, sucursal_id: string, nuevoSaldo: number, options?: { tx?: any }): Promise<CajaObtenidoDetalle> {
         try {
-            const existing = await this.prisma.caja.findFirst({ where: { id, negocio_id, sucursal_id } });
+            const db = options?.tx || this.prisma;
+            const existing = await db.caja.findFirst({ where: { id, negocio_id, sucursal_id } });
             if (!existing) {
                 throw new Error('NOT_FOUND');
             }
-            const updated = await this.prisma.caja.update({
+            const updated = await db.caja.update({
                 where: { id },
                 data: { saldo: nuevoSaldo },
             });
@@ -68,9 +69,10 @@ export class PrismaCajaRepository implements CajaRepository {
         }
     }
 
-    async obtener(id: string, negocio_id: string, sucursal_id: string): Promise<CajaObtenidoDetalle | null> {
+    async obtener(id: string, negocio_id: string, sucursal_id: string, options?: { tx?: any }): Promise<CajaObtenidoDetalle | null> {
         try {
-            const found = await this.prisma.caja.findFirst({ where: { id, negocio_id, sucursal_id } });
+            const db = options?.tx || this.prisma;
+            const found = await db.caja.findFirst({ where: { id, negocio_id, sucursal_id } });
             return found ? CajaMapper.mapSimple(found as any) : null;
         } catch (error) {
             throw PrismaErrorMapper.map(error);

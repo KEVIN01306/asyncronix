@@ -83,19 +83,20 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
 
     // ── Generic low-level creator ─────────────────────────────────────────────
 
-    async crearTransaccion(data: TransaccionCrearDirecta): Promise<Transaccion> {
+    async crearTransaccion(data: TransaccionCrearDirecta, options?: { tx?: any }): Promise<Transaccion> {
         try {
+            const db = options?.tx || this.prisma;
             // Obtain the business name for code generation
-            const negocio = await (this.prisma as any).negocio.findUnique({
+            const negocio = await (db as any).negocio.findUnique({
                 where: { id: data.negocio_id },
                 select: { nombre: true },
             });
             const nombreNegocio: string = negocio?.nombre ?? 'XXXX';
 
-            const correlativo = await obtenerSiguienteCorrelativo(this.prisma as any, data.negocio_id);
+            const correlativo = await obtenerSiguienteCorrelativo(db as any, data.negocio_id);
             const codigo = generarCodigo(nombreNegocio, correlativo);
 
-            const created = await this.prisma.transaccion.create({
+            const created = await db.transaccion.create({
                 data: {
                     negocio_id: data.negocio_id,
                     sucursal_id: data.sucursal_id,
@@ -264,8 +265,14 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
             const whereCondition: any = {
                 negocio_id,
                 sucursal_id,
-                origen_tipo: 'INGRESO_EGRESO',
             };
+
+            if (filters?.origen_tipos && filters.origen_tipos.length > 0) {
+                whereCondition.origen_tipo = { in: filters.origen_tipos };
+            } else if (!filters?.entidad_tipo) {
+                // Si no se filtra por entidad, por defecto solo listamos INGRESO_EGRESO
+                whereCondition.origen_tipo = 'INGRESO_EGRESO';
+            }
 
             if (filters?.tipo_movimiento) {
                 whereCondition.tipo_movimiento = filters.tipo_movimiento;
@@ -325,6 +332,55 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
                 perPage: pagination.perPage,
                 total,
                 data: data.map((item) => TransaccionMapper.mapIngresoEgreso(item)),
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async listarHistorialEntidad(
+        negocio_id: string,
+        sucursal_id: string,
+        entidad_tipo: 'CAJA' | 'CUENTA',
+        entidad_id: string,
+        pagination: Pagination
+    ): Promise<Paginated<any>> {
+        try {
+            const skip = (pagination.page - 1) * pagination.perPage;
+            const take = pagination.perPage;
+
+            const whereCondition: any = {
+                negocio_id,
+                sucursal_id,
+            };
+
+            if (entidad_tipo === 'CAJA') {
+                whereCondition.OR = [
+                    { origen_caja_id: entidad_id },
+                    { destino_caja_id: entidad_id }
+                ];
+            } else {
+                whereCondition.OR = [
+                    { origen_cuenta_id: entidad_id },
+                    { destino_cuenta_id: entidad_id }
+                ];
+            }
+
+            const [total, data] = await Promise.all([
+                this.prisma.transaccion.count({ where: whereCondition }),
+                this.prisma.transaccion.findMany({
+                    where: whereCondition,
+                    skip,
+                    take,
+                    orderBy: { fecha_transaccion: 'desc' },
+                }),
+            ]);
+
+            return {
+                page: pagination.page,
+                perPage: pagination.perPage,
+                total,
+                data: data,
             };
         } catch (error) {
             throw PrismaErrorMapper.map(error);

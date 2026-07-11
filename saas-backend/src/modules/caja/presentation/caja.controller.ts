@@ -9,6 +9,7 @@ import type { ActualizarCajaUseCase } from '../application/actualizar-caja.useca
 import type { EliminarCajaUseCase } from '../application/eliminar-caja.usecase.js';
 import type { AsociarDispositivoCajaUseCase } from '../application/asociar-dispositivo-caja.usecase.js';
 import type { DesasociarDispositivoCajaUseCase } from '../application/desasociar-dispositivo-caja.usecase.js';
+import type { ListarHistorialCajaUseCase } from '../application/listar-historial-caja.usecase.js';
 
 export class CajaController extends BaseController {
     constructor(
@@ -18,7 +19,8 @@ export class CajaController extends BaseController {
         private readonly actualizarCajaUseCase: ActualizarCajaUseCase,
         private readonly eliminarCajaUseCase: EliminarCajaUseCase,
         private readonly asociarDispositivoCajaUseCase: AsociarDispositivoCajaUseCase,
-        private readonly desasociarDispositivoCajaUseCase: DesasociarDispositivoCajaUseCase
+        private readonly desasociarDispositivoCajaUseCase: DesasociarDispositivoCajaUseCase,
+        private readonly listarHistorialCajaUseCase: ListarHistorialCajaUseCase
     ) {
         super();
     }
@@ -105,6 +107,32 @@ export class CajaController extends BaseController {
 
             await this.desasociarDispositivoCajaUseCase.execute(id, negocio_id, sucursal_id, token_autorizado || null);
             res.status(200).json(Respuesta.exito('Caja desasociada del dispositivo con éxito', null));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    historial = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const { limit, offset, q, fecha_inicio, fecha_fin, origen_tipos } = res.locals.query;
+            const page = Math.floor(offset / limit) + 1;
+            
+            // Si origen_tipos es un string, lo convertimos a array. Si es array, lo dejamos.
+            let origenes: any[] | undefined = undefined;
+            if (origen_tipos) {
+                if (Array.isArray(origen_tipos)) {
+                    origenes = origen_tipos;
+                } else if (typeof origen_tipos === 'string') {
+                    origenes = origen_tipos.split(',');
+                }
+            }
+
+            const { total, data } = await this.listarHistorialCajaUseCase.execute(
+                id, negocio_id, sucursal_id, { page, perPage: limit }, q, fecha_inicio, fecha_fin, origenes
+            );
+            res.status(200).json(Respuesta.paginacion('Historial obtenido con éxito', data, total, limit, offset));
         } catch (error) {
             next(error);
         }

@@ -24,7 +24,10 @@ export const preVentaFinalizarSchema = z.object({
     override_stock: z.boolean().optional().default(false),
     pin_caja: z.string().trim().optional().nullable(),
     efectivo_recibido: z.number().nonnegative().optional().nullable(),
-    vuelto: z.number().nonnegative().optional().nullable()
+    vuelto: z.number().nonnegative().optional().nullable(),
+    caja_id: z.string().uuid("Caja ID inválido").optional(),
+    token_autorizado: z.string().optional(),
+    forzar_caja_en_linea: z.boolean().optional().default(false)
 });
 
 export const pinCajaSchema = z.object({

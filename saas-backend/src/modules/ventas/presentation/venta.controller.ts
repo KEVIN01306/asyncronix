@@ -167,11 +167,12 @@ export class VentaController extends BaseController {
     finalizar = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
-            const { negocio_id } = this.obtenerEntorno(res);
-            const { sucursal_id, metodo_pago } = req.body;
+            const { id: usuario_id, negocio_id } = this.obtenerEntorno(res);
+            const { sucursal_id, metodo_pago, caja_id, token_autorizado, forzar_caja_en_linea } = req.body;
             if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
 
-            const venta = await this.finalizarVentaUseCase.execute(id, negocio_id, sucursal_id, metodo_pago);
+            const opcionesCaja = { caja_id, token_autorizado, forzar_caja_en_linea };
+            const venta = await this.finalizarVentaUseCase.execute(id, negocio_id, sucursal_id, usuario_id, metodo_pago, opcionesCaja);
             res.status(200).json(Respuesta.exito('Venta finalizada', venta));
         } catch (error) {
             next(error);
@@ -298,7 +299,10 @@ export class VentaController extends BaseController {
             const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
             if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
 
-            const result = await this.finalizarPreVentaUseCase.execute(id, negocio_id, sucursal_id, usuario_id, req.body, res.locals.usuario?.permisos ?? []);
+            const { caja_id, token_autorizado, forzar_caja_en_linea } = req.body;
+            const opcionesCaja = { caja_id, token_autorizado, forzar_caja_en_linea };
+
+            const result = await this.finalizarPreVentaUseCase.execute(id, negocio_id, sucursal_id, usuario_id, req.body, res.locals.usuario?.permisos ?? [], opcionesCaja);
             res.status(200).json(Respuesta.exito('Preventa finalizada con éxito', result));
         } catch (error) {
             next(error);

@@ -22,6 +22,12 @@ router.get('/:id',
     cajaController.obtener
 );
 
+router.get('/:id/historial',
+    auth.verificarPermiso(['VER_CAJAS_DETALLE']), // Or a specific permission if needed, using the same as detalle for now
+    validar.validarParams(cajaIdParamSchema),
+    cajaController.historial
+);
+
 router.post('/',
     auth.verificarPermiso(['CREAR_CAJAS']),
     validar.validarBody(cajaCrearSchema),

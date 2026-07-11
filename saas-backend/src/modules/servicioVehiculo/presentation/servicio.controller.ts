@@ -219,11 +219,40 @@ export class ServicioController extends BaseController {
     finalizarSalida = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;
-            const { negocio_id } = this.obtenerEntorno(res);
+            const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
+
             if (!req.file) throw new AppError('No se ha subido ninguna firma', 'SIGNATURE_REQUIRED', 400);
-            const { metodo_pago, efectivo_recibido, vuelto } = req.body;
+            
+            const { 
+                metodo_pago, 
+                efectivo_recibido, 
+                vuelto,
+                caja_id,
+                token_autorizado,
+                forzar_caja_en_linea,
+                cuenta_bancaria_id
+            } = req.body;
+            
+            const opcionesFinancieras = { 
+                caja_id, 
+                token_autorizado, 
+                forzar_caja_en_linea: forzar_caja_en_linea === 'true' || forzar_caja_en_linea === true,
+                cuenta_bancaria_id 
+            };
+
             const firma_url = req.file.path.replace(/\\/g, '/');
-            const servicio = await this.finalizarServicioUseCase.execute(id, negocio_id, firma_url, metodo_pago, efectivo_recibido, vuelto);
+            const servicio = await this.finalizarServicioUseCase.execute(
+                id, 
+                negocio_id, 
+                sucursal_id, 
+                usuario_id, 
+                firma_url, 
+                metodo_pago, 
+                efectivo_recibido != null && efectivo_recibido !== '' ? parseFloat(efectivo_recibido) : null, 
+                vuelto != null && vuelto !== '' ? parseFloat(vuelto) : null,
+                opcionesFinancieras
+            );
             res.status(200).json(Respuesta.exito('Servicio finalizado con éxito', servicio));
         } catch (error) {
             next(error);

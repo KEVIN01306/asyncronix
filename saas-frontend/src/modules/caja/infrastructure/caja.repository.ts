@@ -4,6 +4,20 @@ import type { Caja, CajaCreateFormValues, CajaUpdateFormValues } from '../domain
 
 const URL_MODULE = '/cajas';
 
+export interface TransaccionHistorial {
+    id: string;
+    codigo: string;
+    fecha_transaccion: string;
+    tipo_movimiento: string;
+    origen_tipo: string;
+    monto_original: number;
+    descripcion?: string | null;
+    origen_caja_id?: string | null;
+    destino_caja_id?: string | null;
+    origen_cuenta_id?: string | null;
+    destino_cuenta_id?: string | null;
+}
+
 export const cajaRepository = {
     listar: async (limit: number, offset: number, q?: string, signal?: AbortSignal): Promise<PaginatedResponse<Caja>> => {
         const response = await api.get<PaginatedResponse<Caja>>(URL_MODULE, { params: { limit, offset, q }, signal });
@@ -31,6 +45,10 @@ export const cajaRepository = {
     },
     eliminar: async (id: string): Promise<ApiResponse<null>> => {
         const response = await api.delete<ApiResponse<null>>(`${URL_MODULE}/${id}`);
+        return response as any;
+    },
+    obtenerHistorial: async (id: string, limit: number, offset: number, signal?: AbortSignal): Promise<PaginatedResponse<TransaccionHistorial>> => {
+        const response = await api.get<PaginatedResponse<TransaccionHistorial>>(`/ingresos-egresos/caja/${id}/historial`, { params: { limit, offset }, signal });
         return response as any;
     },
 };

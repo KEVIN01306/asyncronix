@@ -5,16 +5,18 @@ import type {
     TransaccionCrear,
     TransaccionCrearDirecta,
     IngresoEgresoEntity,
+    TipoOrigenTransaccion
 } from './transaccion.entity.js';
 
 export interface ListarIngresosEgresosFilters {
-    q?: string;
-    tipo_movimiento?: 'INGRESO' | 'EGRESO';
-    categoria_id?: string;
-    entidad_tipo?: 'CAJA' | 'CUENTA';
-    entidad_id?: string;
-    fecha_inicio?: Date;
-    fecha_fin?: Date;
+    q?: string | undefined;
+    tipo_movimiento?: 'INGRESO' | 'EGRESO' | undefined;
+    categoria_id?: string | undefined;
+    entidad_tipo?: 'CAJA' | 'CUENTA' | undefined;
+    entidad_id?: string | undefined;
+    fecha_inicio?: Date | undefined;
+    fecha_fin?: Date | undefined;
+    origen_tipos?: TipoOrigenTransaccion[] | undefined;
 }
 
 export interface TransaccionRepository {
@@ -23,7 +25,7 @@ export interface TransaccionRepository {
      * The caller is responsible for providing all required fields.
      * Used internally by other modules (sales, services, etc.).
      */
-    crearTransaccion(data: TransaccionCrearDirecta): Promise<Transaccion>;
+    crearTransaccion(data: TransaccionCrearDirecta, options?: { tx?: any }): Promise<Transaccion>;
 
     /**
      * Creates an Ingreso or Egreso (applies origin/destination logic).
@@ -56,4 +58,16 @@ export interface TransaccionRepository {
         pagination: Pagination,
         filters?: ListarIngresosEgresosFilters
     ): Promise<Paginated<IngresoEgresoEntity>>;
+
+    /**
+     * Returns a paginated list of all transactions associated with a Caja or Cuenta.
+     * Includes Ingresos, Egresos, Ventas, Servicios, Movimientos Internos, etc.
+     */
+    listarHistorialEntidad(
+        negocio_id: string,
+        sucursal_id: string,
+        entidad_tipo: 'CAJA' | 'CUENTA',
+        entidad_id: string,
+        pagination: Pagination
+    ): Promise<Paginated<Transaccion>>;
 }

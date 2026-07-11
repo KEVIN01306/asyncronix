@@ -19,7 +19,7 @@ export interface ServicioRepository {
     obtener(id: string, negocio_id: string): Promise<ServicioDetalle | null>;
     obtenerEstado(id: string, negocio_id: string): Promise<Pick<ServicioSimple, 'id' | 'estado'> | null>;
     registrar(data: ServicioCrear, negocio_id: string, recepcionista_id: string): Promise<ServicioDetalle>;
-    actualizar(id: string, negocio_id: string, data: ServicioActualizar): Promise<ServicioDetalle>;
+    actualizar(id: string, negocio_id: string, data: ServicioActualizar, options?: { tx?: any }): Promise<ServicioDetalle>;
     cambiarEstado(id: string, negocio_id: string, estado: string): Promise<ServicioDetalle>;
     guardarFirmaEntrada(servicio_id: string, firma_url: string, negocio_id: string): Promise<ServicioDetalle>;
     registrarImagen(servicio_id: string, url: string, negocio_id: string, descripcion?: string | null): Promise<ServicioDetalle>;

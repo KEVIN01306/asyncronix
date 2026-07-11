@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
 import { CuentaBancariaListPage, CuentaBancariaDetailPage, CuentaBancariaFormPage } from './cuenta-bancaria.lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
+import HistorialEntidadPage from './pages/CuentaBancariaHistorialPage';
 
 export const cuentasBancariasRoutes: RouteObject[] = [
     {
@@ -35,6 +36,14 @@ export const cuentasBancariasRoutes: RouteObject[] = [
                 element: (
                     <RouteProtector requiredPermission="EDITAR_CUENTA_BANCARIA">
                         <CuentaBancariaFormPage />
+                    </RouteProtector>
+                )
+            },
+            {
+                path: ':id/historial',
+                element: (
+                    <RouteProtector requiredPermission="VER_CUENTA_BANCARIA">
+                        <HistorialEntidadPage />
                     </RouteProtector>
                 )
             }

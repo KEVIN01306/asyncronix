@@ -50,7 +50,13 @@ export const servicioListarQuerySchema = z.object({
 export const servicioSalidaSchema = z.object({
     metodo_pago: metodoPagoEnum,
     efectivo_recibido: z.coerce.number().nonnegative().optional().nullable(),
-    vuelto: z.coerce.number().nonnegative().optional().nullable()
+    vuelto: z.coerce.number().nonnegative().optional().nullable(),
+    caja_id: z.string().uuid().optional().nullable(),
+    token_autorizado: z.string().optional().nullable(),
+    forzar_caja_en_linea: z.preprocess((val) => val === 'true' || val === true, z.boolean()).optional().nullable(),
+    cuenta_bancaria_id: z.string().uuid().optional().nullable(),
+    monto_original: z.coerce.number().nonnegative().optional().nullable(),
+    moneda_id: z.string().uuid().optional().nullable()
 }).superRefine((data, ctx) => {
     if (data.metodo_pago !== 'EFECTIVO') {
         return;

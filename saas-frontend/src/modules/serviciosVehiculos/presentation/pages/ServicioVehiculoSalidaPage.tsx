@@ -17,6 +17,8 @@ import * as z from 'zod';
 import SignaturePadModal from '../components/modals/SignaturePadModal';
 import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { useDeviceStore } from '../../../../core/store/deviceStore';
+import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMismatchModal';
 
 const salidaSchema = z.object({
     metodo_pago: z.enum(Object.values(METODO_PAGO) as [string, ...string[]], 'El método de pago es requerido'),
@@ -47,6 +49,11 @@ const ServicioSalidaPage = () => {
     const [openSignaturePad, setOpenSignaturePad] = useState(false);
     const [firmaSalidaBase64, setFirmaSalidaBase64] = useState<string | null>(null);
     const [savingSalida, setSavingSalida] = useState(false);
+
+    const [showCajaMismatchModal, setShowCajaMismatchModal] = useState(false);
+    const [cajaMismatchPayload, setCajaMismatchPayload] = useState<SalidaForm | null>(null);
+
+    const { cajaId, token: cajaToken } = useDeviceStore();
 
     const user = useAuthStore((state: any) => state.user);
     const theme = useTheme();
@@ -150,7 +157,8 @@ const ServicioSalidaPage = () => {
         setOpenSignaturePad(false);
     };
 
-    const handleSubmitSalida = async (values: SalidaForm) => {
+    const handleSubmitSalida = async (values: SalidaForm, forceEnLineaParam?: boolean | React.BaseSyntheticEvent) => {
+        const forceEnLinea = typeof forceEnLineaParam === 'boolean' ? forceEnLineaParam : false;
         if (!servicio) return;
         if (!isSalidaState) {
             toast.error('El servicio no está en estado LISTO_ENTREGA');
@@ -168,7 +176,22 @@ const ServicioSalidaPage = () => {
             return;
         }
 
+        let cajaOptions = {};
+        if (values.metodo_pago === METODO_PAGO.EFECTIVO && !forceEnLinea) {
+            if (!cajaId) {
+                toast.error('Esta PC no tiene ninguna caja enlazada. Configura la caja en los ajustes.');
+                return;
+            }
+            cajaOptions = {
+                caja_id: cajaId,
+                token_autorizado: cajaToken || ''
+            };
+        }
+
         try {
+            const efectivoFinal = values.metodo_pago === METODO_PAGO.EFECTIVO ? (values.efectivo_recibido ?? 0) : null;
+            const vueltoFinal = values.metodo_pago === METODO_PAGO.EFECTIVO ? Math.max(0, (values.efectivo_recibido ?? 0) - totalCobro) : null;
+
             setSavingSalida(true);
             const blob = await fetch(base64).then((response) => response.blob());
             const file = new File([blob], 'firma_salida.png', { type: 'image/png' });
@@ -176,30 +199,45 @@ const ServicioSalidaPage = () => {
                 servicio.id,
                 file,
                 values.metodo_pago,
-                values.metodo_pago === METODO_PAGO.EFECTIVO ? values.efectivo_recibido ?? null : null,
-                values.metodo_pago === METODO_PAGO.EFECTIVO ? values.vuelto ?? null : null
+                efectivoFinal,
+                vueltoFinal,
+                { ...cajaOptions, forzar_caja_en_linea: forceEnLinea }
             );
             setServicio(updatedService);
             toast.success('Servicio finalizado correctamente');
-        } catch (err) {
+            if (showCajaMismatchModal) {
+                setShowCajaMismatchModal(false);
+                setCajaMismatchPayload(null);
+            }
+        } catch (err: any) {
             console.error(err);
-            toast.error('No se pudo finalizar el servicio');
+            if (err?.response?.data?.code === 'CAJA_TOKEN_MISMATCH' || err?.code === 'CAJA_TOKEN_MISMATCH') {
+                setCajaMismatchPayload(values);
+                setShowCajaMismatchModal(true);
+            } else {
+                toast.error('No se pudo finalizar el servicio');
+            }
         } finally {
             setSavingSalida(false);
         }
     };
 
+    const handleForceCajaEnLinea = async () => {
+        if (!cajaMismatchPayload) return;
+        await handleSubmitSalida(cajaMismatchPayload, true);
+    };
+
     if (loading) {
         return (
-            <Loading/>
+            <Loading />
         );
     }
 
     if (error || !servicio) {
         return (
-            <ErrorPageLoading 
-                text={error || 'Servicio no encontrado'} 
-                navigate={() => navigate('/servicios-vehiculo')} 
+            <ErrorPageLoading
+                text={error || 'Servicio no encontrado'}
+                navigate={() => navigate('/servicios-vehiculo')}
             />
         );
     }
@@ -430,19 +468,23 @@ const ServicioSalidaPage = () => {
                         </Typography>
                         <ListTableSimple
                             columns={[
-                                { id: 'variante', name: 'Repuesto', format: (variante) => {
-                                    if (!variante) return '-';
-                                    const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
-                                    return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
-                                }},
+                                {
+                                    id: 'variante', name: 'Repuesto', format: (variante) => {
+                                        if (!variante) return '-';
+                                        const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                        return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
+                                    }
+                                },
                                 { id: 'cantidad', name: 'Cantidad' },
                                 { id: 'precio_venta', name: 'Precio', format: (value) => value ? formatMoney(value) : '-' },
-                                { id: 'total', name: 'Total', format: (_value, row) => {
-                                    if (row.precio_venta && row.cantidad) {
-                                        return formatMoney(row.precio_venta * row.cantidad);
+                                {
+                                    id: 'total', name: 'Total', format: (_value, row) => {
+                                        if (row.precio_venta && row.cantidad) {
+                                            return formatMoney(row.precio_venta * row.cantidad);
+                                        }
+                                        return '-';
                                     }
-                                    return '-';
-                                } }
+                                }
                             ]}
                             data={servicio.repuestos_inventario || []}
                             headerBgColor={theme.palette.primary.main}
@@ -459,14 +501,14 @@ const ServicioSalidaPage = () => {
                         </Typography>
                         <ListTableSimple
                             columns={[
-                                { id: 'item', name: 'Item'}
+                                { id: 'item', name: 'Item' }
                             ]}
                             data={servicio.cambios_siguiente_servicio || []}
                             headerBgColor={theme.palette.primary.main}
                             headerTextColor="#fff"
                         />
                     </Grid>
-                    
+
                 </Grid>
                 <Grid container size={12} mt={2} justifyContent="center" alignItems="center" spacing={2}>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -592,6 +634,12 @@ const ServicioSalidaPage = () => {
                 saving={savingSalida}
                 title="Firma de Salida"
                 description="Por favor, dibuja tu firma para finalizar la salida del servicio."
+            />
+            <CajaMismatchModal
+                open={showCajaMismatchModal}
+                onClose={() => setShowCajaMismatchModal(false)}
+                onForce={handleForceCajaEnLinea}
+                loading={savingSalida}
             />
         </Box>
     );

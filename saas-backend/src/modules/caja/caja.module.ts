@@ -10,10 +10,13 @@ import { AsociarDispositivoCajaUseCase } from './application/asociar-dispositivo
 import { DesasociarDispositivoCajaUseCase } from './application/desasociar-dispositivo-caja.usecase.js';
 import { PrismaUsuarioRepository } from '../usuarios/infrastructure/prisma-usuario.repository.js';
 import { Argon2HashProvider } from '@shared/infrastructure/argon2-hash.provider.js';
+import { PrismaTransaccionRepository } from '../transaccion/infrastructure/prisma-transaccion.repository.js';
+import { ListarHistorialCajaUseCase } from './application/listar-historial-caja.usecase.js';
 
 const cajaRepository = new PrismaCajaRepository(prisma as any);
 const usuarioRepository = new PrismaUsuarioRepository(prisma as any);
 const hashProvider = new Argon2HashProvider();
+const transaccionRepository = new PrismaTransaccionRepository(prisma as any);
 
 const obtenerCajaUseCase = new ObtenerCajaUseCase(cajaRepository);
 const obtenerCajasUseCase = new ObtenerCajasUseCase(cajaRepository);
@@ -22,6 +25,7 @@ const actualizarCajaUseCase = new ActualizarCajaUseCase(cajaRepository);
 const eliminarCajaUseCase = new EliminarCajaUseCase(cajaRepository);
 const asociarDispositivoCajaUseCase = new AsociarDispositivoCajaUseCase(cajaRepository, usuarioRepository, hashProvider);
 const desasociarDispositivoCajaUseCase = new DesasociarDispositivoCajaUseCase(cajaRepository);
+const listarHistorialCajaUseCase = new ListarHistorialCajaUseCase(transaccionRepository);
 
 export const cajaController = new CajaController(
     obtenerCajaUseCase,
@@ -30,5 +34,6 @@ export const cajaController = new CajaController(
     actualizarCajaUseCase,
     eliminarCajaUseCase,
     asociarDispositivoCajaUseCase,
-    desasociarDispositivoCajaUseCase
+    desasociarDispositivoCajaUseCase,
+    listarHistorialCajaUseCase
 );

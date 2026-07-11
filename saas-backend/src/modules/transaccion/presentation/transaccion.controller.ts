@@ -4,13 +4,15 @@ import Respuesta from '@app/http/respuesta.js';
 import type { CrearIngresoEgresoUseCase } from '../application/crear-ingreso-egreso.usecase.js';
 import type { ObtenerDetalleIngresoEgresoUseCase } from '../application/obtener-detalle-ingreso-egreso.usecase.js';
 import type { ListarIngresosEgresosUseCase } from '../application/listar-ingresos-egresos.usecase.js';
+import type { ListarHistorialEntidadUseCase } from '../application/listar-historial.usecase.js';
 import type { ListarIngresosEgresosFilters } from '../domain/transaccion.repository.js';
 
 export class TransaccionController extends BaseController {
     constructor(
         private readonly crearIngresoEgresoUseCase: CrearIngresoEgresoUseCase,
         private readonly obtenerDetalleIngresoEgresoUseCase: ObtenerDetalleIngresoEgresoUseCase,
-        private readonly listarIngresosEgresosUseCase: ListarIngresosEgresosUseCase
+        private readonly listarIngresosEgresosUseCase: ListarIngresosEgresosUseCase,
+        private readonly listarHistorialEntidadUseCase: ListarHistorialEntidadUseCase
     ) {
         super();
     }
@@ -83,6 +85,66 @@ export class TransaccionController extends BaseController {
             );
 
             res.status(201).json(Respuesta.exito('Ingreso/Egreso creado con éxito', ingresoEgreso));
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    historialCaja = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const query = res.locals.query;
+            const page = Math.floor(query.offset / query.limit) + 1;
+
+            const result = await this.listarHistorialEntidadUseCase.execute(
+                negocio_id,
+                sucursal_id,
+                'CAJA',
+                id,
+                page,
+                query.limit
+            );
+
+            res.status(200).json(
+                Respuesta.paginacion(
+                    'Historial de caja obtenido con éxito',
+                    result.data,
+                    result.total,
+                    query.limit,
+                    query.offset
+                )
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    historialCuenta = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
+            const query = res.locals.query;
+            const page = Math.floor(query.offset / query.limit) + 1;
+
+            const result = await this.listarHistorialEntidadUseCase.execute(
+                negocio_id,
+                sucursal_id,
+                'CUENTA',
+                id,
+                page,
+                query.limit
+            );
+
+            res.status(200).json(
+                Respuesta.paginacion(
+                    'Historial de cuenta obtenido con éxito',
+                    result.data,
+                    result.total,
+                    query.limit,
+                    query.offset
+                )
+            );
         } catch (error) {
             next(error);
         }

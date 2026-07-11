@@ -36,6 +36,27 @@ import { PrismaLoteRepository } from '../lote/infrastructure/prisma-lote.reposit
 import { PrismaProductoRepository } from '../producto/infrastructure/prisma-producto.repository.js';
 import { PrismaVarianteRepository } from '../producto/infrastructure/prisma-variante.repository.js';
 
+import { PrismaTransactionManager } from "../../shared/database/prisma/PrismaTransactionManager.js";
+import { PrismaSucursalRepository } from "../sucursal/infrastructure/prisma-sucursal.repository.js";
+import { PrismaCajaRepository } from "../caja/infrastructure/prisma-caja.repository.js";
+import { PrismaCuentaBancariaRepository } from "../cuenta-bancaria/infrastructure/prisma-cuenta-bancaria.repository.js";
+import { PrismaTransaccionRepository } from "../transaccion/infrastructure/prisma-transaccion.repository.js";
+import { AcreditarCajaUseCase } from "../transaccion/application/acreditar-caja.usecase.js";
+import { AcreditarCuentaBancariaUseCase } from "../transaccion/application/acreditar-cuenta-bancaria.usecase.js";
+import { CrearTransaccionUseCase } from "../transaccion/application/crear-transaccion.usecase.js";
+import { FrankfurterExchangeRateProvider } from "../../shared/infrastructure/frankfurter.provider.js";
+
+const transactionManager = new PrismaTransactionManager(prisma);
+const sucursalRepository = new PrismaSucursalRepository(prisma);
+const cajaRepository = new PrismaCajaRepository(prisma);
+const cuentaBancariaRepository = new PrismaCuentaBancariaRepository(prisma);
+const transaccionRepository = new PrismaTransaccionRepository(prisma);
+
+const acreditarCajaUseCase = new AcreditarCajaUseCase(cajaRepository);
+const acreditarCuentaBancariaUseCase = new AcreditarCuentaBancariaUseCase(cuentaBancariaRepository);
+const crearTransaccionUseCase = new CrearTransaccionUseCase(transaccionRepository);
+const exchangeRateProvider = new FrankfurterExchangeRateProvider();
+
 // Use the new ServicioVehiculo repository facade so we can migrate persistence
 // transparently. It currently delegates to the existing repository.
 const repository = new PrismaServicioVehiculoRepository(prisma as any);
@@ -45,7 +66,15 @@ const obtenerEstadoServicioUseCase = new ObtenerEstadoServicioUseCase(repository
 const registrarServicioUseCase = new RegistrarServicioUseCase(repository);
 const actualizarServicioUseCase = new ActualizarServicioUseCase(repository);
 const cambiarEstadoServicioUseCase = new CambiarEstadoServicioUseCase(repository, enviarNotificacionUseCase);
-const finalizarServicioUseCase = new FinalizarServicioUseCase(repository);
+const finalizarServicioUseCase = new FinalizarServicioUseCase(
+    repository,
+    transactionManager,
+    sucursalRepository,
+    acreditarCajaUseCase,
+    acreditarCuentaBancariaUseCase,
+    crearTransaccionUseCase,
+    exchangeRateProvider
+);
 const guardarFirmaEntradaUseCase = new GuardarFirmaEntradaUseCase(repository);
 const subirImagenServicioUseCase = new SubirImagenServicioUseCase(repository);
 const subirImagenProgresoServicioUseCase = new SubirImagenProgresoServicioUseCase(repository);

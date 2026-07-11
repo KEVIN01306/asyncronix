@@ -64,13 +64,24 @@ export const servicioRepository = {
         file: File,
         metodo_pago: string,
         efectivo_recibido?: number | null,
-        vuelto?: number | null
+        vuelto?: number | null,
+        opcionesFinancieras?: {
+            caja_id?: string;
+            token_autorizado?: string;
+            forzar_caja_en_linea?: boolean;
+            cuenta_bancaria_id?: string;
+        }
     ): Promise<ServicioVehiculo> => {
         const formData = new FormData();
         formData.append('firma_cliente', file);
         formData.append('metodo_pago', metodo_pago);
         if (efectivo_recibido != null) formData.append('efectivo_recibido', String(efectivo_recibido));
         if (vuelto != null) formData.append('vuelto', String(vuelto));
+
+        if (opcionesFinancieras?.caja_id) formData.append('caja_id', opcionesFinancieras.caja_id);
+        if (opcionesFinancieras?.token_autorizado) formData.append('token_autorizado', opcionesFinancieras.token_autorizado);
+        if (opcionesFinancieras?.forzar_caja_en_linea) formData.append('forzar_caja_en_linea', String(opcionesFinancieras.forzar_caja_en_linea));
+        if (opcionesFinancieras?.cuenta_bancaria_id) formData.append('cuenta_bancaria_id', opcionesFinancieras.cuenta_bancaria_id);
 
         const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/salida`, formData) as unknown as ServicioVehiculoDetailResponse;
 
