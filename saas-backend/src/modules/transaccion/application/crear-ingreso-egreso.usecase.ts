@@ -3,6 +3,10 @@ import { DatabaseError } from '@shared/database/errors/DatabaseError.js';
 import type { TransaccionCrear, IngresoEgresoEntity } from '../domain/transaccion.entity.js';
 import type { TransaccionRepository } from '../domain/transaccion.repository.js';
 import type { ExchangeRateProvider } from '@shared/domain/providers/ExchangeRateProvider.js';
+import type { AcreditarCajaUseCase } from './acreditar-caja.usecase.js';
+import type { DebitarCajaUseCase } from './debitar-caja.usecase.js';
+import type { AcreditarCuentaBancariaUseCase } from './acreditar-cuenta-bancaria.usecase.js';
+import type { DebitarCuentaBancariaUseCase } from './debitar-cuenta-bancaria.usecase.js';
 
 interface CajaData {
     id: string;
@@ -29,8 +33,12 @@ export class CrearIngresoEgresoUseCase {
         private readonly obtenerCaja: (id: string) => Promise<CajaData | null>,
         private readonly obtenerCuenta: (id: string) => Promise<CuentaBancariaData | null>,
         private readonly obtenerNegocio: (id: string) => Promise<NegocioData | null>,
-        private readonly obtenerMoneda: (id: string) => Promise<MonedaData | null>
-    ) {}
+        private readonly obtenerMoneda: (id: string) => Promise<MonedaData | null>,
+        private readonly acreditarCaja: AcreditarCajaUseCase,
+        private readonly debitarCaja: DebitarCajaUseCase,
+        private readonly acreditarCuenta: AcreditarCuentaBancariaUseCase,
+        private readonly debitarCuenta: DebitarCuentaBancariaUseCase
+    ) { }
 
     async execute(
         data: TransaccionCrear,
@@ -127,7 +135,22 @@ export class CrearIngresoEgresoUseCase {
                 throw new AppError('Tipo de entidad no válido', 'ENTIDAD_TIPO_INVALID', 400);
             }
 
-            return await this.transaccionRepository.crearMovimiento(
+            // Actualizar saldos utilizando los casos de uso
+            if (data.entidad_tipo === 'CAJA') {
+                if (data.tipo_movimiento === 'INGRESO') {
+                    await this.acreditarCaja.execute(data.entidad_id, negocio_id, sucursal_id, processedData.monto_moneda_base!);
+                } else if (data.tipo_movimiento === 'EGRESO') {
+                    await this.debitarCaja.execute(data.entidad_id, negocio_id, sucursal_id, processedData.monto_moneda_base!);
+                }
+            } else if (data.entidad_tipo === 'CUENTA') {
+                if (data.tipo_movimiento === 'INGRESO') {
+                    await this.acreditarCuenta.execute(data.entidad_id, negocio_id, processedData.monto_original);
+                } else if (data.tipo_movimiento === 'EGRESO') {
+                    await this.debitarCuenta.execute(data.entidad_id, negocio_id, processedData.monto_original);
+                }
+            }
+
+            return await this.transaccionRepository.crearIngresoEgreso(
                 processedData,
                 negocio_id,
                 sucursal_id,

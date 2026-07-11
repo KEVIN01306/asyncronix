@@ -4,7 +4,7 @@ export const crearIngresoEgresoSchema = z
     .object({
         categoria_id: z.string().uuid('Categoría inválida'),
         tipo_movimiento: z.enum(['INGRESO', 'EGRESO'], {
-            message: 'Tipo de movimiento inválido',
+            message: 'Tipo de ingreso/egreso inválido',
         }),
         entidad_tipo: z.enum(['CAJA', 'CUENTA'], {
             message: 'Tipo de entidad inválido',
@@ -33,7 +33,7 @@ export const crearIngresoEgresoSchema = z
     });
 
 export const ingresoEgresoIdParamSchema = z.object({
-    id: z.string().uuid('Movimiento inválido'),
+    id: z.string().uuid('Ingreso/Egreso inválido'),
 });
 
 export const listarIngresosEgresosQuerySchema = z.object({

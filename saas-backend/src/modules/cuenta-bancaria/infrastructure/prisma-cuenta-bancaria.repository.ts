@@ -47,6 +47,26 @@ export class PrismaCuentaBancariaRepository implements CuentaBancariaRepository 
         }
     }
 
+    async actualizarSaldo(id: string, negocio_id: string, nuevoSaldo: number): Promise<CuentaBancariaObtenidoDetalle> {
+        try {
+            const existing = await this.prisma.cuentaBancaria.findFirst({ where: { id, negocio_id } });
+            if (!existing) {
+                throw new Error('NOT_FOUND');
+            }
+            const updated = await this.prisma.cuentaBancaria.update({
+                where: { id },
+                data: { saldo: nuevoSaldo },
+                include: {
+                    banco: true,
+                    moneda: true,
+                },
+            });
+            return CuentaBancariaMapper.mapSimple(updated as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
     async eliminar(id: string, negocio_id: string): Promise<void> {
         try {
             const existing = await this.prisma.cuentaBancaria.findFirst({ where: { id, negocio_id } });

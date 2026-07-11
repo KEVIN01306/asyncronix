@@ -7,7 +7,7 @@ import type {
     IngresoEgresoEntity,
 } from './transaccion.entity.js';
 
-export interface ListarTransaccionesMovimientosFilters {
+export interface ListarIngresosEgresosFilters {
     q?: string;
     tipo_movimiento?: 'INGRESO' | 'EGRESO';
     categoria_id?: string;
@@ -27,9 +27,9 @@ export interface TransaccionRepository {
 
     /**
      * Creates an Ingreso or Egreso (applies origin/destination logic).
-     * Used by CrearMovimientoUseCase.
+     * Used by CrearIngresoEgresoUseCase.
      */
-    crearMovimiento(
+    crearIngresoEgreso(
         data: TransaccionCrear,
         negocio_id: string,
         sucursal_id: string,
@@ -50,10 +50,10 @@ export interface TransaccionRepository {
      * Returns a paginated list of Ingresos/Egresos as semantic entities
      * ready for the frontend.
      */
-    listarMovimientos(
+    listarIngresosEgresos(
         negocio_id: string,
         sucursal_id: string,
         pagination: Pagination,
-        filters?: ListarTransaccionesMovimientosFilters
+        filters?: ListarIngresosEgresosFilters
     ): Promise<Paginated<IngresoEgresoEntity>>;
 }

@@ -4,7 +4,7 @@ import Respuesta from '@app/http/respuesta.js';
 import type { CrearIngresoEgresoUseCase } from '../application/crear-ingreso-egreso.usecase.js';
 import type { ObtenerDetalleIngresoEgresoUseCase } from '../application/obtener-detalle-ingreso-egreso.usecase.js';
 import type { ListarIngresosEgresosUseCase } from '../application/listar-ingresos-egresos.usecase.js';
-import type { ListarTransaccionesMovimientosFilters } from '../domain/transaccion.repository.js';
+import type { ListarIngresosEgresosFilters } from '../domain/transaccion.repository.js';
 
 export class TransaccionController extends BaseController {
     constructor(
@@ -21,7 +21,7 @@ export class TransaccionController extends BaseController {
             const query = res.locals.query;
             const page = Math.floor(query.offset / query.limit) + 1;
 
-            const filters: ListarTransaccionesMovimientosFilters = {};
+            const filters: ListarIngresosEgresosFilters = {};
             if (query.q) filters.q = query.q;
             if (query.tipo_movimiento) filters.tipo_movimiento = query.tipo_movimiento;
             if (query.categoria_id) filters.categoria_id = query.categoria_id;

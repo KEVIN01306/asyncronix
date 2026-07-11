@@ -8,7 +8,7 @@ import type {
     TransaccionCrearDirecta,
     IngresoEgresoEntity,
 } from '../domain/transaccion.entity.js';
-import type { TransaccionRepository, ListarTransaccionesMovimientosFilters } from '../domain/transaccion.repository.js';
+import type { TransaccionRepository, ListarIngresosEgresosFilters } from '../domain/transaccion.repository.js';
 import { TransaccionMapper } from './mappers/transaccion.mapper.js';
 
 // Shared Prisma include used for both list and detail queries to ensure a
@@ -153,7 +153,7 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
 
     // ── Ingresos-Egresos module ───────────────────────────────────────────────
 
-    async crearMovimiento(
+    async crearIngresoEgreso(
         data: TransaccionCrear,
         negocio_id: string,
         sucursal_id: string,
@@ -251,11 +251,11 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
         }
     }
 
-    async listarMovimientos(
+    async listarIngresosEgresos(
         negocio_id: string,
         sucursal_id: string,
         pagination: Pagination,
-        filters?: ListarTransaccionesMovimientosFilters
+        filters?: ListarIngresosEgresosFilters
     ): Promise<Paginated<IngresoEgresoEntity>> {
         try {
             const skip = (pagination.page - 1) * pagination.perPage;

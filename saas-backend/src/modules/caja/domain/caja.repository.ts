@@ -5,6 +5,7 @@ import type { Pagination } from '@shared/domain/pagination.js';
 export interface CajaRepository {
     registrar(data: CajaCrear, negocio_id: string, sucursal_id: string): Promise<CajaObtenidoDetalle>;
     actualizar(id: string, negocio_id: string, sucursal_id: string, data: CajaActualizar): Promise<CajaObtenidoDetalle>;
+    actualizarSaldo(id: string, negocio_id: string, sucursal_id: string, nuevoSaldo: number): Promise<CajaObtenidoDetalle>;
     eliminar(id: string, negocio_id: string, sucursal_id: string): Promise<void>;
     obtener(id: string, negocio_id: string, sucursal_id: string): Promise<CajaObtenidoDetalle | null>;
     asociarDispositivo(id: string, negocio_id: string, sucursal_id: string, token: string, ip: string, asociacionId: string): Promise<CajaObtenidoDetalle>;

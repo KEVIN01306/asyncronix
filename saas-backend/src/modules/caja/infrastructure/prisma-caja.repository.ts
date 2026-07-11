@@ -40,6 +40,22 @@ export class PrismaCajaRepository implements CajaRepository {
         }
     }
 
+    async actualizarSaldo(id: string, negocio_id: string, sucursal_id: string, nuevoSaldo: number): Promise<CajaObtenidoDetalle> {
+        try {
+            const existing = await this.prisma.caja.findFirst({ where: { id, negocio_id, sucursal_id } });
+            if (!existing) {
+                throw new Error('NOT_FOUND');
+            }
+            const updated = await this.prisma.caja.update({
+                where: { id },
+                data: { saldo: nuevoSaldo },
+            });
+            return CajaMapper.mapSimple(updated as any);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
     async eliminar(id: string, negocio_id: string, sucursal_id: string): Promise<void> {
         try {
             const existing = await this.prisma.caja.findFirst({ where: { id, negocio_id, sucursal_id } });

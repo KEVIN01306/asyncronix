@@ -31,7 +31,7 @@ export default function IngresoEgresoFormPage() {
     const [monedaSeleccionada, setMonedaSeleccionada] = useState<'base' | 'cuenta'>('base');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [formError, setFormError] = useState<string | null>(null);
+    const [_, setFormError] = useState<string | null>(null);
 
     const {
         control,
@@ -180,8 +180,6 @@ export default function IngresoEgresoFormPage() {
                 <CardContent sx={{ p: 3 }}>
                     <Box component="form" onSubmit={handleSubmit(onSubmit)}>
                         <Stack spacing={3.5}>
-
-                            {formError && <Alert severity="error" variant="outlined">{formError}</Alert>}
 
                             {/* SECCIÓN 1: Clasificación de Operación */}
                             <Box>

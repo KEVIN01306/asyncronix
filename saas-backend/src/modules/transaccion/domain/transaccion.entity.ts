@@ -33,7 +33,7 @@ export interface Transaccion {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Input for CrearMovimientoUseCase (Ingresos / Egresos)
+// Input for CrearIngresoEgresoUseCase (Ingresos / Egresos)
 // ──────────────────────────────────────────────────────────────────────────────
 export interface TransaccionCrear {
     categoria_id: string;

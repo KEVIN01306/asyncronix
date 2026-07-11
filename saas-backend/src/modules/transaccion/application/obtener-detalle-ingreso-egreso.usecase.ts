@@ -4,13 +4,13 @@ import type { IngresoEgresoEntity } from '../domain/transaccion.entity.js';
 import type { TransaccionRepository } from '../domain/transaccion.repository.js';
 
 export class ObtenerDetalleIngresoEgresoUseCase {
-    constructor(private readonly transaccionRepository: TransaccionRepository) {}
+    constructor(private readonly transaccionRepository: TransaccionRepository) { }
 
     async execute(id: string, negocio_id: string, sucursal_id: string): Promise<IngresoEgresoEntity> {
         try {
             const transaccion = await this.transaccionRepository.obtenerDetalle(id, negocio_id, sucursal_id);
             if (!transaccion) {
-                throw new AppError('Movimiento no encontrado', 'MOVIMIENTO_NOT_FOUND', 404);
+                throw new AppError('Ingreso/Egreso no encontrado', 'INGRESO_EGRESO_NOT_FOUND', 404);
             }
             return transaccion;
         } catch (error) {
