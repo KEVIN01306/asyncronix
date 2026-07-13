@@ -1,9 +1,8 @@
-import { Lock, Login, PhoneAndroid, Visibility, VisibilityOff } from "@mui/icons-material"
-import { Box, IconButton, InputAdornment, TextField } from "@mui/material"
-import { useState } from "react";
+import { Box, TextField } from "@mui/material"
 import { SubmitButton } from "../../../../shared/components/button/SubmitButton";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import type { LoginFormValues } from "../../domain/schemas/login.schema";
+
 
 interface LoginFormProps {
     register: UseFormRegister<LoginFormValues>;
@@ -12,62 +11,74 @@ interface LoginFormProps {
     isSubmitting: boolean;
 }
 
-const LoginForm = ({register,errors,onSubmit,isSubmitting}: LoginFormProps) => {
+const LoginForm = ({ register, errors, onSubmit, isSubmitting }: LoginFormProps) => {
 
-    const [showPassword, setShowPassword] = useState(false);
-    
     return (
-        <>
-            <Box component="form" onSubmit={onSubmit} noValidate>
-                <TextField
-                    fullWidth
-                    label="Correo Electrónico"
-                    placeholder="example@domain.com"
-                    {...register('email')}
-                    error={!!errors.email}
-                    helperText={errors.email?.message}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <PhoneAndroid color="action" />
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{ mb: 3 }}
-                />
-                <TextField
-                    fullWidth
-                    label="Contraseña"
-                    type={showPassword ? 'text' : 'password'}
-                    {...register('password')}
-                    error={!!errors.password}
-                    helperText={errors.password?.message}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <Lock color="action" />
-                            </InputAdornment>
-                        ),
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                </IconButton>
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{ mb: 4 }}
-                />
-                <SubmitButton 
-                    isSubmitting={isSubmitting}
-                    text={"Iniciar Sesión"}
-                    loadingText="Verificando..."
-                    icon={<Login/>}
-                />
-            </Box>
-        </>
+        <Box component="form" onSubmit={onSubmit} noValidate>
+            <TextField
+                fullWidth
+                variant="standard"
+                placeholder="correo@ejemplo.com"
+                {...register('email')}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                sx={{ mb: 3 }}
+                InputProps={{
+                    disableUnderline: false,
+                    sx: {
+                        py: 1,
+                        fontSize: '0.95rem',
+                        '&::before': { borderBottomColor: 'divider' },
+                        '&:hover:not(.Mui-disabled):before': {
+                            borderBottomColor: 'text.primary',
+                        },
+                    }
+                }}
+            />
+            <TextField
+                fullWidth
+                variant="standard"
+                type="password"
+                placeholder="Contraseña"
+                {...register('password')}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                sx={{ mb: 4 }}
+                InputProps={{
+                    disableUnderline: false,
+                    sx: {
+                        py: 1,
+                        fontSize: '0.95rem',
+                        '&::before': { borderBottomColor: 'divider' },
+                        '&:hover:not(.Mui-disabled):before': {
+                            borderBottomColor: 'text.primary',
+                        },
+                    }
+                }}
+            />
+
+            <SubmitButton
+                isSubmitting={isSubmitting}
+                text={"Iniciar Sesión"}
+                loadingText="Iniciando..."
+                sx={{
+                    py: 1.2,
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900',
+                    color: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+                    borderRadius: 1.5,
+                    fontSize: '1rem',
+                    textTransform: 'none',
+                    '&:hover': {
+                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800',
+                    },
+                    mb: 2,
+                    boxShadow: 'none'
+                }}
+                icon={null}
+            />
+
+        </Box>
     )
 }
-
 
 export default LoginForm;
