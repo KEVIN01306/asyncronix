@@ -46,4 +46,9 @@ export const listarIngresosEgresosQuerySchema = z.object({
     entidad_id: z.string().uuid('Entidad inválida').optional(),
     fecha_inicio: z.string().datetime().optional(),
     fecha_fin: z.string().datetime().optional(),
+    origen_tipos: z.union([
+        z.enum(['VENTA', 'SERVICIO', 'INGRESO_EGRESO', 'MOVIMIENTO_INTERNO']),
+        z.array(z.enum(['VENTA', 'SERVICIO', 'INGRESO_EGRESO', 'MOVIMIENTO_INTERNO']))
+    ]).optional()
+        .transform(val => Array.isArray(val) ? val : (val ? [val] : undefined)),
 });

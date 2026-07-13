@@ -3,6 +3,7 @@ import { DatabaseError } from '@shared/database/errors/DatabaseError.js';
 import type { Paginated } from '@shared/domain/paginated.js';
 import type { TransaccionRepository } from '../domain/transaccion.repository.js';
 import type { Transaccion } from '../domain/transaccion.entity.js';
+import type { ListarHistorialFilters } from '../domain/transaccion.repository.js';
 
 export class ListarHistorialEntidadUseCase {
     constructor(private readonly transaccionRepository: TransaccionRepository) {}
@@ -13,7 +14,8 @@ export class ListarHistorialEntidadUseCase {
         entidad_tipo: 'CAJA' | 'CUENTA',
         entidad_id: string,
         page: number,
-        limit: number
+        limit: number,
+        filters?: ListarHistorialFilters
     ): Promise<Paginated<Transaccion>> {
         try {
             return await this.transaccionRepository.listarHistorialEntidad(
@@ -21,7 +23,8 @@ export class ListarHistorialEntidadUseCase {
                 sucursal_id,
                 entidad_tipo,
                 entidad_id,
-                { page, perPage: limit }
+                { page, perPage: limit },
+                filters
             );
         } catch (error) {
             if (error instanceof AppError) {

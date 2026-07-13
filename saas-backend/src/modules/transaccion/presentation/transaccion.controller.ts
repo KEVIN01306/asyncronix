@@ -97,13 +97,22 @@ export class TransaccionController extends BaseController {
             const query = res.locals.query;
             const page = Math.floor(query.offset / query.limit) + 1;
 
+            const filters = {
+                q: query.q,
+                fecha_inicio: query.fecha_inicio ? new Date(query.fecha_inicio) : undefined,
+                fecha_fin: query.fecha_fin ? new Date(query.fecha_fin) : undefined,
+                tipo_movimiento: query.tipo_movimiento,
+                origen_tipos: query.origen_tipos
+            };
+
             const result = await this.listarHistorialEntidadUseCase.execute(
                 negocio_id,
                 sucursal_id,
                 'CAJA',
                 id,
                 page,
-                query.limit
+                query.limit,
+                filters
             );
 
             res.status(200).json(
@@ -127,13 +136,22 @@ export class TransaccionController extends BaseController {
             const query = res.locals.query;
             const page = Math.floor(query.offset / query.limit) + 1;
 
+            const filters = {
+                q: query.q,
+                fecha_inicio: query.fecha_inicio ? new Date(query.fecha_inicio) : undefined,
+                fecha_fin: query.fecha_fin ? new Date(query.fecha_fin) : undefined,
+                tipo_movimiento: query.tipo_movimiento,
+                origen_tipos: query.origen_tipos
+            };
+
             const result = await this.listarHistorialEntidadUseCase.execute(
                 negocio_id,
                 sucursal_id,
                 'CUENTA',
                 id,
                 page,
-                query.limit
+                query.limit,
+                filters
             );
 
             res.status(200).json(

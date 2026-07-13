@@ -27,9 +27,12 @@ export const RolesRepository = {
         return response;
     },
 
-    listarPermisos: async (modulo_id: string) => {
+    listarPermisos: async (modulo_id?: string) => {
+        const params: any = { page: 1, perPage: 1000 };
+        if (modulo_id) params.modulo_id = modulo_id;
+        
         const response = await api.get<PaginatedResponse<Permiso>>('/permisos', {
-            params: { modulo_id, page: 1, perPage: 1000 }
+            params
         });
 
         return response;

@@ -1,10 +1,10 @@
 import type { Pagination } from '@shared/domain/pagination.js';
 import type { Paginated } from '@shared/domain/paginated.js';
 import type { TransaccionRepository } from '../../transaccion/domain/transaccion.repository.js';
-import type { IngresoEgresoEntity, TipoOrigenTransaccion } from '../../transaccion/domain/transaccion.entity.js';
+import type { Transaccion, TipoOrigenTransaccion } from '../../transaccion/domain/transaccion.entity.js';
 
 export class ListarHistorialCajaUseCase {
-    constructor(private readonly transaccionRepository: TransaccionRepository) {}
+    constructor(private readonly transaccionRepository: TransaccionRepository) { }
 
     async execute(
         caja_id: string,
@@ -14,20 +14,23 @@ export class ListarHistorialCajaUseCase {
         q?: string,
         fecha_inicio?: Date,
         fecha_fin?: Date,
-        origen_tipos?: TipoOrigenTransaccion[]
-    ): Promise<Paginated<IngresoEgresoEntity>> {
-        return await this.transaccionRepository.listarIngresosEgresos(
+        origen_tipos?: TipoOrigenTransaccion[],
+        tipo_movimiento?: 'INGRESO' | 'EGRESO'
+    ): Promise<Paginated<Transaccion>> {
+        return await this.transaccionRepository.listarHistorialEntidad(
             negocio_id,
             sucursal_id,
+            'CAJA',
+            caja_id,
             pagination,
             {
                 q,
-                entidad_tipo: 'CAJA',
-                entidad_id: caja_id,
                 fecha_inicio,
                 fecha_fin,
-                origen_tipos
+                origen_tipos,
+                tipo_movimiento
             }
         );
     }
 }
+

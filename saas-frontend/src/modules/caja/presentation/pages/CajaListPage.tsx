@@ -17,11 +17,11 @@ const CajaListPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [searchParams, setSearchParams] = useSearchParams();
-    
+
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
-    
+
     const [cajas, setCajas] = useState<Caja[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -61,7 +61,7 @@ const CajaListPage = () => {
         },
         {
             name: 'Detalle',
-            icon: <Info fontSize="small" />, 
+            icon: <Info fontSize="small" />,
             color: 'info',
             onClick: (row: Caja) => navigate(`/cajas/${row.id}`),
         },
@@ -109,10 +109,10 @@ const CajaListPage = () => {
                     <Box py={4}><Loading /></Box>
                 ) : cajas.length === 0 ? (
                     /* ESTADO VACÍO */
-                    <Paper 
+                    <Paper
                         elevation={0}
-                        sx={{ 
-                            p: 6, 
+                        sx={{
+                            p: 6,
                             textAlign: 'center',
                             display: 'flex',
                             flexDirection: 'column',
@@ -132,13 +132,13 @@ const CajaListPage = () => {
                         </Box>
                     </Paper>
                 ) : (
-                    <> 
+                    <>
                         {/* Grid responsivo: 3 por fila en pantallas de escritorio (md=4) */}
                         <Grid container spacing={3} mb={3}>
                             {cajas.map((caja) => (
                                 <Grid size={{ xs: 12, sm: 6, md: 4 }} key={caja.id}>
-                                    <CajaCardItem 
-                                        caja={caja} 
+                                    <CajaCardItem
+                                        caja={caja}
                                         actions={actions}
                                     />
                                 </Grid>

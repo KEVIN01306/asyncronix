@@ -15,8 +15,11 @@ import {
     Switch,
     FormControlLabel,
     ListItemButton,
+    CircularProgress,
+    TextField,
+    InputAdornment,
 } from '@mui/material';
-import { ArrowBack, Save, Security, ViewModule } from '@mui/icons-material';
+import { ArrowBack, Save, Security, ViewModule, Search } from '@mui/icons-material';
 import { toast } from 'sonner';
 
 import { RolesRepository } from '../../infrastructure/repositories/rol.repository';
@@ -35,12 +38,27 @@ const RolePermissionsPage = () => {
     const [saving, setSaving] = useState(false);
     const [permissionsLoading, setPermissionsLoading] = useState(false);
 
+    const [moduleSearchText, setModuleSearchText] = useState('');
+    const [permissionSearchText, setPermissionSearchText] = useState('');
+
     const user = useAuthStore((state) => state.user);
 
-    const modulePermissions = useMemo(
-        () => permisos.filter((permiso) => permiso.modulo_id === selectedModulo?.id),
-        [permisos, selectedModulo]
-    );
+    const filteredModulos = useMemo(() => {
+        if (!moduleSearchText.trim()) return modulos;
+        const search = moduleSearchText.toLowerCase();
+        return modulos.filter((modulo) => modulo.nombre.toLowerCase().includes(search));
+    }, [modulos, moduleSearchText]);
+
+    const modulePermissions = useMemo(() => {
+        if (permissionSearchText.trim()) {
+            const search = permissionSearchText.toLowerCase();
+            return permisos.filter((permiso) =>
+                permiso.codigo.toLowerCase().includes(search) ||
+                (permiso.descripcion && permiso.descripcion.toLowerCase().includes(search))
+            );
+        }
+        return permisos.filter((permiso) => permiso.modulo_id === selectedModulo?.id);
+    }, [permisos, selectedModulo, permissionSearchText]);
 
     const fetchRolePermissions = useCallback(async () => {
         if (!id) return;
@@ -66,12 +84,10 @@ const RolePermissionsPage = () => {
         }
     }, []);
 
-    const fetchPermisos = useCallback(async (moduloId?: string) => {
-        if (!id || !moduloId) return;
-
+    const fetchPermisos = useCallback(async () => {
         setPermissionsLoading(true);
         try {
-            const response = await RolesRepository.listarPermisos(moduloId);
+            const response = await RolesRepository.listarPermisos();
             setPermisos(response.data);
         } catch (error) {
             console.error(error);
@@ -79,22 +95,16 @@ const RolePermissionsPage = () => {
         } finally {
             setPermissionsLoading(false);
         }
-    }, [id]);
+    }, []);
 
     useEffect(() => {
         if (!id) return;
 
         setLoading(true);
-        Promise.all([fetchModulos(), fetchRolePermissions()])
+        Promise.all([fetchModulos(), fetchRolePermissions(), fetchPermisos()])
             .catch((error) => console.error(error))
             .finally(() => setLoading(false));
-    }, [fetchModulos, fetchRolePermissions, id]);
-
-    useEffect(() => {
-        if (selectedModulo) {
-            fetchPermisos(selectedModulo.id);
-        }
-    }, [selectedModulo, fetchPermisos]);
+    }, [fetchModulos, fetchRolePermissions, fetchPermisos, id]);
 
     const handleTogglePermission = (permisoId: string) => {
         setAssignedPermissionIds((current) =>
@@ -119,155 +129,258 @@ const RolePermissionsPage = () => {
     };
 
     if (loading) {
-        return (
-            <Loading/>
-        );
+        return <Loading />;
     }
 
     return (
-        <Box p={{ xs: 2, md: 4 }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="flex-start" mb={4} spacing={2}>
+        <Box sx={{ maxWidth: 1400, mx: 'auto', mt: 2, px: { xs: 2, md: 4 }, pb: 4 }}>
+            {/* Barra de Control y Título Combinado (ActionBar persistente superior) */}
+            <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', md: 'center' }}
+                spacing={2}
+                mb={3}
+            >
                 <Box>
-                    <Typography variant="h4" fontWeight={800} gutterBottom>
-                        Permisos del Rol
+                    <Typography variant="overline" color="text.secondary" sx={{ display: 'block', letterSpacing: 1, fontWeight: 600 }}>
+                        Seguridad y Accesos
                     </Typography>
-                    <Typography color="text.secondary">
-                        Selecciona un módulo del negocio y asigna los permisos que este rol puede usar.
+                    <Typography variant="h2" color="text.primary">
+                        Matriz de Permisos
                     </Typography>
                 </Box>
-                <Button variant="contained" startIcon={<ArrowBack />} onClick={() => navigate('/roles')}>
-                    Volver a roles
-                </Button>
+
+                <Stack direction="row" spacing={1.5} justifyContent={{ xs: 'space-between', md: 'flex-end' }}>
+                    <Button
+                        startIcon={<ArrowBack />}
+                        onClick={() => navigate('/roles')}
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                        sx={{ borderRadius: 999, textTransform: 'none' }}
+                    >
+                        Volver
+                    </Button>
+                    {user?.permisos.includes('EDITAR_PERMISOS') && (
+                        <Button
+                            variant="contained"
+                            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save />}
+                            onClick={handleSavePermissions}
+                            disabled={saving || !selectedModulo}
+                            size="small"
+                            sx={{ borderRadius: 999, px: 3, textTransform: 'none' }}
+                        >
+                            {saving ? 'Guardando...' : 'Guardar cambios'}
+                        </Button>
+                    )}
+                </Stack>
             </Stack>
 
+            {/* Layout de Consola (Doble Columna con Scroll Interno) */}
             <Grid container spacing={3}>
-                {/* LADO IZQUIERDO: Menú de Módulos Mejorado */}
+
+                {/* COLUMNA IZQUIERDA: Módulos (Fija con scroll independiente) */}
                 <Grid size={{ xs: 12, md: 4 }}>
-                    <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                        <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                            <ViewModule color="primary" />
-                            <Typography variant="h6" fontWeight={700}>Módulos del negocio</Typography>
-                        </Stack>
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: { xs: '300px', md: 'calc(100vh - 240px)' },
+                            minHeight: '400px',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Cabecera Estática */}
+                        <Box sx={{ p: 2.5, pb: 1, bgcolor: 'background.paper' }}>
+                            <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                                <ViewModule color="primary" fontSize="small" />
+                                <Typography variant="h3" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
+                                    Módulos del Sistema
+                                </Typography>
+                            </Stack>
+                            <TextField
+                                fullWidth
+                                size="small"
+                                placeholder="Buscar módulo..."
+                                value={moduleSearchText}
+                                onChange={(e) => setModuleSearchText(e.target.value)}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search fontSize="small" color="action" />
+                                        </InputAdornment>
+                                    ),
+                                    sx: { borderRadius: 2 }
+                                }}
+                            />
+                        </Box>
+                        <Divider />
 
-                        <Divider sx={{ mb: 1 }} />
-
-                        {modulos.length === 0 ? (
-                            <Alert severity="info" sx={{ mt: 1 }}>No hay módulos disponibles para este negocio.</Alert>
-                        ) : (
-                            <List disablePadding>
-                                {modulos.map((modulo) => {
-                                    const isSelected = selectedModulo?.id === modulo.id;
-                                    return (
-                                        <ListItem key={modulo.id} disablePadding sx={{ mb: 0.5 }}>
-                                            <ListItemButton
-                                                selected={isSelected}
-                                                onClick={() => setSelectedModulo(modulo)}
-                                                sx={{
-                                                    borderRadius: 1.5,
-                                                    '&.Mui-selected': {
-                                                        bgcolor: 'primary.main',
-                                                        color: 'primary.contrastText',
-                                                        '&:hover': {
-                                                            bgcolor: 'primary.dark',
-                                                        },
-                                                    },
-                                                }}
-                                            >
-                                                <ListItemText
-                                                    primary={modulo.nombre}
-                                                    primaryTypographyProps={{
-                                                        fontWeight: isSelected ? 600 : 500,
-                                                        variant: 'body2'
+                        {/* Contenedor con Scroll */}
+                        <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 1.5, bgcolor: 'paper.main' }}>
+                            {filteredModulos.length === 0 ? (
+                                <Alert severity="info">No hay módulos disponibles.</Alert>
+                            ) : (
+                                <List disablePadding>
+                                    {filteredModulos.map((modulo) => {
+                                        const isSelected = selectedModulo?.id === modulo.id && !permissionSearchText.trim();
+                                        return (
+                                            <ListItem key={modulo.id} disablePadding sx={{ mb: 0.5 }}>
+                                                <ListItemButton
+                                                    selected={isSelected}
+                                                    onClick={() => {
+                                                        setSelectedModulo(modulo);
+                                                        setPermissionSearchText('');
                                                     }}
-                                                />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    );
-                                })}
-                            </List>
-                        )}
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        py: 1.25,
+                                                        transition: 'all 0.2s',
+                                                        '&.Mui-selected': {
+                                                            bgcolor: 'primary.main',
+                                                            color: 'primary.contrastText',
+                                                            '&:hover': {
+                                                                bgcolor: 'primary.main',
+                                                            },
+                                                        },
+                                                    }}
+                                                >
+                                                    <ListItemText
+                                                        primary={modulo.nombre}
+                                                        primaryTypographyProps={{
+                                                            fontWeight: isSelected ? 600 : 500,
+                                                            variant: 'body2',
+                                                        }}
+                                                    />
+                                                </ListItemButton>
+                                            </ListItem>
+                                        );
+                                    })}
+                                </List>
+                            )}
+                        </Box>
                     </Paper>
                 </Grid>
 
+                {/* COLUMNA DERECHA: Permisos del Módulo Seleccionado */}
                 <Grid size={{ xs: 12, md: 8 }}>
-                    <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                        <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                            <Security color="primary" />
-                            <Typography variant="h6" fontWeight={700}>Permisos del módulo</Typography>
-                        </Stack>
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: { xs: '500px', md: 'calc(100vh - 240px)' },
+                            minHeight: '400px',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Cabecera Estática */}
+                        <Box sx={{ p: 2.5, pb: 2 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <Security color="primary" fontSize="small" />
+                                    <Typography variant="h3" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
+                                        {permissionSearchText.trim() ? 'Resultados de Búsqueda' : `Permisos asignados: ${selectedModulo?.nombre || ''}`}
+                                    </Typography>
+                                </Stack>
+                                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                                    Total seleccionados en la sesión: {assignedPermissionIds.length}
+                                </Typography>
+                            </Box>
 
-                        <Divider sx={{ mb: 2 }} />
+                            <TextField
+                                fullWidth
+                                size="small"
+                                placeholder="Buscar permiso globalmente (ej. facturación)..."
+                                value={permissionSearchText}
+                                onChange={(e) => setPermissionSearchText(e.target.value)}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search fontSize="small" color="action" />
+                                        </InputAdornment>
+                                    ),
+                                    sx: { borderRadius: 2 }
+                                }}
+                            />
+                        </Box>
+                        <Divider />
 
-                        {!selectedModulo ? (
-                            <Alert severity="info">Selecciona un módulo para ver los permisos asociados.</Alert>
-                        ) : permissionsLoading ? (
-                            <Loading/>
-                        ) : modulePermissions.length === 0 ? (
-                            <Alert severity="info">No hay permisos disponibles para este módulo.</Alert>
-                        ) : (
-                            <List disablePadding>
-                                {modulePermissions.map((permiso, index) => (
-                                    <Box key={permiso.id}>
-                                        <ListItem
-                                            disableGutters
-                                            sx={{ py: 2 }}
-                                            secondaryAction={
-                                                <FormControlLabel
-                                                    control={
-                                                        <Switch
-                                                            disabled={!user?.permisos.includes('EDITAR_PERMISOS')}
-                                                            checked={assignedPermissionIds.includes(permiso.id)}
-                                                            onChange={() => handleTogglePermission(permiso.id)}
-                                                            color="primary"
-                                                        />
-                                                    }
-                                                    label={assignedPermissionIds.includes(permiso.id) ? 'Asignado' : 'No asignado'}
-                                                    labelPlacement="start"
+                        {/* Contenedor con Scroll */}
+                        <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 3, py: 1 }}>
+                            {!selectedModulo && !permissionSearchText.trim() ? (
+                                <Box sx={{ p: 2 }}><Alert severity="info">Selecciona un módulo o utiliza la barra de búsqueda.</Alert></Box>
+                            ) : permissionsLoading ? (
+                                <Box display="flex" justifyContent="center" alignItems="center" height="100%" minHeight="200px">
+                                    <CircularProgress size={32} />
+                                </Box>
+                            ) : modulePermissions.length === 0 ? (
+                                <Box sx={{ mt: 2 }}><Alert severity="info">{permissionSearchText.trim() ? 'No se encontraron permisos para esta búsqueda.' : 'No hay permisos asignados a este módulo.'}</Alert></Box>
+                            ) : (
+                                <List disablePadding>
+                                    {modulePermissions.map((permiso, index) => {
+                                        const isAssigned = assignedPermissionIds.includes(permiso.id);
+                                        const moduleName = modulos.find(m => m.id === permiso.modulo_id)?.nombre || 'Módulo Desconocido';
+
+                                        return (
+                                            <Box key={permiso.id}>
+                                                <ListItem
+                                                    disableGutters
                                                     sx={{
-                                                        mr: 0,
-                                                        // Aquí controlamos la distribución del texto según el tamaño de pantalla
-                                                        '& .MuiFormControlLabel-label': {
-                                                            display: { xs: 'none', sm: 'inline-block' },
-                                                            fontWeight: 500,
-                                                            fontSize: '0.875rem'
-                                                        }
+                                                        py: 2,
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center'
                                                     }}
-                                                />
-                                            }
-                                        >
-                                            <ListItemText
-                                                primary={permiso.codigo}
-                                                secondary={permiso.descripcion || 'Sin descripción'}
-                                                primaryTypographyProps={{ fontWeight: 600, color: 'text.primary', mb: 0.5 }}
-                                                secondaryTypographyProps={{ variant: 'body2' }}
-                                            />
-                                        </ListItem>
-                                        {index < modulePermissions.length - 1 && <Divider />}
-                                    </Box>
-                                ))}
-                            </List>
-                        )}
-
-                        <Divider sx={{ my: 3 }} />
-
-                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" spacing={2}>
-                            <Typography variant="body2" color="text.secondary">
-                                {assignedPermissionIds.length} permisos seleccionados en total para este rol.
-                            </Typography>
-                            {
-                                user?.permisos.includes('EDITAR_PERMISOS') && (
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<Save />}
-                                        onClick={handleSavePermissions}
-                                        disabled={saving || !selectedModulo}
-                                        sx={{ minWidth: 160 }}
-                                    >
-                                        {saving ? 'Guardando...' : 'Guardar cambios'}
-                                    </Button>
-                                )
-                            }
-                        </Stack>
+                                                >
+                                                    <ListItemText
+                                                        primary={
+                                                            <Box>
+                                                                {permissionSearchText.trim() && (
+                                                                    <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                                                                        {moduleName} &gt; {permiso.codigo}
+                                                                    </Typography>
+                                                                )}
+                                                                {!permissionSearchText.trim() && permiso.codigo}
+                                                            </Box>
+                                                        }
+                                                        secondary={permiso.descripcion || 'Sin descripción descriptiva asignada'}
+                                                        primaryTypographyProps={{ fontWeight: 600, color: 'text.primary', variant: 'body2', mb: 0.25 }}
+                                                        secondaryTypographyProps={{ variant: 'caption', color: 'text.secondary' }}
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Switch
+                                                                disabled={!user?.permisos.includes('EDITAR_PERMISOS')}
+                                                                checked={isAssigned}
+                                                                onChange={() => handleTogglePermission(permiso.id)}
+                                                                color="primary"
+                                                                size="small"
+                                                            />
+                                                        }
+                                                        label={isAssigned ? 'Permitido' : 'Restringido'}
+                                                        labelPlacement="start"
+                                                        sx={{
+                                                            mr: 0,
+                                                            '& .MuiFormControlLabel-label': {
+                                                                fontWeight: 600,
+                                                                fontSize: '0.75rem',
+                                                                color: isAssigned ? 'primary.main' : 'text.secondary',
+                                                                mr: 1,
+                                                                display: { xs: 'none', sm: 'inline-block' }
+                                                            }
+                                                        }}
+                                                    />
+                                                </ListItem>
+                                                {index < modulePermissions.length - 1 && <Divider />}
+                                            </Box>
+                                        );
+                                    })}
+                                </List>
+                            )}
+                        </Box>
                     </Paper>
                 </Grid>
             </Grid>

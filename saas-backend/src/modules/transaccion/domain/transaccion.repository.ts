@@ -19,6 +19,14 @@ export interface ListarIngresosEgresosFilters {
     origen_tipos?: TipoOrigenTransaccion[] | undefined;
 }
 
+export interface ListarHistorialFilters {
+    q?: string | undefined;
+    fecha_inicio?: Date | undefined;
+    fecha_fin?: Date | undefined;
+    origen_tipos?: TipoOrigenTransaccion[] | undefined;
+    tipo_movimiento?: 'INGRESO' | 'EGRESO' | undefined;
+}
+
 export interface TransaccionRepository {
     /**
      * Generic low-level method: persists any transaction as-is.
@@ -68,6 +76,7 @@ export interface TransaccionRepository {
         sucursal_id: string,
         entidad_tipo: 'CAJA' | 'CUENTA',
         entidad_id: string,
-        pagination: Pagination
+        pagination: Pagination,
+        filters?: ListarHistorialFilters
     ): Promise<Paginated<Transaccion>>;
 }

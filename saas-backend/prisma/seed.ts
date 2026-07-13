@@ -381,7 +381,7 @@ async function main() {
     }
 
     // 2. CORRECCIÓN: wa_id idénticos en where y create
-    const whatsappId = "50230108703"; // Asegúrate de que este valor sea único para evitar conflictos en el upsert
+    const whatsappId = "50295769927"; // Asegúrate de que este valor sea único para evitar conflictos en el upsert
 
     const negocio = await prisma.negocio.upsert({
         where: { wa_id: whatsappId },

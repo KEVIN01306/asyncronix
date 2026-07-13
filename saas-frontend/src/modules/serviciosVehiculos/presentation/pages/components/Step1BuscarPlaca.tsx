@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, Autocomplete, Typography, Stack } from '@mui/material';
+import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, Autocomplete, Typography, Stack, useTheme } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,6 +19,8 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
   const [openCrearCliente, setOpenCrearCliente] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+  const theme = useTheme();
+
 
   const [placaBuscada, setPlacaBuscada] = useState<string>('');
 
@@ -79,7 +81,7 @@ export default function Step1BuscarPlaca({ onVehiculoSeleccionado }: { onVehicul
       {vehiculo && (
         <Box mt={3}>
           <Typography variant="h6" mb={2}>Vehículo encontrado</Typography>
-          <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+          <Box sx={{ p: 2, bgcolor: 'paper.main', borderRadius: 1, border: `2px dashed ${theme.palette.grey[200]}` }}>
             <Typography><strong>Placa:</strong> {vehiculo.placa}</Typography>
             <Typography><strong>Modelo:</strong> {vehiculo.modelo?.modelo ?? vehiculo.modelo_id}</Typography>
             <Typography><strong>Marca:</strong> {vehiculo.modelo.marca?.marca ?? 'N/A'}</Typography>
@@ -378,7 +380,7 @@ export function ModalCrearVehiculo({ open, onClose, onCreado, placaPredeterminad
 }
 
 export function ModalCrearCliente({ open, onClose, vehiculo, onSuccess }: any) {
-    const [creatingCliente, setCreatingCliente] = useState(false);
+  const [creatingCliente, setCreatingCliente] = useState(false);
 
   const schema = z.object({
     nombre: z.string().min(1, 'El nombre es requerido'),

@@ -8,7 +8,7 @@ import type {
     TransaccionCrearDirecta,
     IngresoEgresoEntity,
 } from '../domain/transaccion.entity.js';
-import type { TransaccionRepository, ListarIngresosEgresosFilters } from '../domain/transaccion.repository.js';
+import type { TransaccionRepository, ListarIngresosEgresosFilters, ListarHistorialFilters } from '../domain/transaccion.repository.js';
 import { TransaccionMapper } from './mappers/transaccion.mapper.js';
 
 // Shared Prisma include used for both list and detail queries to ensure a
@@ -343,7 +343,8 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
         sucursal_id: string,
         entidad_tipo: 'CAJA' | 'CUENTA',
         entidad_id: string,
-        pagination: Pagination
+        pagination: Pagination,
+        filters?: ListarHistorialFilters
     ): Promise<Paginated<any>> {
         try {
             const skip = (pagination.page - 1) * pagination.perPage;
@@ -354,16 +355,62 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
                 sucursal_id,
             };
 
+            // Entity constraint + Tipo de movimiento constraint
             if (entidad_tipo === 'CAJA') {
-                whereCondition.OR = [
-                    { origen_caja_id: entidad_id },
-                    { destino_caja_id: entidad_id }
-                ];
+                if (filters?.tipo_movimiento === 'INGRESO') {
+                    whereCondition.destino_caja_id = entidad_id;
+                } else if (filters?.tipo_movimiento === 'EGRESO') {
+                    whereCondition.origen_caja_id = entidad_id;
+                } else {
+                    whereCondition.OR = [
+                        { origen_caja_id: entidad_id },
+                        { destino_caja_id: entidad_id }
+                    ];
+                }
             } else {
-                whereCondition.OR = [
-                    { origen_cuenta_id: entidad_id },
-                    { destino_cuenta_id: entidad_id }
-                ];
+                if (filters?.tipo_movimiento === 'INGRESO') {
+                    whereCondition.destino_cuenta_id = entidad_id;
+                } else if (filters?.tipo_movimiento === 'EGRESO') {
+                    whereCondition.origen_cuenta_id = entidad_id;
+                } else {
+                    whereCondition.OR = [
+                        { origen_cuenta_id: entidad_id },
+                        { destino_cuenta_id: entidad_id }
+                    ];
+                }
+            }
+
+            // Text search (q)
+            if (filters?.q) {
+                const qCondition = {
+                    codigo: { contains: filters.q }
+                };
+                
+                if (whereCondition.OR) {
+                    whereCondition.AND = [
+                        { OR: whereCondition.OR },
+                        qCondition
+                    ];
+                    delete whereCondition.OR;
+                } else {
+                    Object.assign(whereCondition, qCondition);
+                }
+            }
+
+            // Date Range
+            if (filters?.fecha_inicio || filters?.fecha_fin) {
+                whereCondition.fecha_transaccion = {};
+                if (filters.fecha_inicio) {
+                    whereCondition.fecha_transaccion.gte = filters.fecha_inicio;
+                }
+                if (filters.fecha_fin) {
+                    whereCondition.fecha_transaccion.lte = filters.fecha_fin;
+                }
+            }
+
+            // Origen Tipos
+            if (filters?.origen_tipos && filters.origen_tipos.length > 0) {
+                whereCondition.origen_tipo = { in: filters.origen_tipos };
             }
 
             const [total, data] = await Promise.all([

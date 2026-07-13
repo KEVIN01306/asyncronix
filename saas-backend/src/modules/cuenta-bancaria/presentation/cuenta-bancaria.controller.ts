@@ -82,12 +82,22 @@ export class CuentaBancariaController extends BaseController {
             // Si la cuenta bancaria puede verse de forma global sin sucursal_id, habría que ajustar el caso de uso
             // O requerir sucursal_id siempre para movimientos de la sucursal actual
             if (!sucursal_id) {
-                throw new AppError('Sucursal requerida para obtener historial', 'SUCURSAL_REQUERIDA', 400);
+                res.status(400).json(Respuesta.error('Sucursal requerida para obtener historial', 'SUCURSAL_REQUERIDA'));
             }
-            
-            const { limit, offset, q, fecha_inicio, fecha_fin, origen_tipos } = res.locals.query;
+
+            // Use res.locals.query if available, otherwise fallback to req.query for unvalidated routes
+            const querySource = res.locals.query || req.query;
+
+            const limit = parseInt((querySource.limit as string) || '10', 10);
+            const offset = parseInt((querySource.offset as string) || '0', 10);
+            const q = querySource.q as string | undefined;
+            const fecha_inicio = querySource.fecha_inicio ? new Date(querySource.fecha_inicio as string) : undefined;
+            const fecha_fin = querySource.fecha_fin ? new Date(querySource.fecha_fin as string) : undefined;
+            const origen_tipos = querySource.origen_tipos;
+            const tipo_movimiento = querySource.tipo_movimiento as 'INGRESO' | 'EGRESO' | undefined;
+
             const page = Math.floor(offset / limit) + 1;
-            
+
             let origenes: any[] | undefined = undefined;
             if (origen_tipos) {
                 if (Array.isArray(origen_tipos)) {
@@ -98,7 +108,7 @@ export class CuentaBancariaController extends BaseController {
             }
 
             const { total, data } = await this.listarHistorialCuentaBancariaUseCase.execute(
-                id, negocio_id, sucursal_id, { page, perPage: limit }, q, fecha_inicio, fecha_fin, origenes
+                id, negocio_id, sucursal_id, { page, perPage: limit }, q, fecha_inicio, fecha_fin, origenes, tipo_movimiento
             );
             res.status(200).json(Respuesta.paginacion('Historial obtenido con éxito', data, total, limit, offset));
         } catch (error) {

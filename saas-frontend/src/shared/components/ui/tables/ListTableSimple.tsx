@@ -47,7 +47,7 @@ export const ListTableSimple = ({
 
         const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
         const hasMoreToScroll = scrollHeight - scrollTop - clientHeight > 5;
-        
+
         setShowScrollIndicator(hasMoreToScroll);
     };
 
@@ -55,7 +55,7 @@ export const ListTableSimple = ({
         const handleInitialCheck = requestAnimationFrame(() => {
             checkScroll();
         });
-        
+
         const container = containerRef.current;
         if (container) {
             container.addEventListener('scroll', checkScroll);
@@ -152,8 +152,8 @@ export const ListTableSimple = ({
                     <Chip
                         icon={<ArrowDownwardIcon style={{ color: '#fff' }} />}
                         label="Desliza para ver más"
-                        sx={{ 
-                            boxShadow: 4, 
+                        sx={{
+                            boxShadow: 4,
                             fontWeight: 'bold',
                             backgroundColor: headerBgColor,
                             color: '#ffffff',

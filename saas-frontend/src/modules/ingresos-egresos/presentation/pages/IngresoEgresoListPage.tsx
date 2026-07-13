@@ -78,9 +78,9 @@ const IngresoEgresoListPage = () => {
                 name: 'Tipo',
                 format: (value: string) =>
                     value === 'INGRESO' ? (
-                        <Chip label="Ingreso" color="success" size="small" sx={{ fontWeight: 600 }} />
+                        <Chip label="Ingreso" color="success" size="small" variant='outlined' sx={{ fontWeight: 600 }} />
                     ) : (
-                        <Chip label="Egreso" color="error" size="small" sx={{ fontWeight: 600 }} />
+                        <Chip label="Egreso" color="error" size="small" variant='outlined' sx={{ fontWeight: 600 }} />
                     ),
             },
             {

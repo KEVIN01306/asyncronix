@@ -47,8 +47,34 @@ export const cajaRepository = {
         const response = await api.delete<ApiResponse<null>>(`${URL_MODULE}/${id}`);
         return response as any;
     },
-    obtenerHistorial: async (id: string, limit: number, offset: number, signal?: AbortSignal): Promise<PaginatedResponse<TransaccionHistorial>> => {
-        const response = await api.get<PaginatedResponse<TransaccionHistorial>>(`/ingresos-egresos/caja/${id}/historial`, { params: { limit, offset }, signal });
+    obtenerHistorial: async (
+        id: string,
+        limit: number,
+        offset: number,
+        filters?: {
+            q?: string;
+            fecha_inicio?: string;
+            fecha_fin?: string;
+            tipo_movimiento?: string;
+            origen_tipos?: string[];
+        },
+        signal?: AbortSignal
+    ): Promise<PaginatedResponse<TransaccionHistorial>> => {
+        const params = new URLSearchParams();
+        params.append('limit', limit.toString());
+        params.append('offset', offset.toString());
+        if (filters?.q) params.append('q', filters.q);
+        if (filters?.fecha_inicio) params.append('fecha_inicio', filters.fecha_inicio);
+        if (filters?.fecha_fin) params.append('fecha_fin', filters.fecha_fin);
+        if (filters?.tipo_movimiento) params.append('tipo_movimiento', filters.tipo_movimiento);
+        if (filters?.origen_tipos && filters.origen_tipos.length > 0) {
+            filters.origen_tipos.forEach(o => params.append('origen_tipos', o));
+        }
+        
+        const response = await api.get<PaginatedResponse<TransaccionHistorial>>(`/ingresos-egresos/caja/${id}/historial`, { 
+            params, 
+            signal 
+        });
         return response as any;
     },
 };

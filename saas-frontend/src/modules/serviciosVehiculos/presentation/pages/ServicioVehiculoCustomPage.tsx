@@ -46,7 +46,7 @@ const ServicioCustomPage = () => {
 
     if (loading) {
         return (
-            <Loading/>
+            <Loading />
         );
     }
 
@@ -74,19 +74,18 @@ const ServicioCustomPage = () => {
                     servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS ||
                     servicio.estado === ESTADO_SERVICIO_VEHICULO.ESPERA_REPUESTOS
                 ) && (
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                        <Button variant="outlined" onClick={() => navigate(`/servicios-vehiculo/${servicio.id}/progreso`)}>
-                            Ver progreso
-                        </Button>
-                        {canManageRepuestos && (
-                            <Button variant="outlined" onClick={() => navigate(`/servicios-vehiculo/${servicio.id}/repuestos`)}>
-                                Administrar repuestos
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                            <Button variant="outlined" onClick={() => navigate(`/servicios-vehiculo/${servicio.id}/progreso`)}>
+                                Ver progreso
                             </Button>
-                        )}
-                    </Stack>
-                )}
+                            {canManageRepuestos && (
+                                <Button variant="outlined" onClick={() => navigate(`/servicios-vehiculo/${servicio.id}/repuestos`)}>
+                                    Administrar repuestos
+                                </Button>
+                            )}
+                        </Stack>
+                    )}
 
-                <ServiceSignatures servicio={servicio} onUpdate={(s) => setServicio(s)} />
 
                 <ServiceChecklist servicio={servicio} onUpdate={(s) => setServicio(s)} />
 
@@ -122,6 +121,8 @@ const ServicioCustomPage = () => {
                         </Paper>
                     </Grid>
                 </Grid>
+
+                <ServiceSignatures servicio={servicio} onUpdate={(s) => setServicio(s)} />
             </Stack>
         </Box>
     );

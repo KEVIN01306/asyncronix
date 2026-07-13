@@ -157,49 +157,20 @@ const ServicioProgresoPage = () => {
                     <Typography variant="h4" fontWeight={800} color="text.primary">Progreso del Servicio #{servicio.id.slice(-12)}</Typography>
                 </Box>
 
-                <Grid size={ 12 } alignItems="center">
+                <Grid size={12} alignItems="center">
                     <ServiceGeneralInfo servicio={servicio} />
                 </Grid>
 
-
-                <Grid size={ 12 }  alignItems="center" gap={2}>
-                    <Paper sx={{ p: 3 }}>
-                        <Typography variant="h6" mb={2}>Acciones</Typography>
-                        
-                    {canTransition ? (
-                        <Button variant="contained" disabled={changingState} onClick={handleTransitionToPruebas}>
-                            {changingState ? 'Cambiando estado...' : 'Pasar a EN_PRUEBAS'}
-                        </Button>
-                    ) : null}
-
-                    {isLocked ? (
-                        <Typography color="text.secondary">El servicio está en EN_PRUEBAS. Edición y carga quedan bloqueadas.</Typography>
-                        
-                    ) : null}
-
-                {isLocked && servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS && user?.permisos.includes('ADMIN_SERVICIOS') ? (
-                        <Button color="secondary" variant="contained" disabled={changingState} onClick={handleTransitionToServicio}>
-                            {changingState ? 'Cambiando estado...' : 'No aprobadas, regresar a EN_SERVICIO'}
-                        </Button>                        
-                    ) : null}
-                    {servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS && user?.permisos.includes('ADMIN_SERVICIOS') ? (
-                        <Button sx={{ ml: 2 }} color="success" variant="outlined" disabled={changingState} onClick={handleApproveForDelivery}>
-                            {changingState ? 'Procesando...' : 'Aprobar y marcar LISTO_ENTREGA'}
-                        </Button>
-                    ) : null}
-                    </Paper>
-                </Grid>
-
-                <Grid container size={ 12 } alignItems="center" justifyContent="space-between" gap={2}>
+                <Grid container size={12} alignItems="center" justifyContent="space-between" gap={2}>
                     <Grid size={{ xs: 12, sm: 5 }} alignItems="center">
-                        <Typography 
-                            variant="h6" 
-                            component="h2" 
+                        <Typography
+                            variant="h6"
+                            component="h2"
                             sx={{ fontWeight: 600, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                         >
                             Repuestos del cliente
                         </Typography>
-                        <ListTableSimple 
+                        <ListTableSimple
                             columns={[
                                 { id: 'repuesto', name: 'Repuesto' },
                                 { id: 'cantidad', name: 'Cantidad' },
@@ -210,20 +181,22 @@ const ServicioProgresoPage = () => {
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 5 }} alignItems="center">
-                        <Typography 
-                            variant="h6" 
-                            component="h2" 
+                        <Typography
+                            variant="h6"
+                            component="h2"
                             sx={{ fontWeight: 600, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                         >
                             Repuestos del inventario
                         </Typography>
-                        <ListTableSimple 
+                        <ListTableSimple
                             columns={[
-                                { id: 'variante', name: 'Repuesto', format: (variante) => {
-                                    if (!variante) return '-';
-                                    const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
-                                    return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
-                                }},
+                                {
+                                    id: 'variante', name: 'Repuesto', format: (variante) => {
+                                        if (!variante) return '-';
+                                        const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                        return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
+                                    }
+                                },
                                 { id: 'cantidad', name: 'Cantidad' },
                             ]}
                             data={servicio.repuestos_inventario || []}
@@ -231,15 +204,15 @@ const ServicioProgresoPage = () => {
                             headerTextColor="#fff"
                         />
                     </Grid>
-                    <Grid size={ 12 } alignItems="center">
-                        <Typography 
-                            variant="h6" 
-                            component="h2" 
+                    <Grid size={12} alignItems="center">
+                        <Typography
+                            variant="h6"
+                            component="h2"
                             sx={{ fontWeight: 600, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                         >
                             Checklist de Recepción
                         </Typography>
-                        <ListTableSimple 
+                        <ListTableSimple
                             columns={[
                                 { id: 'item', name: 'Item', format: (value) => value.nombre || '-' },
                                 { id: 'estado', name: 'Estado' },
@@ -253,9 +226,9 @@ const ServicioProgresoPage = () => {
                 </Grid>
 
                 <Grid container spacing={2}>
-                    <Typography 
-                        variant="h6" 
-                        component="h2" 
+                    <Typography
+                        variant="h6"
+                        component="h2"
                         sx={{ fontWeight: 600, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                     >
                         Tareas del Servicio {servicio.tipo_servicio?.nombre ? `- ${servicio.tipo_servicio.nombre}` : ''}
@@ -269,9 +242,9 @@ const ServicioProgresoPage = () => {
                         />
                     </Grid>
 
-                    <Typography 
-                        variant="h6" 
-                        component="h2" 
+                    <Typography
+                        variant="h6"
+                        component="h2"
                         sx={{ fontWeight: 600, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                     >
                         Servicios Extras
@@ -308,6 +281,33 @@ const ServicioProgresoPage = () => {
                             <ServiceProgressImages servicio={servicio} onUpdate={(s) => setServicio(s)} isMobile={isMobile} />
                         </Paper>
                     </Grid>
+                </Grid>
+                <Grid size={12} alignItems="center" gap={2}>
+                    <Paper sx={{ p: 3 }}>
+                        <Typography variant="h6" mb={2}>Acciones</Typography>
+
+                        {canTransition ? (
+                            <Button variant="contained" disabled={changingState} onClick={handleTransitionToPruebas}>
+                                {changingState ? 'Cambiando estado...' : 'Pasar a EN_PRUEBAS'}
+                            </Button>
+                        ) : null}
+
+                        {isLocked ? (
+                            <Typography color="text.secondary">El servicio está en EN_PRUEBAS. Edición y carga quedan bloqueadas.</Typography>
+
+                        ) : null}
+
+                        {isLocked && servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS && user?.permisos.includes('ADMIN_SERVICIOS') ? (
+                            <Button color="secondary" variant="contained" disabled={changingState} onClick={handleTransitionToServicio}>
+                                {changingState ? 'Cambiando estado...' : 'No aprobadas, regresar a EN_SERVICIO'}
+                            </Button>
+                        ) : null}
+                        {servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS && user?.permisos.includes('ADMIN_SERVICIOS') ? (
+                            <Button sx={{ ml: 2 }} color="success" variant="outlined" disabled={changingState} onClick={handleApproveForDelivery}>
+                                {changingState ? 'Procesando...' : 'Aprobar y marcar LISTO_ENTREGA'}
+                            </Button>
+                        ) : null}
+                    </Paper>
                 </Grid>
             </Stack>
         </Box>

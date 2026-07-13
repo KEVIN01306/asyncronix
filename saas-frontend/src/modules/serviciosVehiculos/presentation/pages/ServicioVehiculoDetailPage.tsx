@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Breadcrumbs, Button, CardMedia, Chip, Divider, Grid, Paper, Typography, useMediaQuery, useTheme,Link } from '@mui/material';
+import { Box, Breadcrumbs, Button, CardMedia, Chip, Divider, Grid, Paper, Typography, useMediaQuery, useTheme, Link } from '@mui/material';
 import { toast } from 'sonner';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { ServicioVehiculo } from '../../domain/interfaces/servicio.interface';
@@ -77,21 +77,21 @@ const ServicioDetailPage = () => {
 
     if (loading) {
         return (
-            <Loading/>
+            <Loading />
         );
     }
 
     if (error || !servicio) {
         return (
-            <ErrorPageLoading 
-                text={error || 'Servicio no encontrado'} 
-                navigate={() => navigate('/servicios-vehiculo')} 
+            <ErrorPageLoading
+                text={error || 'Servicio no encontrado'}
+                navigate={() => navigate('/servicios-vehiculo')}
             />
         );
     }
 
     return (
-        <Box p={{sm: 2, md: 4 }} maxWidth="1000px" margin="0 auto">
+        <Box p={{ sm: 2, md: 4 }} maxWidth="1000px" margin="0 auto">
             <Box>
                 <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
                     <Link underline="hover" color="inherit" sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }} onClick={() => navigate('/servicios-vehiculo')}>
@@ -115,7 +115,7 @@ const ServicioDetailPage = () => {
                                 objectFit: 'contain',
                                 filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.1))'
                             }}
-                        />                    
+                        />
                     </Grid>
                     <Grid size={6} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <Typography textAlign={'center'} variant="h4" fontSize={{ sm: 20, md: 40, xl: 50 }} fontWeight={700} color='primary.main'>{user?.negocio?.nombre_comercial}</Typography>
@@ -132,7 +132,7 @@ const ServicioDetailPage = () => {
                                 objectFit: 'contain',
                                 filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.1))'
                             }}
-                        />    
+                        />
                     </Grid>
                 </Grid>
                 <Grid container size={12} mt={2}>
@@ -141,8 +141,8 @@ const ServicioDetailPage = () => {
                     </Grid>
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
                         <Typography variant="h6" fontSize={15} fontWeight={200}><strong>Fecha:</strong> {new Date(servicio.fecha_entrada ? servicio.fecha_entrada : '').toLocaleDateString()}</Typography>
-                        <Typography variant="h6" fontSize={15} fontWeight={200}><strong>Fecha Salida:</strong> { servicio.fecha_salida ? new Date(servicio.fecha_salida).toLocaleDateString() : '-' }</Typography>
-                            
+                        <Typography variant="h6" fontSize={15} fontWeight={200}><strong>Fecha Salida:</strong> {servicio.fecha_salida ? new Date(servicio.fecha_salida).toLocaleDateString() : '-'}</Typography>
+
                     </Grid>
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start' }}>
                         <Typography display="flex" gap={1} variant="h6" fontSize={15} fontWeight={200}><strong>Cliente:</strong> <LinkStyle ruta={`/clientes/${servicio.cliente?.id}`} text={servicio.cliente?.nombre ?? '-'} /></Typography>
@@ -206,97 +206,97 @@ const ServicioDetailPage = () => {
                 {
                     showImages ? (
                         <>
-                        <Button sx={{ margin: 2}} variant="outlined" onClick={() => setShowImages(false)}>
-                            Ocultar imágenes
-                        </Button>
-                        <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, md: 6 }}>
-                                <Paper sx={{ p: 3, height: '100%' }}>
-                                    <Typography variant="h6" mb={2}>Imágenes del servicio</Typography>
-                                    <ServiceImages servicio={servicio} onUpdate={(s) => setServicio(s)} isMobile={isMobile} />
-                                </Paper>
+                            <Button sx={{ margin: 2 }} variant="outlined" onClick={() => setShowImages(false)}>
+                                Ocultar imágenes
+                            </Button>
+                            <Grid container spacing={2}>
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Paper sx={{ p: 3, height: '100%' }}>
+                                        <Typography variant="h6" mb={2}>Imágenes del servicio</Typography>
+                                        <ServiceImages servicio={servicio} onUpdate={(s) => setServicio(s)} isMobile={isMobile} />
+                                    </Paper>
+                                </Grid>
                             </Grid>
-                        </Grid>
                         </>
-                        
+
                     ) : (
-                        <Button sx={{ margin: 2}} variant="outlined" onClick={() => setShowImages(true)}>
+                        <Button sx={{ margin: 2 }} variant="outlined" onClick={() => setShowImages(true)}>
                             Ver imágenes
                         </Button>
                     )
                 }
-                
+
                 <Divider sx={{ my: 3 }} />
                 <Grid container size={12} mt={2} justifyContent="center" alignItems="center">
-                        <Typography 
-                            variant="h6" 
-                            component="h2" 
-                            textAlign="center"
-                            sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
-                        >
-                            Checklist de Recepción
-                        </Typography>
-                        <ListTableSimple
-                            columns={[
-                                { id: 'item', name: 'Item', format: (value) => value.nombre || '-' },
-                                { id: 'estado', name: 'Estado' },
-                                { id: 'observaciones', name: 'Observaciones', format: (value) => value || '-' },
-                            ]}
-                            data={servicio.checklist || []}
-                            headerBgColor={'primary.main'}
-                            headerTextColor="#fff"
-                        />
+                    <Typography
+                        variant="h6"
+                        component="h2"
+                        textAlign="center"
+                        sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                    >
+                        Checklist de Recepción
+                    </Typography>
+                    <ListTableSimple
+                        columns={[
+                            { id: 'item', name: 'Item', format: (value) => value.nombre || '-' },
+                            { id: 'estado', name: 'Estado' },
+                            { id: 'observaciones', name: 'Observaciones', format: (value) => value || '-' },
+                        ]}
+                        data={servicio.checklist || []}
+                        headerBgColor={'primary.main'}
+                        headerTextColor="#fff"
+                    />
                 </Grid>
                 <Grid container size={12} mt={2} justifyContent="start" alignItems="center">
-                        <Typography 
-                            variant="h6" 
-                            component="h2" 
-                            textAlign="start"
-                            sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
-                        >
-                            Tareas del Servicio {servicio.tipo_servicio?.nombre ? `- ${servicio.tipo_servicio.nombre}` : ''}
-                        </Typography>
-                        <ListTableSimple 
-                            columns={[
-                                { id: 'nombre', name: 'Tarea', format: (value) => value || '-' },
-                                { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
-                                { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' },
-                            ]}
-                            data={tareasNormales}
-                            headerBgColor={'primary.main'}
-                            headerTextColor="#fff"
-                        />
+                    <Typography
+                        variant="h6"
+                        component="h2"
+                        textAlign="start"
+                        sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                    >
+                        Tareas del Servicio {servicio.tipo_servicio?.nombre ? `- ${servicio.tipo_servicio.nombre}` : ''}
+                    </Typography>
+                    <ListTableSimple
+                        columns={[
+                            { id: 'nombre', name: 'Tarea', format: (value) => value || '-' },
+                            { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
+                            { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' },
+                        ]}
+                        data={tareasNormales}
+                        headerBgColor={'primary.main'}
+                        headerTextColor="#fff"
+                    />
                 </Grid>
                 <Grid container size={12} mt={2} justifyContent="start" alignItems="center">
-                        <Typography 
-                            variant="h6" 
-                            component="h2" 
-                            textAlign="start"
-                            sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
-                        >
-                            Servicios Extras
-                        </Typography>
-                        <ListTableSimple 
-                            columns={[
-                                { id: 'nombre', name: 'Tarea', format: (value) => value || '-' },
-                                { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
-                                { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' },
-                            ]}
-                            data={tareasExtras}
-                            headerBgColor={'primary.main'}
-                            headerTextColor="#fff"
-                        />
+                    <Typography
+                        variant="h6"
+                        component="h2"
+                        textAlign="start"
+                        sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                    >
+                        Servicios Extras
+                    </Typography>
+                    <ListTableSimple
+                        columns={[
+                            { id: 'nombre', name: 'Tarea', format: (value) => value || '-' },
+                            { id: 'completado', name: 'Estado', format: (value) => value ? 'Completado' : 'Pendiente' },
+                            { id: 'observacion', name: 'Observaciones', format: (value) => value || '-' },
+                        ]}
+                        data={tareasExtras}
+                        headerBgColor={'primary.main'}
+                        headerTextColor="#fff"
+                    />
                 </Grid>
                 <Grid container size={12} mt={2} justifyContent="space-between" alignItems="center">
                     <Grid size={{ xs: 12, sm: 5 }} alignItems="center">
-                        <Typography 
-                            variant="h6" 
-                            component="h2" 
+                        <Typography
+                            variant="h6"
+                            component="h2"
                             sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                         >
                             Repuestos del cliente
                         </Typography>
-                        <ListTableSimple 
+                        <ListTableSimple
                             columns={[
                                 { id: 'repuesto', name: 'Repuesto' },
                                 { id: 'cantidad', name: 'Cantidad' },
@@ -307,28 +307,32 @@ const ServicioDetailPage = () => {
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 5 }} alignItems="center">
-                        <Typography 
-                            variant="h6" 
-                            component="h2" 
+                        <Typography
+                            variant="h6"
+                            component="h2"
                             sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
                         >
                             Repuestos del inventario
                         </Typography>
-                        <ListTableSimple 
+                        <ListTableSimple
                             columns={[
-                                { id: 'variante', name: 'Repuesto', format: (variante) => {
-                                    if (!variante) return '-';
-                                    const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
-                                    return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
-                                }},
+                                {
+                                    id: 'variante', name: 'Repuesto', format: (variante) => {
+                                        if (!variante) return '-';
+                                        const atributos = (variante.valores ?? []).map((v: VarianteValor) => `${v.atributo?.nombre}: ${v.valor}`).join(', ');
+                                        return `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}`;
+                                    }
+                                },
                                 { id: 'cantidad', name: 'Cantidad' },
                                 { id: 'precio_venta', name: 'Precio', format: (value) => value ? formatMoney(value) : '-' },
-                                { id: 'total', name: 'Total', format: (_value, row) => {
-                                    if (row.precio_venta && row.cantidad) {
-                                        return formatMoney(row.precio_venta * row.cantidad);
+                                {
+                                    id: 'total', name: 'Total', format: (_value, row) => {
+                                        if (row.precio_venta && row.cantidad) {
+                                            return formatMoney(row.precio_venta * row.cantidad);
+                                        }
+                                        return '-';
                                     }
-                                    return '-';
-                                }}
+                                }
                             ]}
                             data={servicio.repuestos_inventario || []}
                             headerBgColor={theme.palette.primary.main}
@@ -342,7 +346,7 @@ const ServicioDetailPage = () => {
                             {
                                 servicio.firma_entrada ? (
                                     <CardMedia component="img" image={`${import.meta.env.VITE_API_URL}/${servicio.firma_entrada}`} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
-                                ): (
+                                ) : (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
                                         <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>
                                     </Box>
@@ -356,7 +360,7 @@ const ServicioDetailPage = () => {
                             {
                                 servicio.firma_salida ? (
                                     <CardMedia component="img" image={`${import.meta.env.VITE_API_URL}/${servicio.firma_salida}`} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
-                                ): (
+                                ) : (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
                                         <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>
                                     </Box>

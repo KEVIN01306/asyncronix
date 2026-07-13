@@ -116,10 +116,20 @@ export class CajaController extends BaseController {
         try {
             const { id } = req.params;
             const { negocio_id, sucursal_id } = this.obtenerEntorno(res);
-            const { limit, offset, q, fecha_inicio, fecha_fin, origen_tipos } = res.locals.query;
+            
+            // Use res.locals.query if available, otherwise fallback to req.query for unvalidated routes
+            const querySource = res.locals.query || req.query;
+            
+            const limit = parseInt((querySource.limit as string) || '10', 10);
+            const offset = parseInt((querySource.offset as string) || '0', 10);
+            const q = querySource.q as string | undefined;
+            const fecha_inicio = querySource.fecha_inicio ? new Date(querySource.fecha_inicio as string) : undefined;
+            const fecha_fin = querySource.fecha_fin ? new Date(querySource.fecha_fin as string) : undefined;
+            const origen_tipos = querySource.origen_tipos;
+            const tipo_movimiento = querySource.tipo_movimiento as 'INGRESO' | 'EGRESO' | undefined;
+            
             const page = Math.floor(offset / limit) + 1;
             
-            // Si origen_tipos es un string, lo convertimos a array. Si es array, lo dejamos.
             let origenes: any[] | undefined = undefined;
             if (origen_tipos) {
                 if (Array.isArray(origen_tipos)) {
@@ -130,7 +140,7 @@ export class CajaController extends BaseController {
             }
 
             const { total, data } = await this.listarHistorialCajaUseCase.execute(
-                id, negocio_id, sucursal_id, { page, perPage: limit }, q, fecha_inicio, fecha_fin, origenes
+                id, negocio_id, sucursal_id, { page, perPage: limit }, q, fecha_inicio, fecha_fin, origenes, tipo_movimiento
             );
             res.status(200).json(Respuesta.paginacion('Historial obtenido con éxito', data, total, limit, offset));
         } catch (error) {

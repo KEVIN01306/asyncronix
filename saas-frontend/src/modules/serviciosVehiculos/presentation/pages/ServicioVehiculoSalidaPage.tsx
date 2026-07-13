@@ -19,6 +19,7 @@ import type { VarianteValor } from '../../../productos/domain/interfaces/product
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { useDeviceStore } from '../../../../core/store/deviceStore';
 import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMismatchModal';
+import CajaStatusWidget from '../../../../shared/components/ui/widgets/CajaStatusWidget';
 
 const salidaSchema = z.object({
     metodo_pago: z.enum(Object.values(METODO_PAGO) as [string, ...string[]], 'El método de pago es requerido'),
@@ -157,8 +158,7 @@ const ServicioSalidaPage = () => {
         setOpenSignaturePad(false);
     };
 
-    const handleSubmitSalida = async (values: SalidaForm, forceEnLineaParam?: boolean | React.BaseSyntheticEvent) => {
-        const forceEnLinea = typeof forceEnLineaParam === 'boolean' ? forceEnLineaParam : false;
+    const executeSalida = async (values: SalidaForm, forceEnLinea = false) => {
         if (!servicio) return;
         if (!isSalidaState) {
             toast.error('El servicio no está en estado LISTO_ENTREGA');
@@ -179,13 +179,13 @@ const ServicioSalidaPage = () => {
         let cajaOptions = {};
         if (values.metodo_pago === METODO_PAGO.EFECTIVO && !forceEnLinea) {
             if (!cajaId) {
-                toast.error('Esta PC no tiene ninguna caja enlazada. Configura la caja en los ajustes.');
-                return;
+                forceEnLinea = true;
+            } else {
+                cajaOptions = {
+                    caja_id: cajaId,
+                    token_autorizado: cajaToken || ''
+                };
             }
-            cajaOptions = {
-                caja_id: cajaId,
-                token_autorizado: cajaToken || ''
-            };
         }
 
         try {
@@ -222,9 +222,13 @@ const ServicioSalidaPage = () => {
         }
     };
 
+    const handleSubmitSalida = (values: SalidaForm) => {
+        executeSalida(values, false);
+    };
+
     const handleForceCajaEnLinea = async () => {
         if (!cajaMismatchPayload) return;
-        await handleSubmitSalida(cajaMismatchPayload, true);
+        await executeSalida(cajaMismatchPayload, true);
     };
 
     if (loading) {
@@ -244,6 +248,7 @@ const ServicioSalidaPage = () => {
 
     return (
         <Box p={{ sm: 2, md: 4 }} maxWidth="1000px" margin="0 auto">
+            <CajaStatusWidget />
             <Button
                 startIcon={<ArrowBack />}
                 onClick={() => navigate(-1)}

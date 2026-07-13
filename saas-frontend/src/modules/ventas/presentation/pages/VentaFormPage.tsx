@@ -1,8 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Grid, Button, Card, CardContent, Divider, IconButton, TextField, Typography, Autocomplete, useTheme, useMediaQuery, TableContainer, Box, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, QrCodeScanner as QrCodeScannerIcon } from '@mui/icons-material';
+import {
+    Grid, Button, Card, CardContent, Divider, IconButton, TextField,
+    Typography, Autocomplete, useTheme, useMediaQuery, TableContainer,
+    Box, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
+    Stack, Chip,
+    List,
+    ListItem,
+    ListItemText,
+    Paper
+} from '@mui/material';
+import {
+    ArrowBack as ArrowBackIcon,
+    QrCodeScanner as QrCodeScannerIcon,
+    Add as AddIcon,
+    Person as PersonIcon,
+    ReceiptLong as ReceiptIcon,
+    AccountBalanceWallet as WalletIcon
+} from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { useDeviceStore } from '../../../../core/store/deviceStore';
@@ -18,6 +34,7 @@ import SaleSummary from '../components/SaleSummary';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import QrProductScanner from '../components/lectorSkuQr';
 import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMismatchModal';
+import CajaStatusWidget from '../../../../shared/components/ui/widgets/CajaStatusWidget';
 
 type FormValues = {
     cliente_id: string;
@@ -31,7 +48,7 @@ export default function VentaFormPage() {
     const [searchParams] = useSearchParams();
     const preventaId = searchParams.get('preventa_id');
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const isEdit = Boolean(id);
     const user = useAuthStore(state => state.user);
 
@@ -234,7 +251,6 @@ export default function VentaFormPage() {
             if (preventaIdState) {
                 await ventaRepository.actualizarClientePreVenta(preventaIdState, data.cliente_id || null);
             }
-            // use pendingProduct (set when user tried to add before selecting client)
             if (!pendingProduct) {
                 toast.error('No hay producto pendiente para agregar');
                 return;
@@ -253,7 +269,6 @@ export default function VentaFormPage() {
                 })));
                 toast.success('Producto agregado a la preventa');
             } else {
-                // crear preventa con el primer producto
                 if (!user?.sucursal_id) {
                     toast.error('No se pudo determinar la sucursal del usuario');
                     return;
@@ -378,12 +393,13 @@ export default function VentaFormPage() {
         let cajaOptions = {};
         if (payload.metodo === 'EFECTIVO' && !forceEnLinea) {
             if (!cajaId) {
-                throw new Error('Esta PC no tiene ninguna caja enlazada. Configura la caja en los ajustes.');
+                forceEnLinea = true;
+            } else {
+                cajaOptions = {
+                    caja_id: cajaId,
+                    token_autorizado: cajaToken || ''
+                };
             }
-            cajaOptions = {
-                caja_id: cajaId,
-                token_autorizado: cajaToken || ''
-            };
         }
         return ventaRepository.finalizarPreVenta(preventaIdValue, {
             metodo_pago: payload.metodo,
@@ -448,14 +464,13 @@ export default function VentaFormPage() {
             let cajaOptions = {};
             if (payload.metodo === 'EFECTIVO' && !forceEnLinea) {
                 if (!cajaId) {
-                    toast.error('Esta PC no tiene ninguna caja enlazada. Configura la caja en los ajustes.');
-                    setSaving(false);
-                    return;
+                    forceEnLinea = true;
+                } else {
+                    cajaOptions = {
+                        caja_id: cajaId,
+                        token_autorizado: cajaToken || ''
+                    };
                 }
-                cajaOptions = {
-                    caja_id: cajaId,
-                    token_autorizado: cajaToken || ''
-                };
             }
 
             await ventaRepository.finalizarVenta(ventaId, user.sucursal_id, payload.metodo, { ...cajaOptions, forzar_caja_en_linea: forceEnLinea });
@@ -520,8 +535,6 @@ export default function VentaFormPage() {
             setShowStockDialog(false);
         }
     };
-
-    
 
     const handleAgregarProducto = async () => {
         if (!productoSeleccionado) return;
@@ -658,75 +671,254 @@ export default function VentaFormPage() {
     if (loading) return <Loading />;
 
     return (
-        <Grid container spacing={2} p={isMobile ? 2 : 4} mx="auto" sx={{ width: '100%', boxSizing: 'border-box' }}>
-            <Grid size={{ xs: 12 }}>
-                <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/ventas')} sx={{ mb: 1, textTransform: 'none' }}>
-                    Volver
+        <Box sx={{ maxWidth: 1400, mx: 'auto', mt: 2, px: isMobile ? 2 : 4, pb: 6 }}>
+            {/* Barra de Navegación y Control Superior */}
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
+                <Button
+                    startIcon={<ArrowBackIcon />}
+                    onClick={() => navigate('/ventas')}
+                    sx={{ textTransform: 'none', borderRadius: 999 }}
+                    variant="text"
+                    color="secondary"
+                >
+                    Volver a ventas
                 </Button>
-            </Grid>
-
-            <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Box>
-                    <Typography variant="overline" color="text.secondary" sx={{ display: 'block', letterSpacing: 1 }}>
-                        Gestión de Ventas
-                    </Typography>
-                    <Typography variant="h5" fontWeight={600}>
-                        {isEdit ? 'Continuar con la venta' : 'Iniciar nueva venta'}
-                    </Typography>
-                </Box>
-                <Box sx={{ textAlign: 'right' }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', letterSpacing: 1, textTransform: 'uppercase' }}>
-                        Caja Física
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600} color={cajaId ? 'primary.main' : 'warning.main'}>
-                        {cajaNombre ? `Asignada: ${cajaNombre}` : 'Conectado a caja virtual o en línea'}
-                    </Typography>
-                </Box>
+                <CajaStatusWidget />
             </Box>
 
-            <Dialog open={showStockDialog} onClose={() => {
-                setShowStockDialog(false);
-                setStockIssue(null);
-                setPendingPaymentPayload(null);
-                setPendingPreventaId(null);
-                setForceStockPin('');
-            }} fullWidth maxWidth="sm">
-                <DialogTitle>Stock insuficiente</DialogTitle>
+            {/* Título de la Sección */}
+            <Box mb={4}>
+                <Typography variant="overline" color="text.secondary" sx={{ display: 'block', letterSpacing: 1, fontWeight: 600 }}>
+                    Terminal de Facturación
+                </Typography>
+                <Typography variant="h2" color="text.primary">
+                    {isEdit ? 'Modificar Transacción' : 'Nueva Venta'}
+                </Typography>
+            </Box>
+
+            {/* Layout de distribución principal (Híbrido Workspace / Apple Checkout) */}
+            <Grid container spacing={3}>
+
+                {/* COLUMNA IZQUIERDA: Entrada de Productos y Tabla Operativa (75% ancho en desktop) */}
+                <Grid size={{ xs: 12, lg: 8 }}>
+                    <Card sx={{ mb: 3 }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="h3" sx={{ fontSize: '1.2rem', mb: 3, fontWeight: 600 }}>
+                                Registro de Ítems
+                            </Typography>
+
+                            {/* Panel de Inserción Rápida */}
+                            <Grid container spacing={2} alignItems="center" mb={4}>
+                                <Grid size={{ xs: 12, sm: 8 }} display="flex" gap={1} alignItems="center">
+                                    <IconButton
+                                        color="primary"
+                                        onClick={handleOpenScanner}
+                                        disabled={!isEditable || scanLoading}
+                                        sx={{
+                                            border: '1px solid',
+                                            borderColor: 'divider',
+                                            height: 48,
+                                            width: 48,
+                                            backgroundColor: 'action.hover'
+                                        }}
+                                    >
+                                        <QrCodeScannerIcon fontSize="small" />
+                                    </IconButton>
+                                    <Box flexGrow={1}>
+                                        <Autocomplete
+                                            options={variantesDisponibles}
+                                            getOptionLabel={(option) => option?.nombre ?? ''}
+                                            value={productoSeleccionado}
+                                            onChange={(_e, newValue) => setProductoSeleccionado(newValue)}
+                                            loading={searchProductoLoading}
+                                            renderOption={(props, option: any) => (
+                                                <li {...props}>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', py: 0.5 }}>
+                                                        <Box>
+                                                            <Typography variant="body2" fontWeight={600}>{option.producto_nombre}</Typography>
+                                                            {option.valores && option.valores.length > 0 && (
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {option.valores.map((v: any) => v.atributo ? `${v.atributo.nombre}: ${v.valor}` : v.valor).join(', ')}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
+                                                        <Box sx={{ textAlign: 'right' }}>
+                                                            <Typography variant="body2" fontWeight={600} color="primary.main">{formatMoney(option.precio_sugerido)}</Typography>
+                                                            <Typography variant="caption" color="text.secondary">Stock: {option.stock_total}</Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </li>
+                                            )}
+                                            renderInput={(params) => (
+                                                <TextField {...params} label="Buscar producto o variante..." variant="outlined" size="small" />
+                                            )}
+                                            disabled={!isEditable}
+                                        />
+                                    </Box>
+                                </Grid>
+
+                                <Grid size={{ xs: 12, sm: 4 }} display="flex" gap={1.5}>
+                                    <Box sx={{ width: '80px' }}>
+                                        <TextField
+                                            type="number"
+                                            label="Cant."
+                                            size="small"
+                                            fullWidth
+                                            value={cantidadAgregar}
+                                            onChange={(e) => setCantidadAgregar(parseInt(e.target.value) || 0)}
+                                            inputProps={{ min: 1 }}
+                                            disabled={!isEditable}
+                                        />
+                                    </Box>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={handleAgregarProducto}
+                                        disabled={!productoSeleccionado || !isEditable || addingProductLoading}
+                                        startIcon={!addingProductLoading && <AddIcon />}
+                                        fullWidth
+                                        sx={{ height: 40 }}
+                                    >
+                                        {addingProductLoading ? <CircularProgress size={20} color="inherit" /> : 'Añadir'}
+                                    </Button>
+                                </Grid>
+                            </Grid>
+
+                            {/* Tabla de Productos Seleccionados */}
+                            <TableContainer sx={{ borderColor: 'divider', overflow: 'hidden' }}>
+                                <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} deletingRows={deletingRows} />
+                            </TableContainer>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* COLUMNA DERECHA: Resumen Financiero y Datos de Control (Barra Lateral Consolidada) */}
+                <Grid size={{ xs: 12, lg: 4 }}>
+                    <Stack spacing={3}>
+
+                        {/* Caja del Checkout / Resumen */}
+                        <Card>
+                            <CardContent sx={{ p: 3 }}>
+                                <Typography variant="h3" sx={{ fontSize: '1.2rem', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <ReceiptIcon color="primary" fontSize="small" /> Resumen de Compra
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" mb={3}>
+                                    Total de ítems agregados y balance pendiente de cobro.
+                                </Typography>
+
+                                <Box component={Paper} sx={{ p: 2, bgcolor: 'action.hover', mb: 3 }}>
+                                    <SaleSummary total={totalVenta} clienteLabel={clienteNombre} onFinalize={() => setShowPaymentModal(true)} disabled={!productosSeleccionados.length} />
+                                </Box>
+                            </CardContent>
+                        </Card>
+
+                        {/* Caja de Metadatos y Cliente */}
+                        <Card>
+                            <CardContent sx={{ p: 3 }}>
+                                <Typography variant="h3" sx={{ fontSize: '1.2rem', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <PersonIcon color="primary" fontSize="small" /> Información de Control
+                                </Typography>
+
+                                <List disablePadding>
+                                    <ListItem disableGutters secondaryAction={
+                                        <Chip label={watch('estado') || 'N/A'} size="small" variant="outlined" color="primary" sx={{ fontWeight: 600 }} />
+                                    }>
+                                        <ListItemText primary="Estado del Flujo" slotProps={{ primary: { variant: 'body2', color: 'text.secondary' } }} />
+                                    </ListItem>
+                                    <Divider sx={{ my: 1 }} />
+                                    <ListItem disableGutters secondaryAction={
+                                        <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <WalletIcon fontSize="inherit" color="secondary" /> {watch('metodo_pago') || 'No definido'}
+                                        </Typography>
+                                    }>
+                                        <ListItemText primary="Método Cobro" slotProps={{ primary: { variant: 'body2', color: 'text.secondary' } }} />
+                                    </ListItem>
+                                </List>
+
+                                <Box component={Paper} sx={{ mt: 3, p: 2, border: '1px dashed', borderColor: 'divider', bgcolor: 'background.default' }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600, display: 'block', mb: 1 }}>
+                                        Cliente Asignado
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={700} color="text.primary" noWrap>
+                                        {clienteNombre}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                                        ID: {watch('cliente_id') || 'Consumidor Final (C/F)'}
+                                    </Typography>
+
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        onClick={() => setShowClientModal(true)}
+                                        disabled={!isEditable}
+                                        fullWidth
+                                    >
+                                        {watch('cliente_id') ? 'Modificar Cliente' : 'Vincular Cliente'}
+                                    </Button>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Stack>
+                </Grid>
+            </Grid>
+
+            {/* Modales e Interfaces de Control */}
+            <Dialog
+                open={showStockDialog}
+                onClose={() => {
+                    setShowStockDialog(false);
+                    setStockIssue(null);
+                    setPendingPaymentPayload(null);
+                    setPendingPreventaId(null);
+                    setForceStockPin('');
+                }}
+                fullWidth
+                maxWidth="sm"
+                PaperProps={{ sx: { p: 1 } }}
+            >
+                <DialogTitle sx={{ fontWeight: 700 }}>Stock insuficiente</DialogTitle>
                 <DialogContent>
                     {stockIssue?.faltantes?.length ? (
                         <Box mt={1} display="grid" gap={1}>
-                            <Typography>Hay productos sin stock suficiente para completar la venta.</Typography>
+                            <Typography variant="body2" color="text.secondary">Hay productos sin existencias suficientes para completar esta venta.</Typography>
                             {stockIssue.faltantes.map((faltante: any, index: number) => (
-                                <Typography key={`${faltante.variante_id}-${index}`} variant="body2" color="text.secondary">
-                                    • {faltante.descripcion}: solicitado {faltante.solicitado}, disponible {faltante.disponible}
+                                <Typography key={`${faltante.variante_id}-${index}`} variant="body2" fontWeight={500} color="error.main">
+                                    • {faltante.descripcion}: Solicitado {faltante.solicitado}, Disponible {faltante.disponible}
                                 </Typography>
                             ))}
                         </Box>
                     ) : (
-                        <Typography>No fue posible completar la venta por stock insuficiente.</Typography>
+                        <Typography variant="body2">No fue posible completar la venta debido a inconsistencias en las existencias.</Typography>
                     )}
 
-                    <Box mt={2}>
+                    <Box mt={3}>
                         <TextField
                             fullWidth
-                            label="PIN de caja"
+                            label="PIN de autorización de caja"
                             type="password"
                             value={forceStockPin}
                             onChange={(e) => setForceStockPin(e.target.value)}
                             inputProps={{ maxLength: 6 }}
+                            size="small"
                         />
                     </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => {
-                        setShowStockDialog(false);
-                        setStockIssue(null);
-                        setPendingPaymentPayload(null);
-                        setPendingPreventaId(null);
-                        setForceStockPin('');
-                    }}>Cancelar</Button>
-                    <Button onClick={handleForceStockConfirm} variant="contained" disabled={forceStockLoading}>
-                        {forceStockLoading ? 'Procesando…' : 'Forzar stock'}
+                <DialogActions sx={{ p: 2 }}>
+                    <Button
+                        onClick={() => {
+                            setShowStockDialog(false);
+                            setStockIssue(null);
+                            setPendingPaymentPayload(null);
+                            setPendingPreventaId(null);
+                            setForceStockPin('');
+                        }}
+                        sx={{ borderRadius: 999 }}
+                        color="secondary"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button onClick={handleForceStockConfirm} variant="contained" disabled={forceStockLoading} sx={{ borderRadius: 999 }}>
+                        {forceStockLoading ? 'Procesando…' : 'Forzar Venta con Stock'}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -738,165 +930,9 @@ export default function VentaFormPage() {
                 loading={isSaving}
             />
 
-            <Grid size={{ xs: 12 }} container spacing={3}>
-                <Grid size={{ xs: 12, md: 12 }}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>Productos de la Venta</Typography>
-                            <Grid container spacing={2} mb={3} alignItems="center">
-                                <Grid size={{ xs: 12, md: 8 }} container spacing={1} alignItems="center">
-                                    <Grid size={{ xs: 12, md: 2 }}>
-                                        <IconButton
-                                            color="primary"
-                                            onClick={handleOpenScanner}
-                                            disabled={!isEditable || scanLoading}
-                                            sx={{ border: '1px solid', borderColor: 'divider', flexShrink: 0, height: 56, width: 56 }}
-                                        >
-                                            <QrCodeScannerIcon />
-                                        </IconButton>
-                                    </Grid>
-                                    <Grid size={{ xs: 12, md: 10 }}>
-                                        <Autocomplete
-                                            options={variantesDisponibles}
-                                            getOptionLabel={(option) => option?.nombre ?? ''}
-                                            value={productoSeleccionado}
-                                            onChange={(_e, newValue) => setProductoSeleccionado(newValue)}
-                                            loading={searchProductoLoading}
-                                            renderOption={(props, option: any) => (
-                                                <li {...props}>
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                                                        <Box>
-                                                            <Typography fontWeight={600}>{option.producto_nombre}</Typography>
-                                                            {option.valores && option.valores.length > 0 && (
-                                                                <Typography variant="caption" color="textSecondary">
-                                                                    {option.valores.map((v: any) => v.atributo ? `${v.atributo.nombre}: ${v.valor}` : v.valor).join(', ')}
-                                                                </Typography>
-                                                            )}
-                                                        </Box>
-                                                        <Box sx={{ textAlign: 'right' }}>
-                                                            <Typography>{formatMoney(option.precio_sugerido)}</Typography>
-                                                            <Typography variant="caption">Stock: {option.stock_total}</Typography>
-                                                        </Box>
-                                                    </Box>
-                                                </li>
-                                            )}
-                                            renderInput={(params) => (
-                                                <TextField {...params} label="Buscar Variante" variant="outlined" />
-                                            )}
-                                            disabled={!isEditable}
-                                        />
-                                    </Grid>
-                                </Grid>
-
-                                <Grid size={{ xs: 12, md: 4 }} container spacing={2}>
-                                    <Grid size={{ xs: 4 }}>
-                                        <TextField
-                                            type="number"
-                                            label="Cant."
-                                            fullWidth
-                                            value={cantidadAgregar}
-                                            onChange={(e) => setCantidadAgregar(parseInt(e.target.value) || 0)}
-                                            inputProps={{ min: 1 }}
-                                            disabled={!isEditable}
-                                        />
-                                    </Grid>
-                                    <Grid size={{ xs: 8 }}>
-                                        <Button
-                                            variant="contained"
-                                            color="secondary"
-                                            onClick={handleAgregarProducto}
-                                            disabled={!productoSeleccionado || !isEditable || addingProductLoading}
-                                            sx={{ height: 56, width: '100%' }}
-                                        >
-                                            {addingProductLoading ? <CircularProgress size={20} color="inherit" /> : 'Agregar'}
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                            <TableContainer>
-                                <SaleProductsTable items={productosSeleccionados} onDelete={handleEliminarProducto} isEditable={isEditable} deletingRows={deletingRows} />
-                            </TableContainer>
-
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
-                                <SaleSummary total={totalVenta} clienteLabel={clienteNombre} onFinalize={() => setShowPaymentModal(true)} disabled={!productosSeleccionados.length} />
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
-            <Grid size={{ xs: 12, md: 12 }}>
-                <Card variant="outlined">
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom color="primary">
-                            Detalle de la Venta
-                        </Typography>
-                        <Divider sx={{ mb: 3 }} />
-
-                        <Grid container spacing={4}>
-                            {/* Información de Estado y Pago */}
-                            <Grid size={{ xs: 12, md: 6 }}>
-                                <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                                    Estado de la Venta
-                                </Typography>
-                                <Typography variant="body1" fontWeight={700} sx={{ mt: 0.5, color: 'text.primary' }}>
-                                    {watch('estado') || 'N/A'}
-                                </Typography>
-                            </Grid>
-
-                            <Grid size={{ xs: 12, md: 6 }}>
-                                <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                                    Método de Pago
-                                </Typography>
-                                <Typography variant="body1" fontWeight={700} sx={{ mt: 0.5, color: 'text.primary' }}>
-                                    {watch('metodo_pago') || 'No definido'}
-                                </Typography>
-                            </Grid>
-                        </Grid>
-
-                        <Box sx={{ mt: 4 }}>
-                            <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                                Información del Cliente
-                            </Typography>
-                            <Box
-                                sx={{
-                                    mt: 1,
-                                    p: 2.5,
-                                    bgcolor: 'background.paper',
-                                    borderRadius: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    border: '1px dashed',
-                                    borderColor: 'grey.300'
-                                }}
-                            >
-                                <Box>
-                                    <Typography variant="h6" sx={{ color: 'primary.main' }}>
-                                        {clienteNombre || 'Sin cliente asignado'}
-                                    </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        ID Cliente: {watch('cliente_id') || '---'}
-                                    </Typography>
-                                </Box>
-
-                                <Button
-                                    size="small"
-                                    variant="text"
-                                    onClick={() => setShowClientModal(true)}
-                                    disabled={!isEditable}
-                                >
-                                    {watch('cliente_id') ? 'Cambiar cliente' : 'Asignar cliente'}
-                                </Button>
-                            </Box>
-                        </Box>
-                    </CardContent>
-                </Card>
-            </Grid>
-
-
             <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
             <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={clienteNombre} loading={isSaving} />
             <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleCodigoLeido} />
-        </Grid>
+        </Box>
     );
 }
