@@ -20,7 +20,6 @@ const LoginPage = () => {
     const goTo = useNavigate();
     const location = useLocation();
     const from = location.state?.from || { pathname: "/" };
-    const theme = useTheme()
 
     const {
         register,

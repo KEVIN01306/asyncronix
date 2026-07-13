@@ -75,7 +75,7 @@ export default function VentaFormPage() {
     const [showCajaMismatchModal, setShowCajaMismatchModal] = useState(false);
     const [cajaMismatchPayload, setCajaMismatchPayload] = useState<{ metodo: string; efectivo_recibido: number | null; vuelto: number | null } | null>(null);
 
-    const { cajaId, cajaNombre, token: cajaToken } = useDeviceStore();
+    const { cajaId, token: cajaToken } = useDeviceStore();
 
     const { setValue, watch } = useForm<FormValues>({
         defaultValues: {

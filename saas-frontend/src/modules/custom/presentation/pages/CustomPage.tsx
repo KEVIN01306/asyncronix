@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography, Radio, RadioGroup, FormControlLabel, Slider, Divider, Button, Stack, Grid, List, ListItem, ListItemText, ListItemSecondaryAction } from '@mui/material';
+import { Box, Card, CardContent, Typography, Radio, RadioGroup, FormControlLabel, Slider, Divider, Button, Stack, Grid } from '@mui/material';
 import { Palette as PaletteIcon, Tune as TuneIcon, NotificationsActive as NotificationsIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import { useUiStore } from '../../../../core/store/uiStore';
 import type { ThemeVariant } from '../../../../core/theme/types';

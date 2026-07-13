@@ -19,7 +19,6 @@ import {
     OutlinedInput,
     Checkbox,
     ListItemText,
-    Button,
     InputAdornment
 } from '@mui/material';
 import { ArrowBack, ArrowDownward, ArrowUpward, AccessTime, ShieldOutlined, Search } from '@mui/icons-material';
@@ -73,7 +72,7 @@ const CuentaBancariaHistorialPage = () => {
 
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
-    const page = Math.floor(offset / limit);
+    // const page = Math.floor(offset / limit);
 
     // Filters
     const q = searchParams.get('q') || '';
