@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Grid, Divider, Paper, useTheme } from '@mui/material';
+import { Box, Typography, Grid, Divider, Paper } from '@mui/material';
 import { motion } from 'framer-motion';
 
 import { loginSchema, type LoginFormValues } from '../../domain/schemas/login.schema';
