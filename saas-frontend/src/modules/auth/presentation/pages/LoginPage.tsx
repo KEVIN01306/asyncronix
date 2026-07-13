@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Grid, Divider, Paper } from '@mui/material';
+import { Box, Typography, Grid, Divider, Paper, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 
 import { loginSchema, type LoginFormValues } from '../../domain/schemas/login.schema';
@@ -20,6 +20,7 @@ const LoginPage = () => {
     const goTo = useNavigate();
     const location = useLocation();
     const from = location.state?.from || { pathname: "/" };
+    const theme = useTheme()
 
     const {
         register,
@@ -74,16 +75,20 @@ const LoginPage = () => {
                 borderRadius: 'inherit'
             }}
         >
-            <Grid container>
+            <Grid container
+                component={Paper}
+            >
 
                 <Grid
+                    component={Paper}
                     size={{ xs: 12, md: 4 }}
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         p: { xs: 4, sm: 6, md: 5, lg: 6 },
-                        bgcolor: 'background.paper'
+                        bgcolor: 'background.paper',
+                        border: 'none'
                     }}
                 >
                     <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
@@ -112,7 +117,6 @@ const LoginPage = () => {
                     </Typography>
                 </Grid>
                 <Grid
-                    component={Paper}
                     size={{ xs: 0, md: 8 }}
                     sx={{
                         display: { xs: 'none', md: 'flex' },
