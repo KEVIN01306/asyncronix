@@ -73,6 +73,7 @@ export class CrearIngresoEgresoUseCase {
                     moneda_actual_id: negocio.moneda_id,
                     tipo_cambio: 1.0,
                     monto_moneda_base: data.monto_original,
+                    metodo_pago: data.metodo_pago ?? 'EFECTIVO',
                 };
             } else if (data.entidad_tipo === 'CUENTA') {
                 const cuenta = await this.obtenerCuenta(data.entidad_id);
@@ -99,6 +100,7 @@ export class CrearIngresoEgresoUseCase {
                         moneda_actual_id: negocio.moneda_id,
                         tipo_cambio: 1.0,
                         monto_moneda_base: data.monto_original,
+                        metodo_pago: data.metodo_pago ?? null,
                     };
                 } else {
                     // Different currencies — apply FX conversion
@@ -129,6 +131,7 @@ export class CrearIngresoEgresoUseCase {
                         tipo_cambio: exchangeRate.rate,
                         monto_original,
                         monto_moneda_base,
+                        metodo_pago: data.metodo_pago ?? null,
                     };
                 }
             } else {

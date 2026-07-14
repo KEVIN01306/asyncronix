@@ -89,6 +89,7 @@ export class FinalizarVentaUseCase {
                         descripcion: `Venta de ${venta.total} - ${venta.id.slice(-4)}`,
                         destino_entidad: 'CAJA',
                         destino_caja_id: cajaSeleccionada.id,
+                        metodo_pago: 'EFECTIVO',
                         fecha_transaccion: new Date()
                     } as any, { tx });
 
@@ -136,6 +137,7 @@ export class FinalizarVentaUseCase {
                         descripcion: `Venta de ${venta.total} - ${venta.id.slice(-4)}`,
                         destino_entidad: 'CUENTA',
                         destino_cuenta_id: relacionCuenta.cuenta_bancaria.id,
+                        metodo_pago: metodoPagoReal,
                         fecha_transaccion: new Date()
                     } as any, { tx });
                 }

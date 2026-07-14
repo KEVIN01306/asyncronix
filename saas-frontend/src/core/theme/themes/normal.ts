@@ -1,5 +1,6 @@
 import type { PaletteMode } from '@mui/material';
 import { adjustColorIntensity } from './colorUtils';
+import { variantProps } from 'framer-motion';
 
 // Tema Normal - ChatGPT Style
 
@@ -160,6 +161,11 @@ export const normalThemeConfig = {
             },
         },
         MuiTextField: {
+            defaultProps: {
+                variant: 'outlined' as const,
+            },
+        },
+        MuiSelect: {
             defaultProps: {
                 variant: 'outlined' as const,
             },

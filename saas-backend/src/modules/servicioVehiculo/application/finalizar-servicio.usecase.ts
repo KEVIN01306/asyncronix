@@ -136,6 +136,7 @@ export class FinalizarServicioUseCase {
                         descripcion: `Cobro de servicio por ${totalCobro} - ${idCorto}`,
                         destino_entidad: 'CAJA',
                         destino_caja_id: cajaSeleccionada.id,
+                        metodo_pago: 'EFECTIVO',
                         fecha_transaccion: new Date()
                     } as any, { tx: tx as any });
 
@@ -187,6 +188,7 @@ export class FinalizarServicioUseCase {
                         descripcion: `Cobro de servicio por ${totalCobro} (${metodoPago}) - ${idCorto}`,
                         destino_entidad: 'CUENTA',
                         destino_cuenta_id: idCuenta,
+                        metodo_pago: metodoPago,
                         fecha_transaccion: new Date()
                     } as any, { tx: tx as any });
                 }

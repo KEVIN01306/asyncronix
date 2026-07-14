@@ -28,7 +28,7 @@ export const sucursalRepository = {
         return response.data;
     },
 
-    registrar:  async (data: SucursalFormValues): Promise<Sucursal> => {
+    registrar: async (data: SucursalFormValues): Promise<Sucursal> => {
         const response = await api.post<SucursalDetailResponse>(`${URL_MODULO}`, data);
         return response.data;
     },

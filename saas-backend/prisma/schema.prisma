@@ -1020,6 +1020,8 @@ model Transaccion {
   tipo_cambio       Float   @default(1.0)
   monto_moneda_base Float
 
+  metodo_pago       MetodoPago?
+
   descripcion String? @db.Text
 
   origen_entidad    TipoEntidadFinanciera?

@@ -1,3 +1,5 @@
+import type { MetodoPago } from '@prisma/client';
+
 export type TipoMovimiento = 'INGRESO' | 'EGRESO' | 'TRANSFERENCIA';
 export type TipoEntidadFinanciera = 'CAJA' | 'CUENTA';
 export type TipoOrigenTransaccion = 'VENTA' | 'SERVICIO' | 'INGRESO_EGRESO' | 'MOVIMIENTO_INTERNO';
@@ -21,6 +23,7 @@ export interface Transaccion {
     monto_original: number;
     tipo_cambio: number;
     monto_moneda_base: number;
+    metodo_pago: MetodoPago | null;
     descripcion: string | null;
     origen_entidad: TipoEntidadFinanciera | null;
     origen_caja_id: string | null;
@@ -45,6 +48,7 @@ export interface TransaccionCrear {
     tipo_cambio?: number;
     monto_moneda_base?: number;
     descripcion?: string;
+    metodo_pago?: MetodoPago | null;
     fecha_transaccion?: Date;
     moneda_actual_id?: string;
 }
@@ -65,6 +69,7 @@ export interface TransaccionCrearDirecta {
     monto_original: number;
     tipo_cambio: number;
     monto_moneda_base: number;
+    metodo_pago?: MetodoPago | null;
     descripcion?: string | null;
     origen_entidad?: TipoEntidadFinanciera | null;
     origen_caja_id?: string | null;

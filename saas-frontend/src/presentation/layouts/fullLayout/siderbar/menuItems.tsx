@@ -14,6 +14,7 @@ import {
   MoveDownRounded,
   QrCodeScanner,
   AccountBalance,
+  Assessment,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -28,12 +29,12 @@ export interface MenuItem {
 }
 
 const MenuItems: MenuItem[] = [
-  { group: "Home"},
+  { group: "Home" },
   { name: "Dashboard", icon: AdminPanelSettingsOutlined, link: "/" },
-  { group: "Enlaces rapidos"},
+  { group: "Enlaces rapidos" },
   { name: "Ventas", icon: PointOfSale, link: "/ventas", permiso: "VER_VENTAS" },
   { name: "Clientes", icon: AccountCircleOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
-  { group: "modulos"},
+  { group: "modulos" },
   {
     module: "Finanzas", name: "Finanzas", icon: AccountBalance, children: [
       { name: "Cajas", link: "/cajas", icon: ViewHeadlineRounded, permiso: "VER_CAJAS" },
@@ -42,7 +43,12 @@ const MenuItems: MenuItem[] = [
       { name: "Ingresos y Egresos", link: "/ingresos-egresos", icon: ViewHeadlineRounded, permiso: "VER_INGRESOS_EGRESOS" },
     ]
   },
-  { 
+  {
+    module: "Reportes", name: "Reportes", icon: Assessment, children: [
+      { name: "Reporte Financiero", link: "/reportes/financiero", icon: ViewHeadlineRounded, permiso: "REPORTES_FINANCIERO" },
+    ]
+  },
+  {
     module: "traslados", name: "Traslados", icon: MoveDownRounded, children: [
       { name: "Salidas", link: "/traslados/salidas", icon: ViewHeadlineRounded, permiso: "VER_TRASLADO" },
       { name: "Entradas", link: "/traslados/entradas", icon: ViewHeadlineRounded, permiso: "VER_TRASLADO" },
@@ -57,22 +63,28 @@ const MenuItems: MenuItem[] = [
       { name: "Lotes", link: "/lotes", icon: AdminPanelSettingsOutlined, permiso: "VER_LOTES" },
     ]
   },
-  { module: "Vehiculos Configuración", icon: CarCrash, children: [
-    { name: "Vehiculos", link: "/vehiculos", icon: AdminPanelSettingsOutlined, permiso: "VER_VEHICULOS" },
-    { name: "Marcas", link: "/marcas", icon: AdminPanelSettingsOutlined, permiso: "VER_MARCAS" },
-    { name: "Líneas", link: "/lineas", icon: AdminPanelSettingsOutlined, permiso: "VER_LINEAS" },
-    { name: "Cilindradas", link: "/cilindradas", icon: AdminPanelSettingsOutlined, permiso: "VER_CILINDRADAS" },
-    { name: "Modelos", link: "/modelos", icon: AdminPanelSettingsOutlined, permiso: "VER_MODELOS" },
-  ]},
-  { module: "Recepción", icon: Build, children: [
-    { name: "Servicios", link: "/servicios-vehiculo", icon: Build, permiso: "VER_SERVICIOS" },
-  ]}, 
-    { module: "Servicio Vehiculos Configuración", icon: SettingsSharp, children: [
-    { name: "Opciones servicio", link: "/opciones-servicio", icon: Build, permiso: "VER_OPCION_SERVICIO" },
-    { name: "Tipos servicio", link: "/tipos-servicio", icon: PrecisionManufacturing, permiso: "VER_TIPO_SERVICIO" },
-    { name: "Checklist", link: "/checklist", icon: ListAlt, permiso: "VER_CHECKLIST" },
-  ]}, 
-  { group: "Configuración negocio"},
+  {
+    module: "Vehiculos Configuración", icon: CarCrash, children: [
+      { name: "Vehiculos", link: "/vehiculos", icon: AdminPanelSettingsOutlined, permiso: "VER_VEHICULOS" },
+      { name: "Marcas", link: "/marcas", icon: AdminPanelSettingsOutlined, permiso: "VER_MARCAS" },
+      { name: "Líneas", link: "/lineas", icon: AdminPanelSettingsOutlined, permiso: "VER_LINEAS" },
+      { name: "Cilindradas", link: "/cilindradas", icon: AdminPanelSettingsOutlined, permiso: "VER_CILINDRADAS" },
+      { name: "Modelos", link: "/modelos", icon: AdminPanelSettingsOutlined, permiso: "VER_MODELOS" },
+    ]
+  },
+  {
+    module: "Recepción", icon: Build, children: [
+      { name: "Servicios", link: "/servicios-vehiculo", icon: Build, permiso: "VER_SERVICIOS" },
+    ]
+  },
+  {
+    module: "Servicio Vehiculos Configuración", icon: SettingsSharp, children: [
+      { name: "Opciones servicio", link: "/opciones-servicio", icon: Build, permiso: "VER_OPCION_SERVICIO" },
+      { name: "Tipos servicio", link: "/tipos-servicio", icon: PrecisionManufacturing, permiso: "VER_TIPO_SERVICIO" },
+      { name: "Checklist", link: "/checklist", icon: ListAlt, permiso: "VER_CHECKLIST" },
+    ]
+  },
+  { group: "Configuración negocio" },
   {
     module: "configuracion", name: "Configuración", icon: SettingsSuggest, children: [
       { name: "Usuarios", link: "/usuarios", icon: AdminPanelSettingsOutlined, permiso: "VER_USUARIOS" },

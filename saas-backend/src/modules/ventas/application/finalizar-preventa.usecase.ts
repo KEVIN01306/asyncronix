@@ -112,6 +112,7 @@ export class FinalizarPreVentaUseCase {
                         tipo_movimiento: 'INGRESO', origen_tipo: 'VENTA',
                         moneda_id,
                         monto_original: venta.total, tipo_cambio: 1.0, monto_moneda_base: venta.total,
+                        metodo_pago: 'EFECTIVO',
                         descripcion: `Venta de ${venta.total} - ${venta.id.slice(-4)}`,
                         destino_entidad: 'CAJA', destino_caja_id: cajaSeleccionada.id,
                         fecha_transaccion: new Date()
@@ -148,6 +149,7 @@ export class FinalizarPreVentaUseCase {
                         tipo_movimiento: 'INGRESO', origen_tipo: 'VENTA',
                         moneda_id: finalMonedaId,
                         monto_original: finalMontoOriginal, tipo_cambio: finalTipoCambio, monto_moneda_base: venta.total,
+                        metodo_pago: metodoPagoReal,
                         descripcion: `Venta de ${venta.total} - ${venta.id.slice(-4)}`,
                         destino_entidad: 'CUENTA', destino_cuenta_id: relacionCuenta.cuenta_bancaria.id,
                         fecha_transaccion: new Date()
