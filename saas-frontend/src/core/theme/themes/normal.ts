@@ -1,6 +1,5 @@
 import type { PaletteMode } from '@mui/material';
 import { adjustColorIntensity } from './colorUtils';
-import { variantProps } from 'framer-motion';
 
 // Tema Normal - ChatGPT Style
 
