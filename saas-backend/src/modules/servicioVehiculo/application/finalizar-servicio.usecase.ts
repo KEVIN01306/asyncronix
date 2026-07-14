@@ -171,7 +171,7 @@ export class FinalizarServicioUseCase {
                         montoOriginalConvertido = totalCobro * tasaCambioUsada;
                     }
 
-                    await this.acreditarCuentaBancariaUseCase.execute(idCuenta, negocio_id, montoOriginalConvertido, { tx: tx as any });
+                    await this.acreditarCuentaBancariaUseCase.execute(idCuenta, negocio_id, montoOriginalConvertido, totalCobro, { tx: tx as any });
 
                     const idCorto = servicio.id.slice(-6).toUpperCase();
                     await this.crearTransaccionUseCase.execute({

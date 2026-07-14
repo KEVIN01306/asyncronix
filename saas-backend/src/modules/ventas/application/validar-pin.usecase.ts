@@ -3,7 +3,7 @@ import { PrismaErrorMapper } from '../../../shared/database/prisma/PrismaErrorMa
 import type { HashProvider } from '../../../shared/domain/hash.provider.js';
 
 export class ValidarPinCajaUseCase {
-    constructor(private readonly db: any, private readonly hashProvider: HashProvider) {}
+    constructor(private readonly db: any, private readonly hashProvider: HashProvider) { }
 
     async execute(pin: string, negocio_id: string, sucursal_id: string) {
         try {

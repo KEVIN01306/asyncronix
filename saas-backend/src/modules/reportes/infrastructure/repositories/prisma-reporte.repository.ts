@@ -4,7 +4,7 @@ import type { FiltrosReporteFinanciero, ReporteFinanciero, MetodoPagoKPI, Origen
 import { PrismaErrorMapper } from '@shared/database/prisma/PrismaErrorMapper.js';
 
 export class PrismaReporteRepository implements ReporteRepository {
-    constructor(private readonly prisma: PrismaClient) {}
+    constructor(private readonly prisma: PrismaClient) { }
 
     async obtenerReporteFinanciero(filtros: FiltrosReporteFinanciero): Promise<ReporteFinanciero> {
         try {
@@ -115,11 +115,12 @@ export class PrismaReporteRepository implements ReporteRepository {
 
             const cuentasDB = await this.prisma.cuentaBancaria.findMany({
                 where: whereCuentas,
-                select: { 
-                    id: true, 
-                    numero_cuenta: true, 
+                select: {
+                    id: true,
+                    numero_cuenta: true,
                     nombre_titular: true,
                     saldo: true,
+                    saldo_moneda_base: true,
                     banco: { select: { nombre_comercial: true } },
                     moneda: { select: { codigo: true } }
                 }
@@ -131,24 +132,27 @@ export class PrismaReporteRepository implements ReporteRepository {
                 saldo: c.saldo
             }));
 
-            const cuentas: CuentaBancariaKPI[] = cuentasDB.map(c => ({
-                id: c.id,
-                banco: c.banco.nombre_comercial,
-                numero_cuenta: c.numero_cuenta,
-                moneda_codigo: c.moneda?.codigo || 'BASE',
-                saldo: c.saldo, // En moneda_base ya que el saldo debería ser convertido, si no, hay que revisar la entidad
-                saldo_original: c.saldo, // Asumimos por ahora, se puede refinar
-                tasa_cambio: 1.0 // Referencial
-            }));
+            const cuentas: CuentaBancariaKPI[] = cuentasDB.map(c => {
+                const saldoEnBase = c.saldo_moneda_base ?? c.saldo;
+                return {
+                    id: c.id,
+                    banco: c.banco.nombre_comercial,
+                    numero_cuenta: c.numero_cuenta,
+                    moneda_codigo: c.moneda?.codigo || 'BASE',
+                    saldo: saldoEnBase, // Usamos el saldo guardado ya en moneda base
+                    saldo_original: c.saldo, // El saldo en la moneda original de la cuenta
+                    tasa_cambio: c.saldo > 0 ? (saldoEnBase / c.saldo) : 1.0 // Tasa histórica deducida
+                };
+            });
 
-            const saldo_actual = cajas.reduce((acc, c) => acc + c.saldo, 0) + 
-                                 cuentas.reduce((acc, c) => acc + c.saldo, 0);
+            const saldo_actual = cajas.reduce((acc, c) => acc + c.saldo, 0) +
+                cuentas.reduce((acc, c) => acc + c.saldo, 0);
 
             // En un futuro, el saldo esperado debería partir de un saldo inicial + flujo_neto
             // Por simplicidad del requerimiento, comparamos contra el flujo de caja del periodo
             // Si no hay filtro de fechas, el flujo_neto debería ser ~ saldo_actual
             const saldo_esperado = flujo_neto;
-            
+
             return {
                 kpis: {
                     total_ingresos,

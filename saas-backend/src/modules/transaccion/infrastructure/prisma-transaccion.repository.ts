@@ -388,7 +388,7 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
                 const qCondition = {
                     codigo: { contains: filters.q }
                 };
-                
+
                 if (whereCondition.OR) {
                     whereCondition.AND = [
                         { OR: whereCondition.OR },

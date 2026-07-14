@@ -10,6 +10,7 @@ export interface CuentaBancaria {
     nombre_titular: string;
     tipo: 'MONETARIA' | 'AHORRO' | 'PLANILLA';
     saldo: number;
+    saldo_moneda_base: number | null;
     activo: boolean;
     created_at: Date;
     updated_at: Date;

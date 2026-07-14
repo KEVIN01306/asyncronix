@@ -122,7 +122,7 @@ export class FinalizarVentaUseCase {
                         finalMonedaId = cuentaMonedaId;
                     }
 
-                    await this.acreditarCuentaBancariaUseCase.execute(relacionCuenta.cuenta_bancaria.id, negocio_id, finalMontoOriginal, { tx });
+                    await this.acreditarCuentaBancariaUseCase.execute(relacionCuenta.cuenta_bancaria.id, negocio_id, finalMontoOriginal, montoOriginalConvertido, { tx });
 
                     await this.crearTransaccionUseCase.execute({
                         negocio_id,

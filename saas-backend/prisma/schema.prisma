@@ -945,17 +945,18 @@ model Caja {
 }
 
 model CuentaBancaria {
-  id             String             @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id     String             @db.Char(36)
-  banco_id       String             @db.Char(36)
-  moneda_id      String?            @db.Char(36)
-  numero_cuenta  String
-  nombre_titular String
-  tipo           TipoCuentaBancaria @default(MONETARIA)
-  saldo          Float              @default(0)
-  activo         Boolean            @default(true)
-  created_at     DateTime           @default(now())
-  updated_at     DateTime           @updatedAt
+  id                String             @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id        String             @db.Char(36)
+  banco_id          String             @db.Char(36)
+  moneda_id         String?            @db.Char(36)
+  numero_cuenta     String
+  nombre_titular    String
+  tipo              TipoCuentaBancaria @default(MONETARIA)
+  saldo             Float              @default(0)
+  saldo_moneda_base Float?             @default(0)
+  activo            Boolean            @default(true)
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
 
   negocio Negocio @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   banco   Banco   @relation(fields: [banco_id], references: [id])
@@ -1020,7 +1021,7 @@ model Transaccion {
   tipo_cambio       Float   @default(1.0)
   monto_moneda_base Float
 
-  metodo_pago       MetodoPago?
+  metodo_pago MetodoPago?
 
   descripcion String? @db.Text
 

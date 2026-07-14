@@ -147,9 +147,9 @@ export class CrearIngresoEgresoUseCase {
                 }
             } else if (data.entidad_tipo === 'CUENTA') {
                 if (data.tipo_movimiento === 'INGRESO') {
-                    await this.acreditarCuenta.execute(data.entidad_id, negocio_id, processedData.monto_original);
+                    await this.acreditarCuenta.execute(data.entidad_id, negocio_id, processedData.monto_original, processedData.monto_moneda_base!);
                 } else if (data.tipo_movimiento === 'EGRESO') {
-                    await this.debitarCuenta.execute(data.entidad_id, negocio_id, processedData.monto_original);
+                    await this.debitarCuenta.execute(data.entidad_id, negocio_id, processedData.monto_original, processedData.monto_moneda_base!);
                 }
             }
 

@@ -47,7 +47,7 @@ export class PrismaCuentaBancariaRepository implements CuentaBancariaRepository 
         }
     }
 
-    async actualizarSaldo(id: string, negocio_id: string, nuevoSaldo: number, options?: { tx?: any }): Promise<CuentaBancariaObtenidoDetalle> {
+    async actualizarSaldo(id: string, negocio_id: string, nuevoSaldo: number, nuevoSaldoMonedaBase: number, options?: { tx?: any }): Promise<CuentaBancariaObtenidoDetalle> {
         try {
             const db = options?.tx || this.prisma;
             const existing = await db.cuentaBancaria.findFirst({ where: { id, negocio_id } });
@@ -56,7 +56,10 @@ export class PrismaCuentaBancariaRepository implements CuentaBancariaRepository 
             }
             const updated = await db.cuentaBancaria.update({
                 where: { id },
-                data: { saldo: nuevoSaldo },
+                data: { 
+                    saldo: nuevoSaldo,
+                    saldo_moneda_base: nuevoSaldoMonedaBase
+                },
                 include: {
                     banco: true,
                     moneda: true,

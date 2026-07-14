@@ -7,8 +7,6 @@ import {
     Stack,
     IconButton,
     Chip,
-    useMediaQuery,
-    useTheme,
     Divider,
     Grid,
     TextField,
@@ -21,6 +19,7 @@ import {
     ListItemText,
     InputAdornment
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { ArrowBack, ArrowDownward, ArrowUpward, AccessTime, ShieldOutlined, Search } from '@mui/icons-material';
 import { toast } from 'sonner';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
@@ -65,16 +64,13 @@ const CuentaBancariaHistorialPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [searchParams, setSearchParams] = useSearchParams();
 
     const backPath = '/cuentas-bancarias';
 
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
-    // const page = Math.floor(offset / limit);
 
-    // Filters
     const q = searchParams.get('q') || '';
     const tipo_movimiento = searchParams.get('tipo_movimiento') || '';
     const origen_tipos = searchParams.getAll('origen_tipos');
@@ -90,7 +86,7 @@ const CuentaBancariaHistorialPage = () => {
 
     const updateFilters = (newFilters: Record<string, string | string[]>) => {
         const currentParams = new URLSearchParams(searchParams);
-        currentParams.set('offset', '0'); // Reset page
+        currentParams.set('offset', '0');
 
         Object.entries(newFilters).forEach(([key, value]) => {
             currentParams.delete(key);
@@ -174,39 +170,37 @@ const CuentaBancariaHistorialPage = () => {
     const renderItem = (row: TransaccionHistorial) => {
         const isIngreso = row.destino_cuenta_id === id;
         const statusColor = isIngreso ? theme.palette.success.main : theme.palette.error.main;
-        const statusBg = isIngreso ? 'success.dark' : 'error.dark';
 
         return (
             <Box
                 key={row.id}
                 sx={{
                     p: 2.5,
-                    mb: 2,
+                    mb: 1.5,
+                    bgcolor: 'background.paper',
+                    borderRadius: 3, // Consistente con tarjetas de iOS
                     border: '1px solid',
                     borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                    borderRadius: 2,
-                    transition: 'all 0.2s',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                    transition: 'all 0.2s ease',
                     '&:hover': {
-                        bgcolor: 'action.hover',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                        borderColor: isIngreso ? 'success.main' : 'error.main',
+                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+                        borderColor: alpha(statusColor, 0.4),
                     }
                 }}
             >
                 <Grid container spacing={2} alignItems="center">
+                    {/* Indicador Izquierdo */}
                     <Grid size={{ xs: 12, sm: 2.5 }}>
                         <Stack direction="row" spacing={1.5} alignItems="center">
                             <Box
                                 sx={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 1.5,
+                                    width: 38,
+                                    height: 38,
+                                    borderRadius: 2.5, // Cuadrados suaves redondeados clásicos de Apple
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    bgcolor: isIngreso ? 'success.light' : 'error.light',
+                                    bgcolor: (theme) => alpha(statusColor, theme.palette.mode === 'dark' ? 0.15 : 0.08),
                                     color: statusColor,
                                 }}
                             >
@@ -216,21 +210,22 @@ const CuentaBancariaHistorialPage = () => {
                                 label={isIngreso ? 'INGRESO' : 'EGRESO'}
                                 size="small"
                                 sx={{
-                                    bgcolor: statusBg,
-                                    color: '#ffffff',
+                                    bgcolor: (theme) => alpha(statusColor, theme.palette.mode === 'dark' ? 0.15 : 0.08),
+                                    color: statusColor,
                                     fontWeight: 700,
                                     fontSize: '0.65rem',
-                                    letterSpacing: '0.5px',
-                                    borderRadius: 1,
+                                    letterSpacing: '0.05em',
+                                    borderRadius: 1.5,
                                     height: 22
                                 }}
                             />
                         </Stack>
                     </Grid>
 
+                    {/* Detalle Central */}
                     <Grid size={{ xs: 12, sm: 6.5 }}>
                         <Box>
-                            <Stack direction={isMobile ? "column" : "row"} spacing={1.5} alignItems={isMobile ? "flex-start" : "center"}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                                 <Typography variant="subtitle2" fontWeight={700} color="text.primary">
                                     {row.origen_tipo === 'INGRESO_EGRESO' ? 'MOVIMIENTO MANUAL' :
                                         row.origen_tipo === 'VENTA' ? 'OPERACIÓN DE VENTA' :
@@ -242,12 +237,10 @@ const CuentaBancariaHistorialPage = () => {
                                     fontFamily="monospace"
                                     sx={{
                                         color: 'text.secondary',
-                                        bgcolor: 'grey.100',
-                                        border: '1px solid',
-                                        borderColor: 'grey.300',
+                                        bgcolor: (theme) => theme.palette.mode === 'dark' ? '#2C2C2E' : '#E8E8ED',
                                         px: 1,
-                                        py: 0.1,
-                                        borderRadius: 0.5,
+                                        py: 0.2,
+                                        borderRadius: 1,
                                         fontWeight: 600
                                     }}
                                 >
@@ -259,34 +252,35 @@ const CuentaBancariaHistorialPage = () => {
                                 {row.descripcion || 'Sin especificaciones registradas.'}
                             </Typography>
 
-                            <Stack direction="row" spacing={1.5} mt={1} alignItems="center" color="text.disabled">
+                            <Stack direction="row" spacing={1.5} mt={1} alignItems="center" color="text.secondary">
                                 <Stack direction="row" spacing={0.5} alignItems="center">
-                                    <AccessTime sx={{ fontSize: 13 }} />
-                                    <Typography variant="caption" fontWeight={600}>
+                                    <AccessTime sx={{ fontSize: 13, color: 'text.secondary' }} />
+                                    <Typography variant="caption" fontWeight={600} color="text.secondary">
                                         {new Date(row.fecha_transaccion).toLocaleString('es-ES')}
                                     </Typography>
                                 </Stack>
                                 <Divider orientation="vertical" flexItem sx={{ height: 12, my: 'auto' }} />
                                 <Stack direction="row" spacing={0.5} alignItems="center">
-                                    <ShieldOutlined sx={{ fontSize: 13 }} />
-                                    <Typography variant="caption" fontWeight={600}>Verificado</Typography>
+                                    <ShieldOutlined sx={{ fontSize: 13, color: 'text.secondary' }} />
+                                    <Typography variant="caption" fontWeight={600} color="text.secondary">Verificado</Typography>
                                 </Stack>
                             </Stack>
                         </Box>
                     </Grid>
 
+                    {/* Monto de la derecha */}
                     <Grid size={{ xs: 12, sm: 3 }}>
                         <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, pr: { sm: 1 } }}>
                             <Typography
-                                variant="subtitle1"
+                                variant="h6"
                                 fontFamily="monospace"
-                                fontWeight={800}
+                                fontWeight={700}
                                 color={statusColor}
-                                sx={{ fontSize: '1.15rem', letterSpacing: '-0.5px' }}
+                                sx={{ letterSpacing: '-0.02em' }}
                             >
                                 {isIngreso ? '+' : '-'}{formatMoney(row.monto_original, cuentaBancaria?.moneda?.codigo)}
                             </Typography>
-                            <Typography variant="caption" color="text.disabled" fontWeight={600} textTransform="uppercase">
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" sx={{ fontSize: '0.65rem' }}>
                                 Monto Transacción
                             </Typography>
                         </Box>
@@ -304,35 +298,52 @@ const CuentaBancariaHistorialPage = () => {
     }, {} as Record<string, TransaccionHistorial[]>);
 
     return (
-        <Box p={isMobile ? 2 : 4} maxWidth="1000px" mx="auto">
-            <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} justifyContent="space-between" spacing={2} mb={4}>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                    <IconButton onClick={() => navigate(backPath)}>
-                        <ArrowBack />
+        <Box p={{ xs: 2, sm: 4 }} maxWidth="1000px" mx="auto">
+            {/* Cabecera Principal */}
+            <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} justifyContent="space-between" spacing={3} mb={4}>
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <IconButton
+                        onClick={() => navigate(backPath)}
+                        sx={{
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: 'background.paper',
+                        }}
+                    >
+                        <ArrowBack fontSize="small" />
                     </IconButton>
                     <Box>
-                        <Typography variant="h4" fontWeight="bold">
-                            Historial de Transacciones
+                        <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.75rem' }}>
+                            Módulo de Tesorería
                         </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                            {cuentaBancaria ? `${cuentaBancaria.banco?.nombre_comercial || 'Banco'} - ${cuentaBancaria.numero_cuenta}` : 'Cuenta Bancaria'}
+                        <Typography variant="h4" fontWeight={700} sx={{ letterSpacing: '-0.02em' }}>
+                            Historial de Cuenta
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" mt={0.25}>
+                            {cuentaBancaria ? `${cuentaBancaria.banco?.nombre_comercial || 'Banco'} • ${cuentaBancaria.numero_cuenta}` : 'Cuenta Bancaria'}
                         </Typography>
                     </Box>
                 </Stack>
+
                 {cuentaBancaria && (
-                    <Paper elevation={0} sx={{ p: 2, bgcolor: 'primary.main', color: 'primary.contrastText', borderRadius: 2, minWidth: 200, textAlign: 'right' }}>
-                        <Typography variant="caption" fontWeight="bold" sx={{ opacity: 0.8 }} textTransform="uppercase">
+                    <Paper sx={{
+                        p: 2.5,
+                        minWidth: 200,
+                        textAlign: { xs: 'left', md: 'right' },
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.08 : 0.04),
+                    }}>
+                        <Typography variant="caption" fontWeight={700} color="text.secondary" textTransform="uppercase" sx={{ letterSpacing: '0.05em' }}>
                             Saldo Disponible
                         </Typography>
-                        <Typography variant="h5" fontWeight="bold" fontFamily="monospace">
+                        <Typography variant="h5" fontWeight={700} color="primary.main" fontFamily="monospace" mt={0.5}>
                             {formatMoney(cuentaBancaria.saldo, cuentaBancaria.moneda?.codigo)}
                         </Typography>
                     </Paper>
                 )}
             </Stack>
 
-            {/* Filters Section */}
-            <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+            {/* Panel de Filtros */}
+            <Paper sx={{ p: 3, mb: 4 }}>
                 <Grid container spacing={2}>
                     <Grid size={{ xs: 12, md: 4 }}>
                         <TextField
@@ -345,7 +356,7 @@ const CuentaBancariaHistorialPage = () => {
                                 input: {
                                     startAdornment: (
                                         <InputAdornment position="start">
-                                            <Search fontSize="small" />
+                                            <Search fontSize="small" sx={{ color: 'text.secondary' }} />
                                         </InputAdornment>
                                     ),
                                 }
@@ -374,11 +385,18 @@ const CuentaBancariaHistorialPage = () => {
                                 value={origen_tipos}
                                 onChange={(e) => updateFilters({ origen_tipos: e.target.value as string[] })}
                                 input={<OutlinedInput label="Origen" />}
-                                renderValue={(selected) => selected.map(s => ORIGEN_TIPOS_OPTIONS.find(o => o.value === s)?.label).join(', ')}
+                                renderValue={(selected) => (
+                                    <Box display="flex" flexWrap="wrap" gap={0.5}>
+                                        {selected.map(s => {
+                                            const label = ORIGEN_TIPOS_OPTIONS.find(o => o.value === s)?.label || s;
+                                            return <Chip key={s} label={label} size="small" variant="outlined" sx={{ borderRadius: 1 }} />;
+                                        })}
+                                    </Box>
+                                )}
                             >
                                 {ORIGEN_TIPOS_OPTIONS.map((option) => (
                                     <MenuItem key={option.value} value={option.value}>
-                                        <Checkbox checked={origen_tipos.indexOf(option.value) > -1} />
+                                        <Checkbox size="small" checked={origen_tipos.indexOf(option.value) > -1} />
                                         <ListItemText primary={option.label} />
                                     </MenuItem>
                                 ))}
@@ -434,17 +452,33 @@ const CuentaBancariaHistorialPage = () => {
                 </Grid>
             </Paper>
 
+            {/* Listado de Transacciones */}
             {loading ? (
                 <Loading />
             ) : movimientos.length === 0 ? (
-                <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }} elevation={0}>
-                    <Typography variant="h6" color="text.secondary">No hay transacciones que coincidan con los filtros</Typography>
+                <Paper sx={{ p: 6, textAlign: 'center' }}>
+                    <Typography variant="body1" color="text.secondary">
+                        No hay transacciones que coincidan con los filtros seleccionados.
+                    </Typography>
                 </Paper>
             ) : (
                 <Box>
                     {Object.entries(groupedTransactions).map(([dateLabel, transacciones]) => (
                         <Box key={dateLabel} mb={4}>
-                            <Typography variant="subtitle1" fontWeight="bold" color="text.secondary" mb={2} sx={{ pl: 1, borderLeft: '3px solid', borderColor: 'primary.main' }}>
+                            <Typography
+                                variant="subtitle2"
+                                fontWeight={700}
+                                color="text.secondary"
+                                mb={1.5}
+                                sx={{
+                                    pl: 1,
+                                    borderLeft: '3px solid',
+                                    borderColor: 'primary.main',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    fontSize: '0.75rem'
+                                }}
+                            >
                                 {dateLabel}
                             </Typography>
                             {transacciones.map(renderItem)}
@@ -452,7 +486,7 @@ const CuentaBancariaHistorialPage = () => {
                     ))}
 
                     {total > 0 && (
-                        <Box sx={{ mt: 2 }}>
+                        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
                             <StandalonePagination
                                 total={total}
                                 limit={limit}

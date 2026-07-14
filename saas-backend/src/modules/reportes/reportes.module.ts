@@ -3,18 +3,11 @@ import { PrismaReporteRepository } from './infrastructure/repositories/prisma-re
 import { ObtenerReporteFinancieroUseCase } from './application/use-cases/obtener-reporte-financiero.usecase.js';
 import { ReporteController } from './presentation/reporte.controller.js';
 
-import { FrankfurterExchangeRateProvider } from '@shared/infrastructure/frankfurter.provider.js';
-import { PrismaNegocioRepository } from '../negocio/infrastructure/prisma-negocio.repository.js';
-
 const prisma = new PrismaClient();
 const repository = new PrismaReporteRepository(prisma);
-const negocioRepository = new PrismaNegocioRepository(prisma);
-const exchangeRateProvider = new FrankfurterExchangeRateProvider();
 
 const obtenerReporteUseCase = new ObtenerReporteFinancieroUseCase(
-    repository,
-    negocioRepository,
-    exchangeRateProvider
+    repository
 );
 
 export const reporteController = new ReporteController(obtenerReporteUseCase);
