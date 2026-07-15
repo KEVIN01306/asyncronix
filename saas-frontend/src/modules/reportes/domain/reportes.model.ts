@@ -34,6 +34,27 @@ export interface CuentaBancariaKPI {
     tasa_cambio: number;
 }
 
+export interface ConciliacionKPI {
+    saldo_esperado: number;
+    saldo_actual: number;
+    diferencia: number;
+}
+
+export interface AgrupacionDetalleOrigen {
+    entidad_tipo: 'CAJA' | 'CUENTA';
+    entidad_id: string;
+    entidad_nombre: string;
+    metodo_pago: string;
+    total: number;
+    porcentaje: number;
+}
+
+export interface DetalleOrigenReporte {
+    origen: string;
+    total_ingresos: number;
+    agrupaciones: AgrupacionDetalleOrigen[];
+}
+
 export interface ConciliacionFinanciera {
     saldo_esperado: number;
     saldo_actual: number;

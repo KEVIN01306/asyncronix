@@ -188,3 +188,44 @@ export interface TransaccionSimple extends Omit<Transaccion, 'negocio_id' | 'suc
     moneda_codigo?: string;
     entidad_nombre?: string;
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Movimientos Internos
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface MovimientoInternoCrear {
+    origen_entidad: TipoEntidadFinanciera;
+    origen_id: string;
+    destino_entidad: TipoEntidadFinanciera;
+    destino_id: string;
+    moneda_id: string;
+    monto_original: number;
+    tipo_cambio?: number;
+    monto_moneda_base?: number;
+    descripcion: string;
+    fecha_transaccion?: Date;
+    moneda_actual_id?: string;
+}
+
+export interface MovimientoInternoEntity {
+    id: string;
+    correlativo: number;
+    codigo: string;
+    descripcion: string | null;
+    negocio: { id: string };
+    sucursal: { id: string };
+    usuario: { id: string; nombre: string; apellido: string | null; avatar: string | null; };
+    monto: {
+        original: number;
+        moneda_base: number;
+        tipo_cambio: number;
+    };
+    moneda: { id: string; codigo: string; nombre: string; simbolo: string; } | null;
+    moneda_base: { id: string; codigo: string; nombre: string; simbolo: string; } | null;
+    origen: IngresoEgresoEntidad | null;
+    destino: IngresoEgresoEntidad | null;
+    fechas: {
+        transaccion: Date;
+        creacion: Date;
+    };
+}

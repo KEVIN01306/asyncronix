@@ -1,4 +1,4 @@
-import type { IngresoEgresoEntity, IngresoEgresoEntidad, TransaccionSimple, TransaccionDetalle } from '../../domain/transaccion.entity.js';
+import type { IngresoEgresoEntity, IngresoEgresoEntidad, TransaccionSimple, TransaccionDetalle, MovimientoInternoEntity } from '../../domain/transaccion.entity.js';
 
 export class TransaccionMapper {
     /**
@@ -80,6 +80,88 @@ export class TransaccionMapper {
                 }
                 : null,
             entidad,
+            fechas: {
+                transaccion: data.fecha_transaccion,
+                creacion: data.created_at,
+            },
+        };
+    }
+
+    static mapMovimientoInterno(data: any): MovimientoInternoEntity {
+        let origen: IngresoEgresoEntidad | null = null;
+        if (data.origen_entidad === 'CAJA') {
+            origen = {
+                tipo: 'CAJA',
+                id: data.origen_caja?.id ?? data.origen_caja_id ?? '',
+                nombre: data.origen_caja?.nombre ?? null,
+            };
+        } else if (data.origen_entidad === 'CUENTA') {
+            origen = {
+                tipo: 'CUENTA',
+                id: data.origen_cuenta?.id ?? data.origen_cuenta_id ?? '',
+                nombre: data.origen_cuenta?.numero_cuenta ?? null,
+                banco: data.origen_cuenta?.banco?.nombre_comercial ?? null,
+                moneda_codigo: data.origen_cuenta?.moneda?.codigo ?? null,
+            };
+        }
+
+        let destino: IngresoEgresoEntidad | null = null;
+        if (data.destino_entidad === 'CAJA') {
+            destino = {
+                tipo: 'CAJA',
+                id: data.destino_caja?.id ?? data.destino_caja_id ?? '',
+                nombre: data.destino_caja?.nombre ?? null,
+            };
+        } else if (data.destino_entidad === 'CUENTA') {
+            destino = {
+                tipo: 'CUENTA',
+                id: data.destino_cuenta?.id ?? data.destino_cuenta_id ?? '',
+                nombre: data.destino_cuenta?.numero_cuenta ?? null,
+                banco: data.destino_cuenta?.banco?.nombre_comercial ?? null,
+                moneda_codigo: data.destino_cuenta?.moneda?.codigo ?? null,
+            };
+        }
+
+        return {
+            id: data.id,
+            correlativo: data.correlativo,
+            codigo: data.codigo,
+            descripcion: data.descripcion ?? null,
+            negocio: {
+                id: data.negocio_id,
+            },
+            sucursal: {
+                id: data.sucursal_id,
+            },
+            usuario: {
+                id: data.usuario_id,
+                nombre: data.usuario?.nombre ?? '',
+                apellido: data.usuario?.apellido ?? null,
+                avatar: data.usuario?.avatar_url ?? null,
+            },
+            monto: {
+                original: data.monto_original,
+                moneda_base: data.monto_moneda_base,
+                tipo_cambio: data.tipo_cambio,
+            },
+            moneda: data.moneda
+                ? {
+                    id: data.moneda.id,
+                    codigo: data.moneda.codigo,
+                    nombre: data.moneda.nombre,
+                    simbolo: data.moneda.simbolo,
+                }
+                : null,
+            moneda_base: data.moneda_actual
+                ? {
+                    id: data.moneda_actual.id,
+                    codigo: data.moneda_actual.codigo,
+                    nombre: data.moneda_actual.nombre,
+                    simbolo: data.moneda_actual.simbolo,
+                }
+                : null,
+            origen,
+            destino,
             fechas: {
                 transaccion: data.fecha_transaccion,
                 creacion: data.created_at,

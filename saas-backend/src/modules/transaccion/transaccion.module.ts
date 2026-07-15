@@ -53,6 +53,11 @@ const obtenerMoneda = async (id: string) => {
     });
 };
 
+import { CrearMovimientoInternoUseCase } from './application/crear-movimiento-interno.usecase.js';
+import { ListarMovimientosInternosUseCase } from './application/listar-movimientos-internos.usecase.js';
+import { ObtenerDetalleMovimientoInternoUseCase } from './application/obtener-detalle-movimiento-interno.usecase.js';
+import { MovimientoInternoController } from './presentation/movimiento-interno.controller.js';
+
 // Generic transaction use case (for internal use by other modules)
 export const crearTransaccionUseCase = new CrearTransaccionUseCase(transaccionRepository);
 
@@ -79,4 +84,27 @@ export const transaccionController = new TransaccionController(
     obtenerDetalleIngresoEgresoUseCase,
     listarIngresosEgresosUseCase,
     listarHistorialEntidadUseCase
+);
+
+// Movimientos Internos use cases
+const crearMovimientoInternoUseCase = new CrearMovimientoInternoUseCase(
+    transaccionRepository,
+    exchangeRateProvider,
+    obtenerCaja,
+    obtenerCuenta,
+    obtenerNegocio,
+    obtenerMoneda,
+    acreditarCajaUseCase,
+    debitarCajaUseCase,
+    acreditarCuentaUseCase,
+    debitarCuentaUseCase
+);
+
+const listarMovimientosInternosUseCase = new ListarMovimientosInternosUseCase(transaccionRepository);
+const obtenerDetalleMovimientoInternoUseCase = new ObtenerDetalleMovimientoInternoUseCase(transaccionRepository);
+
+export const movimientoInternoController = new MovimientoInternoController(
+    crearMovimientoInternoUseCase,
+    listarMovimientosInternosUseCase,
+    obtenerDetalleMovimientoInternoUseCase
 );

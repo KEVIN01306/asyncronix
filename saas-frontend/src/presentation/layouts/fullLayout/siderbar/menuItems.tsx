@@ -41,6 +41,7 @@ const MenuItems: MenuItem[] = [
       { name: "Cuentas bancarias", link: "/cuentas-bancarias", icon: ViewHeadlineRounded, permiso: "VER_CUENTA_BANCARIA" },
       { name: "Categorías de transacción", link: "/categorias-transaccion", icon: ViewHeadlineRounded, permiso: "VER_CATEGORIAS_TRANSACCION" },
       { name: "Ingresos y Egresos", link: "/ingresos-egresos", icon: ViewHeadlineRounded, permiso: "VER_INGRESOS_EGRESOS" },
+      { name: "Movimientos Internos", link: "/movimientos-internos", icon: ViewHeadlineRounded, permiso: "VER_MOVIMIENTOS" },
     ]
   },
   {

@@ -36,6 +36,7 @@ import { categoriasTransaccionRoutes } from "../../modules/categorias-transaccio
 import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
 import { ingresoEgresoRoutes } from "../../modules/ingresos-egresos/presentation/ingresoEgreso.routes";
 import { reportesRoutes } from "../../modules/reportes/presentation/reportes.routes";
+import { movimientosInternosRoutes } from "../../modules/movimientos-internos/presentation/movimientos-internos.routes";
 
 const appRouter = createBrowserRouter([
     {
@@ -89,6 +90,7 @@ const appRouter = createBrowserRouter([
                     ...cuentasBancariasRoutes,
                     ...categoriasTransaccionRoutes,
                     ...ingresoEgresoRoutes,
+                    ...movimientosInternosRoutes,
                     ...reportesRoutes,
                     ...customRoutes,
                     ...paisesRoutes,

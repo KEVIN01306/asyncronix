@@ -7,9 +7,10 @@ import type { MetodoPagoKPI, OrigenDineroKPI } from '../../domain/reportes.model
 interface Props {
     metodos: MetodoPagoKPI[];
     origenes: OrigenDineroKPI[];
+    onSelectOrigen?: (origen: string) => void;
 }
 
-const DistribucionCharts = ({ metodos, origenes }: Props) => {
+const DistribucionCharts = ({ metodos, origenes, onSelectOrigen }: Props) => {
     const { user } = useAuthStore();
     const monedaCodigo = user?.negocio?.moneda?.codigo;
 
@@ -82,7 +83,19 @@ const DistribucionCharts = ({ metodos, origenes }: Props) => {
                             </Typography>
                         ) : (
                             origenes.map((o, idx) => (
-                                <Box key={idx}>
+                                <Box 
+                                    key={idx} 
+                                    sx={{ 
+                                        cursor: onSelectOrigen ? 'pointer' : 'default',
+                                        p: 1, 
+                                        borderRadius: 1,
+                                        transition: 'background-color 0.2s',
+                                        '&:hover': onSelectOrigen ? {
+                                            bgcolor: 'action.hover'
+                                        } : {}
+                                    }}
+                                    onClick={() => onSelectOrigen && onSelectOrigen(o.origen)}
+                                >
                                     <Box display="flex" justifyContent="space-between" alignItems="baseline" mb={0.75}>
                                         <Typography variant="body2" fontWeight={600} color="text.primary">
                                             {o.origen}

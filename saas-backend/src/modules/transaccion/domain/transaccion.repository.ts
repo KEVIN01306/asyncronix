@@ -5,7 +5,9 @@ import type {
     TransaccionCrear,
     TransaccionCrearDirecta,
     IngresoEgresoEntity,
-    TipoOrigenTransaccion
+    TipoOrigenTransaccion,
+    MovimientoInternoCrear,
+    MovimientoInternoEntity
 } from './transaccion.entity.js';
 
 export interface ListarIngresosEgresosFilters {
@@ -79,4 +81,26 @@ export interface TransaccionRepository {
         pagination: Pagination,
         filters?: ListarHistorialFilters
     ): Promise<Paginated<Transaccion>>;
+
+    // ── Movimientos Internos ──────────────────────────────────────────────────
+
+    crearMovimientoInterno(
+        data: MovimientoInternoCrear,
+        negocio_id: string,
+        sucursal_id: string,
+        usuario_id: string
+    ): Promise<MovimientoInternoEntity>;
+
+    obtenerDetalleMovimientoInterno(
+        id: string,
+        negocio_id: string,
+        sucursal_id: string
+    ): Promise<MovimientoInternoEntity | null>;
+
+    listarMovimientosInternos(
+        negocio_id: string,
+        sucursal_id: string,
+        pagination: Pagination,
+        filters?: ListarIngresosEgresosFilters
+    ): Promise<Paginated<MovimientoInternoEntity>>;
 }

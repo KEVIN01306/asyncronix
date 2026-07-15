@@ -436,4 +436,148 @@ export class PrismaTransaccionRepository implements TransaccionRepository {
             throw PrismaErrorMapper.map(error);
         }
     }
+
+    // ── Movimientos Internos ──────────────────────────────────────────────────
+
+    async crearMovimientoInterno(
+        data: MovimientoInternoCrear,
+        negocio_id: string,
+        sucursal_id: string,
+        usuario_id: string
+    ): Promise<MovimientoInternoEntity> {
+        try {
+            // Obtain business name + generate correlativo and codigo
+            const negocio = await (this.prisma as any).negocio.findUnique({
+                where: { id: negocio_id },
+                select: { nombre: true },
+            });
+            const nombreNegocio: string = negocio?.nombre ?? 'XXXX';
+
+            const correlativo = await obtenerSiguienteCorrelativo(this.prisma as any, negocio_id);
+            const codigo = generarCodigo(nombreNegocio, correlativo);
+
+            const created = await this.prisma.transaccion.create({
+                data: {
+                    negocio_id,
+                    sucursal_id,
+                    usuario_id,
+                    correlativo,
+                    codigo,
+                    tipo_movimiento: 'TRANSFERENCIA',
+                    origen_tipo: 'MOVIMIENTO_INTERNO',
+                    moneda_id: data.moneda_id,
+                    moneda_actual_id: data.moneda_actual_id ?? null,
+                    monto_original: data.monto_original,
+                    tipo_cambio: data.tipo_cambio || 1.0,
+                    monto_moneda_base: data.monto_moneda_base || data.monto_original,
+                    descripcion: data.descripcion,
+                    origen_entidad: data.origen_entidad as any,
+                    origen_caja_id: data.origen_entidad === 'CAJA' ? data.origen_id : null,
+                    origen_cuenta_id: data.origen_entidad === 'CUENTA' ? data.origen_id : null,
+                    destino_entidad: data.destino_entidad as any,
+                    destino_caja_id: data.destino_entidad === 'CAJA' ? data.destino_id : null,
+                    destino_cuenta_id: data.destino_entidad === 'CUENTA' ? data.destino_id : null,
+                    fecha_transaccion: data.fecha_transaccion || new Date(),
+                },
+                include: INGRESO_EGRESO_INCLUDE,
+            });
+
+            return TransaccionMapper.mapMovimientoInterno(created);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async obtenerDetalleMovimientoInterno(
+        id: string,
+        negocio_id: string,
+        sucursal_id: string
+    ): Promise<MovimientoInternoEntity | null> {
+        try {
+            const found = await this.prisma.transaccion.findFirst({
+                where: {
+                    id,
+                    negocio_id,
+                    sucursal_id,
+                    origen_tipo: 'MOVIMIENTO_INTERNO',
+                },
+                include: INGRESO_EGRESO_INCLUDE,
+            });
+
+            return found ? TransaccionMapper.mapMovimientoInterno(found) : null;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async listarMovimientosInternos(
+        negocio_id: string,
+        sucursal_id: string,
+        pagination: Pagination,
+        filters?: ListarIngresosEgresosFilters
+    ): Promise<Paginated<MovimientoInternoEntity>> {
+        try {
+            const skip = (pagination.page - 1) * pagination.perPage;
+            const take = pagination.perPage;
+
+            const whereCondition: any = {
+                negocio_id,
+                sucursal_id,
+                origen_tipo: 'MOVIMIENTO_INTERNO'
+            };
+
+            if (filters?.entidad_tipo && filters?.entidad_id) {
+                if (filters.entidad_tipo === 'CAJA') {
+                    whereCondition.OR = [
+                        { origen_caja_id: filters.entidad_id },
+                        { destino_caja_id: filters.entidad_id },
+                    ];
+                } else if (filters.entidad_tipo === 'CUENTA') {
+                    whereCondition.OR = [
+                        { origen_cuenta_id: filters.entidad_id },
+                        { destino_cuenta_id: filters.entidad_id },
+                    ];
+                }
+            }
+
+            if (filters?.fecha_inicio || filters?.fecha_fin) {
+                whereCondition.fecha_transaccion = {};
+                if (filters.fecha_inicio) {
+                    whereCondition.fecha_transaccion.gte = filters.fecha_inicio;
+                }
+                if (filters.fecha_fin) {
+                    const endOfDay = new Date(filters.fecha_fin);
+                    endOfDay.setHours(23, 59, 59, 999);
+                    whereCondition.fecha_transaccion.lte = endOfDay;
+                }
+            }
+
+            if (filters?.q) {
+                whereCondition.OR = [
+                    { descripcion: { contains: filters.q } },
+                    { codigo: { contains: filters.q } }
+                ];
+            }
+
+            const [total, data] = await Promise.all([
+                this.prisma.transaccion.count({ where: whereCondition }),
+                this.prisma.transaccion.findMany({
+                    where: whereCondition,
+                    skip,
+                    take,
+                    orderBy: { fecha_transaccion: 'desc' },
+                    include: INGRESO_EGRESO_INCLUDE,
+                }),
+            ]);
+
+            return {
+                page: pagination.page,
+                perPage: pagination.perPage,
+                total,
+                data: data.map((item) => TransaccionMapper.mapMovimientoInterno(item)),
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 }

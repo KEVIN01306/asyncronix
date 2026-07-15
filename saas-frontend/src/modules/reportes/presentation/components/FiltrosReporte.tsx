@@ -10,15 +10,20 @@ interface Props {
     onFiltrosChange: (nuevosFiltros: FiltrosReporteFinanciero) => void;
     onAplicarFiltros: () => void;
     cargando?: boolean;
+    sucursalesPadre?: any[];
 }
 
-const FiltrosReporte = ({ filtros, onFiltrosChange, onAplicarFiltros, cargando }: Props) => {
+const FiltrosReporte = ({ filtros, onFiltrosChange, onAplicarFiltros, cargando, sucursalesPadre }: Props) => {
     const permisos = useAuthStore(status => status.user?.permisos || []);
-    const [sucursales, setSucursales] = useState<any[]>([]);
+    const [sucursalesLocales, setSucursalesLocales] = useState<any[]>([]);
 
     useEffect(() => {
-        sucursalRepository.listar(99, 0).then(res => setSucursales(res.data)).catch(console.error);
-    }, []);
+        if (!sucursalesPadre) {
+            sucursalRepository.listar(99, 0).then(res => setSucursalesLocales(res.data)).catch(console.error);
+        }
+    }, [sucursalesPadre]);
+
+    const sucursales = sucursalesPadre || sucursalesLocales;
 
     const isAdminReportes = permisos.includes('ADMIN_REPORTES');
 

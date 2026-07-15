@@ -159,6 +159,10 @@ const permisosData = [
     { codigo: "VER_INGRESOS_EGRESOS_DETALLE" },
     { codigo: "CREAR_INGRESOS_EGRESOS" },
 
+    { codigo: "VER_MOVIMIENTOS" },
+    { codigo: "VER_MOVIMIENTOS_DETALLE" },
+    { codigo: "CREAR_MOVIMIENTOS" },
+
     { codigo: "REPORTES_FINANCIERO" },
     { codigo: "ADMIN_REPORTES" }
 ];
@@ -283,6 +287,10 @@ const modulosConPermisos = [
     {
         nombre: "INGRESOS_EGRESOS",
         permisos: ["VER_INGRESOS_EGRESOS", "VER_INGRESOS_EGRESOS_DETALLE", "CREAR_INGRESOS_EGRESOS"]
+    },
+    {
+        nombre: "MOVIMIENTOS",
+        permisos: ["VER_MOVIMIENTOS", "VER_MOVIMIENTOS_DETALLE", "CREAR_MOVIMIENTOS"]
     },
     {
         nombre: "REPORTES",

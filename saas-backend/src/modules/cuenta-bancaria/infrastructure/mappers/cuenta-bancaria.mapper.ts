@@ -10,6 +10,7 @@ export class CuentaBancariaMapper {
             nombre_titular: db.nombre_titular,
             tipo: db.tipo,
             saldo: db.saldo,
+            saldo_moneda_base: db.saldo_moneda_base,
             activo: db.activo,
             created_at: db.created_at,
             updated_at: db.updated_at,

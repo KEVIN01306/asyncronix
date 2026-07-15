@@ -13,4 +13,10 @@ router.get(
     reporteController.obtenerReporteFinanciero
 );
 
+router.get(
+    '/financiero/origen/:origen',
+    auth.verificarPermiso(['REPORTES_FINANCIERO']),
+    reporteController.obtenerDetalleOrigen
+);
+
 export default router;

@@ -41,6 +41,21 @@ export interface ConciliacionFinanciera {
     diferencia: number;
 }
 
+export interface AgrupacionDetalleOrigen {
+    entidad_tipo: 'CAJA' | 'CUENTA';
+    entidad_id: string;
+    entidad_nombre: string;
+    metodo_pago: string;
+    total: number;
+    porcentaje: number;
+}
+
+export interface DetalleOrigenReporte {
+    origen: string;
+    total_ingresos: number;
+    agrupaciones: AgrupacionDetalleOrigen[];
+}
+
 export interface ReporteFinanciero {
     kpis: {
         total_ingresos: number;

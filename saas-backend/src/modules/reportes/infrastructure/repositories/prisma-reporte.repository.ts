@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import type { ReporteRepository } from '../../domain/repositories/reporte.repository.js';
-import type { FiltrosReporteFinanciero, ReporteFinanciero, MetodoPagoKPI, OrigenDineroKPI, CajaKPI, CuentaBancariaKPI } from '../../domain/models/reporte-financiero.model.js';
+import type { FiltrosReporteFinanciero, ReporteFinanciero, MetodoPagoKPI, OrigenDineroKPI, CajaKPI, CuentaBancariaKPI, DetalleOrigenReporte, AgrupacionDetalleOrigen } from '../../domain/models/reporte-financiero.model.js';
 import { PrismaErrorMapper } from '@shared/database/prisma/PrismaErrorMapper.js';
 
 export class PrismaReporteRepository implements ReporteRepository {
@@ -175,6 +175,105 @@ export class PrismaReporteRepository implements ReporteRepository {
                     saldo_actual,
                     diferencia: saldo_actual - saldo_esperado
                 }
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async obtenerDetallePorOrigen(filtros: FiltrosReporteFinanciero, origen: string): Promise<DetalleOrigenReporte> {
+        try {
+            const whereTransacciones: any = {
+                negocio_id: filtros.negocio_id,
+                tipo_movimiento: 'INGRESO',
+                origen_tipo: origen
+            };
+
+            if (filtros.sucursal_ids.length > 0) {
+                whereTransacciones.sucursal_id = { in: filtros.sucursal_ids };
+            }
+
+            if (filtros.fecha_inicio || filtros.fecha_fin) {
+                whereTransacciones.fecha_transaccion = {};
+                if (filtros.fecha_inicio) {
+                    whereTransacciones.fecha_transaccion.gte = new Date(filtros.fecha_inicio + 'T00:00:00');
+                }
+                if (filtros.fecha_fin) {
+                    whereTransacciones.fecha_transaccion.lte = new Date(filtros.fecha_fin + 'T23:59:59.999');
+                }
+            }
+
+            if (filtros.metodos_pago && filtros.metodos_pago.length > 0) {
+                whereTransacciones.metodo_pago = { in: filtros.metodos_pago };
+            }
+
+            if (filtros.entidad_tipos && filtros.entidad_tipos.length > 0) {
+                whereTransacciones.destino_entidad = { in: filtros.entidad_tipos };
+            }
+
+            const agrupacion = await this.prisma.transaccion.groupBy({
+                by: ['destino_entidad', 'destino_caja_id', 'destino_cuenta_id', 'metodo_pago'],
+                where: whereTransacciones,
+                _sum: {
+                    monto_moneda_base: true
+                }
+            });
+
+            // Recopilar IDs únicos de cajas y cuentas
+            const cajaIds = Array.from(new Set(agrupacion.filter(g => g.destino_entidad === 'CAJA' && g.destino_caja_id).map(g => g.destino_caja_id as string)));
+            const cuentaIds = Array.from(new Set(agrupacion.filter(g => g.destino_entidad === 'CUENTA' && g.destino_cuenta_id).map(g => g.destino_cuenta_id as string)));
+
+            // Fetch nombres
+            let cajasMap = new Map<string, string>();
+            if (cajaIds.length > 0) {
+                const cajas = await this.prisma.caja.findMany({
+                    where: { id: { in: cajaIds } },
+                    select: { id: true, nombre: true }
+                });
+                cajas.forEach(c => cajasMap.set(c.id, c.nombre));
+            }
+
+            let cuentasMap = new Map<string, string>();
+            if (cuentaIds.length > 0) {
+                const cuentas = await this.prisma.cuentaBancaria.findMany({
+                    where: { id: { in: cuentaIds } },
+                    select: { id: true, banco: { select: { nombre_comercial: true } }, numero_cuenta: true }
+                });
+                cuentas.forEach(c => cuentasMap.set(c.id, `${c.banco.nombre_comercial} - ${c.numero_cuenta}`));
+            }
+
+            const totalIngresos = agrupacion.reduce((acc, curr) => acc + (curr._sum.monto_moneda_base || 0), 0);
+
+            const agrupacionesMapeadas: AgrupacionDetalleOrigen[] = agrupacion.map(g => {
+                const total = g._sum.monto_moneda_base || 0;
+                let nombre = 'Desconocido';
+                let entidadId = '';
+
+                if (g.destino_entidad === 'CAJA' && g.destino_caja_id) {
+                    nombre = cajasMap.get(g.destino_caja_id) || 'Caja Desconocida';
+                    entidadId = g.destino_caja_id;
+                } else if (g.destino_entidad === 'CUENTA' && g.destino_cuenta_id) {
+                    nombre = cuentasMap.get(g.destino_cuenta_id) || 'Cuenta Desconocida';
+                    entidadId = g.destino_cuenta_id;
+                }
+
+                return {
+                    entidad_tipo: (g.destino_entidad as 'CAJA' | 'CUENTA') || 'CAJA',
+                    entidad_id: entidadId,
+                    entidad_nombre: nombre,
+                    metodo_pago: g.metodo_pago || 'OTRO',
+                    total,
+                    porcentaje: totalIngresos > 0 ? (total / totalIngresos) * 100 : 0
+                };
+            }).filter(g => g.total > 0);
+
+            // Ordenar por total descendente
+            agrupacionesMapeadas.sort((a, b) => b.total - a.total);
+
+            return {
+                origen,
+                total_ingresos: totalIngresos,
+                agrupaciones: agrupacionesMapeadas
             };
         } catch (error) {
             throw PrismaErrorMapper.map(error);
