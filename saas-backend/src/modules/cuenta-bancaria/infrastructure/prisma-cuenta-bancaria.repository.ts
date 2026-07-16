@@ -130,4 +130,14 @@ export class PrismaCuentaBancariaRepository implements CuentaBancariaRepository 
             throw PrismaErrorMapper.map(error);
         }
     }
+
+    async contar(negocio_id: string): Promise<number> {
+        try {
+            return await this.prisma.cuentaBancaria.count({
+                where: { negocio_id, activo: true }
+            });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 }

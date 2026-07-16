@@ -21,9 +21,11 @@ const App = () => {
     <ThemeProvider theme={createAppTheme(themeMode, borderIntensity, borderColorIntensity, themeVariant)}>
       <CssBaseline />
       <RouterProvider router={appRouter} />
-      <Toaster 
+      <Toaster
         position={toasterPosition}
-        closeButton 
+        closeButton
+        visibleToasts={3}
+        expand={true}
         theme={themeMode}
         richColors={toasterStyle === 'colorful'}
       />

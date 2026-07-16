@@ -8,6 +8,31 @@ datasource db {
 }
 
 // ==============================================================
+// CONTROL DE LÍMITES PERSONALIZADOS POR NEGOCIO (SaaS Directo)
+// ==============================================================
+
+model NegocioLimite {
+  id         String @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id String @unique @db.Char(36) // Relación 1-a-1 estricta
+
+  // Límites numéricos acordados (Usa -1 para representar "Ilimitado")
+  max_usuarios          Int @default(3)
+  max_sucursales        Int @default(1)
+  max_productos         Int @default(100)
+  max_variantes         Int @default(800)
+  max_vehiculos         Int @default(1000)
+  max_cajas             Int @default(2)
+  max_cuentas_bancarias Int @default(2)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  negocio Negocio @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+
+  @@map("negocio_limites")
+}
+
+// ==============================================================
 // ADICIÓN: GEOGRAFÍA E INTERNACIONALIZACIÓN (GLOBAL)
 // ==============================================================
 
@@ -126,6 +151,7 @@ model Negocio {
   transacciones        Transaccion[]
   pais                 Pais?                  @relation(fields: [pais_id], references: [id])
   moneda               Moneda?                @relation(fields: [moneda_id], references: [id])
+  negocioLimite        NegocioLimite?
 
   @@map("negocios")
 }

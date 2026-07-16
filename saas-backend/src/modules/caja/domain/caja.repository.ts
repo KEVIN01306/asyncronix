@@ -11,4 +11,5 @@ export interface CajaRepository {
     asociarDispositivo(id: string, negocio_id: string, sucursal_id: string, token: string, ip: string, asociacionId: string): Promise<CajaObtenidoDetalle>;
     desasociarDispositivo(id: string, negocio_id: string, sucursal_id: string, token?: string | null): Promise<void>;
     listar(negocio_id: string, sucursal_id: string, pagination: Pagination, q?: string): Promise<Paginated<CajaSimple>>;
+    contar(negocio_id: string): Promise<number>;
 }

@@ -298,4 +298,13 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
         }
     }
 
+    async contar(negocio_id: string): Promise<number> {
+        try {
+            return await this.db.usuario.count({
+                where: { negocio_id, activo: true }
+            });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 }

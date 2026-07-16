@@ -9,6 +9,7 @@ import type { ObtenerNegocioUseCase } from "../application/obtener-negocio.useca
 import type { ObtenerMiNegocioUseCase } from "../application/obtener-mi-negocio.usecase.js";
 import type { ActualizarMiNegocioUseCase } from "../application/actualizar-mi-negocio.usecase.js";
 import type { CambiarMonedaNegocioUseCase } from "../application/cambiar-moneda-negocio.usecase.js";
+import type { ObtenerLimitesNegocioUseCase } from "../application/obtener-limites-negocio.usecase.js";
 
 export class NegocioController extends BaseController {
 
@@ -18,7 +19,8 @@ export class NegocioController extends BaseController {
         private readonly obtenerNegocioUseCase: ObtenerNegocioUseCase,
         private readonly obtenerMiNegocioUseCase: ObtenerMiNegocioUseCase,
         private readonly actualizarMiNegocioUseCase: ActualizarMiNegocioUseCase,
-        private readonly cambiarMonedaNegocioUseCase: CambiarMonedaNegocioUseCase
+        private readonly cambiarMonedaNegocioUseCase: CambiarMonedaNegocioUseCase,
+        private readonly obtenerLimitesNegocioUseCase: ObtenerLimitesNegocioUseCase
     ) {
         super()
     }
@@ -92,6 +94,16 @@ export class NegocioController extends BaseController {
             const { moneda_id } = req.body
             const negocio = await this.cambiarMonedaNegocioUseCase.execute(negocio_id, moneda_id)
             res.status(200).json(Respuesta.exito('Moneda actualizada con éxito', negocio))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    limites = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res)
+            const limites = await this.obtenerLimitesNegocioUseCase.execute(negocio_id)
+            res.status(200).json(Respuesta.exito('Límites del negocio obtenidos con éxito', limites))
         } catch (error) {
             next(error)
         }

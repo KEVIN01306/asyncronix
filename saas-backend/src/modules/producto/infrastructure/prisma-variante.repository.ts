@@ -372,4 +372,14 @@ export class PrismaVarianteRepository implements VarianteRepository {
 
         return ultimo + 1;
     }
+
+    async contar(negocio_id: string): Promise<number> {
+        try {
+            return await this.prisma.varianteProducto.count({
+                where: { producto: { negocio_id }, activo: true }
+            });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 }

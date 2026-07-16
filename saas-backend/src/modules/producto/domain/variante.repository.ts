@@ -10,4 +10,5 @@ export interface VarianteRepository {
     listarPorNegocio(negocio_id: string, sucursal_id?: string): Promise<VarianteDetalle[]>;
     actualizarCodigoBarras(id: string, codigo_barras: string | null, negocio_id: string): Promise<VarianteDetalle>;
     generarQr(id: string, negocio_id: string): Promise<VarianteDetalle>;
+    contar(negocio_id: string): Promise<number>;
 }

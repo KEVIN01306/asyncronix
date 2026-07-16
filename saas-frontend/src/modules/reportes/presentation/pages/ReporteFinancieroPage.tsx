@@ -88,11 +88,11 @@ const ReporteFinancieroPage = () => {
 
     return (
         <Box p={{ xs: 2, md: 4 }}>
-            <Box 
-                display="flex" 
-                flexDirection={{ xs: 'column', md: 'row' }} 
-                justifyContent="space-between" 
-                alignItems={{ xs: 'stretch', md: 'flex-start' }} 
+            <Box
+                display="flex"
+                flexDirection={{ xs: 'column', md: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'stretch', md: 'flex-start' }}
                 gap={3}
                 mb={4}
             >
@@ -105,10 +105,10 @@ const ReporteFinancieroPage = () => {
                     </Typography>
                 </Box>
                 {reporte && user && (
-                    <Box 
-                        display="flex" 
-                        flexDirection="row" 
-                        gap={1} 
+                    <Box
+                        display="flex"
+                        flexDirection="row"
+                        gap={1}
                     >
                         <ExcelDownloader
                             generateWorkbook={() => generarReporteFinancieroExcel(
@@ -142,10 +142,10 @@ const ReporteFinancieroPage = () => {
             </Box>
 
             {isMobile && (
-                <Button 
-                    variant="outlined" 
-                    fullWidth 
-                    startIcon={<FilterList />} 
+                <Button
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<FilterList />}
                     onClick={() => setMostrarFiltros(!mostrarFiltros)}
                     sx={{ mb: 2 }}
                 >

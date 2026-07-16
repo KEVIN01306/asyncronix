@@ -24,6 +24,7 @@ import { PrismaVarianteRepository } from "./infrastructure/prisma-variante.repos
 import { ProductoController } from "./presentation/producto.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
 import { BuscarVariantePorCodigoUseCase } from "./application/buscar-variante-por-codigo.usecase.js";
+import { validarLimiteNegocioUseCase } from "../negocio/negocio.module.js";
 
 const productoRepository = new PrismaProductoRepository(prisma);
 const varianteRepository = new PrismaVarianteRepository(prisma);
@@ -37,8 +38,8 @@ const actualizarArchivoImagenProductoUseCase = new ActualizarArchivoImagenProduc
 const actualizarDescripcionImagenProductoUseCase = new ActualizarDescripcionImagenProductoUseCase(productoRepository);
 const establecerImagenPrincipalProductoUseCase = new EstablecerImagenPrincipalProductoUseCase(productoRepository);
 const eliminarImagenProductoUseCase = new EliminarImagenProductoUseCase(productoRepository);
-const crearVarianteUseCase = new CrearVarianteUseCase(varianteRepository);
-const registrarProductoUseCase = new RegistrarProductoUseCase(productoRepository, varianteRepository);
+const crearVarianteUseCase = new CrearVarianteUseCase(varianteRepository, validarLimiteNegocioUseCase);
+const registrarProductoUseCase = new RegistrarProductoUseCase(productoRepository, varianteRepository, validarLimiteNegocioUseCase);
 const actualizarProductoUseCase = new ActualizarProductoUseCase(productoRepository);
 const listarAtributosProductoUseCase = new ListarAtributosProductoUseCase(productoRepository);
 const actualizarAtributosProductoUseCase = new ActualizarAtributosProductoUseCase(productoRepository);

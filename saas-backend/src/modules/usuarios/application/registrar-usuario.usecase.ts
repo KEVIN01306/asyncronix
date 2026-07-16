@@ -6,14 +6,20 @@ import type { UsuarioRepository } from "../domain/usuario.repository.js";
 import type { HashProvider } from "@shared/domain/hash.provider.js";
 
 
+import { LimiteNegocio } from "../../negocio/domain/negocio-limite.entity.js";
+import type { ValidarLimiteNegocioUseCase } from "../../negocio/application/validar-limite-negocio.usecase.js";
+
 export class RegistrarUsuarioUseCase {
     constructor(
         private readonly usuarioRepository: UsuarioRepository,
-        private readonly hashProvider: HashProvider
+        private readonly hashProvider: HashProvider,
+        private readonly validarLimiteNegocioUseCase: ValidarLimiteNegocioUseCase
     ) { }
 
     async execute(data: UsuarioCrear, negocio_id: Usuario["negocio_id"]): Promise<UsuarioSimple> {
         try {
+            const cantidadActual = await this.usuarioRepository.contar(negocio_id);
+            await this.validarLimiteNegocioUseCase.execute(negocio_id, LimiteNegocio.USUARIOS, cantidadActual);
 
             const password_hash = await this.hashProvider.hash(String(data.password_hash));
 

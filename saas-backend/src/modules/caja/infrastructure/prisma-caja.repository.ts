@@ -145,4 +145,14 @@ export class PrismaCajaRepository implements CajaRepository {
             throw PrismaErrorMapper.map(error);
         }
     }
+
+    async contar(negocio_id: string): Promise<number> {
+        try {
+            return await this.prisma.caja.count({
+                where: { sucursal: { negocio_id }, activo: true }
+            });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 }

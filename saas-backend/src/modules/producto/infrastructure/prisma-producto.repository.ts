@@ -573,4 +573,14 @@ export class PrismaProductoRepository implements ProductoRepository {
             throw PrismaErrorMapper.map(error);
         }
     }
+
+    async contar(negocio_id: string): Promise<number> {
+        try {
+            return await this.prisma.producto.count({
+                where: { negocio_id, activo: true }
+            });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 }

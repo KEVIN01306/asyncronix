@@ -20,4 +20,5 @@ export interface VehiculoRepository {
     actualizar(id: string, negocio_id: string, data: VehiculoActualizar): Promise<VehiculoDetalle>;
     actualizarAvatar(id: string, negocio_id: string, avatar_url: string | null): Promise<void>;
     actualizarCalcomania(id: string, negocio_id: string, calcomania_url: string | null): Promise<void>;
+    contar(negocio_id: string): Promise<number>;
 }

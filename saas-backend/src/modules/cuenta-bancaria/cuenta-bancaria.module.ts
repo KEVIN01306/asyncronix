@@ -15,7 +15,8 @@ const cuentaBancariaRepository = new PrismaCuentaBancariaRepository(prisma as an
 const transaccionRepository = new PrismaTransaccionRepository(prisma as any);
 const obtenerCuentaBancariaUseCase = new ObtenerCuentaBancariaUseCase(cuentaBancariaRepository);
 const obtenerCuentasBancariasUseCase = new ObtenerCuentasBancariasUseCase(cuentaBancariaRepository);
-const registrarCuentaBancariaUseCase = new RegistrarCuentaBancariaUseCase(cuentaBancariaRepository);
+import { validarLimiteNegocioUseCase } from '../negocio/negocio.module.js';
+const registrarCuentaBancariaUseCase = new RegistrarCuentaBancariaUseCase(cuentaBancariaRepository, validarLimiteNegocioUseCase);
 const actualizarCuentaBancariaUseCase = new ActualizarCuentaBancariaUseCase(cuentaBancariaRepository);
 const eliminarCuentaBancariaUseCase = new EliminarCuentaBancariaUseCase(cuentaBancariaRepository);
 const listarHistorialCuentaBancariaUseCase = new ListarHistorialCuentaBancariaUseCase(transaccionRepository);

@@ -25,6 +25,13 @@ export const handleApiError = (error: any) => {
         500: { title: "Error de servidor", desc: "Lo sentimos, hubo un fallo interno." },
     };
 
+    if (status === 403 && backendCode === 'LIMIT_EXCEEDED') {
+        toast.error("Límite alcanzado", {
+            description: backendMessage,
+        });
+        return;
+    }
+
     if (status === 401) {
         if (backendCode === "TOKEN_EXPIRED") {
             toast.error("Sesión expirada", {

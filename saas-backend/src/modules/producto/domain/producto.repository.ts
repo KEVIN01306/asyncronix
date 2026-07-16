@@ -24,4 +24,5 @@ export interface ProductoRepository {
     eliminarImagen(imagen_id: string, negocio_id: string): Promise<void>;
     listarAtributosProducto(producto_id: string, negocio_id: string): Promise<ProductoAtributo[] | null>;
     actualizarAtributosProducto(producto_id: string, negocio_id: string, atributo_ids: string[]): Promise<ProductoAtributo[] | null>;
+    contar(negocio_id: string): Promise<number>;
 }

@@ -157,4 +157,14 @@ export class PrismaVehiculoRepository implements VehiculoRepository {
             throw PrismaErrorMapper.map(error);
         }
     }
+
+    async contar(negocio_id: string): Promise<number> {
+        try {
+            return await this.db.vehiculo.count({
+                where: { negocio_id, activo: true }
+            });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 }

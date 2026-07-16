@@ -3,14 +3,20 @@ import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
 import { UniqueConstraintError } from "@shared/database/errors/UniqueConstraintError.js";
 import type { SucursalCrear, SucursalObtenidoDetalle } from "../domain/sucursal.entity.js";
 import type { SucursalRepository } from "../domain/sucursal.repository.js";
+import { LimiteNegocio } from "../../negocio/domain/negocio-limite.entity.js";
+import type { ValidarLimiteNegocioUseCase } from "../../negocio/application/validar-limite-negocio.usecase.js";
 
 export class RegistrarSucursalUseCase {
     constructor(
-        private readonly sucursalRepository: SucursalRepository
+        private readonly sucursalRepository: SucursalRepository,
+        private readonly validarLimiteNegocioUseCase: ValidarLimiteNegocioUseCase
     ) { }
 
     async execute(data: SucursalCrear, negocio_id: string): Promise<SucursalObtenidoDetalle> {
         try {
+            const cantidadActual = await this.sucursalRepository.contar(negocio_id);
+            await this.validarLimiteNegocioUseCase.execute(negocio_id, LimiteNegocio.SUCURSALES, cantidadActual);
+
             return await this.sucursalRepository.registrar(data, negocio_id);
         } catch (error) {
             if (error instanceof UniqueConstraintError) {

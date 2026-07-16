@@ -13,6 +13,7 @@ import { PrismaUsuarioRepository } from "./infrastructure/prisma-usuario.reposit
 import { UsuarioController } from "./presentation/usuario.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
 import { Argon2HashProvider } from "@shared/infrastructure/argon2-hash.provider.js";
+import { validarLimiteNegocioUseCase } from "../negocio/negocio.module.js";
 
 
 const usuarioRepository = new PrismaUsuarioRepository(prisma);
@@ -20,7 +21,7 @@ const hashProvider = new Argon2HashProvider()
 
 const obtenerUsuarioUseCase = new ObtenerUsuarioUseCase(usuarioRepository);
 const obtenerUsuariosUseCase = new ObtenerUsuariosUseCase(usuarioRepository);
-const registrarUsuarioUseCase = new RegistrarUsuarioUseCase(usuarioRepository, hashProvider)
+const registrarUsuarioUseCase = new RegistrarUsuarioUseCase(usuarioRepository, hashProvider, validarLimiteNegocioUseCase)
 const actualizarUsuarioUseCase = new ActualizarUsuarioUseCase(usuarioRepository)
 const eliminarUsuarioUseCase = new EliminarUsuarioUseCase(usuarioRepository)
 const actualizarPerfilUseCase = new ActualizarPerfilUseCase(usuarioRepository)

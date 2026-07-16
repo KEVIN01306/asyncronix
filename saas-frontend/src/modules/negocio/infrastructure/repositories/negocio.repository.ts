@@ -17,6 +17,11 @@ export class NegocioRepository {
         const response = await api.put('/negocios/me/moneda', { moneda_id });
         return response.data;
     }
+
+    async obtenerLimites(): Promise<import('../../domain/negocio.schema').NegocioLimiteItem[]> {
+        const response = await api.get('/negocios/me/limites');
+        return response.data?.data || response.data;
+    }
 }
 
 export const negocioRepository = new NegocioRepository();   

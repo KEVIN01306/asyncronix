@@ -11,12 +11,13 @@ const sucursalRepository = new PrismaSucursalRepository(prisma);
 
 import { ObtenerMiSucursalUseCase } from "./application/obtener-mi-sucursal.usecase.js";
 import { AsignarCuentaBancariaSucursalUseCase } from "./application/asignar-cuenta-bancaria-sucursal.usecase.js";
+import { validarLimiteNegocioUseCase } from "../negocio/negocio.module.js";
 
 const obtenerSucursalUseCase = new ObtenerSucursalUseCase(sucursalRepository);
 const obtenerMiSucursalUseCase = new ObtenerMiSucursalUseCase(sucursalRepository);
 const asignarCuentaBancariaSucursalUseCase = new AsignarCuentaBancariaSucursalUseCase(sucursalRepository);
 const obtenerSucursalesUseCase = new ObtenerSucursalesUseCase(sucursalRepository);
-const registrarSucursalUseCase = new RegistrarSucursalUseCase(sucursalRepository);
+const registrarSucursalUseCase = new RegistrarSucursalUseCase(sucursalRepository, validarLimiteNegocioUseCase);
 const actualizarSucursalUseCase = new ActualizarSucursalUseCase(sucursalRepository);
 const eliminarSucursalUseCase = new EliminarSucursalUseCase(sucursalRepository);
 

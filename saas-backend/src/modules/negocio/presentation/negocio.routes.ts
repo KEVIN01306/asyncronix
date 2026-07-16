@@ -17,6 +17,11 @@ router.get("/me",
     negocioController.me
 );
 
+router.get("/me/limites",
+    authMiddleware.verificarPermiso(['VER_NEGOCIOS_DETALLE_ME']), // Assuming the same permission applies for viewing limits, or just let the user view it
+    negocioController.limites
+);
+
 router.put("/me",
     authMiddleware.verificarPermiso(['EDITAR_NEGOCIOS']),
     FileUploadMiddleware.single('logo', 'negocios'),

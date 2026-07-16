@@ -4,15 +4,21 @@ import type { ProductoRepository } from "../domain/producto.repository.js";
 import type { VarianteRepository } from "../domain/variante.repository.js";
 import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
 import AppError from "@shared/errors/AppError.js";
+import { LimiteNegocio } from "../../negocio/domain/negocio-limite.entity.js";
+import type { ValidarLimiteNegocioUseCase } from "../../negocio/application/validar-limite-negocio.usecase.js";
 
 export class RegistrarProductoUseCase {
     constructor(
         private readonly repository: ProductoRepository,
-        private readonly varianteRepository: VarianteRepository
+        private readonly varianteRepository: VarianteRepository,
+        private readonly validarLimiteNegocioUseCase: ValidarLimiteNegocioUseCase
     ) { }
 
     async execute(data: ProductoCrear, negocio_id: string): Promise<ProductoDetalle> {
         try {
+            const cantidadActual = await this.repository.contar(negocio_id);
+            await this.validarLimiteNegocioUseCase.execute(negocio_id, LimiteNegocio.PRODUCTOS, cantidadActual);
+
             const createdProduct = await this.repository.registrar(data, negocio_id);
 
             await this.varianteRepository.crear({

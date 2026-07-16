@@ -20,7 +20,8 @@ const transaccionRepository = new PrismaTransaccionRepository(prisma as any);
 
 const obtenerCajaUseCase = new ObtenerCajaUseCase(cajaRepository);
 const obtenerCajasUseCase = new ObtenerCajasUseCase(cajaRepository);
-const registrarCajaUseCase = new RegistrarCajaUseCase(cajaRepository);
+import { validarLimiteNegocioUseCase } from '../negocio/negocio.module.js';
+const registrarCajaUseCase = new RegistrarCajaUseCase(cajaRepository, validarLimiteNegocioUseCase);
 const actualizarCajaUseCase = new ActualizarCajaUseCase(cajaRepository);
 const eliminarCajaUseCase = new EliminarCajaUseCase(cajaRepository);
 const asociarDispositivoCajaUseCase = new AsociarDispositivoCajaUseCase(cajaRepository, usuarioRepository, hashProvider);

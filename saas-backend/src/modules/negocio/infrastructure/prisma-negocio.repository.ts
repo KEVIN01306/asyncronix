@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
 import type { NegocioActualizar, NegocioCrear, NegocioObtenidoDetalle } from "../domain/negocio.entity.js";
 import type { NegocioRepository } from "../domain/negocio.repository.js";
+import type { NegocioLimite } from "../domain/negocio-limite.entity.js";
 import { NegocioMapper } from "./mappers/negocio.mapper.js";
 
 export class PrismaNegocioRepository implements NegocioRepository {
@@ -109,6 +110,24 @@ export class PrismaNegocioRepository implements NegocioRepository {
             });
 
             return NegocioMapper.mapDetalle(negocio);
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async obtenerLimites(negocio_id: string): Promise<NegocioLimite> {
+        try {
+            const limites = await this.prisma.negocioLimite.findUnique({
+                where: { negocio_id }
+            });
+
+            if (!limites) {
+                // If it doesn't exist, we might return the defaults directly, or throw an error. 
+                // Creating one by default might be a good idea, but for now we just return the Prisma model and let the use case handle it or throw if not found.
+                // Assuming every business has a limite created on registration.
+                throw new Error('Límites no encontrados para el negocio');
+            }
+            return limites;
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

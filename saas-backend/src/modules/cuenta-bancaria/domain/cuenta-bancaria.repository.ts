@@ -9,4 +9,5 @@ export interface CuentaBancariaRepository {
     eliminar(id: string, negocio_id: string): Promise<void>;
     obtener(id: string, negocio_id: string, options?: { tx?: any }): Promise<CuentaBancariaObtenidoDetalle | null>;
     listar(negocio_id: string, pagination: Pagination, q?: string): Promise<Paginated<CuentaBancariaSimple>>;
+    contar(negocio_id: string): Promise<number>;
 }

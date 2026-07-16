@@ -17,4 +17,5 @@ export interface UsuarioRepository {
     actualizarPinModelo(id: Usuario['id'], negocio_id: Usuario['negocio_id'], pin_modelo: string): Promise<void>
     actualizarPinSucursal(id: Usuario['id'], negocio_id: Usuario['negocio_id'], pin_sucursal: string): Promise<void>
     obtenerPinSucursal(id: Usuario['id'], negocio_id: Usuario['negocio_id']): Promise<string | null>
+    contar(negocio_id: string): Promise<number>
 }

@@ -34,3 +34,13 @@ export const negocioEditSchema = z.object({
 
 export type Negocio = z.infer<typeof negocioSchema>;
 export type NegocioEditFormValues = z.infer<typeof negocioEditSchema>;
+
+export interface NegocioLimiteItem {
+    nombre: string;
+    limite: number;
+    utilizados: number;
+    disponibles: number | null;
+    porcentaje_utilizado: number | null;
+    ilimitado: boolean;
+    limite_alcanzado: boolean;
+}
