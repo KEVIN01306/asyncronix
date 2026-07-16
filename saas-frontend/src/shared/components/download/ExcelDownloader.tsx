@@ -11,6 +11,7 @@ interface ExcelDownloaderProps {
     variant?: 'contained' | 'outlined' | 'text';
     color?: 'primary' | 'secondary' | 'error' | 'success';
     fullWidth?: boolean;
+    size?: 'small' | 'medium' | 'large';
 }
 
 export const ExcelDownloader: React.FC<ExcelDownloaderProps> = ({
@@ -20,6 +21,7 @@ export const ExcelDownloader: React.FC<ExcelDownloaderProps> = ({
     variant = 'contained',
     color = 'primary',
     fullWidth = false,
+    size = 'medium',
 }) => {
     const [loading, setLoading] = useState(false);
 
@@ -42,6 +44,7 @@ export const ExcelDownloader: React.FC<ExcelDownloaderProps> = ({
             variant={variant}
             color={color}
             fullWidth={fullWidth}
+            size={size}
             disabled={loading}
             onClick={handleDownload}
             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}

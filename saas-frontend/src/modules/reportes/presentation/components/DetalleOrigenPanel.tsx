@@ -70,7 +70,7 @@ const DetalleOrigenPanel = ({ origen, filtros, onBack }: Props) => {
                         filtros.fecha_inicio && filtros.fecha_fin ? `${filtros.fecha_inicio} a ${filtros.fecha_fin}` : 'Histórico'
                     )}
                     fileName={`Detalle_${origen}.xlsx`}
-                    buttonText="Descargar Excel"
+                    buttonText="Excel"
                     variant="outlined"
                     color="success"
                 />

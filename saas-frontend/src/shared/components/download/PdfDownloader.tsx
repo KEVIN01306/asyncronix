@@ -11,6 +11,7 @@ interface PdfDownloaderProps {
     variant?: 'contained' | 'outlined' | 'text';
     color?: 'primary' | 'secondary' | 'error' | 'success';
     fullWidth?: boolean;
+    size?: 'small' | 'medium' | 'large';
 }
 
 export const PdfDownloader: React.FC<PdfDownloaderProps> = ({
@@ -20,14 +21,16 @@ export const PdfDownloader: React.FC<PdfDownloaderProps> = ({
     variant = 'contained',
     color = 'primary',
     fullWidth = false,
+    size = 'medium',
 }) => {
     return (
-        <PDFDownloadLink document={document} fileName={fileName} style={{ textDecoration: 'none' }}>
+        <PDFDownloadLink document={document} fileName={fileName} style={{ textDecoration: 'none', display: fullWidth ? 'block' : 'inline-block', width: fullWidth ? '100%' : 'auto' }}>
             {({ loading }) => (
                 <Button
                     variant={variant}
                     color={color}
                     fullWidth={fullWidth}
+                    size={size}
                     disabled={loading}
                     startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
                 >

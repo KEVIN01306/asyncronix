@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Collapse, Button, useMediaQuery, useTheme } from '@mui/material';
+import { FilterList } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { reportesService } from '../../infrastructure/reportes.service';
 import type { ReporteFinanciero, FiltrosReporteFinanciero } from '../../domain/reportes.model';
@@ -19,12 +20,25 @@ import DetalleOrigenPanel from '../components/DetalleOrigenPanel';
 
 const ReporteFinancieroPage = () => {
     const user = useAuthStore(state => state.user);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [searchParams, setSearchParams] = useSearchParams();
     const ingresosOrigen = searchParams.get('ingresosOrigen');
-    const [filtros, setFiltros] = useState<FiltrosReporteFinanciero>({});
+    const [mostrarFiltros, setMostrarFiltros] = useState(!isMobile);
+    const [filtros, setFiltros] = useState<FiltrosReporteFinanciero>({
+        sucursal_ids: user?.sucursal_id ? [user.sucursal_id] : []
+    });
     const [reporte, setReporte] = useState<ReporteFinanciero | null>(null);
     const [cargando, setCargando] = useState(false);
     const [sucursales, setSucursales] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!isMobile) {
+            setMostrarFiltros(true);
+        } else {
+            setMostrarFiltros(false);
+        }
+    }, [isMobile]);
 
     const cargarReporte = useCallback(async () => {
         setCargando(true);
@@ -49,14 +63,14 @@ const ReporteFinancieroPage = () => {
     const getPdfFileName = () => {
         const base = 'Reporte - Financiero';
         const date = new Date().toISOString().split('T')[0];
-        
+
         if (!filtros.sucursal_ids || filtros.sucursal_ids.length === 0) {
             return `${base} - ${date}.pdf`;
         }
         if (filtros.sucursal_ids.length > 1) {
             return `${base} - multi sucursal - ${date}.pdf`;
         }
-        
+
         const suc = sucursales.find(s => s.id === filtros.sucursal_ids![0]);
         const sucName = suc ? suc.nombre : 'sucursal';
         return `${base} - ${sucName} - ${date}.pdf`;
@@ -74,7 +88,14 @@ const ReporteFinancieroPage = () => {
 
     return (
         <Box p={{ xs: 2, md: 4 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={4}>
+            <Box 
+                display="flex" 
+                flexDirection={{ xs: 'column', md: 'row' }} 
+                justifyContent="space-between" 
+                alignItems={{ xs: 'stretch', md: 'flex-start' }} 
+                gap={3}
+                mb={4}
+            >
                 <Box>
                     <Typography variant="h4" fontWeight={700} mb={1}>
                         Reporte Financiero
@@ -84,61 +105,81 @@ const ReporteFinancieroPage = () => {
                     </Typography>
                 </Box>
                 {reporte && user && (
-                    <Box display="flex" gap={2}>
-                        <ExcelDownloader 
+                    <Box 
+                        display="flex" 
+                        flexDirection="row" 
+                        gap={1} 
+                    >
+                        <ExcelDownloader
                             generateWorkbook={() => generarReporteFinancieroExcel(
-                                reporte, 
+                                reporte,
                                 user?.negocio?.moneda?.codigo || 'USD',
                                 filtros.sucursal_ids?.length ? sucursales.find(s => s.id === filtros.sucursal_ids![0])?.nombre || 'Sucursal' : 'Todas las Sucursales',
                                 filtros.fecha_inicio && filtros.fecha_fin ? `${filtros.fecha_inicio} a ${filtros.fecha_fin}` : 'Histórico'
                             )}
                             fileName={getPdfFileName().replace('.pdf', '.xlsx')}
-                            buttonText="Exportar Excel"
+                            buttonText="Excel"
                             variant="outlined"
                             color="success"
+                            size="small"
                         />
-                        <PdfDownloader 
+                        <PdfDownloader
                             document={
-                                <ReporteFinancieroPdf 
-                                    reporte={reporte} 
-                                    user={user} 
+                                <ReporteFinancieroPdf
+                                    reporte={reporte}
+                                    user={user}
                                     sucursalesSeleccionadas={filtros.sucursal_ids || []}
                                     todasLasSucursales={sucursales}
                                 />
                             }
                             fileName={getPdfFileName()}
-                            buttonText="Exportar PDF"
+                            buttonText="PDF"
                             variant="outlined"
+                            size="small"
                         />
                     </Box>
                 )}
             </Box>
 
-            <FiltrosReporte 
-                filtros={filtros} 
-                onFiltrosChange={setFiltros} 
-                onAplicarFiltros={cargarReporte} 
-                cargando={cargando}
-                sucursalesPadre={sucursales}
-            />
+            {isMobile && (
+                <Button 
+                    variant="outlined" 
+                    fullWidth 
+                    startIcon={<FilterList />} 
+                    onClick={() => setMostrarFiltros(!mostrarFiltros)}
+                    sx={{ mb: 2 }}
+                >
+                    {mostrarFiltros ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                </Button>
+            )}
+
+            <Collapse in={mostrarFiltros}>
+                <FiltrosReporte
+                    filtros={filtros}
+                    onFiltrosChange={setFiltros}
+                    onAplicarFiltros={cargarReporte}
+                    cargando={cargando}
+                    sucursalesPadre={sucursales}
+                />
+            </Collapse>
 
             {cargando && !reporte ? (
                 <Loading />
             ) : ingresosOrigen && reporte ? (
-                <DetalleOrigenPanel 
-                    origen={ingresosOrigen} 
-                    filtros={filtros} 
-                    onBack={handleClearOrigen} 
+                <DetalleOrigenPanel
+                    origen={ingresosOrigen}
+                    filtros={filtros}
+                    onBack={handleClearOrigen}
                 />
             ) : reporte ? (
                 <>
                     <KPIsGenerales kpis={reporte.kpis} />
-                    <DistribucionCharts 
+                    <DistribucionCharts
                         metodos={reporte.distribucion.por_metodo_pago}
                         origenes={reporte.distribucion.por_origen}
                         onSelectOrigen={handleSelectOrigen}
                     />
-                    <ConciliacionPanel 
+                    <ConciliacionPanel
                         conciliacion={reporte.conciliacion}
                         cajas={reporte.distribucion.entidades.cajas}
                         cuentas={reporte.distribucion.entidades.cuentas}
