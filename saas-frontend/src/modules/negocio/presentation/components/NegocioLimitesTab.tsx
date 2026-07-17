@@ -74,7 +74,7 @@ const getStatusIcon = (estado: EstadoLimite, fontSize: 'small' | 'medium' = 'sma
         case 'ADVERTENCIA': return <WarningIcon fontSize={fontSize} color="warning" />;
         case 'ALERTA': return <WarningIcon fontSize={fontSize} color="error" />;
         case 'ERROR': return <ErrorIcon fontSize={fontSize} color="error" />;
-        default: return null;
+        default: return undefined;
     }
 };
 
