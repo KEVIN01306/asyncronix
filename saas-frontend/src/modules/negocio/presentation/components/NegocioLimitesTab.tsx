@@ -162,8 +162,13 @@ const NegocioLimitesTab: React.FC = () => {
                 </Typography>
             </Box>
 
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={tabValue} onChange={(_, val) => handleChangeTab(val)} aria-label="limites y consumos tabs">
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }} >
+                <Tabs value={tabValue} onChange={(_, val) => handleChangeTab(val)} aria-label="limites y consumos tabs" scrollButtons="auto" variant='scrollable' sx={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    '&::-webkit-scrollbar': { display: 'none' },
+                    '& .MuiTabs-scrollButtons': { opacity: 0 }
+                }}>
                     <Tab label="Consumos Generales" />
                     <Tab label="Almacenamiento (Media)" />
                 </Tabs>

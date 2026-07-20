@@ -129,7 +129,12 @@ const NegocioDetailPage = () => {
             </Stack>
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-                <Tabs value={tabIndex} onChange={handleTabChange} aria-label="negocio tabs">
+                <Tabs value={tabIndex} onChange={handleTabChange} aria-label="negocio tabs" scrollButtons="auto" variant='scrollable' sx={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    '&::-webkit-scrollbar': { display: 'none' },
+                    '& .MuiTabs-scrollButtons': { opacity: 0 }
+                }}>
                     <Tab icon={<Info />} iconPosition="start" label="Información General" />
                     <Tab icon={<ShowChart />} iconPosition="start" label="Límites y Consumos" />
                 </Tabs>
@@ -327,7 +332,7 @@ const NegocioDetailPage = () => {
                     setOpenCambiarMoneda(false);
                 }}
             />
-        </Box>
+        </Box >
     );
 };
 
