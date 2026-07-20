@@ -1,21 +1,29 @@
 import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
 import AppError from "@shared/errors/AppError.js";
 import type { VehiculoRepository } from "../domain/vehiculo.repository.js";
-import ManejadorArchivosUtils from "@shared/infrastructure/manejadorArchivos.utils.js";
+import type { IStorageProvider, FileDTO } from "@shared/domain/providers/storage.provider.js";
 
 export class SubirCalcomaniaVehiculoUseCase {
-    constructor(private readonly repository: VehiculoRepository) { }
+    constructor(
+        private readonly repository: VehiculoRepository,
+        private readonly storageProvider: IStorageProvider
+    ) { }
 
-    async execute(id: string, negocio_id: string, nuevoUrl: string) {
+    async execute(id: string, negocio_id: string, calcomaniaFile: FileDTO) {
         try {
             const veh = await this.repository.obtener(id, negocio_id);
             if (!veh) {
-                await ManejadorArchivosUtils.eliminarArchivo(nuevoUrl);
                 throw new AppError('Vehículo no encontrado', 'DATA_NOT_FOUND', 404);
             }
 
-            if (veh.calcomania_url) {
-                await ManejadorArchivosUtils.eliminarArchivo(veh.calcomania_url);
+            const path = `tenant_${negocio_id}/vehicles/veh_${id}`;
+            let nuevoUrl: string;
+
+            if (veh.calcomania_url && this.storageProvider.replaceFile) {
+                nuevoUrl = await this.storageProvider.replaceFile(veh.calcomania_url, calcomaniaFile, path, 'calcomania');
+            } else {
+                if (veh.calcomania_url) await this.storageProvider.deleteFile(veh.calcomania_url);
+                nuevoUrl = await this.storageProvider.uploadFile(calcomaniaFile, path, 'calcomania');
             }
 
             await this.repository.actualizarCalcomania(id, negocio_id, nuevoUrl);

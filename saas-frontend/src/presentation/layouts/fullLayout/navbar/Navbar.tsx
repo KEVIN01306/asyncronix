@@ -26,6 +26,8 @@ import { useAuthStore } from "../../../../core/store/authStore";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -132,7 +134,7 @@ const Navbar = ({ onToggleSidebar, isSidebarOpen, drawerWidth, isMobile }: Navba
 
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ cursor: 'pointer' }} onClick={handleMenuOpen}>
             <Avatar 
-              src={user?.avatar_url ? `${import.meta.env.VITE_API_URL}/${user.avatar_url}` : "/static/images/avatar/1.jpg"}
+              src={user?.avatar_url ? formatImage(user.avatar_url) : "/static/images/avatar/1.jpg"}
               sx={{
                 width: 38, 
                 height: 38, 

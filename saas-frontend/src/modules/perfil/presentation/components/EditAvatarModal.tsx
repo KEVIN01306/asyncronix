@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Avatar, Typography, CircularProgress } from '@mui/material';
 import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 interface Props {
     open: boolean;
@@ -17,7 +19,7 @@ export const EditAvatarModal = ({ open, onClose, onSubmit, initialUrl }: Props) 
     useEffect(() => {
         if (open) {
             setFile(null);
-            setPreview(initialUrl ? `${import.meta.env.VITE_API_URL}/${initialUrl}` : null);
+            setPreview(initialUrl ? (formatImage(initialUrl) ?? null) : null);
             setIsSubmitting(false);
         }
     }, [open, initialUrl]);

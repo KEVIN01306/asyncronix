@@ -20,6 +20,8 @@ import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { useDeviceStore } from '../../../../core/store/deviceStore';
 import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMismatchModal';
 import CajaStatusWidget from '../../../../shared/components/ui/widgets/CajaStatusWidget';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 const salidaSchema = z.object({
     metodo_pago: z.enum(Object.values(METODO_PAGO) as [string, ...string[]], 'El método de pago es requerido'),
@@ -96,7 +98,7 @@ const ServicioSalidaPage = () => {
 
     const firmaSalidaPreview = useMemo(() => {
         if (firmaSalidaBase64) return firmaSalidaBase64;
-        if (servicio?.firma_salida) return `${import.meta.env.VITE_API_URL}/${servicio.firma_salida}`;
+        if (servicio?.firma_salida) return formatImage(servicio.firma_salida);
         return null;
     }, [firmaSalidaBase64, servicio]);
 
@@ -519,7 +521,7 @@ const ServicioSalidaPage = () => {
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <Box>
                             {servicio.firma_entrada ? (
-                                <CardMedia component="img" image={`${import.meta.env.VITE_API_URL}/${servicio.firma_entrada}`} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                <CardMedia component="img" image={formatImage(servicio.firma_entrada)} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
                             ) : (
                                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
                                     <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>

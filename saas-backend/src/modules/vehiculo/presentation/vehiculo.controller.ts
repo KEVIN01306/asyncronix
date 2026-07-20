@@ -11,6 +11,7 @@ import type { SubirCalcomaniaVehiculoUseCase } from "../application/subir-calcom
 import type { AsociarClienteVehiculoUseCase } from "../application/asociar-cliente.usecase.js";
 import type { CrearYAsociarClienteUseCase } from "../application/crear-y-asociar-cliente.usecase.js";
 import AppError from "@shared/errors/AppError.js";
+import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
 
 export class VehiculoController extends BaseController {
     constructor(
@@ -22,7 +23,8 @@ export class VehiculoController extends BaseController {
         private readonly subirAvatarUseCase: SubirAvatarVehiculoUseCase,
         private readonly subirCalcomaniaUseCase: SubirCalcomaniaVehiculoUseCase,
         private readonly asociarClienteUseCase: AsociarClienteVehiculoUseCase,
-        private readonly crearYAsociarClienteUseCase: CrearYAsociarClienteUseCase
+        private readonly crearYAsociarClienteUseCase: CrearYAsociarClienteUseCase,
+        private readonly storageProvider: IStorageProvider
     ) { super(); }
 
     listar = async (_req: Request, res: Response, next: NextFunction) => {
@@ -85,8 +87,7 @@ export class VehiculoController extends BaseController {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
-            const avatar_url = req.file.path.replace(/\\/g, '/');
-            await this.subirAvatarUseCase.execute(id, negocio_id, avatar_url);
+            await this.subirAvatarUseCase.execute(id, negocio_id, req.file);
             res.status(200).json(Respuesta.exito('Avatar actualizado', null));
         } catch (error) { next(error); }
     }
@@ -96,8 +97,7 @@ export class VehiculoController extends BaseController {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'FILE_REQUIRED', 400);
-            const url = req.file.path.replace(/\\/g, '/');
-            await this.subirCalcomaniaUseCase.execute(id, negocio_id, url);
+            await this.subirCalcomaniaUseCase.execute(id, negocio_id, req.file);
             res.status(200).json(Respuesta.exito('Calcomanía actualizada', null));
         } catch (error) { next(error); }
     }

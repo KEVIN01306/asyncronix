@@ -13,6 +13,8 @@ import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 import VehicleImageUploader from '../components/VehicleImageUploader';
 import VehiclePdfUploader from '../components/VehiclePdfUploader';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 const VehiculoDetailPage = () => {
     const { id } = useParams();
@@ -80,13 +82,13 @@ const VehiculoDetailPage = () => {
 
     const handleOpenPdf = () => {
         if (!vehiculo?.calcomania_url) return;
-        window.open(`${import.meta.env.VITE_API_URL}/${vehiculo.calcomania_url}`, '_blank');
+        window.open(formatImage(vehiculo.calcomania_url), '_blank');
     };
 
     const handleDownloadPdf = async () => {
         if (!vehiculo?.calcomania_url) return;
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/${vehiculo.calcomania_url}`);
+            const response = await fetch(formatImage(vehiculo.calcomania_url)!);
             const blob = await response.blob();
             const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');

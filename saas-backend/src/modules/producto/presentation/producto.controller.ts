@@ -24,6 +24,7 @@ import type { ActualizarDescripcionImagenProductoUseCase } from "../application/
 import type { EstablecerImagenPrincipalProductoUseCase } from "../application/establecer-imagen-principal-producto.usecase.js";
 import type { EliminarImagenProductoUseCase } from "../application/eliminar-imagen-producto.usecase.js";
 import AppError from "@shared/errors/AppError.js";
+import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
 
 export class ProductoController extends BaseController {
     constructor(
@@ -48,7 +49,8 @@ export class ProductoController extends BaseController {
         private readonly generarQrVarianteUseCase: GenerarQrVarianteUseCase,
         private readonly buscarVariantePorCodigoUseCase: BuscarVariantePorCodigoUseCase,
         private readonly listarAtributosProductoUseCase: ListarAtributosProductoUseCase,
-        private readonly actualizarAtributosProductoUseCase: ActualizarAtributosProductoUseCase
+        private readonly actualizarAtributosProductoUseCase: ActualizarAtributosProductoUseCase,
+        private readonly storageProvider: IStorageProvider
     ) {
         super();
     }
@@ -249,7 +251,8 @@ export class ProductoController extends BaseController {
 
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
 
-            const url = req.file.path.replace(/\\/g, '/');
+            const path = `tenant_${negocio_id}/products/prod_${producto_id}`;
+            const url = await this.storageProvider.uploadFile(req.file, path);
             const producto = await this.subirImagenProductoUseCase.execute({
                 producto_id,
                 url,
@@ -280,8 +283,7 @@ export class ProductoController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
 
-            const url = req.file.path.replace(/\\/g, '/');
-            const imagen = await this.actualizarArchivoImagenProductoUseCase.execute(imagen_id, url, negocio_id);
+            const imagen = await this.actualizarArchivoImagenProductoUseCase.execute(imagen_id, req.file, negocio_id);
             res.status(200).json(Respuesta.exito('Imagen actualizada con exito', imagen));
         } catch (error) {
             next(error);

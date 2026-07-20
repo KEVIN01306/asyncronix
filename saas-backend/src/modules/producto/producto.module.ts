@@ -25,19 +25,20 @@ import { ProductoController } from "./presentation/producto.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
 import { BuscarVariantePorCodigoUseCase } from "./application/buscar-variante-por-codigo.usecase.js";
 import { validarLimiteNegocioUseCase } from "../negocio/negocio.module.js";
+import { storageProvider } from "@shared/infrastructure/storage/storage.module.js";
 
 const productoRepository = new PrismaProductoRepository(prisma);
 const varianteRepository = new PrismaVarianteRepository(prisma);
 
 const obtenerProductoUseCase = new ObtenerProductoUseCase(productoRepository);
 const obtenerProductosUseCase = new ObtenerProductosUseCase(productoRepository);
-const eliminarProductoUseCase = new EliminarProductoUseCase(productoRepository);
+const eliminarProductoUseCase = new EliminarProductoUseCase(productoRepository, storageProvider);
 const subirImagenProductoUseCase = new SubirImagenProductoUseCase(productoRepository);
 const listarImagenesProductoUseCase = new ListarImagenesProductoUseCase(productoRepository);
-const actualizarArchivoImagenProductoUseCase = new ActualizarArchivoImagenProductoUseCase(productoRepository);
+const actualizarArchivoImagenProductoUseCase = new ActualizarArchivoImagenProductoUseCase(productoRepository, storageProvider);
 const actualizarDescripcionImagenProductoUseCase = new ActualizarDescripcionImagenProductoUseCase(productoRepository);
 const establecerImagenPrincipalProductoUseCase = new EstablecerImagenPrincipalProductoUseCase(productoRepository);
-const eliminarImagenProductoUseCase = new EliminarImagenProductoUseCase(productoRepository);
+const eliminarImagenProductoUseCase = new EliminarImagenProductoUseCase(productoRepository, storageProvider);
 const crearVarianteUseCase = new CrearVarianteUseCase(varianteRepository, validarLimiteNegocioUseCase);
 const registrarProductoUseCase = new RegistrarProductoUseCase(productoRepository, varianteRepository, validarLimiteNegocioUseCase);
 const actualizarProductoUseCase = new ActualizarProductoUseCase(productoRepository);
@@ -74,5 +75,6 @@ export const productoController = new ProductoController(
     generarQrVarianteUseCase,
     buscarVariantePorCodigoUseCase,
     listarAtributosProductoUseCase,
-    actualizarAtributosProductoUseCase
+    actualizarAtributosProductoUseCase,
+    storageProvider
 );

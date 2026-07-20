@@ -9,6 +9,8 @@ import { VarianteRepository } from '../../infrastructure/repositories/variante.r
 import type { ProductoBusquedaDetalle, Variante } from '../../domain/interfaces/producto.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 type AttributeOptions = Record<string, string[]>;
 
@@ -122,7 +124,7 @@ const COLOR_MAP: Record<string, { background: string }> = {
     'multicolor': {
         background:
             'linear-gradient(45deg, #E53935, #FB8C00, #FDD835, #43A047, #1E88E5, #8E24AA)',
-    },    
+    },
     'animal print': { background: '#A1887F' },
     'leopardo': { background: '#A1887F' },
     'camuflaje': { background: '#6B8E23' },
@@ -131,18 +133,18 @@ const COLOR_MAP: Record<string, { background: string }> = {
 // Helper seguro para extraer el color CSS correspondiente
 const getColorHex = (colorName: string): string => {
     const normalized = colorName.trim().toLowerCase();
-    return COLOR_MAP[normalized]?.background || colorName; 
+    return COLOR_MAP[normalized]?.background || colorName;
 };
 
-const AttributeFilterGroup = ({ 
-    attributeName, 
-    values, 
-    selectedValue, 
-    onSelect, 
-    isOptionDisabled, 
-    theme 
+const AttributeFilterGroup = ({
+    attributeName,
+    values,
+    selectedValue,
+    onSelect,
+    isOptionDisabled,
+    theme
 }: AttributeFilterProps) => {
-    
+
     const isColorAttribute = attributeName.toLowerCase().includes('color');
 
     return (
@@ -163,38 +165,38 @@ const AttributeFilterGroup = ({
 
                         return (
                             <Tooltip key={value} title={value} placement="top">
-                            <Box
-                                key={value}
-                                onClick={() => !disabled && onSelect(attributeName, value)}
-                                sx={{
-                                    width: 38,
-                                    height: 38,
-                                    borderRadius: '50%',
-                                    background: hexColor,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: disabled ? 'not-allowed' : 'pointer',
-                                    opacity: disabled ? 0.3 : 1,
-                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    
-                                    // Efecto de anillo exterior si está seleccionado
-                                    border: selected 
-                                        ? `2px solid ${theme.palette.text.primary}` 
-                                        : isClearColor 
-                                            ? `1px solid ${theme.palette.divider}` 
-                                            : '1px solid transparent',
-                                    
-                                    // Crea una separación limpia entre el aro exterior y el color del círculo
-                                    boxShadow: selected ? `0 0 0 3px ${theme.palette.background.paper} inset` : 'none',
-                                    
-                                    '&:hover': {
-                                        transform: disabled ? 'none' : 'scale(1.12)',
-                                        border: disabled ? 'none' : `1px solid ${theme.palette.text.primary}`,
-                                    }
-                                }}
-                                title={value}
-                            />
+                                <Box
+                                    key={value}
+                                    onClick={() => !disabled && onSelect(attributeName, value)}
+                                    sx={{
+                                        width: 38,
+                                        height: 38,
+                                        borderRadius: '50%',
+                                        background: hexColor,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: disabled ? 'not-allowed' : 'pointer',
+                                        opacity: disabled ? 0.3 : 1,
+                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+
+                                        // Efecto de anillo exterior si está seleccionado
+                                        border: selected
+                                            ? `2px solid ${theme.palette.text.primary}`
+                                            : isClearColor
+                                                ? `1px solid ${theme.palette.divider}`
+                                                : '1px solid transparent',
+
+                                        // Crea una separación limpia entre el aro exterior y el color del círculo
+                                        boxShadow: selected ? `0 0 0 3px ${theme.palette.background.paper} inset` : 'none',
+
+                                        '&:hover': {
+                                            transform: disabled ? 'none' : 'scale(1.12)',
+                                            border: disabled ? 'none' : `1px solid ${theme.palette.text.primary}`,
+                                        }
+                                    }}
+                                    title={value}
+                                />
                             </Tooltip>
                         );
                     }
@@ -210,8 +212,8 @@ const AttributeFilterGroup = ({
                                 minWidth: 54,
                                 height: 48,
                                 borderRadius: 0, // Estética Adidas / Minimalista
-                                border: selected 
-                                    ? `2px solid ${theme.palette.primary}` 
+                                border: selected
+                                    ? `2px solid ${theme.palette.primary}`
                                     : `1px solid ${theme.palette.divider}`,
                                 bgcolor: selected ? theme.palette.primary : 'transparent',
                                 color: selected ? theme.palette.primary.contrastText : theme.palette.text.primary,
@@ -500,18 +502,18 @@ const BuscarProductosPage = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 5 }}>
                         <Stack direction="row" spacing={2} sx={{ height: '56px' }}>
-                            <Button 
-                                fullWidth 
-                                variant="contained" 
+                            <Button
+                                fullWidth
+                                variant="contained"
                                 onClick={handleSearch}
                                 sx={{ bgcolor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 700, '&:hover': { bgcolor: theme.palette.primary.dark } }}
                             >
                                 Buscar
                             </Button>
-                            <Button 
-                                fullWidth 
-                                variant="outlined" 
-                                startIcon={<QrCodeScannerIcon />} 
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                startIcon={<QrCodeScannerIcon />}
                                 onClick={() => setOpenScanner(true)}
                                 sx={{ borderColor: theme.palette.primary.main, color: theme.palette.primary.main, fontWeight: 700, '&:hover': { borderColor: theme.palette.primary.main, bgcolor: theme.palette.action.hover } }}
                             >
@@ -548,7 +550,7 @@ const BuscarProductosPage = () => {
                             {selectedVariantImage ? (
                                 <Box
                                     component="img"
-                                    src={`${import.meta.env.VITE_API_URL}/${selectedVariantImage}`}
+                                    src={formatImage(selectedVariantImage)}
                                     alt={searchResult.producto.nombre}
                                     sx={{
                                         width: '100%',
@@ -609,9 +611,9 @@ const BuscarProductosPage = () => {
                             </Stack>
 
                             {/* Acción Principal */}
-                            <Button 
-                                variant="contained" 
-                                startIcon={<QrCode2 />} 
+                            <Button
+                                variant="contained"
+                                startIcon={<QrCode2 />}
                                 onClick={() => navigate(`/productos/${searchResult.producto.id}`)}
                                 sx={{
                                     bgcolor: theme.palette.primary.main,

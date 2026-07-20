@@ -20,6 +20,8 @@ import { negocioRepository } from '../../infrastructure/repositories/negocio.rep
 import { PaisAutocomplete } from '../../../paises/presentation/components/PaisAutocomplete';
 import type { Pais } from '../../../paises/domain/interface/pais.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 const NegocioEditPage = () => {
     const navigate = useNavigate();
@@ -47,22 +49,22 @@ const NegocioEditPage = () => {
             try {
                 const negocio = await negocioRepository.obtenerMiNegocio();
 
-            setValue('nombre', negocio.nombre);
-            setValue('nombre_comercial', negocio.nombre_comercial ?? null);
-            setValue('nit_rut', negocio.nit_rut ?? null);
-            setValue('slogan', negocio.slogan ?? null);
-            setValue('pais_id', negocio.pais_id ?? null);
-            setSelectedPais(negocio.pais ?? null);
-            setValue('instagram_id', negocio.instagram_id ?? null);
-            setValue('facebook_id', negocio.facebook_id ?? null);
-            setLogoPreview(negocio.logo_url ? `${import.meta.env.VITE_API_URL}/${negocio.logo_url}` : null);
-        } catch (error) {
-            console.error(error);
-            toast.error('No se pudieron cargar los datos');
-        } finally {
-            setLoading(false);
-        }
-    };
+                setValue('nombre', negocio.nombre);
+                setValue('nombre_comercial', negocio.nombre_comercial ?? null);
+                setValue('nit_rut', negocio.nit_rut ?? null);
+                setValue('slogan', negocio.slogan ?? null);
+                setValue('pais_id', negocio.pais_id ?? null);
+                setSelectedPais(negocio.pais ?? null);
+                setValue('instagram_id', negocio.instagram_id ?? null);
+                setValue('facebook_id', negocio.facebook_id ?? null);
+                setLogoPreview(negocio.logo_url ? (formatImage(negocio.logo_url) ?? null) : null);
+            } catch (error) {
+                console.error(error);
+                toast.error('No se pudieron cargar los datos');
+            } finally {
+                setLoading(false);
+            }
+        };
 
         fetchData();
     }, [setValue]);
@@ -128,7 +130,7 @@ const NegocioEditPage = () => {
 
                 <Box component="form" onSubmit={handleSubmit(onSubmit)}>
                     <Grid container spacing={3}>
-                        
+
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 label="Nombre Legal"
@@ -190,14 +192,14 @@ const NegocioEditPage = () => {
                             />
                         </Grid>
 
-                        <Grid size={ 12 }>
-                            <Grid container sx={{ 
-                                p: 3, 
-                                border: '1px dashed', 
-                                borderColor: 'divider', 
-                                borderRadius: 2, 
-                                display: 'flex', 
-                                alignItems: 'center', 
+                        <Grid size={12}>
+                            <Grid container sx={{
+                                p: 3,
+                                border: '1px dashed',
+                                borderColor: 'divider',
+                                borderRadius: 2,
+                                display: 'flex',
+                                alignItems: 'center',
                                 gap: 4,
                                 bgcolor: 'background.paper'
                             }}>

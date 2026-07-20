@@ -33,6 +33,7 @@ import type { CrearCambioSiguienteServicioUseCase } from "../application/crear-c
 import type { ListarCambiosSiguienteServicioUseCase } from "../application/listar-cambios-siguiente-servicio.usecase.js";
 import type { EliminarCambioSiguienteServicioUseCase } from "../application/eliminar-cambio-siguiente-servicio.usecase.js";
 import AppError from "@shared/errors/AppError.js";
+import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
 
 export class ServicioController extends BaseController {
     constructor(
@@ -65,7 +66,8 @@ export class ServicioController extends BaseController {
         private readonly actualizarObservacionesServicioUseCase?: ActualizarObservacionesServicioUseCase,
         private readonly crearCambioSiguienteServicioUseCase?: CrearCambioSiguienteServicioUseCase,
         private readonly listarCambiosSiguienteServicioUseCase?: ListarCambiosSiguienteServicioUseCase,
-        private readonly eliminarCambioSiguienteServicioUseCase?: EliminarCambioSiguienteServicioUseCase
+        private readonly eliminarCambioSiguienteServicioUseCase?: EliminarCambioSiguienteServicioUseCase,
+        private readonly storageProvider?: IStorageProvider
     ) {
         super();
     }
@@ -241,7 +243,9 @@ export class ServicioController extends BaseController {
                 cuenta_bancaria_id 
             };
 
-            const firma_url = req.file.path.replace(/\\/g, '/');
+            const path = `tenant_${negocio_id}/services/vehiculo/srv_${id}`;
+            const firma_url = await this.storageProvider!.uploadFile(req.file, path, 'firma_salida');
+
             const servicio = await this.finalizarServicioUseCase.execute(
                 id, 
                 negocio_id, 
@@ -264,7 +268,10 @@ export class ServicioController extends BaseController {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             if (!req.file) throw new AppError('No se ha subido ninguna firma', 'SIGNATURE_REQUIRED', 400);
-            const firma_url = req.file.path.replace(/\\/g, '/');
+            
+            const path = `tenant_${negocio_id}/services/vehiculo/srv_${id}`;
+            const firma_url = await this.storageProvider!.uploadFile(req.file, path, 'firma_entrada');
+            
             const servicio = await this.guardarFirmaEntradaUseCase.execute(id, firma_url, negocio_id);
             res.status(200).json(Respuesta.exito('Firma de entrada registrada exitosamente', servicio));
         } catch (error) {
@@ -277,10 +284,8 @@ export class ServicioController extends BaseController {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
-            const url = req.file.path.replace(/\\/g, '/');
             const descripcion = typeof req.body.descripcion === 'string' ? req.body.descripcion : null;
-            console.log("esta es la descripccion", descripcion)
-            const servicio = await this.subirImagenServicioUseCase.execute({ servicio_id: id, url, negocio_id, descripcion });
+            const servicio = await this.subirImagenServicioUseCase.execute({ servicio_id: id, file: req.file, negocio_id, descripcion });
             res.status(201).json(Respuesta.exito('Imagen agregada al servicio', servicio));
         } catch (error) {
             next(error);
@@ -292,9 +297,8 @@ export class ServicioController extends BaseController {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
-            const url = req.file.path.replace(/\\/g, '/');
             const descripcion = typeof req.body.descripcion === 'string' ? req.body.descripcion : null;
-            const servicio = await this.subirImagenProgresoServicioUseCase.execute({ servicio_id: id, url, negocio_id, descripcion });
+            const servicio = await this.subirImagenProgresoServicioUseCase.execute({ servicio_id: id, file: req.file, negocio_id, descripcion });
             res.status(201).json(Respuesta.exito('Imagen de progreso agregada al servicio', servicio));
         } catch (error) {
             next(error);

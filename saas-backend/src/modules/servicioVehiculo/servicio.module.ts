@@ -35,6 +35,7 @@ import { enviarNotificacionUseCase } from '../notificacion/notificacion.module.j
 import { PrismaLoteRepository } from '../lote/infrastructure/prisma-lote.repository.js';
 import { PrismaProductoRepository } from '../producto/infrastructure/prisma-producto.repository.js';
 import { PrismaVarianteRepository } from '../producto/infrastructure/prisma-variante.repository.js';
+import { storageProvider } from "@shared/infrastructure/storage/storage.module.js";
 
 import { PrismaTransactionManager } from "../../shared/database/prisma/PrismaTransactionManager.js";
 import { PrismaSucursalRepository } from "../sucursal/infrastructure/prisma-sucursal.repository.js";
@@ -76,8 +77,8 @@ const finalizarServicioUseCase = new FinalizarServicioUseCase(
     exchangeRateProvider
 );
 const guardarFirmaEntradaUseCase = new GuardarFirmaEntradaUseCase(repository);
-const subirImagenServicioUseCase = new SubirImagenServicioUseCase(repository);
-const subirImagenProgresoServicioUseCase = new SubirImagenProgresoServicioUseCase(repository);
+const subirImagenServicioUseCase = new SubirImagenServicioUseCase(repository, storageProvider);
+const subirImagenProgresoServicioUseCase = new SubirImagenProgresoServicioUseCase(repository, storageProvider);
 const eliminarImagenServicioUseCase = new EliminarImagenServicioUseCase(repository);
 const listarChecklistRespuestasUseCase = new ListarChecklistRespuestasUseCase(repository);
 const registrarChecklistRespuestaUseCase = new RegistrarChecklistRespuestaUseCase(repository);
@@ -132,5 +133,6 @@ export const servicioController = new ServicioController(
     actualizarObservacionesServicioUseCase,
     crearCambioSiguienteServicioUseCase,
     listarCambiosSiguienteServicioUseCase,
-    eliminarCambioSiguienteServicioUseCase
+    eliminarCambioSiguienteServicioUseCase,
+    storageProvider
 );

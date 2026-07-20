@@ -13,6 +13,8 @@ import Loading from '../../../../../shared/components/ui/Loaders/Loading';
 import { VarianteRepository } from '../../../infrastructure/repositories/variante.repository';
 import { ProductoRepository } from '../../../infrastructure/repositories/producto.repository';
 import type { ImagenProducto, Variante } from '../../../domain/interfaces/producto.interface';
+import { formatImage } from '../../../../../core/utils/formatImage';
+
 
 const variantFormSchema = z.object({
     precio_sugerido: z.coerce.number().min(0, 'El precio sugerido es obligatorio'),
@@ -314,7 +316,7 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                                         {variant.imagen?.url ? (
                                             <Box
                                                 component="img"
-                                                src={`${import.meta.env.VITE_API_URL }/${variant.imagen.url}`}
+                                                src={formatImage(variant.imagen.url)}
                                                 alt={variant.sku ?? 'Variante'}
                                                 sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}
                                             />
@@ -441,7 +443,7 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                                 {imagenesProducto.map((imagen) => (
                                     <MenuItem key={imagen.id} value={imagen.id}>
                                         <Stack direction="row" spacing={1} alignItems="center">
-                                            <Box component="img" src={`${import.meta.env.VITE_API_URL}/${imagen.url}`} alt={imagen.descripcion ?? 'Imagen'} sx={{ width: 36, height: 36, borderRadius: 1, objectFit: 'cover' }} />
+                                            <Box component="img" src={formatImage(imagen.url)} alt={imagen.descripcion ?? 'Imagen'} sx={{ width: 36, height: 36, borderRadius: 1, objectFit: 'cover' }} />
                                             <Typography variant="body2">{imagen.descripcion || 'Sin descripción'}</Typography>
                                             {imagen.es_principal ? <Chip label="Principal" size="small" color="primary" /> : null}
                                         </Stack>
@@ -450,7 +452,7 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                             </Select>
                         </FormControl>
 
-                            <Box>
+                        <Box>
                             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                                 <Typography variant="subtitle2" color="text.secondary">Atributos</Typography>
                             </Stack>

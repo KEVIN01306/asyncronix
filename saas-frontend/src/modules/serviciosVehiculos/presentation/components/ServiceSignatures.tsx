@@ -5,6 +5,8 @@ import SignaturePadModal from './modals/SignaturePadModal';
 import type { ServicioVehiculo } from '../../domain/interfaces/servicio.interface';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import { ESTADO_SERVICIO_VEHICULO} from '../../domain/servicio.constants';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 type Props = { servicio: ServicioVehiculo; onUpdate: (s: ServicioVehiculo) => void; };
 
@@ -64,7 +66,7 @@ const ServiceSignatures: React.FC<Props> = ({ servicio, onUpdate }) => {
                             <Box>
                                 <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma de Entrada</Typography>
                                 <Card sx={{ border: '1px solid #e0e0e0' }}>
-                                    <CardMedia component="img" image={`${import.meta.env.VITE_API_URL}/${servicio.firma_entrada}`} alt="Firma de entrada" sx={{ height: 200, objectFit: 'contain', p: 1 }} />
+                                    <CardMedia component="img" image={formatImage(servicio.firma_entrada)} alt="Firma de entrada" sx={{ height: 200, objectFit: 'contain', p: 1 }} />
                                 </Card>
                             </Box>
                         )}
@@ -72,7 +74,7 @@ const ServiceSignatures: React.FC<Props> = ({ servicio, onUpdate }) => {
                             <Box>
                                 <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma de Salida</Typography>
                                 <Card sx={{ border: '1px solid #e0e0e0' }}>
-                                    <CardMedia component="img" image={`${import.meta.env.VITE_API_URL}/${servicio.firma_salida}`} alt="Firma de salida" sx={{ height: 200, objectFit: 'contain', p: 1 }} />
+                                    <CardMedia component="img" image={formatImage(servicio.firma_salida)} alt="Firma de salida" sx={{ height: 200, objectFit: 'contain', p: 1 }} />
                                 </Card>
                             </Box>
                         )}

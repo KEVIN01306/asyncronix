@@ -16,6 +16,8 @@ import type { Linea } from '../../../lineas/domain/interface/linea.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { isAbortError, useAbortableFetch } from '../../../../core/hooks/useAbortableFetch';
 import { useDebounce } from '../../../../core/hooks/useDebounce';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 const VehiculosListPage = () => {
     const navigate = useNavigate();
@@ -138,7 +140,7 @@ const VehiculosListPage = () => {
             name: 'Avatar',
             format: (_value: string | undefined, row: Vehiculo) => (
                 <Avatar
-                    src={row.avatar_url ? `${import.meta.env.VITE_API_URL}/${row.avatar_url}` : undefined}
+                    src={row.avatar_url ? formatImage(row.avatar_url) : undefined}
                     sx={{ width: 48, height: 48, bgcolor: 'background.default' }}
                     alt={row.placa}
                 >

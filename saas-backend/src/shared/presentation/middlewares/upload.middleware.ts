@@ -1,17 +1,29 @@
 import multer from 'multer';
-import { storageConfig } from '../../infrastructure/storage/multer.config.js';
+
+const memoryStorage = multer.memoryStorage();
+
+const fileFilter = (_req: any, file: Express.Multer.File, cb: any) => {
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf'];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Tipo de archivo no permitido'));
+    }
+};
+
+const limits = { fileSize: 5 * 1024 * 1024 };
 
 export class FileUploadMiddleware {
     /**
      * Sube un solo archivo
      * @param fieldName Nombre del campo en el FormData
-     * @param folder Carpeta de destino (ej: 'avatars', 'products')
+     * @param _folder Carpeta de destino (ahora ignorada ya que usamos memoria, pero se mantiene para compatibilidad de firma)
      */
-    static single(fieldName: string, folder: string) {
+    static single(fieldName: string, _folder?: string) {
         return multer({
-            storage: storageConfig.getStorage(folder),
-            fileFilter: storageConfig.fileFilter,
-            limits: storageConfig.limits
+            storage: memoryStorage,
+            fileFilter,
+            limits
         }).single(fieldName);
     }
 
@@ -19,13 +31,13 @@ export class FileUploadMiddleware {
      * Sube múltiples archivos
      * @param fieldName Nombre del campo en el FormData
      * @param maxCount Máximo de archivos permitidos
-     * @param folder Carpeta de destino
+     * @param _folder Carpeta de destino
      */
-    static array(fieldName: string, maxCount: number, folder: string) {
+    static array(fieldName: string, maxCount: number, _folder?: string) {
         return multer({
-            storage: storageConfig.getStorage(folder),
-            fileFilter: storageConfig.fileFilter,
-            limits: storageConfig.limits
+            storage: memoryStorage,
+            fileFilter,
+            limits
         }).array(fieldName, maxCount);
     }
 }

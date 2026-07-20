@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Box, Button, Typography, Stack, CircularProgress } from '@mui/material';
 import { PhotoCamera, CameraAlt, Refresh } from '@mui/icons-material';
 import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 interface VehicleImageUploaderProps {
     currentImageUrl?: string;
@@ -13,7 +15,7 @@ interface VehicleImageUploaderProps {
 const VehicleImageUploader = ({ currentImageUrl, onUpload, uploading = false, disabled = false }: VehicleImageUploaderProps) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | undefined>(() => {
-        return currentImageUrl ? `${import.meta.env.VITE_API_URL}/${currentImageUrl}` : undefined;
+        return currentImageUrl ? formatImage(currentImageUrl) : undefined;
     });
     const [error, setError] = useState<string | null>(null);
     const deviceInputRef = useRef<HTMLInputElement | null>(null);
@@ -21,7 +23,7 @@ const VehicleImageUploader = ({ currentImageUrl, onUpload, uploading = false, di
 
     useEffect(() => {
         if (!selectedFile) {
-            setPreviewUrl(currentImageUrl ? `${import.meta.env.VITE_API_URL}/${currentImageUrl}` : undefined);
+            setPreviewUrl(currentImageUrl ? formatImage(currentImageUrl) : undefined);
             return;
         }
 

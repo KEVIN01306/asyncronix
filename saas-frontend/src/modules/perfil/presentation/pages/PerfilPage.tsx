@@ -22,6 +22,8 @@ import { ChangePinModeloModal } from '../components/ChangePinModeloModal';
 import { ChangePinSucursalModal } from '../components/ChangePinSucursalModal.tsx';
 import { EditAvatarModal } from '../components/EditAvatarModal';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 export const PerfilPage = () => {
     const userStore = useAuthStore((state) => state.user);
@@ -36,7 +38,7 @@ export const PerfilPage = () => {
     const [openChangePinSucursal, setOpenChangePinSucursal] = useState(false);
     const [openEditAvatar, setOpenEditAvatar] = useState(false);
 
-    const AvatarSource = perfil?.avatar_url ? `${import.meta.env.VITE_API_URL}/${perfil.avatar_url}` : undefined;
+    const AvatarSource = perfil?.avatar_url ? formatImage(perfil.avatar_url) : undefined;
 
     const cargarPerfil = async () => {
         try {

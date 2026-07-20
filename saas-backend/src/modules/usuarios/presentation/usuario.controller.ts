@@ -13,6 +13,7 @@ import type { ActualizarPinCajaUseCase } from "../application/actualizar-pin-caj
 import type { ActualizarPinModeloUseCase } from "../application/actualizar-pin-modelo.usecase.js";
 import type { ActualizarPinSucursalUseCase } from "../application/actualizar-pin-sucursal.usecase.js";
 import AppError from "../../../shared/errors/AppError.js";
+import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
 
 export class UsuarioController extends BaseController {
 
@@ -27,7 +28,8 @@ export class UsuarioController extends BaseController {
         private readonly cambiarPasswordUseCase: CambiarPasswordUseCase,
         private readonly actualizarPinCajaUseCase: ActualizarPinCajaUseCase,
         private readonly actualizarPinModeloUseCase: ActualizarPinModeloUseCase,
-        private readonly actualizarPinSucursalUseCase: ActualizarPinSucursalUseCase
+        private readonly actualizarPinSucursalUseCase: ActualizarPinSucursalUseCase,
+        private readonly storageProvider: IStorageProvider
     ) {
         super()
     }
@@ -114,7 +116,9 @@ export class UsuarioController extends BaseController {
             if (!req.file) {
                 throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
             }
-            const avatar_url = req.file.path.replace(/\\/g, '/');
+
+            const path = `tenant_${negocio_id}/users/usr_${id}`;
+            const avatar_url = await this.storageProvider.uploadFile(req.file, path, 'profile');
 
             await this.actualizarAvatarUseCase.execute(id, negocio_id, avatar_url)
             res.status(200).json(Respuesta.exito('Avatar actualizado con exito', null))

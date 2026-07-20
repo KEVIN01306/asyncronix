@@ -17,6 +17,8 @@ import ProductoVariantesTab from './components/ProductoVariantesTab';
 import ProductoAtributosTab from './components/ProductoAtributosTab';
 import ProductoImagenesTab from './components/ProductoImagenesTab';
 import { Tabs, Tab } from '@mui/material';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 const ProductoDetailPage = () => {
     const { id } = useParams();
@@ -28,8 +30,8 @@ const ProductoDetailPage = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [generatingQr, setGeneratingQr] = useState(false);
     const principalImage = producto?.imagenes?.find((img) => img.es_principal) ?? producto?.imagenes?.[0];
-    const ImageSource = principalImage?.url ? `${import.meta.env.VITE_API_URL}/${principalImage.url}` : undefined;
-    const QrImageSource = producto?.qr_imagen ? `${import.meta.env.VITE_API_URL}/${producto.qr_imagen}` : undefined;
+    const ImageSource = principalImage?.url ? formatImage(principalImage.url) : undefined;
+    const QrImageSource = producto?.qr_imagen ? formatImage(producto.qr_imagen) : undefined;
 
     // Read tab from URL query params, default to 0
     const [tab, setTabState] = useState(() => {
@@ -162,7 +164,7 @@ const ProductoDetailPage = () => {
             link.download = `${producto?.sku ?? 'producto'}-qr.png`;
             document.body.appendChild(link);
             link.click();
-            
+
             document.body.removeChild(link);
             URL.revokeObjectURL(blobUrl);
         } catch (error) {
@@ -193,17 +195,17 @@ const ProductoDetailPage = () => {
             {tab === 0 ? (
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, md: 8 }}>
-                    <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                        {ImageSource ? <Box component="img" src={ImageSource} alt={producto.nombre} sx={{ width: '100%', maxHeight: 320, objectFit: 'contain', borderRadius: 2, border: '1px solid', borderColor: 'divider', mb: 3 }} /> : null}
-                        <ProductoDetailsPanel
-                            categoria={producto.categoria}
-                            sku={producto.sku}
-                            precio_sugerido={producto.precio_sugerido}
-                            stock_total={producto.stock_total}
-                            activo={producto.activo}
-                        />
-                    </Paper>
-                </Grid>
+                        <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                            {ImageSource ? <Box component="img" src={ImageSource} alt={producto.nombre} sx={{ width: '100%', maxHeight: 320, objectFit: 'contain', borderRadius: 2, border: '1px solid', borderColor: 'divider', mb: 3 }} /> : null}
+                            <ProductoDetailsPanel
+                                categoria={producto.categoria}
+                                sku={producto.sku}
+                                precio_sugerido={producto.precio_sugerido}
+                                stock_total={producto.stock_total}
+                                activo={producto.activo}
+                            />
+                        </Paper>
+                    </Grid>
 
                     <Grid size={{ xs: 12, md: 4 }}>
                         <Box display="flex" flexDirection="column" gap={3}>

@@ -25,6 +25,8 @@ import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageL
 import { useAuthStore } from '../../../../core/store/authStore';
 import { ChangePasswordModal } from '../../../perfil/presentation/components/ChangePasswordModal';
 import type { CambiarPasswordForm } from '../../../perfil/domain/interfaces/perfil.interface';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 const UsuarioDetailPage = () => {
     const { id } = useParams();
@@ -33,7 +35,7 @@ const UsuarioDetailPage = () => {
     const [usuario, setUsuario] = useState<Usuario | null>(null);
     const [loading, setLoading] = useState(true);
     const [openRestablecerPassword, setOpenRestablecerPassword] = useState(false);
-    const AvatarSource = usuario?.avatar_url ? `${import.meta.env.VITE_API_URL}/${usuario.avatar_url}` : undefined;
+    const AvatarSource = usuario?.avatar_url ? formatImage(usuario.avatar_url) : undefined;
 
     const canRestablecerPassword = user?.permisos?.includes('ADMIN_USUARIOS');
 
@@ -66,7 +68,7 @@ const UsuarioDetailPage = () => {
     }, [fetchUsuario, id]);
 
     if (loading) {
-        return <Loading/>;
+        return <Loading />;
     }
 
     if (!usuario) {
@@ -114,22 +116,22 @@ const UsuarioDetailPage = () => {
             </Stack>
 
             <Grid container spacing={3}>
-                <Grid size={{xs: 12, md: 8}}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                         <Box display="flex" alignItems="center" gap={3} mb={4}>
-                            <Avatar 
-                                src={AvatarSource} 
-                                sx={{ 
-                                    fontSize: 50, 
-                                    width: 100,  
-                                    height: 100, 
-                                    border: AvatarSource ?   '2px solid' : "",
-                                    borderColor: 'secondary.main', 
-                                    background: AvatarSource ? "#ffffff" : "#876543cc", 
-                                }} 
-                            > 
+                            <Avatar
+                                src={AvatarSource}
+                                sx={{
+                                    fontSize: 50,
+                                    width: 100,
+                                    height: 100,
+                                    border: AvatarSource ? '2px solid' : "",
+                                    borderColor: 'secondary.main',
+                                    background: AvatarSource ? "#ffffff" : "#876543cc",
+                                }}
+                            >
                                 {usuario.nombre[0]}
-                            </Avatar> 
+                            </Avatar>
                             <Box>
                                 <Typography variant="overline" color="primary" fontWeight={700}>Módulo de Usuarios</Typography>
                                 <Typography variant="h5" fontWeight={700}>{usuario.nombre}</Typography>
@@ -161,7 +163,7 @@ const UsuarioDetailPage = () => {
                             {usuario.sucursal && (
                                 <Box>
                                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>SUCURSAL</Typography>
-                                    <Chip  label={usuario.sucursal.nombre} />
+                                    <Chip label={usuario.sucursal.nombre} />
                                 </Box>
                             )}
 
@@ -181,7 +183,7 @@ const UsuarioDetailPage = () => {
                     </Paper>
                 </Grid>
 
-                <Grid size={{xs: 12, md: 4}} >
+                <Grid size={{ xs: 12, md: 4 }} >
                     <Card variant="outlined" sx={{ borderRadius: 2 }}>
                         <CardContent>
                             <Typography variant="subtitle2" gutterBottom fontWeight={700}>Resumen del Usuario</Typography>

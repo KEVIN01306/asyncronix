@@ -27,6 +27,8 @@ import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 import CambiarMonedaModal from '../components/CambiarMonedaModal';
 import NegocioLimitesTab from '../components/NegocioLimitesTab';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -66,7 +68,7 @@ const NegocioDetailPage = () => {
         setTabIndex(newValue);
     };
 
-    const logoSource = negocio?.logo_url ? `${import.meta.env.VITE_API_URL}/${negocio.logo_url}` : undefined;
+    const logoSource = formatImage(negocio?.logo_url);
     const canCambiarMoneda = user?.permisos.includes('NEGOCIOS_CAMBIAR_MONEDA') ?? false;
 
     const fetchNegocio = useCallback(async () => {

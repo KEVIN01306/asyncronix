@@ -1,6 +1,7 @@
 //import type { Theme } from "@emotion/react";
 import { Box, Tooltip } from "@mui/material";
 import { useAuthStore } from "../../../../../core/store/authStore";
+import { formatImage } from "../../../../../core/utils/formatImage";
 
 export const SidebarHeader: React.FC = () => {
   const user = useAuthStore((state) => state.user);
@@ -10,7 +11,7 @@ export const SidebarHeader: React.FC = () => {
         <Box display="flex" justifyContent="center" width="100%">
           <Box
             component="img"
-            src={import.meta.env.VITE_API_URL + "/" + (user?.negocio?.logo_url || "/icons/asyncronix.png")}
+            src={user?.negocio?.logo_url ? formatImage(user.negocio.logo_url) : "/icons/asyncronix.png"}
             alt={user?.negocio?.nombre_comercial || "Logo"}
             sx={{
               height: 55,

@@ -14,6 +14,7 @@ import { UsuarioController } from "./presentation/usuario.controller.js";
 import prisma from "@infrastructure/config/prisma.js";
 import { Argon2HashProvider } from "@shared/infrastructure/argon2-hash.provider.js";
 import { validarLimiteNegocioUseCase } from "../negocio/negocio.module.js";
+import { storageProvider } from "@shared/infrastructure/storage/storage.module.js";
 
 
 const usuarioRepository = new PrismaUsuarioRepository(prisma);
@@ -42,5 +43,6 @@ export const usuarioController = new UsuarioController(
     cambiarPasswordUseCase,
     actualizarPinCajaUseCase,
     actualizarPinModeloUseCase,
-    actualizarPinSucursalUseCase
+    actualizarPinSucursalUseCase,
+    storageProvider
 );

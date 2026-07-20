@@ -13,6 +13,8 @@ import { HojaServicioPdf } from '../../infrastructure/repositories/HojaServicioP
 import { PdfDownloader } from '../../../../shared/components/download/PdfDownloader';
 import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 const ServicioHojaPage = () => {
     const { id } = useParams();
@@ -312,7 +314,7 @@ const ServicioHojaPage = () => {
                         <Box >
                             {
                                 servicio.firma_entrada ? (
-                                    <CardMedia component="img" image={`${import.meta.env.VITE_API_URL}/${servicio.firma_entrada}`} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                    <CardMedia component="img" image={formatImage(servicio.firma_entrada)} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
                                 ): (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
                                         <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>
@@ -326,7 +328,7 @@ const ServicioHojaPage = () => {
                         <Box >
                             {
                                 servicio.firma_salida ? (
-                                    <CardMedia component="img" image={`${import.meta.env.VITE_API_URL}/${servicio.firma_salida}`} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                    <CardMedia component="img" image={formatImage(servicio.firma_salida)} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
                                 ): (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
                                         <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>

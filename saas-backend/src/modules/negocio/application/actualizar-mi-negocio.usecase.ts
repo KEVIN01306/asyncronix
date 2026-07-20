@@ -4,27 +4,32 @@ import { NotFoundPersistenceError } from "@shared/database/errors/NotFoundPersis
 import { UniqueConstraintError } from "@shared/database/errors/UniqueConstraintError.js";
 import type { NegocioActualizar, NegocioObtenidoDetalle } from "../domain/negocio.entity.js";
 import type { NegocioRepository } from "../domain/negocio.repository.js";
-import ManejadorArchivosUtils from "../infrastructure/utils/manejadorArchivos.utils.js";
+import type { IStorageProvider, FileDTO } from "@shared/domain/providers/storage.provider.js";
 
 export class ActualizarMiNegocioUseCase {
     constructor(
-        private readonly negocioRepository: NegocioRepository
+        private readonly negocioRepository: NegocioRepository,
+        private readonly storageProvider: IStorageProvider
     ) { }
 
-    async execute(negocio_id: string, data: NegocioActualizar, nuevoLogoUrl: string | null | undefined): Promise<NegocioObtenidoDetalle> {
+    async execute(negocio_id: string, data: NegocioActualizar, logoFile: FileDTO | null | undefined): Promise<NegocioObtenidoDetalle> {
         try {
             const negocioActual = await this.negocioRepository.obtener(negocio_id);
 
             if (!negocioActual) {
-                if (nuevoLogoUrl) await ManejadorArchivosUtils.eliminarArchivo(nuevoLogoUrl);
                 throw new AppError('No se encontró el negocio para actualizar', 'DATA_NOT_FOUND', 404);
             }
 
-            if (nuevoLogoUrl) {
-                if (negocioActual.logo_url) {
-                    await ManejadorArchivosUtils.eliminarArchivo(negocioActual.logo_url);
+            if (logoFile) {
+                const path = `tenant_${negocio_id}/business/bus_${negocio_id}`;
+                let logo_url: string;
+                if (negocioActual.logo_url && this.storageProvider.replaceFile) {
+                    logo_url = await this.storageProvider.replaceFile(negocioActual.logo_url, logoFile, path, 'logo');
+                } else {
+                    if (negocioActual.logo_url) await this.storageProvider.deleteFile(negocioActual.logo_url);
+                    logo_url = await this.storageProvider.uploadFile(logoFile, path, 'logo');
                 }
-                data.logo_url = nuevoLogoUrl;
+                data.logo_url = logo_url;
             }
 
             if (data.nombre_comercial) {
@@ -33,7 +38,6 @@ export class ActualizarMiNegocioUseCase {
 
             return await this.negocioRepository.actualizar(negocio_id, data);
         } catch (error) {
-            if (nuevoLogoUrl) await ManejadorArchivosUtils.eliminarArchivo(nuevoLogoUrl);
 
             if (error instanceof AppError) throw error;
 

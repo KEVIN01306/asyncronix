@@ -1,9 +1,12 @@
 import type { ProductoRepository } from "../domain/producto.repository.js";
 import AppError from "@shared/errors/AppError.js";
-import ManejadorArchivos from "@shared/infrastructure/manejadorArchivos.utils.js";
+import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
 
 export class EliminarImagenProductoUseCase {
-    constructor(private readonly repository: ProductoRepository) { }
+    constructor(
+        private readonly repository: ProductoRepository,
+        private readonly storageProvider: IStorageProvider
+    ) { }
 
     async execute(imagen_id: string, negocio_id: string): Promise<void> {
         const imagen = await this.repository.obtenerImagen(imagen_id, negocio_id);
@@ -12,7 +15,7 @@ export class EliminarImagenProductoUseCase {
             throw new AppError('No es posible eliminar la imagen principal del producto.', 'IMAGEN_PRINCIPAL_NO_ELIMINABLE', 400);
         }
 
-        await ManejadorArchivos.eliminarArchivo(imagen.url);
+        await this.storageProvider.deleteFile(imagen.url);
 
         await this.repository.eliminarImagen(imagen_id, negocio_id);
     }

@@ -6,6 +6,8 @@ import ConfirmDialog from '../../../../../shared/components/ui/dialog/ConfirmDia
 import { bajarCalidadImagen } from '../../../../../core/utils/bajarCalidadImagen';
 import type { ImagenProducto } from '../../../domain/interfaces/producto.interface';
 import { ProductoRepository } from '../../../infrastructure/repositories/producto.repository';
+import { formatImage } from '../../../../../core/utils/formatImage';
+
 
 interface Props {
     productoId: string;
@@ -114,7 +116,7 @@ const ProductoImagenesTab = ({ productoId, onRefresh }: Props) => {
                 {imagenes.map((imagen) => (
                     <Grid key={imagen.id} size={{ xs: 12, md: 4 }}>
                         <Card variant="outlined">
-                            <Box component="img" src={`${import.meta.env.VITE_API_URL}/${imagen.url}`} alt={imagen.descripcion || 'Imagen'} sx={{ width: '100%', height: 220, objectFit: 'cover' }} />
+                            <Box component="img" src={formatImage(imagen.url)} alt={imagen.descripcion || 'Imagen'} sx={{ width: '100%', height: 220, objectFit: 'cover' }} />
                             <CardContent>
                                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                                     <Typography variant="body2">{imagen.descripcion || 'Sin descripción'}</Typography>

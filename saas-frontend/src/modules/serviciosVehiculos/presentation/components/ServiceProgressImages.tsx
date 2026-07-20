@@ -7,6 +7,8 @@ import CreateImageModal from './modals/CreateImageModal';
 import ImagePreviewModal from './modals/ImagePreviewModal';
 import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
 import { ESTADO_SERVICIO_VEHICULO, type EstadoVehiculoServicio,  } from '../../domain/servicio.constants';
+import { formatImage } from '../../../../core/utils/formatImage';
+
 
 type Props = {
     servicio: ServicioVehiculo;
@@ -75,7 +77,7 @@ const ServiceProgressImages: React.FC<Props> = ({ servicio, onUpdate, isMobile }
     };
 
     const handleOpenPreview = (imagen: { url: string; descripcion?: string | null }) => {
-        setPreviewUrl(`${import.meta.env.VITE_API_URL}/${imagen.url}`);
+        setPreviewUrl(formatImage(imagen.url) ?? null);
         setOpenPreview(true);
     };
 
@@ -98,7 +100,7 @@ const ServiceProgressImages: React.FC<Props> = ({ servicio, onUpdate, isMobile }
                         <CardMedia
                             component="img"
                             height="280"
-                            image={`${import.meta.env.VITE_API_URL}/${servicio.imagenes[selectedIndex]?.url}`}
+                            image={formatImage(servicio.imagenes[selectedIndex]?.url)}
                             alt={servicio.imagenes[selectedIndex]?.descripcion ?? 'Servicio'}
                         />
                         <Box sx={{ p: 2 }}>
@@ -111,7 +113,7 @@ const ServiceProgressImages: React.FC<Props> = ({ servicio, onUpdate, isMobile }
                         {servicio.imagenes.map((imagen, index) => (
                             <Card key={imagen.id} onClick={() => setSelectedIndex(index)} sx={{ minWidth: 100, maxWidth: 120, flex: '0 0 auto', cursor: 'pointer' }}>
                                 <CardActionArea>
-                                    <CardMedia component="img" height="84" image={`${import.meta.env.VITE_API_URL}/${imagen.url}`} alt={imagen.descripcion ?? 'Miniatura'} />
+                                    <CardMedia component="img" height="84" image={formatImage(imagen.url)} alt={imagen.descripcion ?? 'Miniatura'} />
                                 </CardActionArea>
                             </Card>
                         ))}

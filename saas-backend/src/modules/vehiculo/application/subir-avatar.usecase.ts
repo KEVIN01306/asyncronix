@@ -1,22 +1,29 @@
 import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
 import AppError from "@shared/errors/AppError.js";
 import type { VehiculoRepository } from "../domain/vehiculo.repository.js";
-import ManejadorArchivosUtils from "@shared/infrastructure/manejadorArchivos.utils.js";
+import type { IStorageProvider, FileDTO } from "@shared/domain/providers/storage.provider.js";
 
 export class SubirAvatarVehiculoUseCase {
-    constructor(private readonly repository: VehiculoRepository) { }
+    constructor(
+        private readonly repository: VehiculoRepository,
+        private readonly storageProvider: IStorageProvider
+    ) { }
 
-    async execute(id: string, negocio_id: string, nuevoAvatarUrl: string) {
+    async execute(id: string, negocio_id: string, avatarFile: FileDTO) {
         try {
             const veh = await this.repository.obtener(id, negocio_id);
             if (!veh) {
-                // cleanup file already uploaded
-                await ManejadorArchivosUtils.eliminarArchivo(nuevoAvatarUrl);
                 throw new AppError('Vehículo no encontrado', 'DATA_NOT_FOUND', 404);
             }
 
-            if (veh.avatar_url) {
-                await ManejadorArchivosUtils.eliminarArchivo(veh.avatar_url);
+            const path = `tenant_${negocio_id}/vehicles/veh_${id}`;
+            let nuevoAvatarUrl: string;
+
+            if (veh.avatar_url && this.storageProvider.replaceFile) {
+                nuevoAvatarUrl = await this.storageProvider.replaceFile(veh.avatar_url, avatarFile, path, 'avatar');
+            } else {
+                if (veh.avatar_url) await this.storageProvider.deleteFile(veh.avatar_url);
+                nuevoAvatarUrl = await this.storageProvider.uploadFile(avatarFile, path, 'avatar');
             }
 
             await this.repository.actualizarAvatar(id, negocio_id, nuevoAvatarUrl);

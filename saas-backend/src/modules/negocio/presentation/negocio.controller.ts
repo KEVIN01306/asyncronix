@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from "express";
 import BaseController from "@shared/presentation/base.controller.js";
 import Respuesta from "@app/http/respuesta.js";
 
-import ManejadorArchivosUtils from "../infrastructure/utils/manejadorArchivos.utils.js";
 import type { RegistrarNegocioUseCase } from "../application/registrar-negocio.usecase.js";
 import type { ActualizarNegocioUseCase } from "../application/actualizar-negocio.usecase.js";
 import type { ObtenerNegocioUseCase } from "../application/obtener-negocio.usecase.js";
@@ -10,6 +9,7 @@ import type { ObtenerMiNegocioUseCase } from "../application/obtener-mi-negocio.
 import type { ActualizarMiNegocioUseCase } from "../application/actualizar-mi-negocio.usecase.js";
 import type { CambiarMonedaNegocioUseCase } from "../application/cambiar-moneda-negocio.usecase.js";
 import type { ObtenerLimitesNegocioUseCase } from "../application/obtener-limites-negocio.usecase.js";
+import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
 
 export class NegocioController extends BaseController {
 
@@ -20,7 +20,8 @@ export class NegocioController extends BaseController {
         private readonly obtenerMiNegocioUseCase: ObtenerMiNegocioUseCase,
         private readonly actualizarMiNegocioUseCase: ActualizarMiNegocioUseCase,
         private readonly cambiarMonedaNegocioUseCase: CambiarMonedaNegocioUseCase,
-        private readonly obtenerLimitesNegocioUseCase: ObtenerLimitesNegocioUseCase
+        private readonly obtenerLimitesNegocioUseCase: ObtenerLimitesNegocioUseCase,
+        private readonly storageProvider: IStorageProvider
     ) {
         super()
     }
@@ -40,9 +41,8 @@ export class NegocioController extends BaseController {
         try {
             const data = req.body;
             const logo = req.file;
-            const logoPath = logo ? ManejadorArchivosUtils.formatearRuta(logo.path) : 'uploads/negocios/default.png';
 
-            const negocio = await this.registrarNegocioUseCase.execute(data, logoPath)
+            const negocio = await this.registrarNegocioUseCase.execute(data, logo)
             res.status(201).json(Respuesta.exito('Negocio creado con éxito', negocio))
         } catch (error) {
             next(error)
@@ -54,10 +54,9 @@ export class NegocioController extends BaseController {
             const { id } = req.params
             const data = req.body
             const { negocio_id } = this.obtenerEntorno(res)
-            const logo = req.file
-            const logoPath = logo ? ManejadorArchivosUtils.formatearRuta(logo.path) : undefined
+            const logo = req.file;
 
-            const negocio = await this.actualizarNegocioUseCase.execute(id, data, logoPath, negocio_id)
+            const negocio = await this.actualizarNegocioUseCase.execute(id, data, logo, negocio_id)
             res.status(200).json(Respuesta.exito('Negocio actualizado con éxito', negocio))
         } catch (error) {
             next(error)
@@ -78,10 +77,9 @@ export class NegocioController extends BaseController {
         try {
             const { negocio_id } = this.obtenerEntorno(res)
             const data = req.body
-            const logo = req.file
-            const logoPath = logo ? ManejadorArchivosUtils.formatearRuta(logo.path) : undefined
+            const logo = req.file;
 
-            const negocio = await this.actualizarMiNegocioUseCase.execute(negocio_id, data, logoPath)
+            const negocio = await this.actualizarMiNegocioUseCase.execute(negocio_id, data, logo)
             res.status(200).json(Respuesta.exito('Negocio actualizado con éxito', negocio))
         } catch (error) {
             next(error)

@@ -1,5 +1,7 @@
 import { Avatar, Box, Stack, Tooltip, Typography } from "@mui/material";
 import { useAuthStore } from "../../../../../core/store/authStore";
+import { formatImage } from '../../../../../core/utils/formatImage';
+
 
 interface SidebarFooterProps {
   collapsed: boolean;
@@ -23,7 +25,7 @@ export const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
       >
         <Tooltip followCursor describeChild title={user?.nombre + ' ' + user?.apellido} placement="top-end">
           <Avatar
-            src={user?.avatar_url ? `${import.meta.env.VITE_API_URL}/${user.avatar_url}` : "/static/images/avatar/1.jpg"}
+            src={user?.avatar_url ? formatImage(user.avatar_url) : "/static/images/avatar/1.jpg"}
             sx={{
               width: collapsed ? 40 : 50,
               height: collapsed ? 40 : 50,
