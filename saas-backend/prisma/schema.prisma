@@ -371,8 +371,8 @@ model Vehiculo {
   negocio_id       String   @db.Char(36)
   placa            String
   modelo_id        String   @db.Char(36)
-  avatar_url       String?
-  calcomania_url   String?
+  avatar_url       String?  @db.Text
+  calcomania_url   String?  @db.Text
   vehiculo_tipo_id String   @db.Char(36)
   cliente_id       String?  @db.Char(36)
   activo           Boolean  @default(true)
@@ -939,7 +939,7 @@ model PreVentaDetalle {
 model Imagen {
   id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   servicio_id String   @db.Char(36)
-  imagen      String
+  imagen      String   @db.Text
   descripcion String?
   activo      Boolean  @default(true)
   created_at  DateTime @default(now())

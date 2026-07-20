@@ -2,6 +2,7 @@ import type { IStorageProvider, FileDTO } from "../../../shared/domain/providers
 import type { MediaRepository } from "../domain/media.repository.js";
 import type { NegocioRepository } from "../../negocio/domain/negocio.repository.js";
 import type { MediaEntity } from "../domain/media.entity.js";
+import AppError from "../../../shared/errors/AppError.js";
 
 export class CrearMediaUseCase {
     constructor(
@@ -11,6 +12,14 @@ export class CrearMediaUseCase {
     ) { }
 
     async execute(file: FileDTO, negocio_id: string, path: string, fixedFileName?: string): Promise<string> {
+        const limites = await this.negocioRepository.obtenerLimites(negocio_id);
+        if (limites && limites.storage_max_bytes !== null && limites.storage_max_bytes !== BigInt(-1)) {
+            const used = limites.storage_bytes_used || BigInt(0);
+            const newTotal = used + BigInt(file.size);
+            if (newTotal > limites.storage_max_bytes) {
+                throw new AppError('El límite de almacenamiento ha sido alcanzado. Extiende tu plan para poder subir más imágenes.', 'STORAGE_LIMIT_REACHED', 400);
+            }
+        }
         // Subir a Storage
         const finalPath = await this.storageProvider.uploadFile(file, path, fixedFileName);
 
