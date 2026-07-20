@@ -3,13 +3,14 @@ import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
 import { UniqueConstraintError } from "@shared/database/errors/UniqueConstraintError.js";
 import type { NegocioCrear, NegocioObtenidoDetalle } from "../domain/negocio.entity.js";
 import type { NegocioRepository } from "../domain/negocio.repository.js";
-import type { IStorageProvider, FileDTO } from "@shared/domain/providers/storage.provider.js";
+import type { FileDTO } from "@shared/domain/providers/storage.provider.js";
+import type { CrearMediaUseCase } from "../../media/application/crear-media.usecase.js";
 import { v4 as uuidv4 } from "uuid";
 
 export class RegistrarNegocioUseCase {
     constructor(
         private readonly negocioRepository: NegocioRepository,
-        private readonly storageProvider: IStorageProvider
+        private readonly crearMediaUseCase: CrearMediaUseCase
     ) { }
 
     async execute(data: NegocioCrear, logoFile: FileDTO | null | undefined): Promise<NegocioObtenidoDetalle> {
@@ -28,7 +29,7 @@ export class RegistrarNegocioUseCase {
             
             if (logoFile) {
                 const path = `tenant_${nuevoNegocio.id}/business/bus_${nuevoNegocio.id}`;
-                const logo_url = await this.storageProvider.uploadFile(logoFile, path, 'logo');
+                const logo_url = await this.crearMediaUseCase.execute(logoFile, nuevoNegocio.id, path, 'logo');
                 await this.negocioRepository.actualizar(nuevoNegocio.id, { logo_url });
                 nuevoNegocio.logo_url = logo_url;
             }

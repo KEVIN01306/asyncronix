@@ -22,7 +22,7 @@ export class ObtenerLimitesNegocioUseCase {
         private readonly cuentaBancariaRepository: CuentaBancariaRepository
     ) { }
 
-    async execute(negocioId: string): Promise<NegocioLimiteItem[]> {
+    async execute(negocioId: string): Promise<{ generales: NegocioLimiteItem[], storage: { storage_bytes_used: number, storage_max_bytes: number | null } }> {
         try {
             const limites = await this.negocioRepository.obtenerLimites(negocioId);
 
@@ -44,15 +44,21 @@ export class ObtenerLimitesNegocioUseCase {
                 this.cuentaBancariaRepository.contar(negocioId)
             ]);
 
-            return [
-                this.buildItem(LimiteNegocio.USUARIOS, limites.max_usuarios, usuariosCount),
-                this.buildItem(LimiteNegocio.SUCURSALES, limites.max_sucursales, sucursalesCount),
-                this.buildItem(LimiteNegocio.PRODUCTOS, limites.max_productos, productosCount),
-                this.buildItem(LimiteNegocio.VARIANTES, limites.max_variantes, variantesCount),
-                this.buildItem(LimiteNegocio.VEHICULOS, limites.max_vehiculos, vehiculosCount),
-                this.buildItem(LimiteNegocio.CAJAS, limites.max_cajas, cajasCount),
-                this.buildItem(LimiteNegocio.CUENTAS_BANCARIAS, limites.max_cuentas_bancarias, cuentasCount)
-            ];
+            return {
+                generales: [
+                    this.buildItem(LimiteNegocio.USUARIOS, limites.max_usuarios, usuariosCount),
+                    this.buildItem(LimiteNegocio.SUCURSALES, limites.max_sucursales, sucursalesCount),
+                    this.buildItem(LimiteNegocio.PRODUCTOS, limites.max_productos, productosCount),
+                    this.buildItem(LimiteNegocio.VARIANTES, limites.max_variantes, variantesCount),
+                    this.buildItem(LimiteNegocio.VEHICULOS, limites.max_vehiculos, vehiculosCount),
+                    this.buildItem(LimiteNegocio.CAJAS, limites.max_cajas, cajasCount),
+                    this.buildItem(LimiteNegocio.CUENTAS_BANCARIAS, limites.max_cuentas_bancarias, cuentasCount)
+                ],
+                storage: {
+                    storage_bytes_used: Number(limites.storage_bytes_used ?? 0),
+                    storage_max_bytes: limites.storage_max_bytes ? Number(limites.storage_max_bytes) : null
+                }
+            };
 
         } catch (error) {
             if (error instanceof AppError) throw error;

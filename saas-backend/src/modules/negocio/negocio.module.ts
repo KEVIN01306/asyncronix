@@ -18,6 +18,7 @@ import { PrismaVehiculoRepository } from "../vehiculo/infrastructure/prisma-vehi
 import { PrismaCajaRepository } from "../caja/infrastructure/prisma-caja.repository.js";
 import { PrismaCuentaBancariaRepository } from "../cuenta-bancaria/infrastructure/prisma-cuenta-bancaria.repository.js";
 import { storageProvider } from "@shared/infrastructure/storage/storage.module.js";
+import { crearMediaUseCase, reemplazarMediaUseCase } from "../media/media.module.js";
 
 const negocioRepository = new PrismaNegocioRepository(prisma);
 const monedaRepository = new PrismaMonedaRepository(prisma);
@@ -29,11 +30,11 @@ const vehiculoRepository = new PrismaVehiculoRepository(prisma);
 const cajaRepository = new PrismaCajaRepository(prisma);
 const cuentaBancariaRepository = new PrismaCuentaBancariaRepository(prisma);
 
-const registrarNegocioUseCase = new RegistrarNegocioUseCase(negocioRepository, storageProvider);
-const actualizarNegocioUseCase = new ActualizarNegocioUseCase(negocioRepository, storageProvider);
+const registrarNegocioUseCase = new RegistrarNegocioUseCase(negocioRepository, crearMediaUseCase);
+const actualizarNegocioUseCase = new ActualizarNegocioUseCase(negocioRepository, reemplazarMediaUseCase);
 const obtenerNegocioUseCase = new ObtenerNegocioUseCase(negocioRepository);
 const obtenerMiNegocioUseCase = new ObtenerMiNegocioUseCase(negocioRepository);
-const actualizarMiNegocioUseCase = new ActualizarMiNegocioUseCase(negocioRepository, storageProvider);
+const actualizarMiNegocioUseCase = new ActualizarMiNegocioUseCase(negocioRepository, reemplazarMediaUseCase);
 const cambiarMonedaNegocioUseCase = new CambiarMonedaNegocioUseCase(negocioRepository, monedaRepository);
 const obtenerLimitesNegocioUseCase = new ObtenerLimitesNegocioUseCase(
     negocioRepository,

@@ -4,12 +4,13 @@ import { NotFoundPersistenceError } from "@shared/database/errors/NotFoundPersis
 import { UniqueConstraintError } from "@shared/database/errors/UniqueConstraintError.js";
 import type { NegocioActualizar, NegocioObtenidoDetalle } from "../domain/negocio.entity.js";
 import type { NegocioRepository } from "../domain/negocio.repository.js";
-import type { IStorageProvider, FileDTO } from "@shared/domain/providers/storage.provider.js";
+import type { FileDTO } from "@shared/domain/providers/storage.provider.js";
+import type { ReemplazarMediaUseCase } from "../../media/application/reemplazar-media.usecase.js";
 
 export class ActualizarMiNegocioUseCase {
     constructor(
         private readonly negocioRepository: NegocioRepository,
-        private readonly storageProvider: IStorageProvider
+        private readonly reemplazarMediaUseCase: ReemplazarMediaUseCase
     ) { }
 
     async execute(negocio_id: string, data: NegocioActualizar, logoFile: FileDTO | null | undefined): Promise<NegocioObtenidoDetalle> {
@@ -22,14 +23,7 @@ export class ActualizarMiNegocioUseCase {
 
             if (logoFile) {
                 const path = `tenant_${negocio_id}/business/bus_${negocio_id}`;
-                let logo_url: string;
-                if (negocioActual.logo_url && this.storageProvider.replaceFile) {
-                    logo_url = await this.storageProvider.replaceFile(negocioActual.logo_url, logoFile, path, 'logo');
-                } else {
-                    if (negocioActual.logo_url) await this.storageProvider.deleteFile(negocioActual.logo_url);
-                    logo_url = await this.storageProvider.uploadFile(logoFile, path, 'logo');
-                }
-                data.logo_url = logo_url;
+                data.logo_url = await this.reemplazarMediaUseCase.execute(logoFile, negocio_id, path, 'logo', negocioActual.logo_url ?? undefined);
             }
 
             if (data.nombre_comercial) {

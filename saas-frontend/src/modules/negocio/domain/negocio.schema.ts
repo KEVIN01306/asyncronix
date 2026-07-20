@@ -44,3 +44,10 @@ export interface NegocioLimiteItem {
     ilimitado: boolean;
     limite_alcanzado: boolean;
 }
+export interface ObtenerLimitesResponse {
+  generales: NegocioLimiteItem[];
+  storage: {
+    storage_bytes_used: number;
+    storage_max_bytes: number | null;
+  };
+}

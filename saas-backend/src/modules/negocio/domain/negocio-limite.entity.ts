@@ -18,6 +18,9 @@ export interface NegocioLimite {
     max_vehiculos: number;
     max_cajas: number;
     max_cuentas_bancarias: number;
+    storage_bytes_used: bigint | null;
+    storage_max_bytes: bigint | null;
+    created_at: Date;
 }
 
 export interface NegocioLimiteItem {

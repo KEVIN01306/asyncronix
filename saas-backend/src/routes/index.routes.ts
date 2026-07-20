@@ -40,6 +40,7 @@ router.use('/categoria-transaccion', (await import('../modules/categoria-transac
 router.use('/ingresos-egresos', (await import('../modules/transaccion/presentation/transaccion.routes.js')).default)
 router.use('/movimientos-internos', (await import('../modules/transaccion/presentation/movimiento-interno.routes.js')).default)
 router.use('/reportes', (await import('../modules/reportes/presentation/reportes.routes.js')).default)
+router.use('/media', (await import('../modules/media/presentation/media.routes.js')).default)
 
 router.use(errorMiddleware)
 

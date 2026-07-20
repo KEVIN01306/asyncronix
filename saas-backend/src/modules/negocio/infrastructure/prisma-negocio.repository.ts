@@ -132,4 +132,26 @@ export class PrismaNegocioRepository implements NegocioRepository {
             throw PrismaErrorMapper.map(error);
         }
     }
+
+    async incrementarStorage(negocio_id: string, bytes: number): Promise<void> {
+        await this.prisma.negocioLimite.update({
+            where: { negocio_id },
+            data: {
+                storage_bytes_used: {
+                    increment: bytes
+                }
+            }
+        });
+    }
+
+    async decrementarStorage(negocio_id: string, bytes: number): Promise<void> {
+        await this.prisma.negocioLimite.update({
+            where: { negocio_id },
+            data: {
+                storage_bytes_used: {
+                    decrement: bytes
+                }
+            }
+        });
+    }
 }

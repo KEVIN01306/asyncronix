@@ -251,11 +251,9 @@ export class ProductoController extends BaseController {
 
             if (!req.file) throw new AppError('No se ha subido ninguna imagen', 'IMAGE_REQUIRED', 400);
 
-            const path = `tenant_${negocio_id}/products/prod_${producto_id}`;
-            const url = await this.storageProvider.uploadFile(req.file, path);
             const producto = await this.subirImagenProductoUseCase.execute({
                 producto_id,
-                url,
+                file: req.file,
                 descripcion: descripcion ?? null,
                 negocio_id
             });

@@ -24,6 +24,9 @@ model NegocioLimite {
   max_cajas             Int @default(2)
   max_cuentas_bancarias Int @default(2)
 
+  storage_bytes_used BigInt? @default(0)
+  storage_max_bytes  BigInt? @default(5368709120)
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -152,8 +155,23 @@ model Negocio {
   pais                 Pais?                  @relation(fields: [pais_id], references: [id])
   moneda               Moneda?                @relation(fields: [moneda_id], references: [id])
   negocioLimite        NegocioLimite?
+  medias               Media[]
 
   @@map("negocios")
+}
+
+model Media {
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id String   @db.Char(36)
+  path       String   @db.Text // Path único en R2: "productos/prod_abc123/img.webp"
+  size_bytes Int // Tamaño exacto del archivo procesado en WebP
+  mime_type  String   @db.VarChar(50) // e.g., "image/webp"
+  created_at DateTime @default(now())
+
+  negocio Negocio @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+
+  @@index([negocio_id])
+  @@map("media")
 }
 
 model Sucursal {

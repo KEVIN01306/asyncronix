@@ -9,4 +9,7 @@ export interface NegocioRepository {
     listar(wa_id: string): Promise<NegocioObtenidoDetalle | null>;
     cambiarMoneda(id: string, moneda_id: string): Promise<NegocioObtenidoDetalle>;
     obtenerLimites(negocio_id: string): Promise<NegocioLimite>;
+    obtenerEstadisticasGeneral(negocio_id: string, start?: Date, end?: Date): Promise<any>;
+    incrementarStorage(negocio_id: string, bytes: number): Promise<void>;
+    decrementarStorage(negocio_id: string, bytes: number): Promise<void>;
 }

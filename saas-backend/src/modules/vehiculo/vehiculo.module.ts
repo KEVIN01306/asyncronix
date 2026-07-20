@@ -13,6 +13,8 @@ import { AsociarClienteVehiculoUseCase } from './application/asociar-cliente.use
 import { CrearYAsociarClienteUseCase } from './application/crear-y-asociar-cliente.usecase.js';
 import { validarLimiteNegocioUseCase } from '../negocio/negocio.module.js';
 import { storageProvider } from '@shared/infrastructure/storage/storage.module.js';
+import { reemplazarMediaUseCase } from '../media/media.module.js';
+
 
 const repository = new PrismaVehiculoRepository(prisma as any);
 const obtenerVehiculosUseCase = new ObtenerVehiculosUseCase(repository);
@@ -20,8 +22,8 @@ const obtenerVehiculoUseCase = new ObtenerVehiculoUseCase(repository);
 const obtenerVehiculoPorPlacaUseCase = new ObtenerVehiculoPorPlacaUseCase(repository);
 const registrarVehiculoUseCase = new RegistrarVehiculoUseCase(repository, validarLimiteNegocioUseCase);
 const actualizarVehiculoUseCase = new ActualizarVehiculoUseCase(repository);
-const subirAvatarUseCase = new SubirAvatarVehiculoUseCase(repository, storageProvider);
-const subirCalcomaniaUseCase = new SubirCalcomaniaVehiculoUseCase(repository, storageProvider);
+const subirAvatarUseCase = new SubirAvatarVehiculoUseCase(repository, reemplazarMediaUseCase);
+const subirCalcomaniaUseCase = new SubirCalcomaniaVehiculoUseCase(repository, reemplazarMediaUseCase);
 const clienteRepository = new PrismaClienteRepository(prisma as any);
 const asociarClienteUseCase = new AsociarClienteVehiculoUseCase(repository, clienteRepository);
 const crearYAsociarClienteUseCase = new CrearYAsociarClienteUseCase(clienteRepository, repository);

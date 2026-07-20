@@ -1,6 +1,5 @@
 import api from '../../../../core/api/api'
-import type { Negocio } from '../../domain/negocio.schema';
-import type { NegocioEditFormValues } from '../../domain/negocio.schema';
+import type { Negocio, NegocioEditFormValues, ObtenerLimitesResponse } from '../../domain/negocio.schema';
 
 export class NegocioRepository {
     async obtenerMiNegocio(): Promise<Negocio> {
@@ -18,10 +17,10 @@ export class NegocioRepository {
         return response.data;
     }
 
-    async obtenerLimites(): Promise<import('../../domain/negocio.schema').NegocioLimiteItem[]> {
+    async obtenerLimites(): Promise<ObtenerLimitesResponse> {
         const response = await api.get('/negocios/me/limites');
         return response.data?.data || response.data;
     }
 }
 
-export const negocioRepository = new NegocioRepository();   
+export const negocioRepository = new NegocioRepository();

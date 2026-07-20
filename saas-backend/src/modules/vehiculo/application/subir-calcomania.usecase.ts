@@ -1,12 +1,13 @@
 import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
 import AppError from "@shared/errors/AppError.js";
 import type { VehiculoRepository } from "../domain/vehiculo.repository.js";
-import type { IStorageProvider, FileDTO } from "@shared/domain/providers/storage.provider.js";
+import type { FileDTO } from "@shared/domain/providers/storage.provider.js";
+import type { ReemplazarMediaUseCase } from "../../media/application/reemplazar-media.usecase.js";
 
 export class SubirCalcomaniaVehiculoUseCase {
     constructor(
         private readonly repository: VehiculoRepository,
-        private readonly storageProvider: IStorageProvider
+        private readonly reemplazarMediaUseCase: ReemplazarMediaUseCase
     ) { }
 
     async execute(id: string, negocio_id: string, calcomaniaFile: FileDTO) {
@@ -17,16 +18,9 @@ export class SubirCalcomaniaVehiculoUseCase {
             }
 
             const path = `tenant_${negocio_id}/vehicles/veh_${id}`;
-            let nuevoUrl: string;
+            const nuevoCalcomaniaUrl = await this.reemplazarMediaUseCase.execute(calcomaniaFile, negocio_id, path, 'calcomania', veh.calcomania_url ?? undefined);
 
-            if (veh.calcomania_url && this.storageProvider.replaceFile) {
-                nuevoUrl = await this.storageProvider.replaceFile(veh.calcomania_url, calcomaniaFile, path, 'calcomania');
-            } else {
-                if (veh.calcomania_url) await this.storageProvider.deleteFile(veh.calcomania_url);
-                nuevoUrl = await this.storageProvider.uploadFile(calcomaniaFile, path, 'calcomania');
-            }
-
-            await this.repository.actualizarCalcomania(id, negocio_id, nuevoUrl);
+            await this.repository.actualizarCalcomania(id, negocio_id, nuevoCalcomaniaUrl);
         } catch (error) {
             if (error instanceof DatabaseError) throw new AppError('Error en DB', 'DATABASE_ERROR', 500);
             throw error;
