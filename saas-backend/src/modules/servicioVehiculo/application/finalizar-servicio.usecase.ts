@@ -10,6 +10,8 @@ import type { AcreditarCuentaBancariaUseCase } from "../../transaccion/applicati
 import type { CrearTransaccionUseCase } from "../../transaccion/application/crear-transaccion.usecase.js";
 import type { ExchangeRateProvider } from "../../../shared/domain/providers/ExchangeRateProvider.js";
 import { PrismaErrorMapper } from "../../../shared/database/prisma/PrismaErrorMapper.js";
+import type { CrearMediaUseCase } from "../../media/application/crear-media.usecase.js";
+import type { FileDTO } from "../../../shared/domain/providers/storage.provider.js";
 
 export class FinalizarServicioUseCase {
     constructor(
@@ -19,7 +21,8 @@ export class FinalizarServicioUseCase {
         private readonly acreditarCajaUseCase: AcreditarCajaUseCase,
         private readonly acreditarCuentaBancariaUseCase: AcreditarCuentaBancariaUseCase,
         private readonly crearTransaccionUseCase: CrearTransaccionUseCase,
-        private readonly exchangeRateProvider: ExchangeRateProvider
+        private readonly exchangeRateProvider: ExchangeRateProvider,
+        private readonly crearMediaUseCase: CrearMediaUseCase
     ) { }
 
     async execute(
@@ -27,7 +30,7 @@ export class FinalizarServicioUseCase {
         negocio_id: string,
         sucursal_id: string,
         usuario_id: string,
-        firmaSalidaUrl: string,
+        file: FileDTO,
         metodoPago: string,
         efectivoRecibido?: number | null,
         vuelto?: number | null,
@@ -47,13 +50,16 @@ export class FinalizarServicioUseCase {
                     throw new AppError('El servicio no está en estado LISTO_ENTREGA', 'INVALID_STATE', 400);
                 }
 
-                if (!firmaSalidaUrl) {
+                if (!file) {
                     throw new AppError('La firma del cliente es requerida', 'FIRMA_REQUERIDA', 400);
                 }
 
                 if (!metodoPago) {
                     throw new AppError('El método de pago es requerido', 'METODO_PAGO_REQUERIDO', 400);
                 }
+
+                const path = `tenant_${negocio_id}/services/vehiculo/srv_${id}`;
+                const firmaSalidaUrl = await this.crearMediaUseCase.execute(file, negocio_id, path, 'firma_salida.png');
 
                 const totalCobro = Number(servicio.total ?? 0);
 

@@ -74,10 +74,11 @@ const finalizarServicioUseCase = new FinalizarServicioUseCase(
     acreditarCajaUseCase,
     acreditarCuentaBancariaUseCase,
     crearTransaccionUseCase,
-    exchangeRateProvider
+    exchangeRateProvider,
+    crearMediaUseCase
 );
 
-const guardarFirmaEntradaUseCase = new GuardarFirmaEntradaUseCase(repository);
+const guardarFirmaEntradaUseCase = new GuardarFirmaEntradaUseCase(repository, crearMediaUseCase);
 const subirImagenServicioUseCase = new SubirImagenServicioUseCase(repository, crearMediaUseCase);
 const subirImagenProgresoServicioUseCase = new SubirImagenProgresoServicioUseCase(repository, crearMediaUseCase);
 const eliminarImagenServicioUseCase = new EliminarImagenServicioUseCase(repository, eliminarMediaUseCase);

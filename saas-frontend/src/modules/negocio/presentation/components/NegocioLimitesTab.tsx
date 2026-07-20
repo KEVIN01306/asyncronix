@@ -28,6 +28,7 @@ import { negocioRepository } from '../../infrastructure/repositories/negocio.rep
 import type { ObtenerLimitesResponse, NegocioLimiteItem } from '../../domain/negocio.schema';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import MediaTab from './MediaTab';
+import { useSearchParams } from 'react-router-dom';
 
 const iconMap: Record<string, React.ReactNode> = {
     USUARIOS: <Group sx={{ fontSize: 20 }} />,
@@ -118,7 +119,9 @@ const NegocioLimitesTab: React.FC = () => {
     const [limites, setLimites] = useState<ObtenerLimitesResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [tabValue, setTabValue] = useState(0);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const initialLimitesTab = parseInt(searchParams.get('limites') || '0', 10);
+    const [tabValue, setTabValue] = useState(initialLimitesTab);
 
     useEffect(() => {
         const fetchLimites = async () => {
@@ -137,6 +140,8 @@ const NegocioLimitesTab: React.FC = () => {
 
     const handleChangeTab = (newValue: number) => {
         setTabValue(newValue);
+        searchParams.set('limites', newValue.toString());
+        setSearchParams(searchParams);
     };
 
     if (loading) return <Box py={6}><Loading /></Box>;

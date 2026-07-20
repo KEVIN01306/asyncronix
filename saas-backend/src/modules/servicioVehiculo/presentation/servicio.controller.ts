@@ -243,15 +243,12 @@ export class ServicioController extends BaseController {
                 cuenta_bancaria_id 
             };
 
-            const path = `tenant_${negocio_id}/services/vehiculo/srv_${id}`;
-            const firma_url = await this.storageProvider!.uploadFile(req.file, path, 'firma_salida');
-
             const servicio = await this.finalizarServicioUseCase.execute(
                 id, 
                 negocio_id, 
                 sucursal_id, 
                 usuario_id, 
-                firma_url, 
+                req.file, 
                 metodo_pago, 
                 efectivo_recibido != null && efectivo_recibido !== '' ? parseFloat(efectivo_recibido) : null, 
                 vuelto != null && vuelto !== '' ? parseFloat(vuelto) : null,
@@ -269,10 +266,7 @@ export class ServicioController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res);
             if (!req.file) throw new AppError('No se ha subido ninguna firma', 'SIGNATURE_REQUIRED', 400);
             
-            const path = `tenant_${negocio_id}/services/vehiculo/srv_${id}`;
-            const firma_url = await this.storageProvider!.uploadFile(req.file, path, 'firma_entrada');
-            
-            const servicio = await this.guardarFirmaEntradaUseCase.execute(id, firma_url, negocio_id);
+            const servicio = await this.guardarFirmaEntradaUseCase.execute(id, req.file, negocio_id);
             res.status(200).json(Respuesta.exito('Firma de entrada registrada exitosamente', servicio));
         } catch (error) {
             next(error);

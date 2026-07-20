@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -58,14 +58,18 @@ function CustomTabPanel(props: TabPanelProps) {
 
 const NegocioDetailPage = () => {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const user = useAuthStore(state => state.user);
     const [negocio, setNegocio] = useState<Negocio | null>(null);
     const [loading, setLoading] = useState(true);
     const [openCambiarMoneda, setOpenCambiarMoneda] = useState(false);
-    const [tabIndex, setTabIndex] = useState(0);
+    const initialTab = parseInt(searchParams.get('tab') || '0', 10);
+    const [tabIndex, setTabIndex] = useState(initialTab);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabIndex(newValue);
+        searchParams.set('tab', newValue.toString());
+        setSearchParams(searchParams);
     };
 
     const logoSource = formatImage(negocio?.logo_url);
@@ -131,7 +135,7 @@ const NegocioDetailPage = () => {
                 </Tabs>
             </Box>
 
-            <CustomTabPanel value={tabIndex} index={0}>
+            <CustomTabPanel value={tabIndex} index={0} >
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, md: 8 }}>
                         <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
