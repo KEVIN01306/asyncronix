@@ -41,6 +41,23 @@ export class PrismaVerificationCodeRepository implements VerificationCodeReposit
     }
   }
 
+  async buscarUltimoPorEmailYTipo(negocio_id: string, email: string, tipo: TipoVerificacion): Promise<VerificationCode | null> {
+    try {
+      const data = await this.prisma.verificationCode.findFirst({
+        where: {
+          negocio_id,
+          email,
+          tipo: tipo as any,
+          usado: false
+        },
+        orderBy: { created_at: 'desc' }
+      });
+      return data ? { ...data, tipo: data.tipo as TipoVerificacion } : null;
+    } catch (error: any) {
+      throw PrismaErrorMapper.map(error);
+    }
+  }
+
   async marcarComoUsado(id: string): Promise<void> {
     try {
       await this.prisma.verificationCode.update({

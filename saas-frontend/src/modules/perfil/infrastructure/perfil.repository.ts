@@ -51,5 +51,10 @@ export const perfilRepository = {
     verifyVerificationCode: async (code: string) => {
         const response = await api.post('/verification-code/verify', { code });
         return response.data;
+    },
+
+    checkVerificationCodeStatus: async (): Promise<{ active: boolean, timeLeft: number }> => {
+        const response = await api.get('/verification-code/status');
+        return response.data;
     }
 }

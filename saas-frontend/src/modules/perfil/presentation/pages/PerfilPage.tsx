@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider, List, ListItem, ListItemText, IconButton } from '@mui/material';
+import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider, List, ListItem, ListItemText, IconButton, Tooltip } from '@mui/material';
 import {
     Edit as EditIcon,
     VpnKey as VpnKeyIcon,
@@ -218,35 +218,55 @@ export const PerfilPage = () => {
                             </Typography>
                             <Divider />
                             <List disablePadding>
-                                <ListItem disableGutters secondaryAction={
-                                    <Box display="flex" alignItems="center" gap={1}>
-                                        <Typography variant="body2" color="text.primary">{perfil?.email || 'N/A'}</Typography>
+                                <ListItem disableGutters sx={{ display: 'flex', flexWrap: { xs: 'wrap', sm: 'nowrap' }, gap: 1, justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+                                        Correo electrónico
+                                    </Typography>
+                                    <Box display="flex" alignItems="center" gap={1} sx={{ minWidth: 0, justifyContent: { xs: 'flex-start', sm: 'flex-end' }, flex: 1 }}>
+                                        <Typography variant="body2" color="text.primary" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                                            {perfil?.email || 'N/A'}
+                                        </Typography>
                                         {perfil?.email && (
                                             perfil?.verificado ? (
-                                                <Box display="flex" alignItems="center" gap={0.5} sx={{ color: 'success.main', ml: 1 }}>
+                                                <Box display="flex" alignItems="center" gap={0.5} sx={{ color: 'success.main', ml: 1, flexShrink: 0 }}>
                                                     <VerifiedUserIcon fontSize="small" />
-                                                    <Typography variant="caption" fontWeight={600}>Verificado</Typography>
+                                                    <Typography sx={{ display: { xs: 'none', md: 'block' } }} variant="caption" fontWeight={600}>Verificado</Typography>
                                                 </Box>
                                             ) : (
-                                                <Button
-                                                    variant="text"
-                                                    size="small"
-                                                    color="warning"
-                                                    startIcon={<ErrorOutlineIcon />}
-                                                    onClick={() => navigate('/perfil/verificar-correo')}
-                                                    sx={{ ml: 1, textTransform: 'none', borderRadius: 2 }}
-                                                >
-                                                    Verificar
-                                                </Button>
+                                                <>
+                                                    <Tooltip title="Verificar correo">
+                                                        <IconButton
+                                                            size="small"
+                                                            color="warning"
+                                                            onClick={() => navigate('/perfil/verificar-correo')}
+                                                            sx={{ display: { xs: 'flex', md: 'none' }, flexShrink: 0 }}
+                                                        >
+                                                            <ErrorOutlineIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Button
+                                                        variant="text"
+                                                        size="small"
+                                                        color="warning"
+                                                        startIcon={<ErrorOutlineIcon />}
+                                                        onClick={() => navigate('/perfil/verificar-correo')}
+                                                        sx={{ textTransform: 'none', borderRadius: 2, flexShrink: 0, display: { xs: 'none', md: 'flex' } }}
+                                                    >
+                                                        Verificar
+                                                    </Button>
+                                                </>
                                             )
                                         )}
                                     </Box>
-                                }>
-                                    <ListItemText primary="Correo electrónico" slotProps={{ primary: { variant: 'body2', color: 'text.secondary' } }} />
                                 </ListItem>
                                 <Divider />
-                                <ListItem disableGutters secondaryAction={<Typography variant="body2" color="text.primary">{perfil?.telefono || 'N/A'}</Typography>}>
-                                    <ListItemText primary="Teléfono" slotProps={{ primary: { variant: 'body2', color: 'text.secondary' } }} />
+                                <ListItem disableGutters sx={{ display: 'flex', flexWrap: { xs: 'wrap', sm: 'nowrap' }, gap: 1, justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
+                                        Teléfono
+                                    </Typography>
+                                    <Typography variant="body2" color="text.primary" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                                        {perfil?.telefono || 'N/A'}
+                                    </Typography>
                                 </ListItem>
                             </List>
                         </CardContent>

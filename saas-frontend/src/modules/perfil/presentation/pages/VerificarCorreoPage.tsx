@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -31,31 +31,39 @@ import { verificarCorreoSchema, type VerificarCorreoFormValues } from '../../dom
 
 export const VerificarCorreoPage = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const userStore = useAuthStore((state) => state.user);
     const getMeStore = useAuthStore((state) => state.getMe);
 
     const [sending, setSending] = useState(false);
     const [isChecking, setIsChecking] = useState(true);
     const [timeLeft, setTimeLeft] = useState(15 * 60);
+    const [cooldownLeft, setCooldownLeft] = useState(0);
+
+    const urlCode = searchParams.get('code');
 
     const {
         control,
         handleSubmit,
+        watch,
         formState: { errors, isSubmitting, isValid }
     } = useForm<VerificarCorreoFormValues>({
         resolver: zodResolver(verificarCorreoSchema),
-        defaultValues: { code: '' },
+        defaultValues: { code: urlCode?.replace(/\D/g, '').slice(0, 6) || '' },
         mode: 'onChange'
     });
 
     const handleSendCode = useCallback(async (silent = false) => {
         try {
+            console.log('Intentando enviar código... silent =', silent);
             setSending(true);
-            await perfilRepository.sendVerificationCode();
+            const res = await perfilRepository.sendVerificationCode();
+            console.log('Respuesta de sendVerificationCode:', res);
             setTimeLeft(15 * 60);
+            setCooldownLeft(30);
             if (!silent) toast.success('Código reenviado con éxito');
         } catch (error: any) {
-            console.log(error);
+            console.log('Error en handleSendCode:', error);
             if (!silent) toast.error(error.response?.data?.error || 'Error al enviar el código');
         } finally {
             setSending(false);
@@ -80,7 +88,19 @@ export const VerificarCorreoPage = () => {
 
                     if (!hasRequestedCode.current) {
                         hasRequestedCode.current = true;
-                        await handleSendCode(true);
+
+                        console.log('Consultando status...');
+                        const status = await perfilRepository.checkVerificationCodeStatus();
+                        console.log('Status recibido:', status);
+                        if (status.active) {
+                            setTimeLeft(status.timeLeft);
+                            setCooldownLeft(30);
+                        } else {
+                            console.log('Status no activo, llamando a handleSendCode(true)');
+                            await handleSendCode(true);
+                        }
+                    } else {
+                        console.log('hasRequestedCode ya era true, ignorando envío');
                     }
                     setIsChecking(false);
                 }
@@ -99,6 +119,14 @@ export const VerificarCorreoPage = () => {
         }, 1000);
         return () => clearInterval(timer);
     }, [timeLeft]);
+
+    useEffect(() => {
+        if (cooldownLeft <= 0) return;
+        const timer = setInterval(() => {
+            setCooldownLeft(prev => prev - 1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [cooldownLeft]);
 
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -119,6 +147,16 @@ export const VerificarCorreoPage = () => {
             toast.error(error.response?.data?.error || 'Error al verificar el código');
         }
     };
+
+    const currentCode = watch('code');
+    const hasAutoSubmitted = useRef(false);
+
+    useEffect(() => {
+        if (urlCode && currentCode?.length === 6 && isValid && !isSubmitting && !hasAutoSubmitted.current) {
+            hasAutoSubmitted.current = true;
+            handleSubmit(onSubmit)();
+        }
+    }, [currentCode, urlCode, isValid, isSubmitting, handleSubmit]);
 
     if (isChecking) {
         return (
@@ -396,7 +434,7 @@ export const VerificarCorreoPage = () => {
                                     variant="outlined"
                                     size="small"
                                     startIcon={<RefreshIcon sx={{ fontSize: 14 }} />}
-                                    disabled={timeLeft > 0 || sending}
+                                    disabled={cooldownLeft > 0 || sending}
                                     onClick={() => handleSendCode(false)}
                                     sx={{
                                         borderRadius: '6px',
@@ -408,7 +446,7 @@ export const VerificarCorreoPage = () => {
                                         py: 0.8
                                     }}
                                 >
-                                    {sending ? 'Enviando...' : 'Reenviar código'}
+                                    {sending ? 'Enviando...' : cooldownLeft > 0 ? `Reenviar en ${cooldownLeft}s` : 'Reenviar código'}
                                 </Button>
                             </Stack>
 

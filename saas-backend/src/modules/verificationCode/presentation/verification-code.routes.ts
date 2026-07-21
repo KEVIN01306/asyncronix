@@ -10,6 +10,7 @@ const validar = new ValidarMiddleware();
 
 router.use(auth.protegerRuta);
 
+router.get('/status', verificationCodeController.status);
 router.post('/send', verificationCodeController.send);
 router.post('/verify', validar.validarBody(verificarCodigoSchema), verificationCodeController.verify);
 
