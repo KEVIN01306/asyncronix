@@ -24,19 +24,16 @@ export class ObtenerEstadoCodigoUseCase {
       const ultimoCodigo = await this.repository.buscarUltimoPorEmailYTipo(negocio_id, email, tipo);
 
       if (!ultimoCodigo) {
-        console.log('no hay codigo: ', ultimoCodigo)
         return { active: false, timeLeft: 0 };
       }
 
       const ahora = new Date();
       if (ahora > ultimoCodigo.expira_at) {
-        console.log('tiempo expirado: ', ahora, ultimoCodigo.expira_at)
         return { active: false, timeLeft: 0 };
       }
 
       const timeLeftMs = ultimoCodigo.expira_at.getTime() - ahora.getTime();
       const timeLeft = Math.floor(timeLeftMs / 1000);
-      console.log('tiempo restante: ', timeLeft)
 
       return { active: true, timeLeft };
     } catch (error) {
