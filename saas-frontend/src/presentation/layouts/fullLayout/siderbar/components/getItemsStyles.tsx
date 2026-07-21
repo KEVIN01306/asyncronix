@@ -1,7 +1,7 @@
 import type { Theme } from "@emotion/react";
 import { alpha, type SxProps } from "@mui/material";
 
-const getItemStyle = (isActive: boolean, isChild: boolean = false, drawerOpen: boolean = true, collapsed: boolean = false, isMobile: boolean = false): SxProps<Theme> => ({
+const getItemStyle = (isActive: boolean, _isChild: boolean = false, drawerOpen: boolean = true, collapsed: boolean = false, _isMobile: boolean = false): SxProps<Theme> => ({
   mx: 1,
   my: 0.1,
   px: 1.5,

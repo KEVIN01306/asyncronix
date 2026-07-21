@@ -1,4 +1,4 @@
-import { alpha, Box, Collapse, List, ListItemButton, ListItemIcon, ListItemText, Popper, Paper, ClickAwayListener } from "@mui/material";
+import { Box, Collapse, List, ListItemButton, ListItemIcon, ListItemText, Popper, Paper, ClickAwayListener } from "@mui/material";
 import React, { useContext, useState, useRef, useEffect } from "react";
 import getItemStyle from "./getItemsStyles";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
@@ -120,7 +120,7 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
             <item.icon fontSize="small" sx={{ fontSize: '1.2rem', color: (isActiveModule || isExpanded) ? 'text.primary' : 'text.secondary' }} />
           </ListItemIcon>
         )}
-        
+
         {!ctx.collapsed && (
           <ListItemText
             primary={item.module}
@@ -131,7 +131,7 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
             }}
           />
         )}
-        
+
         {!ctx.collapsed && (
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
             {isExpanded ? (
@@ -166,25 +166,25 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
             <Box sx={{ fontSize: '0.8rem', fontWeight: 700, mb: 1, color: 'text.primary', p: 1 }}>{item.module}</Box>
             <List disablePadding>
               {item.children?.map((child) => (
-                  <ListItemButton
-                    key={child.name}
-                    onClick={() => {
-                      setAnchorEl(null);
-                      if (child.link) {
-                        navigate(child.link);
-                      }
-                      ctx.closeAllGroups();
-                    }}
-                    sx={getItemStyle(false, true, ctx.drawerOpen, ctx.collapsed, ctx.isMobile)}
-                  >
-                    {child.icon && (
-                      <ListItemIcon sx={{ minWidth: 'auto', mr: 1.5 }}>
-                        <child.icon sx={{ fontSize: '1rem' }} />
-                      </ListItemIcon>
-                    )}
-                    <ListItemText primary={child.name} primaryTypographyProps={{ fontSize: '0.8rem' }} />
-                  </ListItemButton>
-                ))}
+                <ListItemButton
+                  key={child.name}
+                  onClick={() => {
+                    setAnchorEl(null);
+                    if (child.link) {
+                      navigate(child.link);
+                    }
+                    ctx.closeAllGroups();
+                  }}
+                  sx={getItemStyle(false, true, ctx.drawerOpen, ctx.collapsed, ctx.isMobile)}
+                >
+                  {child.icon && (
+                    <ListItemIcon sx={{ minWidth: 'auto', mr: 1.5 }}>
+                      <child.icon sx={{ fontSize: '1rem' }} />
+                    </ListItemIcon>
+                  )}
+                  <ListItemText primary={child.name} primaryTypographyProps={{ fontSize: '0.8rem' }} />
+                </ListItemButton>
+              ))}
             </List>
           </Paper>
         </ClickAwayListener>

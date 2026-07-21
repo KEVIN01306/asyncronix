@@ -98,7 +98,7 @@ const MediaGallery: React.FC = () => {
         fetchMedia(page, perPage);
     }, [page, perPage]);
 
-    const handleChangePage = (event: unknown, newPage: number) => {
+    const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage + 1);
     };
 
