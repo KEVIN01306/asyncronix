@@ -19,7 +19,7 @@ export class VerificationCodeController extends BaseController {
   status = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const entorno = this.obtenerEntorno(res);
-      
+
       const usuario = await this.usuarioRepository.obtener(entorno.id, entorno.negocio_id);
       if (!usuario || !usuario.email) {
         throw new AppError('El usuario no tiene un correo electrónico configurado', 'NO_EMAIL', 400);
@@ -38,8 +38,9 @@ export class VerificationCodeController extends BaseController {
   send = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const entorno = this.obtenerEntorno(res);
-      
+
       const usuario = await this.usuarioRepository.obtener(entorno.id, entorno.negocio_id);
+
       if (!usuario || !usuario.email) {
         throw new AppError('El usuario no tiene un correo electrónico configurado', 'NO_EMAIL', 400);
       }

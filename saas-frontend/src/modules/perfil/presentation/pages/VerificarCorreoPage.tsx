@@ -96,8 +96,12 @@ export const VerificarCorreoPage = () => {
                             setTimeLeft(status.timeLeft);
                             setCooldownLeft(30);
                         } else {
-                            console.log('Status no activo, llamando a handleSendCode(true)');
-                            await handleSendCode(true);
+                            if (!urlCode) {
+                                console.log('Status no activo, llamando a handleSendCode(true)');
+                                await handleSendCode(true);
+                            } else {
+                                console.log('Status no activo pero hay urlCode, omitiendo auto-envío para evitar race condition con auto-verify');
+                            }
                         }
                     } else {
                         console.log('hasRequestedCode ya era true, ignorando envío');
