@@ -10,15 +10,15 @@ export const getStoredThemeVariant = (): ThemeVariant => {
     try {
         const v = localStorage.getItem(STORAGE_KEY) as ThemeVariant | null;
         // Validate that the stored value is one of the valid variants
-        if (v === 'normal' || v === 'marton' || v === 'corport' || v === 'brutalist' || v === 'neumorphic') {
+        if (v === 'normal' || v === 'marton' || v === 'corport' || v === 'brutalist' || v === 'neumorphic' || v === 'liquidGlass') {
             return v;
         }
-        return 'normal';
+        return 'marton';
     } catch {
-        return 'normal';
+        return 'marton';
     }
 };
-    
+
 export const setStoredThemeVariant = (variant: ThemeVariant) => {
     try {
         localStorage.setItem(STORAGE_KEY, variant);

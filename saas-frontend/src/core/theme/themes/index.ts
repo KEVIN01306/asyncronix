@@ -5,6 +5,7 @@ import { getMartonThemePalette, martonThemeConfig } from './marton';
 import { getCorporateThemePalette, corporateThemeConfig } from './corport';
 import { getBrutalistThemePalette, brutalistThemeConfig } from './brutalist';
 import { getNeumorphicThemePalette, neumorphicThemeConfig } from './neumorphic';
+import { getLiquidGlassThemePalette, LiquidGlassThemeConfig } from './liquidGlass';
 
 export const getThemePaletteByVariant = (
     mode: PaletteMode,
@@ -24,6 +25,9 @@ export const getThemePaletteByVariant = (
     if (variant === 'neumorphic') {
         return getNeumorphicThemePalette(mode, borderIntensity, borderColorIntensity);
     }
+    if (variant === 'liquidGlass') {
+        return getLiquidGlassThemePalette(mode, borderIntensity, borderColorIntensity);
+    }
     return getNormalThemePalette(mode, borderIntensity, borderColorIntensity);
 };
 
@@ -39,6 +43,9 @@ export const getThemeConfigByVariant = (variant: ThemeVariant) => {
     }
     if (variant === 'neumorphic') {
         return neumorphicThemeConfig;
+    }
+    if (variant === 'liquidGlass') {
+        return LiquidGlassThemeConfig;
     }
     return normalThemeConfig;
 };

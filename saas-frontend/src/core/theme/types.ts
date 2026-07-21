@@ -1,1 +1,1 @@
-export type ThemeVariant = 'normal' | 'marton' | 'corport' | 'brutalist' | 'neumorphic';
+export type ThemeVariant = 'normal' | 'marton' | 'corport' | 'brutalist' | 'neumorphic' | 'liquidGlass';

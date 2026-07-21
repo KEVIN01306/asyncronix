@@ -103,7 +103,7 @@ export const CustomPage = () => {
                                 <Divider sx={{ mb: 2 }} />
 
                                 <RadioGroup value={themeVariant} onChange={handleVariantChange}>
-                                    {['normal', 'marton', 'corport', 'brutalist', 'neumorphic'].map((variant) => (
+                                    {['normal', 'marton', 'corport', 'brutalist', 'neumorphic', 'liquidGlass'].map((variant) => (
                                         <FormControlLabel
                                             key={variant}
                                             value={variant}
