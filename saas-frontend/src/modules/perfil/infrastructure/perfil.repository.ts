@@ -41,5 +41,15 @@ export const perfilRepository = {
     cambiarPassword: async (data: CambiarPasswordForm) => {
         const response = await api.patch('/usuarios/me/password', data);
         return response.data;
+    },
+
+    sendVerificationCode: async () => {
+        const response = await api.post('/verification-code/send');
+        return response.data;
+    },
+
+    verifyVerificationCode: async (code: string) => {
+        const response = await api.post('/verification-code/verify', { code });
+        return response.data;
     }
 }

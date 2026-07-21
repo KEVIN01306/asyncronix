@@ -210,19 +210,22 @@ const Sidebar = ({ open, onClose, isMobile, drawerWidth, menuItems, onOpen, onCo
             {menuItems.map((item, index) => (
               item ? (
                 item.group ? (
-                  <ListItem key={`group-${index}`} sx={{ px: 2, py: 1.25, display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : 'flex-start' }}>
-                    {collapsed ? (
-                      <Tooltip title={item.group} placement="right" arrow>
-                        <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer' }}>
-                          {item.group.charAt(0)}
+                  <React.Fragment key={`group-${index}`}>
+                    {index > 0 && <Divider sx={{ my: 1.5, borderColor: 'divider', mx: 2 }} />}
+                    <ListItem sx={{ px: 2.5, py: 1, mt: index > 0 ? 0 : 1, mb: 0.5, display: 'flex', flexDirection: 'column', alignItems: collapsed ? 'center' : 'flex-start' }}>
+                      {collapsed ? (
+                        <Tooltip title={item.group} placement="right" arrow>
+                          <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', textAlign: 'center', cursor: 'pointer', fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.65rem' }}>
+                            {item.group.substring(0, 3)}
+                          </Typography>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', textAlign: 'left', cursor: 'default', fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.7rem' }}>
+                          {item.group}
                         </Typography>
-                      </Tooltip>
-                    ) : (
-                      <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', textAlign: 'left', cursor: 'pointer' }}>
-                        {item.group}
-                      </Typography>
-                    )}
-                  </ListItem>
+                      )}
+                    </ListItem>
+                  </React.Fragment>
                 ) : item.children ? (
                   <SidebarGroup key={item.module} item={item} />
                 ) : (

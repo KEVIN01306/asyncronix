@@ -41,6 +41,7 @@ router.use('/ingresos-egresos', (await import('../modules/transaccion/presentati
 router.use('/movimientos-internos', (await import('../modules/transaccion/presentation/movimiento-interno.routes.js')).default)
 router.use('/reportes', (await import('../modules/reportes/presentation/reportes.routes.js')).default)
 router.use('/media', (await import('../modules/media/presentation/media.routes.js')).default)
+router.use('/verification-code', (await import('../modules/verificationCode/presentation/verification-code.routes.js')).default)
 
 router.use(errorMiddleware)
 

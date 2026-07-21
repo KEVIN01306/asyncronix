@@ -8,6 +8,7 @@ import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Usuario } from '../../domain/interfaces/usuario.interface';
 import { usuarioRepository } from '../../infrastructure/repositories/usuario.repository';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { formatImage } from '../../../../core/utils/formatImage';
 
 
 const UsuariosListPage = () => {
@@ -38,38 +39,36 @@ const UsuariosListPage = () => {
     const [tempSelectedSucursal, setTempSelectedSucursal] = useState<string | null>(selectedSucursal);
     const [tempSelectedRoles, setTempSelectedRoles] = useState<string[] | null>(selectedRoles);
 
-    const URL_BASE = `${import.meta.env.VITE_API_URL}/`
-
     const columns = [
-        { 
-        id: 'nombre', 
-        name: 'Nombre', 
-        format: (value: any, row: any) => ( 
-            <Box display={'flex'} alignItems={'center'} gap={2}> 
-            <Avatar 
-                src={URL_BASE + row.avatar_url} 
-                sx={{ 
-                width: 38,  
-                height: 38, 
-                border: row.avatar_url ? '2px solid' : "",
-                borderColor:'secondary.main', 
-                background: row.avatar_url ? "#ffffff" : "#876543cc", 
-                }} 
-            > 
-                {value[0]}
-            </Avatar> 
-            {value.toUpperCase()}
-            </Box>
+        {
+            id: 'nombre',
+            name: 'Nombre',
+            format: (value: any, row: any) => (
+                <Box display={'flex'} alignItems={'center'} gap={2}>
+                    <Avatar
+                        src={formatImage(row.avatar_url)}
+                        sx={{
+                            width: 38,
+                            height: 38,
+                            border: row.avatar_url ? '2px solid' : "",
+                            borderColor: 'secondary.main',
+                            background: row.avatar_url ? "#ffffff" : "#876543cc",
+                        }}
+                    >
+                        {value[0]}
+                    </Avatar>
+                    {value.toUpperCase()}
+                </Box>
 
-            
-        ) 
-        }, 
-                { id: 'telefono', name: 'Teléfono' },
-        { id: 'roles', name: 'Roles', format: (value: any) => <Chip  color={value?.[0]?.nombre === 'ADMIN' ? 'primary' : 'default'} label={value?.[0]?.nombre} /> },
+
+            )
+        },
+        { id: 'telefono', name: 'Teléfono' },
+        { id: 'roles', name: 'Roles', format: (value: any) => <Chip color={value?.[0]?.nombre === 'ADMIN' ? 'primary' : 'default'} label={value?.[0]?.nombre} /> },
         { id: 'sucursal', name: 'Sucursal', format: (value: any) => <Chip color={value ? "primary" : "default"} label={value ? value.nombre : 'Sin sucursal'} /> },
     ];
 
-    const actions = [       
+    const actions = [
         {
             name: 'Ver',
             icon: <Visibility fontSize="small" />,
@@ -145,10 +144,10 @@ const UsuariosListPage = () => {
         <Box p={isMobile ? 2 : 4}>
             <Alert severity="info" sx={{ mb: 3, boxShadow: 'none', border: (theme) => `1px solid ${theme.palette.divider}` }}>
                 <AlertTitle>Informacion</AlertTitle>
-                            En este modulo puedes administrar tus Usuarios, registrar nuevos, editar su información o eliminarlos. Mantén tu lista de usuarios actualizada para una mejor gestión de tu negocio.
+                En este modulo puedes administrar tus Usuarios, registrar nuevos, editar su información o eliminarlos. Mantén tu lista de usuarios actualizada para una mejor gestión de tu negocio.
             </Alert>
 
-            <Box display="flex" flexDirection={ isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={'center'} gap={2} mb={1}
+            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={'center'} gap={2} mb={1}
                 sx={{
                     bgcolor: 'background.paper',
                     p: 2,
@@ -189,7 +188,7 @@ const UsuariosListPage = () => {
 
             <TableContainer >
                 {loading ? (
-                    <Loading/>                
+                    <Loading />
                 ) : (
                     <>
                         <ListTable

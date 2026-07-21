@@ -6,6 +6,7 @@ export interface UsuarioAutentificacion {
     avatar_url: string | null,
     password_hash: string | null,
     telefono: string,
+    verificado: boolean,
     activo: boolean | null,
     negocio_id: string,
     sucursal_id: string | null,

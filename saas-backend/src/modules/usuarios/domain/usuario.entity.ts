@@ -41,5 +41,5 @@ export interface UsuarioActualizar extends Omit<Usuario, "id" | "activo" | "pass
     rolIds: string[];
 }
 
-export interface UsuarioActualizarPerfil extends Partial<Pick<Usuario, "nombre" | "apellido" | "email" | "telefono">> {
+export interface UsuarioActualizarPerfil extends Partial<Pick<Usuario, "nombre" | "apellido" | "email" | "telefono" | "verificado">> {
 }

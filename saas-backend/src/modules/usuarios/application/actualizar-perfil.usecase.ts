@@ -8,6 +8,14 @@ export class ActualizarPerfilUseCase {
 
     async execute(id: Usuario["id"], negocio_id: Usuario["negocio_id"], data: UsuarioActualizarPerfil): Promise<UsuarioSimple> {
         try {
+            // Verificar si el correo cambió
+            if (data.email !== undefined) {
+                const usuarioActual = await this.usuarioRepository.obtener(id, negocio_id);
+                if (usuarioActual && usuarioActual.email !== data.email) {
+                    data.verificado = false;
+                }
+            }
+            
             return await this.usuarioRepository.actualizarPerfil(id, negocio_id, data);
         } catch (error) {
             if (error instanceof DatabaseError) {

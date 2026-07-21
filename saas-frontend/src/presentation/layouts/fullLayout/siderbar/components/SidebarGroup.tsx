@@ -115,25 +115,31 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
         onMouseLeave={handleMouseLeave}
         sx={getItemStyle(isActiveModule || isExpanded, false, ctx.drawerOpen, ctx.collapsed, ctx.isMobile)}
       >
-        <ListItemIcon>
-          <item.icon fontSize="small" />
-        </ListItemIcon>
-
-        <ListItemText
-          primary={item.module}
-          primaryTypographyProps={{
-            fontSize: "0.8rem",
-            fontWeight: 700,
-            letterSpacing: "0.01em",
-          }}
-        />
-
+        {item.icon && (
+          <ListItemIcon sx={{ minWidth: 'auto', display: 'flex', justifyContent: 'center', mr: ctx.collapsed ? 0 : 1.5 }}>
+            <item.icon fontSize="small" sx={{ fontSize: '1.2rem', color: (isActiveModule || isExpanded) ? 'text.primary' : 'text.secondary' }} />
+          </ListItemIcon>
+        )}
+        
         {!ctx.collapsed && (
-          isExpanded ? (
-            <ExpandLess fontSize="small" sx={{ opacity: 0.5 }} />
-          ) : (
-            <ExpandMore fontSize="small" sx={{ opacity: 0.5 }} />
-          )
+          <ListItemText
+            primary={item.module}
+            primaryTypographyProps={{
+              fontSize: "0.85rem",
+              fontWeight: (isActiveModule || isExpanded) ? 600 : 500,
+              color: (isActiveModule || isExpanded) ? 'text.primary' : 'text.secondary'
+            }}
+          />
+        )}
+        
+        {!ctx.collapsed && (
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
+            {isExpanded ? (
+              <ExpandLess sx={{ fontSize: '1rem', opacity: 0.6 }} />
+            ) : (
+              <ExpandMore sx={{ fontSize: '1rem', opacity: 0.6 }} />
+            )}
+          </Box>
         )}
       </ListItemButton>
 
@@ -171,7 +177,12 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
                     }}
                     sx={getItemStyle(false, true, ctx.drawerOpen, ctx.collapsed, ctx.isMobile)}
                   >
-                    <ListItemText primary={child.name} primaryTypographyProps={{ fontSize: '0.75rem' }} />
+                    {child.icon && (
+                      <ListItemIcon sx={{ minWidth: 'auto', mr: 1.5 }}>
+                        <child.icon sx={{ fontSize: '1rem' }} />
+                      </ListItemIcon>
+                    )}
+                    <ListItemText primary={child.name} primaryTypographyProps={{ fontSize: '0.8rem' }} />
                   </ListItemButton>
                 ))}
             </List>
@@ -185,20 +196,8 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
           disablePadding
           sx={{
             position: "relative",
-            ml: 3.5,
           }}
         >
-          <Box
-            sx={{
-              position: "absolute",
-              left: 8,
-              top: 0,
-              bottom: 8,
-              width: "1px",
-              bgcolor: alpha("#6889b8", 0.2),
-            }}
-          />
-
           {item.children?.map((child) => {
             const isChildActive = matchesRoute(
               pathname,
@@ -213,14 +212,17 @@ export const SidebarGroup: React.FC<{ item: MenuItem }> = ({ item }) => {
                 }
                 sx={getItemStyle(isChildActive, true, ctx.drawerOpen, ctx.collapsed, ctx.isMobile)}
               >
+                {child.icon && (
+                  <ListItemIcon sx={{ minWidth: 'auto', mr: 1.5 }}>
+                    <child.icon sx={{ fontSize: '1rem', color: isChildActive ? 'text.primary' : 'text.secondary' }} />
+                  </ListItemIcon>
+                )}
                 <ListItemText
                   primary={child.name}
                   primaryTypographyProps={{
-                    fontSize: "0.7rem",
-                    fontWeight: isChildActive ? 700 : 500,
-                    color: isChildActive
-                      ? "primary.main"
-                      : "text.secondary",
+                    fontSize: "0.85rem",
+                    fontWeight: isChildActive ? 600 : 500,
+                    color: isChildActive ? 'text.primary' : 'text.secondary'
                   }}
                 />
               </ListItemButton>

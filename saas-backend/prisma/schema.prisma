@@ -156,6 +156,7 @@ model Negocio {
   moneda               Moneda?                @relation(fields: [moneda_id], references: [id])
   negocioLimite        NegocioLimite?
   medias               Media[]
+  verificationCodes    VerificationCode[]
 
   @@map("negocios")
 }
@@ -1094,9 +1095,33 @@ model Transaccion {
   @@map("transacciones")
 }
 
+model VerificationCode {
+  id         String           @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id String           @db.Char(36)
+  email      String           @db.VarChar(255)
+  code       String           @db.VarChar(6)
+  tipo       TipoVerificacion
+  expira_at  DateTime
+  usado      Boolean          @default(false)
+  created_at DateTime         @default(now())
+
+  negocio Negocio @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+
+  @@index([email, code])
+  @@index([negocio_id])
+  @@map("verification_codes")
+}
+
 // ==============================================================
 // 8. ENUMERACIONES
 // ==============================================================
+
+enum TipoVerificacion {
+  REGISTRO_USUARIO
+  RECUPERACION_PASSWORD
+  CAMBIO_EMAIL
+}
+
 enum TipoCaja {
   FISICA
   EN_LINEA

@@ -39,3 +39,9 @@ export const actualizarPinSucursalSchema = z.object({
 });
 
 export type ActualizarPinSucursalFormValues = z.infer<typeof actualizarPinSucursalSchema>;
+
+export const verificarCorreoSchema = z.object({
+  code: z.string().length(6, 'El código debe tener exactamente 6 caracteres').regex(/^\d+$/, 'El código solo debe contener números'),
+});
+
+export type VerificarCorreoFormValues = z.infer<typeof verificarCorreoSchema>;

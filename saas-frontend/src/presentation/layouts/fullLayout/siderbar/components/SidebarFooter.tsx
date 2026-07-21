@@ -1,4 +1,4 @@
-import { Avatar, Box, Stack, Tooltip, Typography } from "@mui/material";
+import { Avatar, Box, Stack, Tooltip, Typography, Badge } from "@mui/material";
 import { useAuthStore } from "../../../../../core/store/authStore";
 import { formatImage } from '../../../../../core/utils/formatImage';
 
@@ -24,19 +24,32 @@ export const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
         }}
       >
         <Tooltip followCursor describeChild title={user?.nombre + ' ' + user?.apellido} placement="top-end">
-          <Avatar
-            src={user?.avatar_url ? formatImage(user.avatar_url) : "/static/images/avatar/1.jpg"}
+          <Badge
+            overlap="circular"
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            variant="dot"
+            invisible={!collapsed}
             sx={{
-              width: collapsed ? 40 : 50,
-              height: collapsed ? 40 : 50,
-              border: user?.avatar_url ? '2px solid' : "",
-              borderColor: 'secondary.main',
-              background: user?.avatar_url ? '#ffffff' : '#876543cc',
-              mx: collapsed ? 'auto' : 0,
+              '& .MuiBadge-badge': {
+                backgroundColor: '#4caf50',
+                boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
+              },
             }}
           >
-            {user?.nombre?.[0] ?? ''}
-          </Avatar>
+            <Avatar
+              src={user?.avatar_url ? formatImage(user.avatar_url) : "/static/images/avatar/1.jpg"}
+              sx={{
+                width: collapsed ? 40 : 50,
+                height: collapsed ? 40 : 50,
+                border: user?.avatar_url ? '2px solid' : "",
+                borderColor: 'secondary.main',
+                background: user?.avatar_url ? '#ffffff' : '#876543cc',
+                mx: collapsed ? 'auto' : 0,
+              }}
+            >
+              {user?.nombre?.[0] ?? ''}
+            </Avatar>
+          </Badge>
         </Tooltip>
 
         {!collapsed && (

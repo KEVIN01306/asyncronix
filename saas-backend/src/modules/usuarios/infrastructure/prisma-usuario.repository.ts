@@ -307,4 +307,15 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
             throw PrismaErrorMapper.map(error);
         }
     }
+
+    async marcarComoVerificado(id: string, negocio_id: string): Promise<void> {
+        try {
+            await this.db.usuario.update({
+                where: { id, negocio_id, activo: true },
+                data: { verificado: true }
+            });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
 }

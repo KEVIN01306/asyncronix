@@ -1,9 +1,22 @@
 import type { RouteObject } from "react-router-dom";
-import { PerfilPage } from "./perfil.lazy";
+import { PerfilPage, VerificarCorreoPage, CorreoVerificadoPage } from "./perfil.lazy";
 
 export const perfilRoutes: RouteObject[] = [
     {
         path: "perfil",
-        element: <PerfilPage />,
+        children: [
+            {
+                index: true,
+                element: <PerfilPage />,
+            },
+            {
+                path: "verificar-correo",
+                element: <VerificarCorreoPage />,
+            },
+            {
+                path: "correo-verificado",
+                element: <CorreoVerificadoPage />,
+            }
+        ]
     }
 ];

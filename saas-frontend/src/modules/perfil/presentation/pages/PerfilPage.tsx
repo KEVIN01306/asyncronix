@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Card, CardContent, Typography, Avatar, Button, Grid, Divider, List, ListItem, ListItemText, IconButton } from '@mui/material';
 import {
     Edit as EditIcon,
@@ -23,9 +24,11 @@ import { ChangePinSucursalModal } from '../components/ChangePinSucursalModal.tsx
 import { EditAvatarModal } from '../components/EditAvatarModal';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { formatImage } from '../../../../core/utils/formatImage';
+import { VerifiedUser as VerifiedUserIcon, ErrorOutline as ErrorOutlineIcon } from '@mui/icons-material';
 
 
 export const PerfilPage = () => {
+    const navigate = useNavigate();
     const userStore = useAuthStore((state) => state.user);
     const getMeStore = useAuthStore((state) => state.getMe);
     const [perfil, setPerfil] = useState<Perfil | null>(null);
@@ -215,7 +218,30 @@ export const PerfilPage = () => {
                             </Typography>
                             <Divider />
                             <List disablePadding>
-                                <ListItem disableGutters secondaryAction={<Typography variant="body2" color="text.primary">{perfil?.email || 'N/A'}</Typography>}>
+                                <ListItem disableGutters secondaryAction={
+                                    <Box display="flex" alignItems="center" gap={1}>
+                                        <Typography variant="body2" color="text.primary">{perfil?.email || 'N/A'}</Typography>
+                                        {perfil?.email && (
+                                            perfil?.verificado ? (
+                                                <Box display="flex" alignItems="center" gap={0.5} sx={{ color: 'success.main', ml: 1 }}>
+                                                    <VerifiedUserIcon fontSize="small" />
+                                                    <Typography variant="caption" fontWeight={600}>Verificado</Typography>
+                                                </Box>
+                                            ) : (
+                                                <Button
+                                                    variant="text"
+                                                    size="small"
+                                                    color="warning"
+                                                    startIcon={<ErrorOutlineIcon />}
+                                                    onClick={() => navigate('/perfil/verificar-correo')}
+                                                    sx={{ ml: 1, textTransform: 'none', borderRadius: 2 }}
+                                                >
+                                                    Verificar
+                                                </Button>
+                                            )
+                                        )}
+                                    </Box>
+                                }>
                                     <ListItemText primary="Correo electrónico" slotProps={{ primary: { variant: 'body2', color: 'text.secondary' } }} />
                                 </ListItem>
                                 <Divider />
