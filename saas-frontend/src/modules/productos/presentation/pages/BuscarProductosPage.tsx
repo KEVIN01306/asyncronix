@@ -10,6 +10,7 @@ import type { ProductoBusquedaDetalle, Variante } from '../../domain/interfaces/
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { formatImage } from '../../../../core/utils/formatImage';
+import { useBarcodeScanner } from '../../../../core/hooks/useBarcodeScanner';
 
 
 type AttributeOptions = Record<string, string[]>;
@@ -469,6 +470,8 @@ const BuscarProductosPage = () => {
             setLoading(false);
         }
     };
+
+    useBarcodeScanner({ onScan: handleCodigoLeido });
 
     const selectedVariantImage = activeVariant?.imagen?.url
         || searchResult?.producto.imagenes?.find((img) => img.es_principal)?.url

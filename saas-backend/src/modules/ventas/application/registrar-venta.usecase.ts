@@ -16,7 +16,7 @@ export class RegistrarVentaUseCase {
         private readonly varianteRepository: VarianteRepository,        
         ) {}
 
-    async execute(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string): Promise<VentaSimple> {
+    async execute(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string, options?: { tx?: any, ignoreStock?: boolean }): Promise<VentaSimple> {
         if (!data.productos || data.productos.length === 0) {
             throw new AppError("La venta debe tener al menos un producto", "VENTA_SIN_PRODUCTOS", 400);
         }
@@ -33,7 +33,7 @@ export class RegistrarVentaUseCase {
                 }
 
                 const res = await this.loteRepository.listarPorVariante(prodInput.variante_id, negocio_id, { page: 1, perPage: 1000 }, sucursal_id);
-                const detalles = construirDetallesVentaPorVariante(variante, res.data, prodInput.cantidad);
+                const detalles = construirDetallesVentaPorVariante(variante, res.data, prodInput.cantidad, options?.ignoreStock);
                 detallesToPersist.push(...detalles);
                 totalVenta += detalles.reduce((sum, d) => sum + (d.precio_unitario * d.cantidad), 0);
                 totalCosto += detalles.reduce((sum, d) => sum + (d.costo_unitario * d.cantidad), 0);
@@ -47,7 +47,7 @@ export class RegistrarVentaUseCase {
                 total_costo: totalCosto
             } as any;
 
-            return await this.ventaRepository.registrar(dataToPersist, negocio_id, sucursal_id, usuario_id);
+            return await this.ventaRepository.registrar(dataToPersist, negocio_id, sucursal_id, usuario_id, options);
         } catch (error: any) {
             if (error instanceof PersistenceError) {
                 if (error instanceof InsufficientStockPersistenceError) {

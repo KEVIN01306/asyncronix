@@ -6,9 +6,9 @@ import type { ServicioCrear, ServicioDetalle } from "../domain/servicio.entity.j
 export class RegistrarServicioUseCase {
     constructor(private readonly repository: ServicioRepository) { }
 
-    async execute(data: ServicioCrear, negocio_id: string, recepcionista_id: string): Promise<ServicioDetalle> {
+    async execute(data: ServicioCrear, negocio_id: string, recepcionista_id: string, options?: { tx?: any }): Promise<ServicioDetalle> {
         try {
-            return await this.repository.registrar(data, negocio_id, recepcionista_id);
+            return await this.repository.registrar(data, negocio_id, recepcionista_id, options);
         } catch (error) {
             if (error instanceof DatabaseError) throw new AppError('Error en DB', 'DATABASE_ERROR', 500);
             throw error;

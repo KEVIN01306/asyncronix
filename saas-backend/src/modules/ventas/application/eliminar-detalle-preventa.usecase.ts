@@ -1,4 +1,5 @@
 import { PrismaErrorMapper } from '../../../shared/database/prisma/PrismaErrorMapper.js';
+import AppError from '../../../shared/errors/AppError.js';
 
 export class EliminarDetallePreVentaUseCase {
     constructor(private readonly db: any) {}
@@ -7,7 +8,7 @@ export class EliminarDetallePreVentaUseCase {
         try {
             const detalle = await this.db.preVentaDetalle.findFirst({
                 where: { id: detalleId },
-                include: { pre_venta: true }
+                include: { pre_venta: { include: { cotizacion: true } } }
             });
 
             if (!detalle || !detalle.pre_venta || !detalle.pre_venta.activo) {
@@ -20,6 +21,10 @@ export class EliminarDetallePreVentaUseCase {
                 detalle.pre_venta.usuario_id !== usuario_id
             ) {
                 throw new Error('DETALLE_PREVENTA_NO_ENCONTRADO');
+            }
+
+            if (detalle.pre_venta.cotizacion) {
+                throw new AppError('No se puede modificar una preventa que proviene de una cotización.', 'PREVENTA_BLOQUEADA', 400);
             }
 
             await this.db.preVentaDetalle.delete({ where: { id: detalleId } });

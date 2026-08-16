@@ -29,7 +29,7 @@ import { storageProvider } from "@shared/infrastructure/storage/storage.module.j
 import { crearMediaUseCase, eliminarMediaUseCase, reemplazarMediaUseCase } from "../media/media.module.js";
 
 const productoRepository = new PrismaProductoRepository(prisma);
-const varianteRepository = new PrismaVarianteRepository(prisma);
+export const varianteRepository = new PrismaVarianteRepository(prisma);
 
 const obtenerProductoUseCase = new ObtenerProductoUseCase(productoRepository);
 const actualizarProductoUseCase = new ActualizarProductoUseCase(productoRepository);

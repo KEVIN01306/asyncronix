@@ -1,9 +1,10 @@
 import AppError from "../../../shared/errors/AppError.js";
 
-export function construirDetallesVentaPorVariante(variante: any, lotes: any[], cantidad: number) {
+export function construirDetallesVentaPorVariante(variante: any, lotes: any[], cantidad: number, ignoreStock: boolean = false) {
     const lotesActivos = lotes.filter((l: any) => l.activo && (l.cantidad_actual ?? 0) > 0);
-    if (!lotesActivos || lotesActivos.length === 0) {
-        throw new AppError('No hay lotes activos con stock para la variante', 'NO_LOTE_DISPONIBLE', 400);
+    if ((!lotesActivos || lotesActivos.length === 0) && !ignoreStock) {
+        const nombre = variante.producto?.nombre ?? variante.sku ?? 'Desconocido';
+        throw new AppError(`No hay stock disponible para el producto: ${nombre}`, 'NO_LOTE_DISPONIBLE', 400);
     }
 
     let restante = cantidad;
@@ -33,7 +34,24 @@ export function construirDetallesVentaPorVariante(variante: any, lotes: any[], c
     }
 
     if (restante > 0) {
-        throw new AppError('Stock insuficiente para completar la cantidad solicitada', 'INSUFICIENTE_STOCK', 400);
+        if (!ignoreStock) {
+            const nombre = variante.producto?.nombre ?? variante.sku ?? 'Desconocido';
+            throw new AppError(`Stock insuficiente para el producto: ${nombre}`, 'INSUFICIENTE_STOCK', 400);
+        } else {
+            const baseName = variante.producto?.nombre ?? variante.sku ?? '';
+            const atributos = (variante.valores ?? []).map((v: any) => v.atributo ? `${v.atributo.nombre}: ${v.valor}` : `${v.valor}`).filter(Boolean).join(', ');
+            const descripcion = atributos && atributos.length > 0 ? `${baseName} (${atributos})` : baseName;
+
+            detallesToCreate.push({
+                variante_id: variante.id,
+                lote_id: null,
+                descripcion,
+                cantidad: restante,
+                precio_unitario: precioUnitario,
+                costo_unitario: 0
+            });
+            restante = 0;
+        }
     }
 
     return detallesToCreate;

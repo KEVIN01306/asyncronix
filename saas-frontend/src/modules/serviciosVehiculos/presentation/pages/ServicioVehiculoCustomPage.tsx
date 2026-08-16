@@ -12,6 +12,7 @@ import ServiceSignatures from '../components/ServiceSignatures';
 import ServiceGeneralInfo from '../components/ServiceGeneralInfo';
 import ServiceClientParts from '../components/ServiceClientParts';
 import ServiceDetailManualTasks from '../components/ServiceDetailManualTasks';
+import { TipoServicioRepository } from '../../../tipos-servicio/infrastructure/repositories/tipo-servicio.repository';
 import { ESTADO_SERVICIO_VEHICULO } from '../../domain/servicio.constants';
 import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageLoading';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
@@ -24,6 +25,7 @@ const ServicioCustomPage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [servicio, setServicio] = useState<ServicioVehiculo | null>(null);
+    const [tipoServicio, setTipoServicio] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const user = useAuthStore((state: any) => state.user);
     const canManageRepuestos = user?.permisos?.includes('EDITAR_SERVICIOS') && user?.permisos?.includes('EDITAR_SERVICIOS_REPUESTOS');
@@ -34,6 +36,15 @@ const ServicioCustomPage = () => {
             setLoading(true);
             const response = await servicioRepository.obtener(id);
             setServicio(response);
+            
+            if (response.tipo_servicio_id) {
+                try {
+                    const ts = await TipoServicioRepository.Obtener(response.tipo_servicio_id);
+                    setTipoServicio(ts);
+                } catch (e) {
+                    console.error("Error fetching tipo_servicio", e);
+                }
+            }
         } catch (error) {
             console.error(error);
             toast.error('No se pudo cargar el servicio');
@@ -103,13 +114,23 @@ const ServicioCustomPage = () => {
                     />
                 </Paper>
 
-                <Paper sx={{ p: 3 }}>
-                    <Typography variant="h6" mb={2}>Servicios Extras</Typography>
-                    <Typography variant="body2" color="text.secondary" mb={2}>
-                        Agrega servicios adicionales manuales que deben mantenerse aunque cambie el tipo de servicio.
-                    </Typography>
-                    <ServiceDetailManualTasks servicio={servicio} onUpdate={(s) => setServicio(s)} taskType="extra" />
-                </Paper>
+                {tipoServicio && tipoServicio.opciones?.length > 0 ? (
+                    <Paper sx={{ p: 3 }}>
+                        <Typography variant="h6" mb={2}>Servicios Extras</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>
+                            Agrega servicios adicionales manuales que deben mantenerse aunque cambie el tipo de servicio.
+                        </Typography>
+                        <ServiceDetailManualTasks servicio={servicio} onUpdate={(s) => setServicio(s)} taskType="extra" />
+                    </Paper>
+                ) : (
+                    <Paper sx={{ p: 3 }}>
+                        <Typography variant="h6" mb={2}>Opciones Manuales</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={2}>
+                            Agrega las opciones y tareas manualmente para este servicio.
+                        </Typography>
+                        <ServiceDetailManualTasks servicio={servicio} onUpdate={(s) => setServicio(s)} taskType="normal" />
+                    </Paper>
+                )}
 
                 <ServiceClientParts servicio={servicio} onUpdate={(s) => setServicio(s)} />
 

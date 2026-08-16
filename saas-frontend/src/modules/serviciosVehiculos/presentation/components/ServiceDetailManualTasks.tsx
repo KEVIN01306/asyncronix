@@ -33,7 +33,7 @@ const ServiceDetailManualTasks: React.FC<Props> = ({ servicio, onUpdate, taskTyp
     const theme = useTheme();
     const isExtraTask = taskType === 'extra';
     const tareasFiltradas = (servicio.tareas || []).filter((tarea) => Boolean(tarea.extra) === isExtraTask);
-    
+
 
     useEffect(() => {
         const fetchOpciones = async () => {
@@ -175,11 +175,11 @@ const ServiceDetailManualTasks: React.FC<Props> = ({ servicio, onUpdate, taskTyp
                             )}
                         />
                     </Grid>
-                    
+
                     <Grid size={{ xs: 12, sm: 'auto' }}>
-                        <Button 
-                            variant="contained" 
-                            onClick={handleCreateTask} 
+                        <Button
+                            variant="contained"
+                            onClick={handleCreateTask}
                             disabled={creatingTask || !taskLabel.trim()}
                             sx={{ height: 56 }}
                         >

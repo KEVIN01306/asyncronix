@@ -8,7 +8,7 @@ export const ProtectedRoute = () => {
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(true);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-    
+
     const user = useAuthStore((state) => state.user);
     const isAuth = useAuthStore((state) => state.isAuthenticated);
     const getMeStore = useAuthStore((state) => state.getMe);

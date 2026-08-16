@@ -3,7 +3,7 @@ import type { Paginated } from "../../../shared/domain/paginated.js";
 import type { VentaSimple, VentaObtenerDetalle, VentaCrear, VentaActualizar, MetodoPago } from "./venta.entity.js";
 
 export interface VentaRepository {
-    registrar(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string): Promise<VentaObtenerDetalle>;
+    registrar(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string, options?: { tx?: any }): Promise<VentaObtenerDetalle>;
     actualizar(id: string, data: VentaActualizar, negocio_id: string, sucursal_id: string): Promise<VentaSimple>;
     anular(id: string, negocio_id: string, sucursal_id: string, comentario: string): Promise<VentaSimple>;
     obtener(id: string, negocio_id: string, sucursal_id: string): Promise<VentaObtenerDetalle | null>;

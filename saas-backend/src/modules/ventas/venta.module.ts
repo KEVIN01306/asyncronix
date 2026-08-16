@@ -50,11 +50,11 @@ const acreditarCajaUseCase = new AcreditarCajaUseCase(cajaRepository);
 const acreditarCuentaBancariaUseCase = new AcreditarCuentaBancariaUseCase(cuentaBancariaRepository);
 const crearTransaccionUseCase = new CrearTransaccionUseCase(transaccionRepository);
 
-const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository, varianteRepository);
+export const registrarVentaUseCase = new RegistrarVentaUseCase(ventaRepository, loteRepository, varianteRepository);
 const agregarProductoUseCase = new AgregarProductoUseCase(ventaRepository, loteRepository, varianteRepository);
 const buscarProductoPorCodigoUseCase = new BuscarProductoPorCodigoUseCase(varianteRepository);
 const eliminarDetalleVentaUseCase = new EliminarDetalleVentaUseCase(ventaRepository);
-const finalizarVentaUseCase = new FinalizarVentaUseCase(
+export const finalizarVentaUseCase = new FinalizarVentaUseCase(
     ventaRepository,
     transactionManager,
     sucursalRepository,
@@ -69,13 +69,13 @@ const obtenerVentaUseCase = new ObtenerVentaUseCase(ventaRepository);
 const obtenerVentasUseCase = new ObtenerVentasUseCase(ventaRepository);
 const buscarClientePorNitVentaUseCase = new BuscarClientePorNitVentaUseCase(clienteRepository);
 const registrarClienteParaVentaUseCase = new RegistrarClienteParaVentaUseCase(clienteRepository);
-const crearPreVentaUseCase = new CrearPreVentaUseCase(prisma);
+export const crearPreVentaUseCase = new CrearPreVentaUseCase(prisma);
 const obtenerPreVentasUseCase = new ObtenerPreVentasUseCase(prisma);
 const obtenerPreVentaUseCase = new ObtenerPreVentaUseCase(prisma);
 const actualizarCantidadPreVentaUseCase = new ActualizarCantidadPreVentaUseCase(prisma);
 const hashProvider = new Argon2HashProvider();
 const finalizarPreVentaUseCase = new FinalizarPreVentaUseCase(
-    prisma, 
+    prisma,
     hashProvider,
     sucursalRepository,
     acreditarCajaUseCase,

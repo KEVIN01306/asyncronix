@@ -14,6 +14,7 @@ import { VarianteRepository } from '../../../infrastructure/repositories/variant
 import { ProductoRepository } from '../../../infrastructure/repositories/producto.repository';
 import type { ImagenProducto, Variante } from '../../../domain/interfaces/producto.interface';
 import { formatImage } from '../../../../../core/utils/formatImage';
+import { useBarcodeScanner } from '../../../../../core/hooks/useBarcodeScanner';
 
 
 const variantFormSchema = z.object({
@@ -52,6 +53,15 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
         resolver: zodResolver(variantFormSchema) as Resolver<VarianteForm>,
         defaultValues: defaultForm
     });
+
+    const handleBarcodeScanned = (code: string) => {
+        if (openDialog) {
+            setValue('codigo_barras', code, { shouldValidate: true, shouldDirty: true });
+            toast.success('Código asignado desde el lector');
+        }
+    };
+
+    useBarcodeScanner({ onScan: handleBarcodeScanned });
 
     useEffect(() => {
         if (editingVariant) {

@@ -263,7 +263,7 @@ const ServicioSalidaPage = () => {
                     <Grid size={3} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>
                         <Box
                             component="img"
-                            src={import.meta.env.VITE_API_URL + '/' + (user?.negocio?.logo_url || '/icons/asyncronix.png')}
+                            src={formatImage(user?.negocio?.logo_url || '/icons/asyncronix.png')}
                             alt={user?.negocio?.nombre_comercial || 'Logo'}
                             sx={{
                                 height: 150,
@@ -282,7 +282,7 @@ const ServicioSalidaPage = () => {
                     <Grid size={3} sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
                         <Box
                             component="img"
-                            src={import.meta.env.VITE_API_URL + '/' + (user?.negocio?.logo_url || '/icons/asyncronix.png')}
+                            src={formatImage(user?.negocio?.logo_url || '/icons/asyncronix.png')}
                             alt={user?.negocio?.nombre_comercial || 'Logo'}
                             sx={{
                                 height: 150,

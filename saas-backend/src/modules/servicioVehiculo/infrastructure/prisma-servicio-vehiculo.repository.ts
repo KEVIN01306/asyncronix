@@ -115,14 +115,15 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
         }
     }
 
-    async registrar(data: ServicioCrear, negocio_id: string, recepcionista_id: string) {
+    async registrar(data: ServicioCrear, negocio_id: string, recepcionista_id: string, options?: { tx?: any }) {
+        const db = options?.tx || this.prisma;
         try {
             // create servicio as before
-            const checklistItems = await this.prisma.checklistItem.findMany({ where: { negocio_id, activo: true } });
+            const checklistItems = await db.checklistItem.findMany({ where: { negocio_id, activo: true } });
 
-            const tipoServicio = data.tipo_servicio_id ? await this.prisma.tipoServicio.findFirst({ where: { id: data.tipo_servicio_id, negocio_id, activo: true }, include: { opciones: { include: { opcion_servicio: true } } } }) : null;
+            const tipoServicio = data.tipo_servicio_id ? await db.tipoServicio.findFirst({ where: { id: data.tipo_servicio_id, negocio_id, activo: true }, include: { opciones: { include: { opcion_servicio: true } } } }) : null;
 
-            const created = await this.prisma.servicio.create({
+            const created = await db.servicio.create({
                 data: {
                     negocio_id,
                     sucursal_id: data.sucursal_id,
@@ -133,7 +134,6 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
                     fecha_salida: data.fecha_salida ? new Date(data.fecha_salida) : null,
                     diagnostico: data.diagnostico ?? null,
                     total: data.total ?? 0,
-                    estado: data.estado ? data.estado as any : undefined,
                     MetodoPago: data.MetodoPago ?? undefined,
                     checklist: tipoServicio?.checklist ? {
                         create: checklistItems.map((item) => ({ checklist_item_id: item.id, estado: 'OPTIMO', observaciones: null }))
@@ -143,7 +143,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             });
 
             // create servicioVehiculo record linked to servicio
-            await (this.prisma.servicioVehiculo.upsert as any)({
+            await (db.servicioVehiculo.upsert as any)({
                 where: { servicio_id: created.id },
                 update: {
                     vehiculo_id: data.vehiculo_id,
@@ -163,7 +163,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             });
 
             // fetch merged record from servicioVehiculo which includes servicio and vehiculo/mecanico
-            const sv = await this.prisma.servicioVehiculo.findFirst({ where: { servicio_id: created.id }, include: { servicio: { include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } }, tipo_servicio: true } }, vehiculo: { include: { modelo: true } }, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } } } as any);
+            const sv = await db.servicioVehiculo.findFirst({ where: { servicio_id: created.id }, include: { servicio: { include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } }, tipo_servicio: true } }, vehiculo: { include: { modelo: true } }, mecanico: { select: { id: true, nombre: true, apellido: true, email: true } } } } as any);
 
             return mapServicioVehiculoToServicioDetalle(sv as any);
         } catch (error) {

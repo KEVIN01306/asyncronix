@@ -72,8 +72,8 @@ async function obtenerSiguienteCorrelativo(prisma: PrismaClient, negocio_id: str
  * Format: first 4 letters of name (uppercase) + correlativo padded to at least 9 digits.
  * Example: "PATRON" + 1 → "PATR000000001"
  */
-function generarCodigo(nombreNegocio: string, correlativo: number): string {
-    const prefix = nombreNegocio.replace(/\s+/g, '').toUpperCase().slice(0, 4).padEnd(4, 'X');
+function generarCodigo(Prefijo: string, correlativo: number): string {
+    const prefix = Prefijo.replace(/\s+/g, '').toUpperCase().slice(0, 4).padEnd(4, 'X');
     const numero = String(correlativo).padStart(9, '0');
     return `${prefix}${numero}`;
 }

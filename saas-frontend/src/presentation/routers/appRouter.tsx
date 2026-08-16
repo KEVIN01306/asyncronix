@@ -37,6 +37,7 @@ import { AccesoDenegadoPage } from "../../shared/pages/AccesoDenegadoPage";
 import { ingresoEgresoRoutes } from "../../modules/ingresos-egresos/presentation/ingresoEgreso.routes";
 import { reportesRoutes } from "../../modules/reportes/presentation/reportes.routes";
 import { movimientosInternosRoutes } from "../../modules/movimientos-internos/presentation/movimientos-internos.routes";
+import { cotizacionesRoutes } from "../../modules/cotizaciones/presentation/cotizacion.routes";
 
 const appRouter = createBrowserRouter([
     {
@@ -95,6 +96,7 @@ const appRouter = createBrowserRouter([
                     ...customRoutes,
                     ...paisesRoutes,
                     ...monedasRoutes,
+                    ...cotizacionesRoutes,
                     {
                         path: "acceso-denegado",
                         element: <AccesoDenegadoPage />

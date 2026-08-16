@@ -14,10 +14,9 @@ import { PersistenceError } from '../../../shared/database/errors/PersistenceErr
 export class PrismaVentaRepository implements VentaRepository {
     constructor(private readonly db: PrismaClient) { }
 
-    async registrar(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string): Promise<VentaObtenerDetalle> {
+    async registrar(data: VentaCrear, negocio_id: string, sucursal_id: string, usuario_id: string, options?: { tx?: any }): Promise<VentaObtenerDetalle> {
         try {
-            // Ahora el repo solo persiste la venta y los detalles ya resueltos por el Use Case.
-            return await this.db.$transaction(async (tx) => {
+            const execute = async (tx: any) => {
                 // Create venta first without nested detalles. We'll insert detalles explicitly
                 const venta = await tx.venta.create({
                     data: {
@@ -62,7 +61,13 @@ export class PrismaVentaRepository implements VentaRepository {
                 }
 
                 return VentaMapper.mapDetalle(venta);
-            }, { maxWait: 5000, timeout: 20000 });
+            };
+
+            if (options?.tx) {
+                return await execute(options.tx);
+            } else {
+                return await this.db.$transaction(execute, { maxWait: 5000, timeout: 20000 });
+            }
         } catch (error: any) {
             if (error instanceof Error && (error.message.includes("INSUFICIENTE_STOCK") || error.message.includes("PRODUCTO_NO_ENCONTRADO") || error.message.includes("VARIANTE_NO_ENCONTRADA"))) {
                 throw error;

@@ -12,6 +12,7 @@ import QrProductScanner from '../../../ventas/presentation/components/lectorSkuQ
 import type { VentaVarianteDetalle } from '../../../ventas/domain/interfaces/venta.interface';
 import type { Variante } from '../../../productos/domain/interfaces/producto.interface';
 import { formatMoney } from '../../../../core/utils/formatMoney';
+import { useBarcodeScanner } from '../../../../core/hooks/useBarcodeScanner';
 
 export default function ServicioRepuestosPage() {
     const { id } = useParams();
@@ -86,6 +87,8 @@ export default function ServicioRepuestosPage() {
             setScanLoading(false);
         }
     };
+
+    useBarcodeScanner({ onScan: handleCodigoLeido });
 
     const handleOpenScanner = () => {
         setShowScannerModal(true);

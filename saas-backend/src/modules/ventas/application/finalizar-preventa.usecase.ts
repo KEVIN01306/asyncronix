@@ -22,7 +22,7 @@ export class FinalizarPreVentaUseCase {
         try {
             const preventa = await this.db.preVenta.findFirst({
                 where: { id, negocio_id, sucursal_id, usuario_id, activo: true },
-                include: { detalles: true }
+                include: { detalles: true, cotizacion: true }
             });
 
             if (!preventa) throw new Error('PREVENTA_NO_ENCONTRADA');
@@ -241,6 +241,13 @@ export class FinalizarPreVentaUseCase {
 
                 await tx.preVentaDetalle.deleteMany({ where: { pre_venta_id: id } });
                 await tx.preVenta.update({ where: { id }, data: { activo: false } });
+
+                if (preventa.cotizacion) {
+                    await tx.cotizacion.update({
+                        where: { id: preventa.cotizacion.id },
+                        data: { venta_id: venta.id }
+                    });
+                }
 
                 return { venta, preventa };
             },{

@@ -11,7 +11,8 @@ export class ObtenerPreVentasUseCase {
                     usuario: true,
                     detalles: true,
                     sucursal: true,
-                    negocio: true
+                    negocio: true,
+                    cotizacion: true
                 },
                 orderBy: { created_at: 'desc' }
             });

@@ -42,6 +42,7 @@ import {
   AdminPanelSettingsOutlined,
   StorefrontOutlined,
   BusinessOutlined,
+  Receipt,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -61,6 +62,7 @@ const MenuItems: MenuItem[] = [
 
   { group: "Enlaces rapidos" },
   { name: "Ventas", icon: PointOfSaleOutlined, link: "/ventas", permiso: "VER_VENTAS" },
+  { name: "Cotizador", icon: Receipt, link: "/cotizaciones", permiso: "VER_COTIZACIONES" },
   { name: "Clientes", icon: PeopleAltOutlined, link: "/clientes", permiso: "VER_CLIENTES" },
 
   { group: "modulos" },

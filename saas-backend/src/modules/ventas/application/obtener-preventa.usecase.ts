@@ -16,7 +16,8 @@ export class ObtenerPreVentaUseCase {
                         }
                     },
                     sucursal: true,
-                    negocio: true
+                    negocio: true,
+                    cotizacion: true
                 }
             });
 

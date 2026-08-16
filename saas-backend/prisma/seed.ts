@@ -57,6 +57,12 @@ const permisosData = [
     { codigo: "ANULAR_VENTAS" },
     { codigo: "VENTAS_FORZAR_STOCK" },
 
+    { codigo: "VER_COTIZACIONES" },
+    { codigo: "VER_COTIZACIONES_DETALLE" },
+    { codigo: "CREAR_COTIZACIONES" },
+    { codigo: "EDITAR_COTIZACIONES" },
+    { codigo: "CONVERTIR_COTIZACIONES" },
+
     { codigo: "VER_CLIENTES" },
     { codigo: "VER_CLIENTES_DETALLE" },
     { codigo: "CREAR_CLIENTES" },
@@ -211,6 +217,10 @@ const modulosConPermisos = [
     {
         nombre: "VENTAS",
         permisos: ["VER_VENTAS", "VER_VENTAS_DETALLE", "CREAR_VENTAS", "EDITAR_VENTAS", "ANULAR_VENTAS", "VENTAS_FORZAR_STOCK"]
+    },
+    {
+        nombre: "COTIZACIONES",
+        permisos: ["VER_COTIZACIONES", "VER_COTIZACIONES_DETALLE", "CREAR_COTIZACIONES", "EDITAR_COTIZACIONES", "CONVERTIR_COTIZACIONES"]
     },
     {
         nombre: "CLIENTES",

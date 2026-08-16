@@ -2,14 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import {
-    Grid, Button, Card, CardContent, Divider, IconButton, TextField,
-    Typography, Autocomplete, useTheme, useMediaQuery, TableContainer,
-    Box, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
-    Stack, Chip,
-    List,
-    ListItem,
-    ListItemText,
-    Paper
+    Box, Typography, Card, CardContent, Grid, IconButton, TextField, Button,
+    TableContainer, Paper, List, ListItem, ListItemText, Divider, Stack, Chip, Dialog,
+    DialogTitle, DialogContent, DialogActions, Autocomplete, CircularProgress, Alert,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
 import {
     ArrowBack as ArrowBackIcon,
@@ -35,6 +32,7 @@ import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import QrProductScanner from '../components/lectorSkuQr';
 import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMismatchModal';
 import CajaStatusWidget from '../../../../shared/components/ui/widgets/CajaStatusWidget';
+import { useBarcodeScanner } from '../../../../core/hooks/useBarcodeScanner';
 
 type FormValues = {
     cliente_id: string;
@@ -61,6 +59,7 @@ export default function VentaFormPage() {
     const [showClientModal, setShowClientModal] = useState(false);
     const [pendingProduct, setPendingProduct] = useState<VentaProductoInput | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [isFromCotizacion, setIsFromCotizacion] = useState(false);
     const [showScannerModal, setShowScannerModal] = useState(false);
     const [showStockDialog, setShowStockDialog] = useState(false);
     const [stockIssue, setStockIssue] = useState<any | null>(null);
@@ -92,7 +91,7 @@ export default function VentaFormPage() {
     const [cantidadAgregar, setCantidadAgregar] = useState<number>(1);
 
     const estado = watch('estado') as EstadoVenta;
-    const isEditable = !id || estado === 'PENDIENTE';
+    const isEditable = (!id || estado === 'PENDIENTE') && !isFromCotizacion;
 
     const cargarProductosDisponibles = useCallback(async () => {
         try {
@@ -175,6 +174,7 @@ export default function VentaFormPage() {
             setValue('estado', 'PENDIENTE');
             setClienteNombre('Consumidor Final');
             setClientSelected(Boolean(preventa.cliente_id));
+            setIsFromCotizacion(Boolean(preventa.cotizacion));
             setProductosSeleccionados(preventa.detalles.map((detalle) => ({
                 producto_id: detalle.variante_id,
                 cantidad: detalle.cantidad,
@@ -359,6 +359,8 @@ export default function VentaFormPage() {
             setScanLoading(false);
         }
     };
+
+    useBarcodeScanner({ onScan: handleCodigoLeido });
 
     const handleOpenScanner = () => {
         setShowScannerModal(true);
@@ -701,6 +703,12 @@ export default function VentaFormPage() {
 
                 {/* COLUMNA IZQUIERDA: Entrada de Productos y Tabla Operativa (75% ancho en desktop) */}
                 <Grid size={{ xs: 12, lg: 8 }}>
+                    {isFromCotizacion && (
+                        <Alert severity="info" sx={{ mb: 3 }}>
+                            Esta preventa fue generada desde una cotización y no puede ser modificada.
+                            Puedes finalizarla para registrar la venta.
+                        </Alert>
+                    )}
                     <Card sx={{ mb: 3 }}>
                         <CardContent sx={{ p: 3 }}>
                             <Typography variant="h3" sx={{ fontSize: '1.2rem', mb: 3, fontWeight: 600 }}>

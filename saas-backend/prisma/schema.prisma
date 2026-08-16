@@ -157,6 +157,7 @@ model Negocio {
   negocioLimite        NegocioLimite?
   medias               Media[]
   verificationCodes    VerificationCode[]
+  cotizacions          Cotizacion[]
 
   @@map("negocios")
 }
@@ -198,6 +199,7 @@ model Sucursal {
   transacciones     Transaccion[]
   trasladosOrigen   Traslado[]               @relation("SucursalOrigen")
   trasladosDestino  Traslado[]               @relation("SucursalDestino")
+  cotizacions       Cotizacion[]
 
   @@index([negocio_id])
   @@map("sucursales")
@@ -255,6 +257,8 @@ model Usuario {
   ventas_autorizadas      Venta[]            @relation("VentaAutorizador")
   pre_ventas              PreVenta[]         @relation("PreVentaUsuario")
   transacciones_hechas    Transaccion[]      @relation("TransaccionesUsuario")
+  cotizacions             Cotizacion[]
+  corteCajas              CorteCaja[]
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -274,12 +278,13 @@ model Cliente {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  negocio    Negocio    @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  motos      Vehiculo[]
-  citas      Cita[]     @relation("CitaCliente")
-  servicios  Servicio[] @relation("ServicioCliente")
-  ventas     Venta[]    @relation("VentaCliente")
-  pre_ventas PreVenta[] @relation("PreVentaCliente")
+  negocio     Negocio      @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  motos       Vehiculo[]
+  citas       Cita[]       @relation("CitaCliente")
+  servicios   Servicio[]   @relation("ServicioCliente")
+  ventas      Venta[]      @relation("VentaCliente")
+  pre_ventas  PreVenta[]   @relation("PreVentaCliente")
+  cotizacions Cotizacion[]
 
   @@unique([negocio_id, telefono])
   @@unique([negocio_id, dpi])
@@ -386,6 +391,7 @@ model Vehiculo {
   vehiculo_tipo    VehiculoTipo       @relation(fields: [vehiculo_tipo_id], references: [id])
   servicioVehiculo ServicioVehiculo[]
   citas            Cita[]
+  cotizacions      Cotizacion[]
 
   @@unique([negocio_id, placa])
   @@map("vehiculos")
@@ -471,6 +477,7 @@ model Servicio {
   repuestos                ServicioRepuesto[]
   ServicioRepuestoCliente  ServicioRepuestoCliente[]
   CambiosSiguienteServicio CambiosSiguienteServicio[]
+  cotizacion               Cotizacion?
 
   @@map("servicios")
 }
@@ -503,10 +510,11 @@ model TipoServicio {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  negocio   Negocio              @relation(fields: [negocio_id], references: [id])
-  opciones  TipoServicioOpcion[]
-  servicios Servicio[]
-  citas     Cita[]
+  negocio            Negocio              @relation(fields: [negocio_id], references: [id])
+  opciones           TipoServicioOpcion[]
+  servicios          Servicio[]
+  citas              Cita[]
+  cotizacionDetalles CotizacionDetalle[]
 
   @@map("tipos_servicio")
 }
@@ -731,13 +739,14 @@ model VarianteProducto {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  producto           Producto           @relation(fields: [producto_id], references: [id], onDelete: Cascade)
-  imagen             ImagenProducto?    @relation(fields: [imagen_id], references: [id], onDelete: SetNull)
+  producto           Producto            @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  imagen             ImagenProducto?     @relation(fields: [imagen_id], references: [id], onDelete: SetNull)
   valores            ValorAtributo[]
   lotes              Lote[]
   repuestos          ServicioRepuesto[]
   venta_detalles     VentaDetalle[]
   pre_venta_detalles PreVentaDetalle[]
+  cotizacionDetalles CotizacionDetalle[]
 
   @@unique([producto_id, sku])
   @@index([producto_id])
@@ -879,6 +888,7 @@ model Venta {
   cliente     Cliente?       @relation("VentaCliente", fields: [cliente_id], references: [id])
   autorizador Usuario?       @relation("VentaAutorizador", fields: [autorizador_id], references: [id])
   detalles    VentaDetalle[]
+  cotizacion  Cotizacion?
 
   @@map("ventas")
 }
@@ -914,11 +924,12 @@ model PreVenta {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  negocio  Negocio           @relation(fields: [negocio_id], references: [id])
-  sucursal Sucursal          @relation(fields: [sucursal_id], references: [id])
-  usuario  Usuario           @relation("PreVentaUsuario", fields: [usuario_id], references: [id])
-  cliente  Cliente?          @relation("PreVentaCliente", fields: [cliente_id], references: [id])
-  detalles PreVentaDetalle[]
+  negocio    Negocio           @relation(fields: [negocio_id], references: [id])
+  sucursal   Sucursal          @relation(fields: [sucursal_id], references: [id])
+  usuario    Usuario           @relation("PreVentaUsuario", fields: [usuario_id], references: [id])
+  cliente    Cliente?          @relation("PreVentaCliente", fields: [cliente_id], references: [id])
+  detalles   PreVentaDetalle[]
+  cotizacion Cotizacion?
 
   @@map("pre_ventas")
 }
@@ -935,6 +946,70 @@ model PreVentaDetalle {
   variante  VarianteProducto @relation(fields: [variante_id], references: [id])
 
   @@map("pre_venta_detalles")
+}
+
+model Cotizacion {
+  id          String  @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id  String  @db.Char(36)
+  sucursal_id String  @db.Char(36)
+  usuario_id  String  @db.Char(36) // Recepcionista o vendedor
+  cliente_id  String? @db.Char(36) // Opcional, por si cotizan al público en general
+  vehiculo_id String? @db.Char(36) // Opcional, si va destinado al taller
+
+  correlativo   Int                   @default(1)
+  codigo        String
+  total         Float
+  fecha_emision DateTime              @default(now())
+  fecha_validez DateTime // Fecha de expiración de precios
+  estado        EstadoCotizacion      @default(PENDIENTE)
+  tipo_destino  TipoDestinoCotizacion @default(VENTA_DIRECTA)
+  terminos      String?               @db.Text
+
+  // Enlaces cuando se convierte a una operación real
+  venta_id    String? @unique @db.Char(36)
+  preventa_id String? @unique @db.Char(36)
+  servicio_id String? @unique @db.Char(36)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  negocio  Negocio   @relation(fields: [negocio_id], references: [id])
+  sucursal Sucursal  @relation(fields: [sucursal_id], references: [id])
+  usuario  Usuario   @relation(fields: [usuario_id], references: [id])
+  cliente  Cliente?  @relation(fields: [cliente_id], references: [id])
+  vehiculo Vehiculo? @relation(fields: [vehiculo_id], references: [id])
+  venta    Venta?    @relation(fields: [venta_id], references: [id])
+  preventa PreVenta? @relation(fields: [preventa_id], references: [id])
+  servicio Servicio? @relation(fields: [servicio_id], references: [id])
+
+  detalles CotizacionDetalle[]
+
+  @@index([negocio_id])
+  @@index([sucursal_id])
+  @@index([estado])
+  @@map("cotizaciones")
+}
+
+model CotizacionDetalle {
+  id            String @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  cotizacion_id String @db.Char(36)
+
+  variante_id      String? @db.Char(36) // Si cotiza un repuesto
+  tipo_servicio_id String? @db.Char(36) // Si cotiza paquete de servicio
+  // Nota: Ambos pueden ir nulos si es "mano de obra a medida" o un ítem fuera de inventario
+
+  descripcion     String @db.VarChar(255)
+  cantidad        Int
+  precio_unitario Float
+  descuento       Float  @default(0)
+  subtotal        Float // Guardar el subtotal mejora el rendimiento al consultar
+
+  cotizacion    Cotizacion        @relation(fields: [cotizacion_id], references: [id], onDelete: Cascade)
+  variante      VarianteProducto? @relation(fields: [variante_id], references: [id])
+  tipo_servicio TipoServicio?     @relation(fields: [tipo_servicio_id], references: [id])
+
+  @@index([cotizacion_id])
+  @@map("cotizacion_detalles")
 }
 
 model Imagen {
@@ -985,6 +1060,7 @@ model Caja {
   // Relaciones para auditoría de movimientos
   transaccionesOrigen  Transaccion[] @relation("OrigenCaja")
   transaccionesDestino Transaccion[] @relation("DestinoCaja")
+  corteCajas           CorteCaja[]
 
   @@map("cajas")
 }
@@ -1080,6 +1156,8 @@ model Transaccion {
   fecha_transaccion DateTime @default(now())
   created_at        DateTime @default(now())
 
+  corte_caja_id String? @db.Char(36)
+
   negocio       Negocio               @relation(fields: [negocio_id], references: [id])
   sucursal      Sucursal              @relation(fields: [sucursal_id], references: [id])
   categoria     CategoriaTransaccion? @relation(fields: [categoria_id], references: [id])
@@ -1091,8 +1169,39 @@ model Transaccion {
   origen_cuenta  CuentaBancaria? @relation("OrigenCuenta", fields: [origen_cuenta_id], references: [id])
   destino_caja   Caja?           @relation("DestinoCaja", fields: [destino_caja_id], references: [id])
   destino_cuenta CuentaBancaria? @relation("DestinoCuenta", fields: [destino_cuenta_id], references: [id])
+  corte_caja     CorteCaja?      @relation(fields: [corte_caja_id], references: [id])
 
   @@map("transacciones")
+}
+
+model CorteCaja {
+  id         String @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  caja_id    String @db.Char(36)
+  usuario_id String @db.Char(36) // Quién abre/cierra la caja
+
+  fecha_apertura DateTime  @default(now())
+  fecha_cierre   DateTime?
+
+  saldo_inicial   Float // Con cuánto empezó el turno
+  ventas_efectivo Float @default(0) // Suma de ingresos en efectivo
+  otros_ingresos  Float @default(0)
+  egresos         Float @default(0)
+
+  saldo_esperado Float? // Calculado por el sistema: (inicial + ingresos - egresos)
+  saldo_real     Float? // Lo que el cajero cuenta físicamente
+  diferencia     Float? // Positivo (sobrante), Negativo (faltante)
+
+  estado        EstadoCorte @default(ABIERTO)
+  observaciones String?     @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  caja          Caja          @relation(fields: [caja_id], references: [id])
+  usuario       Usuario       @relation(fields: [usuario_id], references: [id])
+  transacciones Transaccion[] // Relación con los movimientos del turno
+
+  @@map("cortes_caja")
 }
 
 model VerificationCode {
@@ -1115,6 +1224,23 @@ model VerificationCode {
 // ==============================================================
 // 8. ENUMERACIONES
 // ==============================================================
+
+enum EstadoCorte {
+  ABIERTO
+  CERRADO
+}
+
+enum EstadoCotizacion {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
+  VENCIDA
+}
+
+enum TipoDestinoCotizacion {
+  VENTA_DIRECTA // Para facturar directo en mostrador
+  TALLER // Para ingresar un vehículo a servicio
+}
 
 enum TipoVerificacion {
   REGISTRO_USUARIO

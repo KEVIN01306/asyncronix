@@ -28,10 +28,11 @@ export class FinalizarVentaUseCase {
         sucursal_id: string, 
         usuario_id: string, 
         metodo_pago?: MetodoPago,
-        opcionesCaja?: { caja_id?: string; token_autorizado?: string; forzar_caja_en_linea?: boolean }
+        opcionesCaja?: { caja_id?: string; token_autorizado?: string; forzar_caja_en_linea?: boolean },
+        options?: { tx?: any }
     ): Promise<VentaSimple> {
         try {
-            return await this.transactionManager.run(async (tx) => {
+            const executeFlow = async (tx: any) => {
                 // 1. Finalizar la venta y obtenerla
                 const venta = await this.ventaRepository.finalizarVenta(ventaId, negocio_id, sucursal_id, metodo_pago, { tx });
                 const metodoPagoReal = venta.metodo_pago;
@@ -122,7 +123,7 @@ export class FinalizarVentaUseCase {
                         finalMonedaId = cuentaMonedaId;
                     }
 
-                    await this.acreditarCuentaBancariaUseCase.execute(relacionCuenta.cuenta_bancaria.id, negocio_id, finalMontoOriginal, data.total, { tx });
+                    await this.acreditarCuentaBancariaUseCase.execute(relacionCuenta.cuenta_bancaria.id, negocio_id, finalMontoOriginal, venta.total, { tx });
 
                     await this.crearTransaccionUseCase.execute({
                         negocio_id,
@@ -143,7 +144,13 @@ export class FinalizarVentaUseCase {
                 }
 
                 return venta;
-            });
+            };
+
+            if (options?.tx) {
+                return await executeFlow(options.tx);
+            } else {
+                return await this.transactionManager.run(executeFlow);
+            }
         } catch (error: any) {
             if (error instanceof PersistenceError) {
                 if (error instanceof VentaNotFoundPersistenceError) throw new AppError('La venta no existe', 'NOT_FOUND', 404);
