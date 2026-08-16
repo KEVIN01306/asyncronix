@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -25,7 +25,7 @@ export default function QuotationForm({ defaultValues, onSubmit, isSubmitting, i
     const methods = useForm<CotizacionForm>({
         resolver: zodResolver(cotizacionFormSchema),
         defaultValues: {
-            tipo_destino: TipoDestinoCotizacion.MOSTRADOR,
+            tipo_destino: TipoDestinoCotizacion.VENTA_DIRECTA,
             detalles: [],
             ...defaultValues
         }

@@ -130,8 +130,8 @@ export default function CotizacionListPage() {
 
     const columns = [
         { id: 'codigo', name: 'Código' },
-        { id: 'cliente_nombre', name: 'Cliente', format: (v: any, row: Cotizacion) => row.cliente?.nombre || 'C/F' },
-        { id: 'vehiculo_placa', name: 'Vehículo', format: (v: any, row: Cotizacion) => row.vehiculo?.placa || 'N/A' },
+        { id: 'cliente_nombre', name: 'Cliente', format: (_v: any, row: Cotizacion) => row.cliente?.nombre || 'C/F' },
+        { id: 'vehiculo_placa', name: 'Vehículo', format: (_v: any, row: Cotizacion) => row.vehiculo?.placa || 'N/A' },
         { id: 'fecha_emision', name: 'Emisión', format: (v: any) => new Date(v).toLocaleDateString() },
         { id: 'total', name: 'Total', format: (v: any) => formatMoney(v) },
         { id: 'estado', name: 'Estado', format: (v: any) => <QuotationStatusBadge estado={v} /> },
@@ -214,25 +214,31 @@ export default function CotizacionListPage() {
                 </Button>
             </Box>
 
-            <ListTable
-                columns={columns}
-                data={cotizaciones}
-                page={Math.floor(offset / limit)}
-                rowsPerPage={limit}
-                total={total}
-                loading={loading}
-                onPageChange={(_, newPage) => {
-                    searchParams.set('offset', (newPage * limit).toString());
-                    setSearchParams(searchParams);
-                }}
-                onRowsPerPageChange={(e) => {
-                    const newLimit = parseInt(e.target.value, 10);
-                    searchParams.set('limit', newLimit.toString());
-                    searchParams.set('offset', '0');
-                    setSearchParams(searchParams);
-                }}
-                actions={actionsList}
-            />
+            {loading ? (
+                <Box display="flex" justifyContent="center" my={4}>
+                    <Loading />
+                </Box>
+            ) : (
+                <ListTable
+                    columns={columns}
+                    data={cotizaciones}
+                    actions={actionsList}
+                    pagination={{
+                        total,
+                        limit,
+                        offset,
+                        onPageChange: (newPage: number) => {
+                            searchParams.set('offset', (newPage * limit).toString());
+                            setSearchParams(searchParams);
+                        },
+                        onRowsPerPageChange: (newLimit: number) => {
+                            searchParams.set('limit', newLimit.toString());
+                            searchParams.set('offset', '0');
+                            setSearchParams(searchParams);
+                        }
+                    }}
+                />
+            )}
 
             <QuotationFilters
                 open={filterModalOpen}

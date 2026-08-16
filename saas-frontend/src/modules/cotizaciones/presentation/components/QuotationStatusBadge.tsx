@@ -8,7 +8,7 @@ interface Props {
 
 const QuotationStatusBadge = ({ estado, size = 'small' }: Props) => {
     let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
-    let label = estado;
+    let label: string = estado;
 
     switch (estado) {
         case EstadoCotizacion.PENDIENTE:

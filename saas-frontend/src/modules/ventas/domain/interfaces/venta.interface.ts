@@ -110,6 +110,7 @@ export interface PreVenta {
     created_at: string;
     updated_at: string;
     detalles: PreVentaDetalle[];
+    cotizacion?: any;
 }
 
 export interface PreVentaCreateForm {

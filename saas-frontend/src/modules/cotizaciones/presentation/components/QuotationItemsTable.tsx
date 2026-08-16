@@ -20,7 +20,7 @@ interface Props {
 }
 
 export default function QuotationItemsTable({ isReadOnly = false }: Props) {
-    const { control, watch, setValue } = useFormContext<CotizacionForm>();
+    const { control } = useFormContext<CotizacionForm>();
     const { fields, append, remove, update } = useFieldArray({
         control,
         name: 'detalles'

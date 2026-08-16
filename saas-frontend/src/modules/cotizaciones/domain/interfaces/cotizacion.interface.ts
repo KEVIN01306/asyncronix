@@ -1,16 +1,20 @@
 import { z } from 'zod';
 
-export enum EstadoCotizacion {
-    PENDIENTE = 'PENDIENTE',
-    ACEPTADA = 'ACEPTADA',
-    RECHAZADA = 'RECHAZADA',
-    VENCIDA = 'VENCIDA'
-}
+export const EstadoCotizacion = {
+    PENDIENTE: 'PENDIENTE',
+    ACEPTADA: 'ACEPTADA',
+    RECHAZADA: 'RECHAZADA',
+    VENCIDA: 'VENCIDA'
+} as const;
 
-export enum TipoDestinoCotizacion {
-    TALLER = 'TALLER',
-    VENTA_DIRECTA = 'VENTA_DIRECTA'
-}
+export type EstadoCotizacion = typeof EstadoCotizacion[keyof typeof EstadoCotizacion];
+
+export const TipoDestinoCotizacion = {
+    TALLER: 'TALLER',
+    VENTA_DIRECTA: 'VENTA_DIRECTA'
+} as const;
+
+export type TipoDestinoCotizacion = typeof TipoDestinoCotizacion[keyof typeof TipoDestinoCotizacion];
 
 export interface CotizacionDetalle {
     id: string;
@@ -32,6 +36,9 @@ export interface Cotizacion {
     correlativo: number;
     cliente_id?: string | null;
     vehiculo_id?: string | null;
+    venta_id?: string | null;
+    preventa_id?: string | null;
+    servicio_id?: string | null;
     usuario_id: string;
     estado: EstadoCotizacion;
     fecha_emision: string;
@@ -69,9 +76,9 @@ export const cotizacionDetalleFormSchema = z.object({
     variante_id: z.string().nullable().optional(),
     tipo_servicio_id: z.string().nullable().optional(),
     descripcion: z.string().min(1, "La descripción es requerida").max(255),
-    cantidad: z.coerce.number().int().positive("La cantidad debe ser mayor a 0"),
-    precio_unitario: z.coerce.number().min(0, "El precio no puede ser negativo"),
-    descuento: z.coerce.number().min(0).optional().default(0),
+    cantidad: z.number().int().positive("La cantidad debe ser mayor a 0"),
+    precio_unitario: z.number().min(0, "El precio no puede ser negativo"),
+    descuento: z.number().min(0),
     // Tipo auxiliar para la UI, no se envía al backend si no es necesario,
     // o se procesa antes de enviar.
     tipo: z.enum(['PRODUCTO', 'SERVICIO', 'MANO_OBRA_PERSONALIZADA']).optional()
@@ -102,6 +109,7 @@ export interface CotizacionResponse {
 
 export const convertirCotizacionSchema = z.object({
     metodo_pago: z.string().optional(),
+    tipo_servicio_id: z.string().nullable().optional(),
     opcionesCaja: z.object({
         caja_id: z.string().optional(),
         token_autorizado: z.string().optional(),

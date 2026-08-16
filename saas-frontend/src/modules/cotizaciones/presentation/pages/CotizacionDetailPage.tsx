@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton, Button, Chip } from '@mui/material';
+import { Box, Typography, IconButton, Button } from '@mui/material';
 import { ArrowBack, Transform, Edit, PictureAsPdf } from '@mui/icons-material';
 import { toast } from 'sonner';
 
