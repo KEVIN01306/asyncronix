@@ -22,7 +22,7 @@ const SucursalFormPage = () => {
     const user = useAuthStore((state) => state.user);
 
     const { register, handleSubmit, reset, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<SucursalFormValues>({
-        resolver: zodResolver(sucursalSchema),
+        resolver: zodResolver(sucursalSchema) as any,
         defaultValues: {
             codigo_establecimiento: '1'
         }
@@ -70,13 +70,13 @@ const SucursalFormPage = () => {
         }
     };
 
-    if (loading) return <Loading/>;
+    if (loading) return <Loading />;
 
     return (
         <Box p={2} maxWidth="800px" mx="auto">
-            <Button 
-                startIcon={<ArrowBack />} 
-                onClick={() => navigate(-1)} 
+            <Button
+                startIcon={<ArrowBack />}
+                onClick={() => navigate(-1)}
                 sx={{ mb: 2, textTransform: 'none' }}
             >
                 Volver
@@ -151,7 +151,7 @@ const SucursalFormPage = () => {
                             helperText={errors.codigo_postal?.message}
                         />
 
-                        <SubmitButton 
+                        <SubmitButton
                             isSubmitting={isSubmitting}
                             text={isEdit ? 'Guardar Cambios' : 'Registrar Sucursal'}
                             loadingText="Guardando..."
