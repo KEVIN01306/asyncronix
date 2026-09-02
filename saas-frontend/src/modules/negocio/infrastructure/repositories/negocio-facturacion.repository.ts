@@ -1,7 +1,7 @@
 import api from '../../../../core/api/api';
 import type { ApiResponse } from '../../../../core/api/interfaces/api-response.interface';
-import type { NegocioFacturacionConfig } from '../interface/negocio-facturacion.interface';
-import type { NegocioFacturacionFormValues } from '../schemas/negocio-facturacion.schema';
+import type { NegocioFacturacionConfig } from '../../domain/interface/negocio-facturacion.interface';
+import type { NegocioFacturacionFormValues } from '../../domain/schemas/negocio-facturacion.schema';
 
 const URL = '/negocios/me/facturacion';
 
