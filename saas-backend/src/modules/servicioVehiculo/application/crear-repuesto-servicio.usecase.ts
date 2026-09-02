@@ -3,6 +3,7 @@ import { DatabaseError } from '../../../shared/database/errors/DatabaseError.js'
 import { PersistenceError } from '../../../shared/database/errors/PersistenceError.js';
 import { LoteNotFoundPersistenceError } from '../../../shared/database/errors/LoteNotFoundPersistenceError.js';
 import { InsufficientStockPersistenceError } from '../../../shared/database/errors/InsufficientStockPersistenceError.js';
+import { ESTADO_SERVICIO } from '../domain/servicio.constants.js';
 import type { ServicioRepository } from '../domain/servicio.repository.js';
 import type { LoteRepository } from '../../lote/domain/lote.repository.js';
 import type { VarianteRepository } from '../../producto/domain/variante.repository.js';
@@ -18,6 +19,17 @@ export class CrearServicioRepuestoUseCase {
         try {
             if (!varianteId && !codigo) {
                 throw new AppError('Se requiere variante_id o codigo para crear el repuesto', 'VARIANTE_O_CODIGO_REQUERIDO', 400);
+            }
+
+            const servicioState = await this.servicioRepository.obtenerEstado(servicioId, negocio_id);
+            if (!servicioState) throw new AppError('Servicio no encontrado', 'SERVICIO_NO_ENCONTRADO', 404);
+
+            let servicio_reparacion_id: string | undefined;
+            if (servicioState.estado === ESTADO_SERVICIO.EN_REPARACION) {
+                const reparacion = await this.servicioRepository.obtenerReparacionActiva(servicioId, negocio_id);
+                if (reparacion) {
+                    servicio_reparacion_id = reparacion.id;
+                }
             }
 
             const variante = varianteId
@@ -54,7 +66,7 @@ export class CrearServicioRepuestoUseCase {
 
             if (restante > 0) throw new AppError('Stock insuficiente para completar la cantidad solicitada', 'INSUFICIENTE_STOCK', 400);
 
-            return await this.servicioRepository.crearRepuestosAtomicos(servicioId, detallesToCreate, negocio_id, sucursal_id);
+            return await this.servicioRepository.crearRepuestosAtomicos(servicioId, detallesToCreate, negocio_id, sucursal_id, servicio_reparacion_id);
         } catch (error: any) {
             if (error instanceof AppError) throw error;
             if (error instanceof PersistenceError) {

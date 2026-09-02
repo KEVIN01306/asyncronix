@@ -7,6 +7,7 @@ export const mapServicioSimple = (record: any): ServicioSimple => ({
     cliente_id: record.cliente_id,
     tipo_servicio_id: record.tipo_servicio_id,
     estado: record.estado,
+    subtotal: record.subtotal,
     total: record.total,
     created_at: record.created_at,
     vehiculo: record.vehiculo ? {
@@ -58,7 +59,8 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
     fecha_salida: record.fecha_salida,
     firma_entrada: record.firma_entrada,
     firma_salida: record.firma_salida,
-    total: record.total,
+    subtotal: record.subtotal ?? 0,
+    total: record.total ?? 0,
     efectivo_recibido: record.efectivo_recibido ?? null,
     vuelto: record.vuelto ?? null,
     estado: record.estado,
@@ -141,6 +143,7 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
     repuestos_inventario: (record.repuestos ?? []).map((r: any) => ({
         id: r.id,
         servicio_id: r.servicio_id,
+        servicio_reparacion_id: r.servicio_reparacion_id ?? null,
         variante_id: r.variante_id,
         lote_id: r.lote_id ?? null,
         variante: r.variante ? {
@@ -176,6 +179,65 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         apellido: record.mecanico.apellido ?? null,
         email: record.mecanico.email ?? null
     } : null,
+    servicioReparacion: (record.servicioReparacion ?? []).map((rep: any) => ({
+        id: rep.id,
+        servicio_id: rep.servicio_id,
+        firma_entrada: rep.firma_entrada ?? null,
+        firma_salida: rep.firma_salida ?? null,
+        fecha_entrada: rep.fecha_entrada,
+        fecha_salida: rep.fecha_salida ?? null,
+        subtotal: rep.subtotal,
+        total: rep.total,
+        created_at: rep.created_at,
+        updated_at: rep.updated_at,
+        servicioReparacionRepuestos: (rep.servicioReparacionRepuestos ?? []).map((r: any) => ({
+            id: r.id,
+            servicio_reparacion_id: r.servicio_reparacion_id,
+            descripccion: r.descripccion,
+            cantidad: r.cantidad,
+            instrucciones: r.instrucciones,
+            entregado: r.entregado,
+            procedencia: r.procedencia,
+            created_at: r.created_at,
+            updated_at: r.updated_at
+        })),
+        servicioRepuestos: (rep.servicioRepuestos ?? []).map((r: any) => ({
+            id: r.id,
+            servicio_id: r.servicio_id,
+            servicio_reparacion_id: r.servicio_reparacion_id ?? null,
+            variante_id: r.variante_id,
+            lote_id: r.lote_id ?? null,
+            variante: r.variante ? {
+                id: r.variante.id,
+                sku: r.variante.sku,
+                producto: r.variante.producto ? {
+                    id: r.variante.producto.id,
+                    nombre: r.variante.producto.nombre
+                } : null,
+                valores: (r.variante.valores ?? []).map((v: any) => ({
+                    id: v.id,
+                    atributo: v.atributo ? { id: v.atributo.id, nombre: v.atributo.nombre } : null,
+                    valor: v.valor
+                }))
+            } : null,
+            cantidad: r.cantidad,
+            precio_venta: r.precio_venta,
+            costo: r.costo,
+            created_at: r.created_at,
+            updated_at: r.updated_at
+        }))
+    })),
+    servicioCustodias: (record.servicioCustodia ?? []).map((custodia: any) => ({
+        id: custodia.id,
+        servicio_id: custodia.servicio_id,
+        descripcion: custodia.descripcion ?? null,
+        firma_salida: custodia.firma_salida ?? null,
+        fecha_entrada: custodia.fecha_entrada,
+        fecha_salida: custodia.fecha_salida ?? null,
+        total: custodia.total,
+        created_at: custodia.created_at,
+        updated_at: custodia.updated_at
+    }))
 });
 
 export const mapChecklistRespuesta = (record: any): ChecklistRespuestaSimple => ({

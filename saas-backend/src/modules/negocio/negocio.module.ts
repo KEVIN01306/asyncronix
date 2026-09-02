@@ -9,6 +9,8 @@ import { ActualizarMiNegocioUseCase } from "./application/actualizar-mi-negocio.
 import { CambiarMonedaNegocioUseCase } from "./application/cambiar-moneda-negocio.usecase.js";
 import { ObtenerLimitesNegocioUseCase } from "./application/obtener-limites-negocio.usecase.js";
 import { ValidarLimiteNegocioUseCase } from "./application/validar-limite-negocio.usecase.js";
+import { ObtenerFacturacionNegocioUseCase } from "./application/obtener-facturacion-negocio.usecase.js";
+import { ActualizarFacturacionNegocioUseCase } from "./application/actualizar-facturacion-negocio.usecase.js";
 import { PrismaMonedaRepository } from "../moneda/infrastructure/prisma-moneda.repository.js";
 import { PrismaUsuarioRepository } from "../usuarios/infrastructure/prisma-usuario.repository.js";
 import { PrismaSucursalRepository } from "../sucursal/infrastructure/prisma-sucursal.repository.js";
@@ -46,6 +48,8 @@ const obtenerLimitesNegocioUseCase = new ObtenerLimitesNegocioUseCase(
     cajaRepository,
     cuentaBancariaRepository
 );
+const obtenerFacturacionNegocioUseCase = new ObtenerFacturacionNegocioUseCase(negocioRepository);
+const actualizarFacturacionNegocioUseCase = new ActualizarFacturacionNegocioUseCase(negocioRepository);
 export const validarLimiteNegocioUseCase = new ValidarLimiteNegocioUseCase(negocioRepository);
 
 export const negocioController = new NegocioController(
@@ -56,5 +60,7 @@ export const negocioController = new NegocioController(
     actualizarMiNegocioUseCase,
     cambiarMonedaNegocioUseCase,
     obtenerLimitesNegocioUseCase,
+    obtenerFacturacionNegocioUseCase,
+    actualizarFacturacionNegocioUseCase,
     storageProvider
 );

@@ -65,11 +65,26 @@ const ServicioDetailPage = () => {
     };
 
     const totalRepuestos = servicio?.repuestos_inventario?.reduce((acc, repuesto) => {
-        if (repuesto.precio_venta && repuesto.cantidad) {
-            return acc + (repuesto.precio_venta * repuesto.cantidad);
-        }
-        return acc;
+        return acc + (repuesto.precio_venta * repuesto.cantidad);
     }, 0) || 0;
+
+    const totalRepuestosReparaciones = servicio?.servicioReparacion?.reduce((acc, rep) => {
+        const totalRep = rep.servicioRepuestos?.reduce((acc2, r) => {
+            return acc2 + (r.precio_venta * r.cantidad);
+        }, 0) || 0;
+        return acc + totalRep;
+    }, 0) || 0;
+
+    const totalReparaciones = servicio?.servicioReparacion?.reduce((acc, rep) => {
+        return acc + (rep.total || 0);
+    }, 0) || 0;
+
+    const totalCustodias = servicio?.servicioCustodias?.reduce((acc, cust) => {
+        return acc + (Number(cust.total) || 0);
+    }, 0) || 0;
+
+    const subtotalManoObra = servicio?.subtotal || 0;
+    const granTotal = subtotalManoObra + totalRepuestos + totalReparaciones + totalRepuestosReparaciones + totalCustodias;
     const tareasNormales = (servicio?.tareas || []).filter((tarea) => !tarea.extra);
     const tareasExtras = (servicio?.tareas || []).filter((tarea) => tarea.extra);
 
@@ -101,7 +116,7 @@ const ServicioDetailPage = () => {
                     </Link>
                     <Typography color="text.primary">Detalle</Typography>
                 </Breadcrumbs>
-                <Typography variant="h4" fontWeight={800} color="text.primary">Servicio #{servicio.id}</Typography>
+                <Typography variant="body2" color="text.primary">#{servicio.id}</Typography>
             </Box>
             <Box component={Paper} p={3} >
                 <Grid container size={12} spacing={4}>
@@ -189,7 +204,12 @@ const ServicioDetailPage = () => {
                 <Grid container size={12} mt={2} justifyContent="center" alignItems="center">
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
                         <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
-                            Total Servicio: {servicio.total ? formatMoney(servicio.total) : '-'}
+                            Mano de Obra (Subtotal): {subtotalManoObra ? formatMoney(subtotalManoObra) : '-'}
+                        </Typography>
+                    </Grid>
+                    <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
+                        <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                            Total Reparaciones: {totalReparaciones ? formatMoney(totalReparaciones) : '-'}
                         </Typography>
                     </Grid>
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
@@ -199,7 +219,17 @@ const ServicioDetailPage = () => {
                     </Grid>
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
                         <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
-                            Total: {formatMoney(servicio.total ? servicio.total + totalRepuestos : totalRepuestos)}
+                            Total Repuestos Reparaciones: {totalRepuestosReparaciones ? formatMoney(totalRepuestosReparaciones) : '-'}
+                        </Typography>
+                    </Grid>
+                    <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
+                        <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                            Total Custodias: {totalCustodias ? formatMoney(totalCustodias) : '-'}
+                        </Typography>
+                    </Grid>
+                    <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
+                        <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                            Total: {formatMoney(granTotal)}
                         </Typography>
                     </Grid>
                 </Grid>
@@ -372,8 +402,148 @@ const ServicioDetailPage = () => {
                         <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Cliente (Salida)</Typography>
                     </Box>
                 </Grid>
+
+                <Divider sx={{ my: 3 }} />
+                <Grid container size={12} mt={2} justifyContent="start" alignItems="center">
+                    <Typography
+                        variant="h6"
+                        component="h2"
+                        textAlign="start"
+                        sx={{ width: '100%', fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                    >
+                        Reparaciones
+                    </Typography>
+
+                    {(!servicio.servicioReparacion || servicio.servicioReparacion.length === 0) ? (
+                        <Typography variant="body2" color="text.secondary" mt={2}>No hay reparaciones registradas</Typography>
+                    ) : (
+                        servicio.servicioReparacion.map((rep, index) => (
+                            <>
+                                <Box key={rep.id} sx={{ p: 2, mt: 2, width: '100%' }}>
+                                    <Typography variant="subtitle1" fontWeight={600} color="primary">Reparación #{index + 1} - Total Labor: {formatMoney(rep.total)}</Typography>
+                                    <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+                                        Entrada: {new Date(rep.fecha_entrada).toLocaleDateString()} {rep.fecha_salida ? `- Salida: ${new Date(rep.fecha_salida).toLocaleDateString()}` : ''}
+                                    </Typography>
+
+                                    <Grid container spacing={2}>
+                                        <Grid size={{ xs: 12, md: 6 }}>
+                                            <Typography variant="subtitle2" mb={1}>Repuestos Solicitados</Typography>
+                                            <ListTableSimple
+                                                columns={[
+                                                    { id: 'descripccion', name: 'Descripción', format: (val) => val },
+                                                    { id: 'cantidad', name: 'Cantidad', format: (val) => val },
+                                                    { id: 'procedencia', name: 'Procedencia', format: (val) => val },
+                                                    { id: 'entregado', name: 'Estado', format: (val) => val ? 'Entregado' : 'Pendiente' }
+                                                ]}
+                                                data={rep.servicioReparacionRepuestos || []}
+                                                headerBgColor={'primary.main'}
+                                                headerTextColor="#fff"
+                                            />
+                                        </Grid>
+                                        <Grid size={{ xs: 12, md: 6 }}>
+                                            <Typography variant="subtitle2" mb={1}>Repuestos del Inventario</Typography>
+                                            <ListTableSimple
+                                                columns={[
+                                                    {
+                                                        id: 'id', name: 'Producto', format: (_, r: any) => {
+                                                            const nombre = r.variante?.producto?.nombre || 'Sin nombre';
+                                                            const valores = r.variante?.valores && r.variante.valores.length > 0
+                                                                ? r.variante.valores.map((v: any) => `${v.atributo?.nombre}: ${v.valor}`).join(', ')
+                                                                : '';
+                                                            return `${nombre} ${valores ? `(${valores})` : ''}`;
+                                                        }
+                                                    },
+                                                    { id: 'cantidad', name: 'Cantidad', format: (val) => val },
+                                                    { id: 'precio_venta', name: 'Precio', format: (val) => formatMoney(val) },
+                                                    { id: 'subtotal', name: 'Subtotal', format: (_, r: any) => formatMoney(r.precio_venta * r.cantidad) }
+                                                ]}
+                                                data={rep.servicioRepuestos || []}
+                                                headerBgColor={'primary.main'}
+                                                headerTextColor="#fff"
+                                            />
+                                        </Grid>
+                                    </Grid>
+
+                                    <Grid container size={12} mt={4} justifyContent="center" alignItems="center" gap={4}>
+                                        <Box>
+                                            <Box>
+                                                {rep.firma_entrada ? (
+                                                    <CardMedia component="img" image={formatImage(rep.firma_entrada)} alt="Firma de entrada reparación" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                                ) : (
+                                                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                                        <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                            <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Reparación (Entrada)</Typography>
+                                        </Box>
+                                        <Box>
+                                            <Box>
+                                                {rep.firma_salida ? (
+                                                    <CardMedia component="img" image={formatImage(rep.firma_salida)} alt="Firma de salida reparación" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                                ) : (
+                                                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                                        <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                            <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Reparación (Salida)</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Divider sx={{ my: 3 }} />
+
+                                </Box>
+                            </>)
+                        )
+                    )}
+                </Grid>
+
+                <Grid container size={12} mt={2} justifyContent="start" alignItems="center">
+                    <Typography
+                        variant="h6"
+                        component="h2"
+                        textAlign="start"
+                        sx={{ width: '100%', fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}
+                    >
+                        Custodias
+                    </Typography>
+
+                    {(!servicio.servicioCustodias || servicio.servicioCustodias.length === 0) ? (
+                        <Typography variant="body2" color="text.secondary" mt={2}>No hay custodias registradas</Typography>
+                    ) : (
+                        servicio.servicioCustodias.map((cust, index) => (
+                            <Box key={cust.id} sx={{ p: 2, mt: 2, width: '100%', backgroundColor: '#f9f9f9', borderRadius: 2 }}>
+                                <Typography variant="subtitle1" fontWeight={600} color="primary">Custodia #{index + 1} - Total: {formatMoney(cust.total)}</Typography>
+                                <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+                                    Entrada: {new Date(cust.fecha_entrada).toLocaleDateString()} {cust.fecha_salida ? `- Salida: ${new Date(cust.fecha_salida).toLocaleDateString()}` : ''}
+                                </Typography>
+
+                                {cust.descripcion && (
+                                    <Typography variant="body2" color="text.secondary" mb={2}>
+                                        <strong>Descripción:</strong> {cust.descripcion}
+                                    </Typography>
+                                )}
+
+                                <Grid container size={12} mt={2} justifyContent="center" alignItems="center">
+                                    <Box>
+                                        <Box>
+                                            {cust.firma_salida ? (
+                                                <CardMedia component="img" image={formatImage(cust.firma_salida)} alt="Firma de salida custodia" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                            ) : (
+                                                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                                    <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                        <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Custodia (Salida)</Typography>
+                                    </Box>
+                                </Grid>
+                            </Box>
+                        ))
+                    )}
+                </Grid>
             </Box>
-        </Box>
+        </Box >
     );
 };
 

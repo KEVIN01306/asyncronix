@@ -133,6 +133,23 @@ const SucursalDetailPage = () => {
                                     <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 500 }}>
                                         {sucursal.direccion}
                                     </Typography>
+                                    {sucursal.division_nivel_2 && (
+                                        <Typography variant="body2" color="text.secondary">
+                                            {sucursal.division_nivel_2.nombre}, {sucursal.division_nivel_2.division_nivel_1.nombre} 
+                                            {sucursal.codigo_postal ? ` (${sucursal.codigo_postal})` : ''}
+                                        </Typography>
+                                    )}
+                                </Stack>
+                            </Grid>
+                            
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Stack spacing={1}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, letterSpacing: 1 }}>
+                                        <StoreMallDirectoryOutlined sx={{ fontSize: 16 }} /> DATOS FISCALES / FEL
+                                    </Typography>
+                                    <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 500 }}>
+                                        Establecimiento {sucursal.codigo_establecimiento || 'N/A'}
+                                    </Typography>
                                 </Stack>
                             </Grid>
                         </Grid>

@@ -61,7 +61,7 @@ export const servicioRepository = {
 
     finalizarSalida: async (
         id: string,
-        file: File,
+        firmas: Record<string, File>,
         metodo_pago: string,
         efectivo_recibido?: number | null,
         vuelto?: number | null,
@@ -71,9 +71,11 @@ export const servicioRepository = {
             forzar_caja_en_linea?: boolean;
             cuenta_bancaria_id?: string;
         }
-    ): Promise<ServicioVehiculo> => {
+    ) => {
         const formData = new FormData();
-        formData.append('firma_cliente', file);
+        Object.entries(firmas).forEach(([key, file]) => {
+            formData.append(key, file);
+        });
         formData.append('metodo_pago', metodo_pago);
         if (efectivo_recibido != null) formData.append('efectivo_recibido', String(efectivo_recibido));
         if (vuelto != null) formData.append('vuelto', String(vuelto));
@@ -200,6 +202,58 @@ export const servicioRepository = {
     },
     actualizarClienteExterno: async (id: string, data: { nombre_extra: string; documento_extra: string; numero_extra: string }): Promise<ServicioVehiculo> => {
         const response = await api.put<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/cliente-externo`, data);
+        return response.data;
+    },
+    mandarReparacion: async (id: string, file: File) => {
+        const formData = new FormData();
+        formData.append('firma_entrada', file);
+        const response = await api.post(`${URL_MODULE}/${id}/reparacion`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+    mandarCustodia: async (id: string) => {
+        const response = await api.post(`${URL_MODULE}/${id}/custodia`);
+        return response.data;
+    },
+    obtenerReparacion: async (id: string) => {
+        const response: any = await api.get(`${URL_MODULE}/${id}/reparacion-activa`);
+        return response.data;
+    },
+    actualizarReparacion: async (id: string, data: { total?: number, descripcion?: string }) => {
+        const response: any = await api.patch(`${URL_MODULE}/reparacion/${id}`, data);
+        return response.data;
+    },
+    crearRepuestoSolicitado: async (reparacionId: string, data: any) => {
+        const response: any = await api.post(`${URL_MODULE}/reparacion/${reparacionId}/repuestos-solicitados`, data);
+        return response.data;
+    },
+    actualizarRepuestoSolicitado: async (reparacionId: string, repuestoId: string, data: any) => {
+        const response: any = await api.put(`${URL_MODULE}/reparacion/${reparacionId}/repuestos-solicitados/${repuestoId}`, data);
+        return response.data;
+    },
+    eliminarRepuestoSolicitado: async (reparacionId: string, repuestoId: string) => {
+        const response: any = await api.delete(`${URL_MODULE}/reparacion/${reparacionId}/repuestos-solicitados/${repuestoId}`);
+        return response.data;
+    },
+    actualizarCustodia: async (id: string, custodiaId: string, data: { total?: number, descripcion?: string | null }) => {
+        const response: any = await api.patch(`${URL_MODULE}/${id}/custodia/${custodiaId}`, data);
+        return response.data;
+    },
+    terminarCustodia: async (id: string, custodiaId: string, file: File) => {
+        const formData = new FormData();
+        formData.append('firma_salida', file);
+        const response = await api.post(`${URL_MODULE}/${id}/custodia/${custodiaId}/finalizar`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+    terminarReparacion: async (id: string, reparacionId: string, file: File) => {
+        const formData = new FormData();
+        formData.append('firma_salida', file);
+        const response = await api.post(`${URL_MODULE}/${id}/reparacion/${reparacionId}/finalizar`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     }
 };

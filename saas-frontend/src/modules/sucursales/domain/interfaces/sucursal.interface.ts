@@ -8,6 +8,18 @@ export interface Sucursal {
     direccion: string;
     es_principal: boolean;
     negocio_id?: string;
+    codigo_establecimiento: string;
+    codigo_postal: string | null;
+    division_nivel2_id: string | null;
+    division_nivel_2?: {
+        id: string;
+        nombre: string;
+        division_nivel_1: {
+            id: string;
+            nombre: string;
+            pais_id: string;
+        };
+    } | null;
 }
 
 export interface SucursalCuentaBancaria {

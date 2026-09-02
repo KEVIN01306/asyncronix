@@ -21,6 +21,7 @@ import { useDeviceStore } from '../../../../core/store/deviceStore';
 import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMismatchModal';
 import CajaStatusWidget from '../../../../shared/components/ui/widgets/CajaStatusWidget';
 import { formatImage } from '../../../../core/utils/formatImage';
+import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
 
 
 const salidaSchema = z.object({
@@ -50,7 +51,8 @@ const ServicioSalidaPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [showImages, setShowImages] = useState(false);
     const [openSignaturePad, setOpenSignaturePad] = useState(false);
-    const [firmaSalidaBase64, setFirmaSalidaBase64] = useState<string | null>(null);
+    const [firmasSalidaBase64, setFirmasSalidaBase64] = useState<Record<string, string>>({});
+    const [activeSignatureKey, setActiveSignatureKey] = useState<string | null>(null);
     const [savingSalida, setSavingSalida] = useState(false);
 
     const [showCajaMismatchModal, setShowCajaMismatchModal] = useState(false);
@@ -96,13 +98,13 @@ const ServicioSalidaPage = () => {
         fetchService();
     }, [fetchService]);
 
-    const firmaSalidaPreview = useMemo(() => {
-        if (firmaSalidaBase64) return firmaSalidaBase64;
-        if (servicio?.firma_salida) return formatImage(servicio.firma_salida);
+    const getSignaturePreview = useCallback((key: string, existingUrl?: string | null) => {
+        if (firmasSalidaBase64[key]) return firmasSalidaBase64[key];
+        if (existingUrl) return formatImage(existingUrl);
         return null;
-    }, [firmaSalidaBase64, servicio]);
+    }, [firmasSalidaBase64]);
 
-    const isSalidaState = servicio?.estado === ESTADO_SERVICIO_VEHICULO.LISTO_ENTREGA;
+    const isSalidaState = servicio?.estado === ESTADO_SERVICIO_VEHICULO.LISTO_ENTREGA || servicio?.estado === ESTADO_SERVICIO_VEHICULO.EN_REPARACION || servicio?.estado === ESTADO_SERVICIO_VEHICULO.EN_CUSTODIA;
 
     const getEstadoColor = (estadoValue: string) => {
         switch (estadoValue) {
@@ -124,7 +126,27 @@ const ServicioSalidaPage = () => {
         }
         return acc;
     }, 0) || 0;
-    const totalCobro = (servicio?.total ?? 0) + totalRepuestos;
+
+    const totalReparaciones = servicio?.servicioReparacion?.reduce((acc, rep) => {
+        return acc + (Number(rep.total) || 0);
+    }, 0) || 0;
+
+    const totalRepuestosReparaciones = servicio?.servicioReparacion?.reduce((acc, rep) => {
+        const repuestos = rep.servicioRepuestos || [];
+        const totalRep = repuestos.reduce((acc2, repuesto) => {
+            if (repuesto.precio_venta && repuesto.cantidad) {
+                return acc2 + (repuesto.precio_venta * repuesto.cantidad);
+            }
+            return acc2;
+        }, 0);
+        return acc + totalRep;
+    }, 0) || 0;
+
+    const subtotalManoObra = servicio?.subtotal ?? 0;
+    const totalCustodias = servicio?.servicioCustodias?.reduce((acc, cust) => {
+        return acc + (Number(cust.total) || 0);
+    }, 0) || 0;
+    const totalCobro = subtotalManoObra + totalRepuestos + totalReparaciones + totalRepuestosReparaciones + totalCustodias;
     const diferenciaPago = useMemo(() => {
         const recibido = Number(efectivoRecibido ?? 0);
         if (!Number.isFinite(recibido)) return -totalCobro;
@@ -149,28 +171,55 @@ const ServicioSalidaPage = () => {
     const tareasNormales = (servicio?.tareas || []).filter((tarea) => !tarea.extra);
     const tareasExtras = (servicio?.tareas || []).filter((tarea) => tarea.extra);
 
-    const handleOpenSignaturePad = () => setOpenSignaturePad(true);
-    const handleCloseSignaturePad = () => setOpenSignaturePad(false);
-    const handleSaveSignature = (base64: string | null) => setFirmaSalidaBase64(base64);
+    const handleOpenSignaturePad = (key: string) => { setActiveSignatureKey(key); setOpenSignaturePad(true); };
+    const handleCloseSignaturePad = () => { setOpenSignaturePad(false); setActiveSignatureKey(null); };
+    const handleSaveSignature = (base64: string | null) => {
+        if (activeSignatureKey && base64) {
+            setFirmasSalidaBase64(prev => ({ ...prev, [activeSignatureKey]: base64 }));
+        }
+    };
     const handleConfirmSignature = () => {
-        if (!firmaSalidaBase64 && !servicio?.firma_salida) {
-            toast.error('La firma de salida es obligatoria');
-            return;
+        if (activeSignatureKey) {
+            if (!firmasSalidaBase64[activeSignatureKey] && !(activeSignatureKey === 'firma_cliente' && servicio?.firma_salida)) {
+                toast.error('La firma es obligatoria');
+                return;
+            }
         }
         setOpenSignaturePad(false);
+        setActiveSignatureKey(null);
     };
 
     const executeSalida = async (values: SalidaForm, forceEnLinea = false) => {
         if (!servicio) return;
         if (!isSalidaState) {
-            toast.error('El servicio no está en estado LISTO_ENTREGA');
+            toast.error('El servicio no está en estado válido para salida');
             return;
         }
 
-        const base64 = firmaSalidaBase64 ?? servicio.firma_salida;
-        if (!base64) {
-            toast.error('Debes capturar la firma de salida antes de finalizar');
+        const base64Cliente = firmasSalidaBase64['firma_cliente'] ?? servicio.firma_salida;
+        if (!base64Cliente) {
+            toast.error('Debes capturar la firma de salida del cliente');
             return;
+        }
+
+        // Check repair signatures
+        if (servicio.servicioReparacion) {
+            for (const rep of servicio.servicioReparacion) {
+                if (!firmasSalidaBase64[`firma_reparacion_${rep.id}`] && !rep.firma_salida) {
+                    toast.error('Falta la firma de salida para la reparación en curso');
+                    return;
+                }
+            }
+        }
+
+        // Check custody signatures
+        if (servicio.servicioCustodias) {
+            for (const cust of servicio.servicioCustodias) {
+                if (!firmasSalidaBase64[`firma_custodia_${cust.id}`] && !cust.firma_salida) {
+                    toast.error('Falta la firma de salida para la custodia en curso');
+                    return;
+                }
+            }
         }
 
         if (values.metodo_pago === METODO_PAGO.EFECTIVO && (values.efectivo_recibido ?? 0) < totalCobro) {
@@ -195,11 +244,17 @@ const ServicioSalidaPage = () => {
             const vueltoFinal = values.metodo_pago === METODO_PAGO.EFECTIVO ? Math.max(0, (values.efectivo_recibido ?? 0) - totalCobro) : null;
 
             setSavingSalida(true);
-            const blob = await fetch(base64).then((response) => response.blob());
-            const file = new File([blob], 'firma_salida.png', { type: 'image/png' });
+
+            const filesToUpload: Record<string, File> = {};
+            for (const [key, b64] of Object.entries(firmasSalidaBase64)) {
+                const blob = await fetch(b64).then((res) => res.blob());
+                const file = new File([blob], 'firma.png', { type: 'image/png' });
+                filesToUpload[key] = await bajarCalidadImagen(file);
+            }
+
             const updatedService = await servicioRepository.finalizarSalida(
                 servicio.id,
-                file,
+                filesToUpload,
                 values.metodo_pago,
                 efectivoFinal,
                 vueltoFinal,
@@ -207,6 +262,7 @@ const ServicioSalidaPage = () => {
             );
             setServicio(updatedService);
             toast.success('Servicio finalizado correctamente');
+            navigate(`/servicios-vehiculo/${updatedService.id}/hoja`);
             if (showCajaMismatchModal) {
                 setShowCajaMismatchModal(false);
                 setCajaMismatchPayload(null);
@@ -258,6 +314,7 @@ const ServicioSalidaPage = () => {
             >
                 Volver
             </Button>
+            <Typography variant="body2" color="text.primary">#{servicio.id}</Typography>
             <Box component={Paper} p={3}>
                 <Grid container size={12} spacing={4}>
                     <Grid size={3} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>
@@ -339,7 +396,7 @@ const ServicioSalidaPage = () => {
                 <Grid container size={12} mt={2} justifyContent="center" alignItems="center">
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
                         <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
-                            Total Servicio: {servicio.total ? formatMoney(servicio.total) : '-'}
+                            Mano de Obra (Subtotal): {subtotalManoObra ? formatMoney(subtotalManoObra) : '-'}
                         </Typography>
                     </Grid>
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
@@ -347,9 +404,30 @@ const ServicioSalidaPage = () => {
                             Total Repuestos: {totalRepuestos ? formatMoney(totalRepuestos) : '-'}
                         </Typography>
                     </Grid>
+                    {servicio.servicioReparacion && servicio.servicioReparacion.length > 0 && (
+                        <>
+                            <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
+                                <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                                    Total Reparaciones: {totalReparaciones ? formatMoney(totalReparaciones) : '-'}
+                                </Typography>
+                            </Grid>
+                            <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
+                                <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                                    Total Repuestos Reparaciones: {totalRepuestosReparaciones ? formatMoney(totalRepuestosReparaciones) : '-'}
+                                </Typography>
+                            </Grid>
+                        </>
+                    )}
+                    {servicio.servicioCustodias && servicio.servicioCustodias.length > 0 && (
+                        <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
+                            <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                                Total Custodias: {totalCustodias ? formatMoney(totalCustodias) : '-'}
+                            </Typography>
+                        </Grid>
+                    )}
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
-                        <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 400, color: 'primary', textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
-                            Total: {formatMoney(totalCobro)}
+                        <Typography variant="h6" component="h2" textAlign="center" sx={{ fontWeight: 600, color: 'primary.dark', textTransform: 'uppercase', fontSize: '1.2rem', letterSpacing: '0.5px' }}>
+                            Total Final: {formatMoney(totalCobro)}
                         </Typography>
                     </Grid>
                     <Grid size={12} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'start', gap: 1 }}>
@@ -518,6 +596,10 @@ const ServicioSalidaPage = () => {
 
                 </Grid>
                 <Grid container size={12} mt={2} justifyContent="center" alignItems="center" spacing={2}>
+                    <Grid size={12}>
+                        <Typography variant="h6" mb={1} textAlign="center">Firmas Requeridas</Typography>
+                    </Grid>
+
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <Box>
                             {servicio.firma_entrada ? (
@@ -530,18 +612,158 @@ const ServicioSalidaPage = () => {
                             <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Cliente (Entrada)</Typography>
                         </Box>
                     </Grid>
+
                     <Grid size={{ xs: 12, sm: 6 }}>
                         <Box>
-                            {firmaSalidaPreview ? (
-                                <CardMedia component="img" image={firmaSalidaPreview} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                            {getSignaturePreview('firma_cliente', servicio.firma_salida) ? (
+                                <CardMedia component="img" image={getSignaturePreview('firma_cliente', servicio.firma_salida)!} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
                             ) : (
                                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
-                                    <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>F</Typography>
+                                    <Typography sx={{ height: 150, width: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Sin firma</Typography>
                                 </Box>
                             )}
-                            <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Cliente (Salida)</Typography>
+                            <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Cliente (Salida Servicio)</Typography>
+                            <Box display="flex" justifyContent="center">
+                                <Button size="small" variant="outlined" onClick={() => handleOpenSignaturePad('firma_cliente')} disabled={!isSalidaState || !hasSalidaPermission}>
+                                    Firmar Salida Servicio
+                                </Button>
+                            </Box>
                         </Box>
                     </Grid>
+
+                    {servicio.servicioReparacion && servicio.servicioReparacion.length > 0 && (
+                        <Grid size={12} mt={4}>
+                            <Divider sx={{ mb: 3 }} />
+                            <Typography variant="h5" textAlign="center" color="primary.main" fontWeight={600} mb={3}>
+                                Reparaciones Asociadas
+                            </Typography>
+                        </Grid>
+                    )}
+                    {servicio.servicioReparacion?.map((rep, index) => (
+                        <Grid container size={12} key={rep.id} spacing={3} sx={{ backgroundColor: '#fdfdfd', borderRadius: 2, p: { xs: 2, md: 3 }, mb: 3 }}>
+                            <Grid size={12}>
+                                <Typography variant="h6" color="primary">Reparación #{index + 1}</Typography>
+                                {rep.descripcion && (
+                                    <Typography variant="body1" mt={1} color="text.secondary">
+                                        <strong>Descripción:</strong> {rep.descripcion}
+                                    </Typography>
+                                )}
+                            </Grid>
+
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <Typography variant="subtitle2" mb={1} fontWeight={600} color="text.secondary" textTransform="uppercase">Repuestos Solicitados</Typography>
+                                <ListTableSimple
+                                    columns={[
+                                        { id: 'descripccion', name: 'Descripción' },
+                                        { id: 'cantidad', name: 'Cant.' },
+                                        { id: 'procedencia', name: 'Procedencia' }
+                                    ]}
+                                    data={rep.servicioReparacionRepuestos || []}
+                                    headerBgColor={theme.palette.primary.main}
+                                />
+                            </Grid>
+
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <Typography variant="subtitle2" mb={1} fontWeight={600} color="text.secondary" textTransform="uppercase">Repuestos de Inventario</Typography>
+                                <ListTableSimple
+                                    columns={[
+                                        { id: 'id', name: 'Producto', format: (_, r: any) => r.variante?.producto?.nombre || 'Sin nombre' },
+                                        { id: 'cantidad', name: 'Cant.' }
+                                    ]}
+                                    data={rep.servicioRepuestos || []}
+                                    headerBgColor={theme.palette.primary.main}
+                                />
+                            </Grid>
+
+                            <Grid size={12} mt={2}>
+                                <Typography variant="subtitle1" fontWeight={600} mb={1} textAlign="center">Firmas de la Reparación</Typography>
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                <Box sx={{ width: '100%', maxWidth: 300 }}>
+                                    {rep.firma_entrada ? (
+                                        <CardMedia component="img" image={formatImage(rep.firma_entrada)} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                    ) : (
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                            <Typography sx={{ height: 150, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Sin firma</Typography>
+                                        </Box>
+                                    )}
+                                    <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1} mt={1}>Firma Entrada Reparación {index + 1}</Typography>
+                                </Box>
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                <Box sx={{ width: '100%', maxWidth: 300 }}>
+                                    {getSignaturePreview(`firma_reparacion_${rep.id}`, rep.firma_salida) ? (
+                                        <CardMedia component="img" image={getSignaturePreview(`firma_reparacion_${rep.id}`, rep.firma_salida)!} alt={`Firma Reparación ${index + 1}`} sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                    ) : (
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                            <Typography sx={{ height: 150, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Sin firma</Typography>
+                                        </Box>
+                                    )}
+                                    <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1} mt={1}>Firma Salida Reparación {index + 1}</Typography>
+                                    {!rep.firma_salida && (
+                                        <Box display="flex" justifyContent="center">
+                                            <Button size="small" variant="outlined" onClick={() => handleOpenSignaturePad(`firma_reparacion_${rep.id}`)} disabled={!isSalidaState || !hasSalidaPermission}>
+                                                Firmar Reparación
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    ))}
+                    
+                    {servicio.servicioCustodias && servicio.servicioCustodias.length > 0 && (
+                        <Grid size={12} mt={4}>
+                            <Divider sx={{ mb: 3 }} />
+                            <Typography variant="h5" textAlign="center" color="primary.main" fontWeight={600} mb={3}>
+                                Custodias Asociadas
+                            </Typography>
+                        </Grid>
+                    )}
+                    {servicio.servicioCustodias?.map((cust, index) => (
+                        <Grid container size={12} key={cust.id} spacing={3} sx={{ backgroundColor: '#fdfdfd', borderRadius: 2, p: { xs: 2, md: 3 }, mb: 3 }}>
+                            <Grid size={12}>
+                                <Typography variant="h6" color="primary">Custodia #{index + 1}</Typography>
+                                {cust.descripcion && (
+                                    <Typography variant="body1" mt={1} color="text.secondary">
+                                        <strong>Descripción:</strong> {cust.descripcion}
+                                    </Typography>
+                                )}
+                                <Typography variant="body2" color="text.secondary" mt={1}>
+                                    <strong>Tiempo:</strong> {new Date(cust.fecha_entrada).toLocaleDateString()} a {cust.fecha_salida ? new Date(cust.fecha_salida).toLocaleDateString() : 'Pendiente'}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" mt={1}>
+                                    <strong>Costo:</strong> {formatMoney(cust.total)}
+                                </Typography>
+                            </Grid>
+
+                            <Grid size={12} mt={2}>
+                                <Typography variant="subtitle1" fontWeight={600} mb={1} textAlign="center">Firma de la Custodia</Typography>
+                            </Grid>
+
+                            <Grid size={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                <Box sx={{ width: '100%', maxWidth: 300 }}>
+                                    {getSignaturePreview(`firma_custodia_${cust.id}`, cust.firma_salida) ? (
+                                        <CardMedia component="img" image={getSignaturePreview(`firma_custodia_${cust.id}`, cust.firma_salida)!} alt={`Firma Custodia ${index + 1}`} sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                    ) : (
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                            <Typography sx={{ height: 150, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Sin firma</Typography>
+                                        </Box>
+                                    )}
+                                    <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1} mt={1}>Firma Salida Custodia {index + 1}</Typography>
+                                    {!cust.firma_salida && (
+                                        <Box display="flex" justifyContent="center">
+                                            <Button size="small" variant="outlined" onClick={() => handleOpenSignaturePad(`firma_custodia_${cust.id}`)} disabled={!isSalidaState || !hasSalidaPermission}>
+                                                Firmar Custodia
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    ))}
                 </Grid>
 
                 <Box mt={3} p={3} sx={{ backgroundColor: '#f9fafb', borderRadius: 2 }}>
@@ -549,8 +771,8 @@ const ServicioSalidaPage = () => {
                     {!hasSalidaPermission && (
                         <Typography color="error" mb={2}>No tienes permiso para finalizar la salida de este servicio.</Typography>
                     )}
-                    {servicio.estado !== ESTADO_SERVICIO_VEHICULO.LISTO_ENTREGA && (
-                        <Typography color="text.secondary" mb={2}>El servicio debe estar en estado LISTO_ENTREGA para finalizar la salida.</Typography>
+                    {!isSalidaState && (
+                        <Typography color="text.secondary" mb={2}>El servicio debe estar en un estado válido (LISTO ENTREGA, EN REPARACION o EN CUSTODIA) para finalizar la salida.</Typography>
                     )}
                     <form onSubmit={form.handleSubmit(handleSubmitSalida)}>
                         <Grid container spacing={2}>
@@ -614,11 +836,6 @@ const ServicioSalidaPage = () => {
                                     </Grid>
                                 </>
                             )}
-                            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Button variant="outlined" onClick={handleOpenSignaturePad} disabled={!isSalidaState || !hasSalidaPermission}>
-                                    Capturar firma de salida
-                                </Button>
-                            </Grid>
                             <Grid size={12}>
                                 <Button
                                     type="submit"

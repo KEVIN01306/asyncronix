@@ -15,6 +15,7 @@ export const servicioCrearSchema = z.object({
     kilometraje: z.coerce.number().int().optional().nullable(),
     kilometraje_proximo: z.coerce.number().int().optional().nullable(),
     fecha_salida: z.string().datetime().optional().nullable(),
+    subtotal: z.coerce.number().nonnegative().optional().nullable(),
     total: z.coerce.number().nonnegative().optional().nullable(),
     estado: estadoServicioEnum.optional(),
     MetodoPago: metodoPagoEnum.optional()
@@ -116,3 +117,27 @@ export const clienteExternoSchema = z.object({
 export const cambioSiguienteServicioCrearSchema = z.object({
     item: z.string().trim().min(1, 'El item es requerido').max(100, 'El item no puede exceder 100 caracteres')
 });
+
+export const mandarReparacionSchema = z.object({
+    firma_entrada: z.string().trim().min(1, 'La firma de entrada es requerida')
+});
+
+export const actualizarReparacionSchema = z.object({
+    total: z.coerce.number().nonnegative('El total no puede ser negativo').optional(),
+    descripcion: z.string().trim().optional()
+});
+
+export const actualizarCustodiaSchema = z.object({
+    total: z.coerce.number().nonnegative('El total no puede ser negativo').optional(),
+    descripcion: z.string().trim().optional().nullable()
+});
+
+export const repuestoReparacionSchema = z.object({
+    descripccion: z.string().trim().min(1, 'La descripción es requerida'),
+    cantidad: z.coerce.number().int().min(1, 'La cantidad debe ser mayor a 0'),
+    instrucciones: z.string().trim().optional().default(''),
+    procedencia: z.enum(['PROPIO', 'CLIENTE']),
+    entregado: z.boolean().optional().default(false)
+});
+
+export const actualizarRepuestoReparacionSchema = repuestoReparacionSchema.partial();

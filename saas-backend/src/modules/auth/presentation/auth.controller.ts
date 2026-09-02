@@ -10,7 +10,7 @@ const COOKIE_OPTIONS = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: 'strict' as const,
-    maxAge: 7 * 24 * 60 * 60 *1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/'
 }
 
@@ -39,7 +39,7 @@ export class AuthController {
         }
     }
 
-    refresh = async  (req: Request, res:Response, next: NextFunction) => {
+    refresh = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const tokenEnviado = req.cookies.refreshToken;
 
@@ -55,7 +55,7 @@ export class AuthController {
                 Respuesta.exito("Token renovado", { accessToken })
             )
 
-        }catch (error) {
+        } catch (error) {
             next(error)
         }
     }

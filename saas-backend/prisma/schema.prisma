@@ -50,10 +50,49 @@ model Pais {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  moneda   Moneda    @relation(fields: [moneda_id], references: [id])
-  negocios Negocio[]
+  moneda          Moneda           @relation(fields: [moneda_id], references: [id])
+  negocios        Negocio[]
+  divisionNivel1s DivisionNivel1[]
 
   @@map("paises")
+}
+
+// ==============================================================
+// DIVISIONES POLÍTICAS / ADMINISTRATIVAS (UNIVERSAL)
+// Nivel 1: Departamentos (GT, CO), Estados (MX, US), Provincias (ES, AR), Regiones (CL)
+// Nivel 2: Municipios (GT, MX), Ciudades/Condados (US), Cantones (CR), Comunas (CL)
+// ==============================================================
+
+model DivisionNivel1 {
+  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  pais_id    String   @db.Char(36)
+  nombre     String   @db.VarChar(100) // Ej. "Guatemala", "Quetzaltenango", "Jalisco"
+  codigo_iso String?  @db.VarChar(10) // Ej. "GT-GU", "GT-QZ", "MX-JAL"
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  pais               Pais             @relation(fields: [pais_id], references: [id], onDelete: Cascade)
+  divisiones_nivel_2 DivisionNivel2[]
+
+  @@unique([pais_id, nombre])
+  @@map("divisiones_nivel1")
+}
+
+model DivisionNivel2 {
+  id                 String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  division_nivel1_id String   @db.Char(36)
+  nombre             String   @db.VarChar(100) // Ej. "Guatemala", "Mixco", "Villa Nueva"
+  codigo_postal      String?  @db.VarChar(10) // Ej. "01001", "01057", "01064"
+  activo             Boolean  @default(true)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  division_nivel_1 DivisionNivel1 @relation(fields: [division_nivel1_id], references: [id], onDelete: Cascade)
+  sucursales       Sucursal[]
+
+  @@unique([division_nivel1_id, nombre])
+  @@map("divisiones_nivel2")
 }
 
 model Moneda {
@@ -130,36 +169,65 @@ model Negocio {
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
 
-  modulos              Modulo[]
-  permisos             Permiso[]              @relation("NegocioPermisos")
-  sucursales           Sucursal[]
-  usuarios             Usuario[]
-  clientes             Cliente[]
-  roles                Rol[]
-  motos                Vehiculo[]
-  categorias           CategoriaProducto[]
-  productos            Producto[]
-  lotes                Lote[]
-  ventas               Venta[]
-  pre_ventas           PreVenta[]
-  servicios            Servicio[]
-  citas                Cita[]
-  tipos_serv           TipoServicio[]
-  opciones_serv        OpcionServicio[]
-  checklist            ChecklistItem[]
-  proveedores          Proveedor[]
-  cajas                Caja[]
-  cuentas_bancarias    CuentaBancaria[]
-  categorias_trans_neg CategoriaTransaccion[]
-  transacciones        Transaccion[]
-  pais                 Pais?                  @relation(fields: [pais_id], references: [id])
-  moneda               Moneda?                @relation(fields: [moneda_id], references: [id])
-  negocioLimite        NegocioLimite?
-  medias               Media[]
-  verificationCodes    VerificationCode[]
-  cotizacions          Cotizacion[]
+  modulos                  Modulo[]
+  permisos                 Permiso[]                 @relation("NegocioPermisos")
+  sucursales               Sucursal[]
+  usuarios                 Usuario[]
+  clientes                 Cliente[]
+  roles                    Rol[]
+  motos                    Vehiculo[]
+  categorias               CategoriaProducto[]
+  productos                Producto[]
+  lotes                    Lote[]
+  ventas                   Venta[]
+  pre_ventas               PreVenta[]
+  servicios                Servicio[]
+  citas                    Cita[]
+  tipos_serv               TipoServicio[]
+  opciones_serv            OpcionServicio[]
+  checklist                ChecklistItem[]
+  proveedores              Proveedor[]
+  cajas                    Caja[]
+  cuentas_bancarias        CuentaBancaria[]
+  categorias_trans_neg     CategoriaTransaccion[]
+  transacciones            Transaccion[]
+  pais                     Pais?                     @relation(fields: [pais_id], references: [id])
+  moneda                   Moneda?                   @relation(fields: [moneda_id], references: [id])
+  negocioLimite            NegocioLimite?
+  medias                   Media[]
+  verificationCodes        VerificationCode[]
+  cotizacions              Cotizacion[]
+  facturas                 Factura[]
+  negocioFacturacionConfig NegocioFacturacionConfig?
 
   @@map("negocios")
+}
+
+model NegocioFacturacionConfig {
+  id         String @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id String @unique @db.Char(36)
+
+  // Datos Fiscales del Contribuyente (SAT)
+  nit_emisor       String @db.VarChar(20)
+  nombre_emisor    String @db.VarChar(255)
+  nombre_comercial String @db.VarChar(255)
+  afiliacion_iva   String @default("GEN") @db.VarChar(10) // "GEN" (12%) o "PEQ" (5%)
+  tipo_frase       Int    @default(1) // Frase SAT (ej. 1)
+  codigo_escenario Int    @default(2) // Escenario SAT (ej. 2 - Sujeto a Pagos Trimestrales)
+  correo_emisor    String @db.VarChar(150)
+
+  // Credenciales API Digifact
+  fel_username String @db.VarChar(100)
+  fel_password String @db.Text
+  fel_ambiente String @default("TEST") @db.VarChar(10) // "TEST" o "PRODUCCION"
+
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  negocio Negocio @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+
+  @@map("negocio_facturacion_configs")
 }
 
 model Media {
@@ -177,15 +245,19 @@ model Media {
 }
 
 model Sucursal {
-  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id String   @db.Char(36)
-  nombre     String
-  direccion  String?
-  telefono   String?
-  email      String?
-  activo     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id                 String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id         String   @db.Char(36)
+  division_nivel2_id String?  @db.Char(36) // Relación directa con el Municipio/Ciudad
+  nombre             String
+  direccion          String?
+  telefono           String?
+  email              String?
+  activo             Boolean  @default(true)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  codigo_establecimiento String  @default("1") @db.VarChar(10) // "1", "2", "3"...
+  codigo_postal          String? @db.VarChar(10)
 
   negocio           Negocio                  @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
   usuarios          Usuario[]
@@ -200,6 +272,8 @@ model Sucursal {
   trasladosOrigen   Traslado[]               @relation("SucursalOrigen")
   trasladosDestino  Traslado[]               @relation("SucursalDestino")
   cotizacions       Cotizacion[]
+  facturas          Factura[]
+  division_nivel_2  DivisionNivel2?          @relation(fields: [division_nivel2_id], references: [id], onDelete: SetNull)
 
   @@index([negocio_id])
   @@map("sucursales")
@@ -259,6 +333,7 @@ model Usuario {
   transacciones_hechas    Transaccion[]      @relation("TransaccionesUsuario")
   cotizacions             Cotizacion[]
   corteCajas              CorteCaja[]
+  facturas                Factura[]
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -285,6 +360,7 @@ model Cliente {
   ventas      Venta[]      @relation("VentaCliente")
   pre_ventas  PreVenta[]   @relation("PreVentaCliente")
   cotizacions Cotizacion[]
+  facturas    Factura[]
 
   @@unique([negocio_id, telefono])
   @@unique([negocio_id, dpi])
@@ -452,6 +528,7 @@ model Servicio {
   firma_salida      String?      @db.Text
   fecha_entrada     DateTime     @default(now())
   fecha_salida      DateTime?
+  subtotal          Float        @default(0)
   total             Float        @default(0)
   documento_extra   String?      @db.VarChar(20)
   nombre_extra      String?      @db.VarChar(255)
@@ -478,8 +555,48 @@ model Servicio {
   ServicioRepuestoCliente  ServicioRepuestoCliente[]
   CambiosSiguienteServicio CambiosSiguienteServicio[]
   cotizacion               Cotizacion?
+  servicioReparacion       ServicioReparacion[]
+  servicioCustodia         ServicioCustodia[]
+  facturas                 Factura[]
 
   @@map("servicios")
+}
+
+model ServicioReparacion {
+  id            String    @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  servicio_id   String    @db.Char(36)
+  descripcion   String?   @db.Text
+  firma_entrada String?   @db.Text
+  firma_salida  String?   @db.Text
+  fecha_entrada DateTime  @default(now())
+  fecha_salida  DateTime?
+  total         Float     @default(0)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  servicio                    Servicio                     @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
+  servicioRepuestos           ServicioRepuesto[]
+  servicioReparacionRepuestos ServicioReparacionRepuesto[]
+  facturaDetalles             FacturaDetalle[]
+
+  @@map("reparacion_servicio")
+}
+
+model ServicioCustodia {
+  id            String    @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  servicio_id   String    @db.Char(36)
+  descripcion   String?   @db.Text
+  firma_salida  String?   @db.Text
+  fecha_entrada DateTime  @default(now())
+  fecha_salida  DateTime?
+  total         Float     @default(0)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  servicio        Servicio         @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
+  facturaDetalles FacturaDetalle[]
+
+  @@map("custodia_servicio")
 }
 
 model ServicioVehiculo {
@@ -515,6 +632,7 @@ model TipoServicio {
   servicios          Servicio[]
   citas              Cita[]
   cotizacionDetalles CotizacionDetalle[]
+  facturaDetalles    FacturaDetalle[]
 
   @@map("tipos_servicio")
 }
@@ -747,6 +865,7 @@ model VarianteProducto {
   venta_detalles     VentaDetalle[]
   pre_venta_detalles PreVentaDetalle[]
   cotizacionDetalles CotizacionDetalle[]
+  facturaDetalles    FacturaDetalle[]
 
   @@unique([producto_id, sku])
   @@index([producto_id])
@@ -799,23 +918,39 @@ model Lote {
 }
 
 model ServicioRepuesto {
-  id           String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  servicio_id  String   @db.Char(36)
-  lote_id      String?  @db.Char(36)
-  variante_id  String   @db.Char(36)
-  cantidad     Int
-  precio_venta Float
-  costo        Float?
-  activo       Boolean  @default(true)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  id                     String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  servicio_id            String?  @db.Char(36)
+  servicio_reparacion_id String?  @db.Char(36)
+  lote_id                String?  @db.Char(36)
+  variante_id            String   @db.Char(36)
+  cantidad               Int
+  precio_venta           Float
+  costo                  Float?
+  activo                 Boolean  @default(true)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
 
-  servicio Servicio         @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
-  lote     Lote?            @relation(fields: [lote_id], references: [id])
-  variante VarianteProducto @relation(fields: [variante_id], references: [id])
+  servicio            Servicio?           @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
+  servicio_reparacion ServicioReparacion? @relation(fields: [servicio_reparacion_id], references: [id], onDelete: Cascade)
+  lote                Lote?               @relation(fields: [lote_id], references: [id])
+  variante            VarianteProducto    @relation(fields: [variante_id], references: [id])
 
   @@index([variante_id])
   @@map("servicio_repuestos")
+}
+
+model ServicioReparacionRepuesto {
+  id                     String              @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  servicio_reparacion_id String              @db.Char(36)
+  descripccion           String              @db.Text
+  cantidad               Int
+  instrucciones          String              @db.Text
+  entregado              Boolean             @default(false)
+  procedencia            ProcedenciaRepuesto @default(CLIENTE)
+  created_at             DateTime            @default(now())
+  updated_at             DateTime            @updatedAt
+
+  servicio_reparacion ServicioReparacion @relation(fields: [servicio_reparacion_id], references: [id], onDelete: Cascade)
 }
 
 model CambiosSiguienteServicio {
@@ -889,6 +1024,7 @@ model Venta {
   autorizador Usuario?       @relation("VentaAutorizador", fields: [autorizador_id], references: [id])
   detalles    VentaDetalle[]
   cotizacion  Cotizacion?
+  facturas    Factura[]
 
   @@map("ventas")
 }
@@ -912,6 +1048,97 @@ model VentaDetalle {
 
   @@index([variante_id])
   @@map("venta_detalles")
+}
+
+// ==============================================================
+// TABLAS DE FACTURACIÓN (DTE / SAT / FEL)
+// ==============================================================
+
+model Factura {
+  id          String  @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id  String  @db.Char(36)
+  sucursal_id String  @db.Char(36)
+  usuario_id  String  @db.Char(36) // Emisor o cajero
+  cliente_id  String? @db.Char(36)
+
+  // Enlaces opcionales al origen comercial/taller
+  venta_id    String? @db.Char(36)
+  servicio_id String? @db.Char(36)
+
+  // Datos fiscales oficiales
+  tipo_dte         TipoDTE @default(FACT)
+  serie            String? @db.VarChar(50)
+  numero_factura   String  @db.VarChar(50)
+  dte_uuid         String? @unique @db.VarChar(100) // Número de autorización SAT
+  dte_sat_xml      String? @db.LongText // XML firmado completo
+  dte_certificador String? @db.VarChar(100)
+  acuse_recibo_sat String? @db.VarChar(255)
+
+  // Datos del receptor en el momento de emisión
+  receptor_nit       String  @default("CF") @db.VarChar(20)
+  receptor_nombre    String  @db.VarChar(255)
+  receptor_direccion String? @db.VarChar(255)
+
+  // Desglose de importes
+  subtotal_sin_iva Float // Base Imponible / Monto Gravable
+  descuento        Float @default(0)
+  iva              Float @default(0) // Monto Impuesto (12%)
+  total            Float // Total general a cobrar
+
+  metodo_pago         MetodoPago    @default(EFECTIVO)
+  estado              EstadoFactura @default(EMITIDA)
+  motivo_anulacion    String?       @db.Text
+  acuse_anulacion     String?       @db.VarChar(255)
+  fecha_emision       DateTime      @default(now())
+  fecha_certificacion DateTime?
+  fecha_anulacion     DateTime?
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  negocio  Negocio   @relation(fields: [negocio_id], references: [id])
+  sucursal Sucursal  @relation(fields: [sucursal_id], references: [id])
+  usuario  Usuario   @relation(fields: [usuario_id], references: [id])
+  cliente  Cliente?  @relation(fields: [cliente_id], references: [id])
+  venta    Venta?    @relation(fields: [venta_id], references: [id])
+  servicio Servicio? @relation(fields: [servicio_id], references: [id])
+
+  detalles FacturaDetalle[]
+
+  @@unique([negocio_id, serie, numero_factura])
+  @@index([negocio_id])
+  @@index([sucursal_id])
+  @@index([dte_uuid])
+  @@map("facturas")
+}
+
+model FacturaDetalle {
+  id         String @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  factura_id String @db.Char(36)
+
+  // Referencias polimórficas opcionales a lo que se facturó
+  variante_id            String? @db.Char(36) // Si fue un repuesto de inventario
+  tipo_servicio_id       String? @db.Char(36) // Si fue paquete de servicio estándar
+  servicio_reparacion_id String? @db.Char(36) // Si fue una reparación puntual
+  servicio_custodia_id   String? @db.Char(36) // Si fue cobro por custodia
+
+  tipo_item       TipoItemFactura @default(BIEN) // BIEN o SERVICIO para DTE
+  descripcion     String          @db.VarChar(255)
+  cantidad        Float           @default(1.0)
+  unidad_medida   String          @default("UNI") @db.VarChar(10) // "UNI", "SER", etc.
+  precio_unitario Float // Precio con IVA incluido
+  descuento       Float           @default(0)
+  monto_gravable  Float // Base sin IVA
+  monto_impuesto  Float // IVA individual
+  total           Float // Importe total de línea
+
+  factura             Factura             @relation(fields: [factura_id], references: [id], onDelete: Cascade)
+  variante            VarianteProducto?   @relation(fields: [variante_id], references: [id])
+  tipo_servicio       TipoServicio?       @relation(fields: [tipo_servicio_id], references: [id])
+  servicio_reparacion ServicioReparacion? @relation(fields: [servicio_reparacion_id], references: [id])
+  servicio_custodia   ServicioCustodia?   @relation(fields: [servicio_custodia_id], references: [id])
+
+  @@index([factura_id])
+  @@map("factura_detalles")
 }
 
 model PreVenta {
@@ -1225,6 +1452,31 @@ model VerificationCode {
 // 8. ENUMERACIONES
 // ==============================================================
 
+enum TipoDTE {
+  FACT // Factura
+  FCAM // Factura cambiaria
+  FPEQ // Factura pequeño contribuyente
+  NCRE // Nota de crédito
+  NDEB // Nota de débito
+}
+
+enum TipoItemFactura {
+  BIEN // Bienes tangibles (repuestos, lubricantes, etc.)
+  SERVICIO // Servicios intangibles (mano de obra, reparaciones, custodias)
+}
+
+enum EstadoFactura {
+  EMITIDA // Creada internamente en el sistema
+  CERTIFICADA // Autorizada por SAT (con UUID y XML oficial)
+  ANULADA // Dejada sin efecto ante SAT
+  ERROR // Fallo de validación
+}
+
+enum ProcedenciaRepuesto {
+  PROPIO
+  CLIENTE
+}
+
 enum EstadoCorte {
   ABIERTO
   CERRADO
@@ -1301,6 +1553,7 @@ enum EstadoServicioVehiculo {
   EN_DIAGNOSTICO
   ESPERA_REPUESTOS
   EN_REPARACION
+  EN_CUSTODIA
   LISTO_ENTREGA
   FINALIZADO
   CANCELADO

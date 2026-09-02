@@ -25,3 +25,15 @@ export const negocioActualizarSchema = negocioCrearSchema.partial()
 export const negocioCambiarMonedaSchema = z.object({
     moneda_id: z.string().uuid('Moneda inválida'),
 })
+
+export const negocioFacturacionSchema = z.object({
+    nit_emisor: z.string().min(1).max(20),
+    nombre_emisor: z.string().min(1).max(255),
+    nombre_comercial: z.string().min(1).max(255),
+    afiliacion_iva: z.string().min(1).max(10),
+    tipo_frase: z.number().int().min(1),
+    codigo_escenario: z.number().int().min(1),
+    correo_emisor: z.string().email().max(150),
+    fel_username: z.string().min(1).max(100),
+    fel_ambiente: z.string().min(1).max(10)
+})

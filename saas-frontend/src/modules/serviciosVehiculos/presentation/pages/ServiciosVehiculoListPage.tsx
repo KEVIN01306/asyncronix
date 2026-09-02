@@ -64,7 +64,8 @@ const ServiciosListPage = () => {
             name: 'Estado',
             format: (value: any) => <Chip variant='outlined' label={value} color={getEstadoColor(value)} size='small' />
         },
-        { id: 'total', name: 'Total', format: (value: any) => formatMoney(Number(value ?? 0)) },
+        { id: 'subtotal', name: 'Mano de Obra', format: (value: any) => formatMoney(Number(value ?? 0)) },
+        { id: 'total', name: 'Total (Final)', format: (value: any) => formatMoney(Number(value ?? 0)) },
         { id: 'created_at', name: 'Fecha', format: (value: any) => value ? new Date(value).toLocaleString() : 'N/A' }
     ];
 
@@ -170,21 +171,28 @@ const ServiciosListPage = () => {
             name: 'Ver configuración',
             icon: <Visibility fontSize="small" />, 
             color: 'primary.main',
-            visible: (row: any) => row.estado !== ESTADO_SERVICIO_VEHICULO.FINALIZADO && [ESTADO_SERVICIO_VEHICULO.EN_SERVICIO, ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS, ESTADO_SERVICIO_VEHICULO.RECEPCION].includes(row.estado),
+            visible: (row: any) => row.estado !== ESTADO_SERVICIO_VEHICULO.FINALIZADO && [ESTADO_SERVICIO_VEHICULO.EN_SERVICIO, ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS, ESTADO_SERVICIO_VEHICULO.RECEPCION, ESTADO_SERVICIO_VEHICULO.EN_REPARACION].includes(row.estado),
             onClick: (row: any) => navigate(`/servicios-vehiculo/${row.id}/configuracion`)
         },
         {
             name: 'Ver progreso',
             icon: <Visibility fontSize="small" />,
             color: 'info.main',
-            visible: (row: any) => [ESTADO_SERVICIO_VEHICULO.EN_SERVICIO, ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS].includes(row.estado),
+            visible: (row: any) => [ESTADO_SERVICIO_VEHICULO.EN_SERVICIO, ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS, ESTADO_SERVICIO_VEHICULO.EN_REPARACION].includes(row.estado),
             onClick: (row: any) => navigate(`/servicios-vehiculo/${row.id}/progreso`)
+        },
+        {
+            name: 'Ver custodia',
+            icon: <Visibility fontSize="small" />,
+            color: 'warning.main',
+            visible: (row: any) => row.estado === ESTADO_SERVICIO_VEHICULO.EN_CUSTODIA,
+            onClick: (row: any) => navigate(`/servicios-vehiculo/${row.id}/custodia`)
         },
         {
             name: 'Dar salida',
             icon: <Visibility fontSize="small" />,
             color: 'success.main',
-            visible: (row: any) => hasSalidaPermission && row.estado === ESTADO_SERVICIO_VEHICULO.LISTO_ENTREGA,
+            visible: (row: any) => hasSalidaPermission && [ESTADO_SERVICIO_VEHICULO.LISTO_ENTREGA, ESTADO_SERVICIO_VEHICULO.EN_REPARACION, ESTADO_SERVICIO_VEHICULO.EN_CUSTODIA].includes(row.estado),
             onClick: (row: any) => navigate(`/servicios-vehiculo/${row.id}/salida`)
         },
         {

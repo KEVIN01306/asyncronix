@@ -65,7 +65,7 @@ export default function ServicioRepuestosPage() {
         fetchService();
     }, [id, navigate, cargarProductosDisponibles]);
 
-    const canEdit = user?.permisos?.includes('EDITAR_SERVICIOS') && user?.permisos?.includes('EDITAR_SERVICIOS_REPUESTOS');
+    const canEdit = user?.permisos?.includes('EDITAR_SERVICIOS') && user?.permisos?.includes('EDITAR_SERVICIOS_REPUESTOS') && ['RECEPCION', 'EN_SERVICIO', 'ESPERA_REPUESTOS', 'EN_REPARACION'].includes(servicio?.estado);
 
     const handleCodigoLeido = async (codigo: string) => {
         setShowScannerModal(false);
@@ -96,7 +96,7 @@ export default function ServicioRepuestosPage() {
 
     const handleAgregar = async () => {
         if (!canEdit) return toast.error('Permisos insuficientes');
-        
+
         // Usar varianteSeleccionada (del código) o productoSeleccionado (del autocomplete)
         const variante = varianteSeleccionada || productoSeleccionado;
         if (!variante) return toast.error('Variante requerida');
@@ -139,7 +139,25 @@ export default function ServicioRepuestosPage() {
     };
 
     if (!servicio) return <Loading />;
-    const totalRepuestos = (servicio.repuestos_inventario ?? []).reduce((s: number, r: any) => s + ((r.precio_venta ?? 0) * (r.cantidad ?? 0)), 0);
+
+    if (servicio.estado === 'EN_CUSTODIA') {
+        return (
+            <Box p={3}>
+                <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(`/servicios-vehiculo/${servicio.id}`)} sx={{ mb: 2 }}>{'Volver'}</Button>
+                <Typography variant="h6" color="error">No se pueden administrar repuestos mientras el servicio está en Custodia.</Typography>
+            </Box>
+        );
+    }
+
+    const inReparacion = servicio.estado === 'EN_REPARACION';
+    const activeReparacion = inReparacion ? servicio.servicioReparacion?.find((r: any) => !r.fecha_salida) : null;
+    
+    // Si esta en reparacion, mostramos los repuestos de la reparacion. Si no, los del servicio general.
+    const repuestosList = inReparacion 
+        ? (activeReparacion?.servicioRepuestos ?? []) 
+        : (servicio.repuestos_inventario ?? []);
+
+    const totalRepuestos = repuestosList.reduce((s: number, r: any) => s + ((r.precio_venta ?? 0) * (r.cantidad ?? 0)), 0);
 
     return (
         <Box p={3}>
@@ -256,7 +274,7 @@ export default function ServicioRepuestosPage() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {(servicio.repuestos_inventario ?? []).map((r: any) => (
+                            {repuestosList.map((r: any) => (
                                 <TableRow key={r.id}>
                                     <TableCell>
                                         <Stack spacing={0.5}>
@@ -287,7 +305,7 @@ export default function ServicioRepuestosPage() {
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            {(servicio.repuestos_inventario ?? []).length === 0 && (
+                            {repuestosList.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} align="center">
                                         <Typography color="text.secondary">No hay repuestos agregados</Typography>

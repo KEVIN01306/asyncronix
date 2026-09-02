@@ -32,6 +32,11 @@ import type { ActualizarObservacionesServicioUseCase } from "../application/actu
 import type { CrearCambioSiguienteServicioUseCase } from "../application/crear-cambio-siguiente-servicio.usecase.js";
 import type { ListarCambiosSiguienteServicioUseCase } from "../application/listar-cambios-siguiente-servicio.usecase.js";
 import type { EliminarCambioSiguienteServicioUseCase } from "../application/eliminar-cambio-siguiente-servicio.usecase.js";
+import type { MandarReparacionUseCase } from "../application/mandar-reparacion.usecase.js";
+import type { MandarCustodiaUseCase } from "../application/mandar-custodia.usecase.js";
+import type { AdministrarReparacionUseCase } from "../application/administrar-reparacion.usecase.js";
+import type { AdministrarRepuestoSolicitadoUseCase } from "../application/administrar-repuesto-solicitado.usecase.js";
+import type { ActualizarCustodiaUseCase } from "../application/actualizar-custodia.usecase.js";
 import AppError from "@shared/errors/AppError.js";
 import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
 
@@ -67,6 +72,13 @@ export class ServicioController extends BaseController {
         private readonly crearCambioSiguienteServicioUseCase?: CrearCambioSiguienteServicioUseCase,
         private readonly listarCambiosSiguienteServicioUseCase?: ListarCambiosSiguienteServicioUseCase,
         private readonly eliminarCambioSiguienteServicioUseCase?: EliminarCambioSiguienteServicioUseCase,
+        private readonly mandarReparacionUseCase?: MandarReparacionUseCase,
+        private readonly terminarReparacionUseCase?: any,
+        private readonly mandarCustodiaUseCase?: MandarCustodiaUseCase,
+        private readonly administrarReparacionUseCase?: AdministrarReparacionUseCase,
+        private readonly administrarRepuestoSolicitadoUseCase?: AdministrarRepuestoSolicitadoUseCase,
+        private readonly actualizarCustodiaUseCase?: ActualizarCustodiaUseCase,
+        private readonly terminarCustodiaUseCase?: any,
         private readonly storageProvider?: IStorageProvider
     ) {
         super();
@@ -224,7 +236,9 @@ export class ServicioController extends BaseController {
             const { id: usuario_id, negocio_id, sucursal_id } = this.obtenerEntorno(res);
             if (!sucursal_id) throw new Error('SUCURSAL_REQUERIDA');
 
-            if (!req.file) throw new AppError('No se ha subido ninguna firma', 'SIGNATURE_REQUIRED', 400);
+            if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
+                throw new AppError('No se han subido firmas', 'SIGNATURE_REQUIRED', 400);
+            }
             
             const { 
                 metodo_pago, 
@@ -248,7 +262,7 @@ export class ServicioController extends BaseController {
                 negocio_id, 
                 sucursal_id, 
                 usuario_id, 
-                req.file, 
+                req.files as Express.Multer.File[], 
                 metodo_pago, 
                 efectivo_recibido != null && efectivo_recibido !== '' ? parseFloat(efectivo_recibido) : null, 
                 vuelto != null && vuelto !== '' ? parseFloat(vuelto) : null,
@@ -487,5 +501,122 @@ export class ServicioController extends BaseController {
         } catch (error) {
             next(error);
         }
+    }
+
+    mandarReparacion = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.mandarReparacionUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            
+            if (!req.file) throw new AppError('No se ha subido ninguna firma', 'SIGNATURE_REQUIRED', 400);
+
+            const result = await this.mandarReparacionUseCase.execute(id, req.file, negocio_id);
+            res.status(200).json(Respuesta.exito('Servicio en reparación', result));
+        } catch (error) { next(error); }
+    }
+
+    mandarCustodia = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.mandarCustodiaUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            
+            const result = await this.mandarCustodiaUseCase.execute(id, negocio_id);
+            res.status(200).json(Respuesta.exito('Servicio en custodia', result));
+        } catch (error) { next(error); }
+    }
+
+    obtenerReparacionActiva = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.administrarReparacionUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            
+            const result = await this.administrarReparacionUseCase.obtenerActiva(id, negocio_id);
+            res.status(200).json(Respuesta.exito('Reparación obtenida', result));
+        } catch (error) { next(error); }
+    }
+
+    actualizarReparacion = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.administrarReparacionUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            
+            const result = await this.administrarReparacionUseCase.actualizar(id, req.body, negocio_id);
+            res.status(200).json(Respuesta.exito('Reparación actualizada', result));
+        } catch (error) { next(error); }
+    }
+
+    crearRepuestoSolicitado = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.administrarRepuestoSolicitadoUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            
+            const result = await this.administrarRepuestoSolicitadoUseCase.crear(id, req.body, negocio_id);
+            res.status(201).json(Respuesta.exito('Repuesto solicitado creado', result));
+        } catch (error) { next(error); }
+    }
+
+    actualizarRepuestoSolicitado = async (req: Request<{ id: string, repuesto_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id, repuesto_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.administrarRepuestoSolicitadoUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            
+            const result = await this.administrarRepuestoSolicitadoUseCase.actualizar(repuesto_id, id, req.body, negocio_id);
+            res.status(200).json(Respuesta.exito('Repuesto solicitado actualizado', result));
+        } catch (error) { next(error); }
+    }
+
+    eliminarRepuestoSolicitado = async (req: Request<{ id: string, repuesto_id: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id, repuesto_id } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.administrarRepuestoSolicitadoUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            
+            await this.administrarRepuestoSolicitadoUseCase.eliminar(repuesto_id, id, negocio_id);
+            res.status(200).json(Respuesta.exito('Repuesto solicitado eliminado', null));
+        } catch (error) { next(error); }
+    }
+
+    actualizarCustodia = async (req: Request<{ id: string; custodiaId: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { custodiaId } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            if (!this.actualizarCustodiaUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+
+            const payload = req.body;
+            const updated = await this.actualizarCustodiaUseCase.execute(custodiaId, negocio_id, payload);
+            res.status(200).json(Respuesta.exito('Custodia actualizada', updated));
+        } catch (error) { next(error); }
+    }
+
+    terminarCustodia = async (req: Request<{ id: string; custodiaId: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id, custodiaId } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            
+            if (!this.terminarCustodiaUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            if (!req.file) throw new AppError('La firma de salida es requerida', 'SIGNATURE_REQUIRED', 400);
+
+            const result = await this.terminarCustodiaUseCase.execute(id, custodiaId, req.file, negocio_id);
+            res.status(200).json(Respuesta.exito('Custodia finalizada', result));
+        } catch (error) { next(error); }
+    }
+
+    terminarReparacion = async (req: Request<{ id: string; reparacionId: string }>, res: Response, next: NextFunction) => {
+        try {
+            const { id, reparacionId } = req.params;
+            const { negocio_id } = this.obtenerEntorno(res);
+            
+            if (!this.terminarReparacionUseCase) throw new AppError('Operación no disponible', 'NOT_IMPLEMENTED', 500);
+            if (!req.file) throw new AppError('La firma de salida es requerida', 'SIGNATURE_REQUIRED', 400);
+
+            const result = await this.terminarReparacionUseCase.execute(id, reparacionId, req.file, negocio_id);
+            res.status(200).json(Respuesta.exito('Reparación finalizada', result));
+        } catch (error) { next(error); }
     }
 }

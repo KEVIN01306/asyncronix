@@ -60,11 +60,11 @@ const ServiceSignatures: React.FC<Props> = ({ servicio, onUpdate }) => {
 
             {(servicio.firma_entrada || servicio.firma_salida) && (
                 <Box mt={2}>
-                    <Typography variant="h6" mb={2}>Firmas</Typography>
+                    <Typography variant="h6" mb={2}>Firmas del Servicio</Typography>
                     <Box display="grid" gap={3} gridTemplateColumns={{ xs: '1fr', md: '1fr 1fr' }}>
                         {servicio.firma_entrada && (
                             <Box>
-                                <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma de Entrada</Typography>
+                                <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma de Entrada (Servicio)</Typography>
                                 <Card sx={{ border: '1px solid #e0e0e0' }}>
                                     <CardMedia component="img" image={formatImage(servicio.firma_entrada)} alt="Firma de entrada" sx={{ height: 200, objectFit: 'contain', p: 1 }} />
                                 </Card>
@@ -72,13 +72,63 @@ const ServiceSignatures: React.FC<Props> = ({ servicio, onUpdate }) => {
                         )}
                         {servicio.firma_salida && (
                             <Box>
-                                <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma de Salida</Typography>
+                                <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma de Salida (Servicio)</Typography>
                                 <Card sx={{ border: '1px solid #e0e0e0' }}>
                                     <CardMedia component="img" image={formatImage(servicio.firma_salida)} alt="Firma de salida" sx={{ height: 200, objectFit: 'contain', p: 1 }} />
                                 </Card>
                             </Box>
                         )}
                     </Box>
+                </Box>
+            )}
+
+            {servicio.servicioReparacion && servicio.servicioReparacion.length > 0 && (
+                <Box mt={4}>
+                    <Typography variant="h6" mb={2}>Firmas de Reparaciones</Typography>
+                    {servicio.servicioReparacion.map((rep, index) => (
+                        <Box key={rep.id} mb={3}>
+                            <Typography variant="subtitle1" fontWeight={600} color="primary" mb={2}>Reparación #{index + 1}</Typography>
+                            <Box display="grid" gap={3} gridTemplateColumns={{ xs: '1fr', md: '1fr 1fr' }}>
+                                {rep.firma_entrada && (
+                                    <Box>
+                                        <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma Entrada (Reparación)</Typography>
+                                        <Card sx={{ border: '1px solid #e0e0e0' }}>
+                                            <CardMedia component="img" image={formatImage(rep.firma_entrada)} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1 }} />
+                                        </Card>
+                                    </Box>
+                                )}
+                                {rep.firma_salida && (
+                                    <Box>
+                                        <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma Salida (Reparación)</Typography>
+                                        <Card sx={{ border: '1px solid #e0e0e0' }}>
+                                            <CardMedia component="img" image={formatImage(rep.firma_salida)} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1 }} />
+                                        </Card>
+                                    </Box>
+                                )}
+                            </Box>
+                        </Box>
+                    ))}
+                </Box>
+            )}
+
+            {servicio.servicioCustodias && servicio.servicioCustodias.length > 0 && (
+                <Box mt={4}>
+                    <Typography variant="h6" mb={2}>Firmas de Custodias</Typography>
+                    {servicio.servicioCustodias.map((cust, index) => (
+                        <Box key={cust.id} mb={3}>
+                            <Typography variant="subtitle1" fontWeight={600} color="primary" mb={2}>Custodia #{index + 1}</Typography>
+                            <Box display="grid" gap={3} gridTemplateColumns={{ xs: '1fr', md: '1fr 1fr' }}>
+                                {cust.firma_salida && (
+                                    <Box>
+                                        <Typography variant="subtitle2" fontWeight={600} mb={1}>Firma Salida (Custodia)</Typography>
+                                        <Card sx={{ border: '1px solid #e0e0e0' }}>
+                                            <CardMedia component="img" image={formatImage(cust.firma_salida)} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1 }} />
+                                        </Card>
+                                    </Box>
+                                )}
+                            </Box>
+                        </Box>
+                    ))}
                 </Box>
             )}
 

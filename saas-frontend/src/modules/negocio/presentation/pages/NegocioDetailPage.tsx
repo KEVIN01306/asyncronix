@@ -17,7 +17,7 @@ import {
     Tabs,
     Tab
 } from '@mui/material';
-import { ArrowBack, Edit, Business, Instagram, Facebook, CurrencyExchange, Info, ShowChart } from '@mui/icons-material';
+import { ArrowBack, Edit, Business, Instagram, Facebook, CurrencyExchange, Info, ShowChart, Receipt } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../../../core/store/authStore';
 
@@ -28,6 +28,7 @@ import ErrorPageLoading from '../../../../shared/components/ui/errors/errorPageL
 import CambiarMonedaModal from '../components/CambiarMonedaModal';
 import NegocioLimitesTab from '../components/NegocioLimitesTab';
 import { formatImage } from '../../../../core/utils/formatImage';
+import { NegocioFacturacionTab } from '../components/tabs/NegocioFacturacionTab';
 
 
 interface TabPanelProps {
@@ -136,6 +137,7 @@ const NegocioDetailPage = () => {
                     '& .MuiTabs-scrollButtons': { opacity: 0 }
                 }}>
                     <Tab icon={<Info />} iconPosition="start" label="Información General" />
+                    <Tab icon={<Receipt />} iconPosition="start" label="Información Fiscal" />
                     <Tab icon={<ShowChart />} iconPosition="start" label="Límites y Consumos" />
                 </Tabs>
             </Box>
@@ -321,6 +323,12 @@ const NegocioDetailPage = () => {
             </CustomTabPanel>
 
             <CustomTabPanel value={tabIndex} index={1}>
+                <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                    <NegocioFacturacionTab />
+                </Paper>
+            </CustomTabPanel>
+
+            <CustomTabPanel value={tabIndex} index={2}>
                 <NegocioLimitesTab />
             </CustomTabPanel>
 

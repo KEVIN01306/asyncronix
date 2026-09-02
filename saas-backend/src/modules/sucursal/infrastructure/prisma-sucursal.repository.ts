@@ -25,7 +25,7 @@ export class PrismaSucursalRepository implements SucursalRepository {
                     ...data,
                     negocio_id,
                 },
-                include: { negocio: true },
+                include: { negocio: true, division_nivel_2: { include: { division_nivel_1: true } } },
             });
 
             return SucursalMapper.mapDetalle(sucursal);
@@ -39,7 +39,7 @@ export class PrismaSucursalRepository implements SucursalRepository {
             const sucursal = await this.prisma.sucursal.update({
                 where: { id, negocio_id },
                 data,
-                include: { negocio: true },
+                include: { negocio: true, division_nivel_2: { include: { division_nivel_1: true } } },
             });
 
             return SucursalMapper.mapDetalle(sucursal);
@@ -62,7 +62,7 @@ export class PrismaSucursalRepository implements SucursalRepository {
         try {
             const sucursal = await this.prisma.sucursal.findFirst({
                 where: { id, negocio_id },
-                include: { negocio: true },
+                include: { negocio: true, division_nivel_2: { include: { division_nivel_1: true } } },
             });
 
             if (!sucursal) {
@@ -96,6 +96,9 @@ export class PrismaSucursalRepository implements SucursalRepository {
                             id: true,
                         },
                     },
+                    division_nivel_2: {
+                        include: { division_nivel_1: true }
+                    }
                 },
             });
 

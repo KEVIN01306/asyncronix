@@ -98,7 +98,7 @@ const ServicioHojaPage = () => {
                     </Link>
                     <Typography color="text.primary">Detalle</Typography>
                 </Breadcrumbs>
-                <Typography variant="h4" fontWeight={800} color="text.primary">Servicio #{servicio.id}</Typography>
+                <Typography variant="body2" color="text.primary">#{servicio.id}</Typography>
             </Box>
             {pdfServicio && (
                 <Box my={2}>
@@ -311,9 +311,10 @@ const ServicioHojaPage = () => {
                         />
                     </Grid>
                 </Grid>
-                <Grid container size={12} mt={2} justifyContent="center" alignItems="center">
-                    <Box>
-                        <Box >
+
+                <Grid container size={12} mt={4} justifyContent="center" alignItems="center">
+                    <Box sx={{ mr: 4 }}>
+                        <Box>
                             {
                                 servicio.firma_entrada ? (
                                     <CardMedia component="img" image={formatImage(servicio.firma_entrada)} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
@@ -327,7 +328,7 @@ const ServicioHojaPage = () => {
                         <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Cliente (Entrada)</Typography>
                     </Box>
                     <Box>
-                        <Box >
+                        <Box>
                             {
                                 servicio.firma_salida ? (
                                     <CardMedia component="img" image={formatImage(servicio.firma_salida)} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
@@ -341,6 +342,135 @@ const ServicioHojaPage = () => {
                         <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1}>Firma Cliente (Salida)</Typography>
                     </Box>
                 </Grid>
+
+                {servicio.servicioReparacion && servicio.servicioReparacion.length > 0 && (
+                    <Grid container size={12} mt={4}>
+                        <Grid size={12} mb={2}>
+                            <Typography variant="h6" color="primary" sx={{ textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                                Reparaciones Asociadas
+                            </Typography>
+                            <Divider sx={{ my: 1 }} />
+                        </Grid>
+                        {servicio.servicioReparacion.map((rep, index) => (
+                            <Grid container size={12} key={rep.id} spacing={3} sx={{ backgroundColor: '#fdfdfd', borderRadius: 2, p: { xs: 2, md: 3 }, mb: 3 }}>
+                                <Grid size={12}>
+                                    <Typography variant="h6" color="primary">Reparación #{index + 1}</Typography>
+                                    {rep.descripcion && (
+                                        <Typography variant="body1" mt={1} color="text.secondary">
+                                            <strong>Descripción:</strong> {rep.descripcion}
+                                        </Typography>
+                                    )}
+                                </Grid>
+
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Typography variant="subtitle2" mb={1} fontWeight={600} color="text.secondary" textTransform="uppercase">Repuestos Solicitados</Typography>
+                                    <ListTableSimple
+                                        columns={[
+                                            { id: 'descripccion', name: 'Descripción' },
+                                            { id: 'cantidad', name: 'Cant.' },
+                                            { id: 'procedencia', name: 'Procedencia' }
+                                        ]}
+                                        data={rep.servicioReparacionRepuestos || []}
+                                        headerBgColor={theme.palette.primary.main}
+                                    />
+                                </Grid>
+
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Typography variant="subtitle2" mb={1} fontWeight={600} color="text.secondary" textTransform="uppercase">Repuestos de Inventario</Typography>
+                                    <ListTableSimple
+                                        columns={[
+                                            { id: 'id', name: 'Producto', format: (_, r: any) => r.variante?.producto?.nombre || 'Sin nombre' },
+                                            { id: 'cantidad', name: 'Cant.' }
+                                        ]}
+                                        data={rep.servicioRepuestos || []}
+                                        headerBgColor={theme.palette.primary.main}
+                                    />
+                                </Grid>
+
+                                <Grid size={12} mt={2}>
+                                    <Typography variant="subtitle1" fontWeight={600} mb={1} textAlign="center">Firmas de la Reparación</Typography>
+                                </Grid>
+
+                                <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Box sx={{ width: '100%', maxWidth: 300 }}>
+                                        {rep.firma_entrada ? (
+                                            <CardMedia component="img" image={formatImage(rep.firma_entrada)} alt="Firma de entrada" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                        ) : (
+                                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                                <Typography sx={{ height: 150, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Sin firma</Typography>
+                                            </Box>
+                                        )}
+                                        <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1} mt={1}>Firma Entrada Reparación {index + 1}</Typography>
+                                    </Box>
+                                </Grid>
+
+                                <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Box sx={{ width: '100%', maxWidth: 300 }}>
+                                        {rep.firma_salida ? (
+                                            <CardMedia component="img" image={formatImage(rep.firma_salida)} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                        ) : (
+                                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                                <Typography sx={{ height: 150, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Sin firma</Typography>
+                                            </Box>
+                                        )}
+                                        <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1} mt={1}>Firma Salida Reparación {index + 1}</Typography>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+                        ))}
+                    </Grid>
+                )}
+
+                {servicio.servicioCustodias && servicio.servicioCustodias.length > 0 && (
+                    <Grid container size={12} mt={4}>
+                        <Grid size={12} mb={2}>
+                            <Typography variant="h6" color="primary" sx={{ textTransform: 'uppercase', fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                                Custodias Asociadas
+                            </Typography>
+                            <Divider sx={{ my: 1 }} />
+                        </Grid>
+                        {servicio.servicioCustodias.map((cust, index) => (
+                            <Grid container size={12} key={cust.id} spacing={3} sx={{ backgroundColor: '#fdfdfd', borderRadius: 2, p: { xs: 2, md: 3 }, mb: 3 }}>
+                                <Grid size={12}>
+                                    <Typography variant="h6" color="primary">Custodia #{index + 1}</Typography>
+                                    {cust.descripcion && (
+                                        <Typography variant="body1" mt={1} color="text.secondary">
+                                            <strong>Descripción:</strong> {cust.descripcion}
+                                        </Typography>
+                                    )}
+                                </Grid>
+
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Typography variant="body1" mt={1} color="text.secondary">
+                                        <strong>Fecha Entrada:</strong> {new Date(cust.fecha_entrada).toLocaleString()}
+                                    </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Typography variant="body1" mt={1} color="text.secondary">
+                                        <strong>Fecha Salida:</strong> {cust.fecha_salida ? new Date(cust.fecha_salida).toLocaleString() : 'En curso'}
+                                    </Typography>
+                                </Grid>
+
+                                <Grid size={12} mt={2}>
+                                    <Typography variant="subtitle1" fontWeight={600} mb={1} textAlign="center">Firma de Salida Custodia</Typography>
+                                </Grid>
+
+                                <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Box sx={{ width: '100%', maxWidth: 300 }}>
+                                        {cust.firma_salida ? (
+                                            <CardMedia component="img" image={formatImage(cust.firma_salida)} alt="Firma de salida" sx={{ height: 150, objectFit: 'contain', p: 1, border: 'none' }} />
+                                        ) : (
+                                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #ccc', borderRadius: 1, p: 1 }}>
+                                                <Typography sx={{ height: 150, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>Sin firma</Typography>
+                                            </Box>
+                                        )}
+                                        <Typography variant="subtitle2" textAlign="center" fontWeight={200} mb={1} mt={1}>Firma Salida Custodia {index + 1}</Typography>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+                        ))}
+                    </Grid>
+                )}
             </Box>
         </Box>
     );

@@ -30,7 +30,7 @@ const ServicioFormPage = () => {
     const [loading, setLoading] = useState(true);
     const [isEdit, setIsEdit] = useState(false);
 
-    const { control, register, handleSubmit, reset, setValue, watch, formState: { isSubmitting } } = useForm<ServicioFormValues>({
+    const { control, register, handleSubmit, reset, setValue, watch, formState: { isSubmitting, errors } } = useForm<ServicioFormValues>({
         defaultValues: {
             placa: '',
             vehiculo_id: undefined,
@@ -40,7 +40,7 @@ const ServicioFormPage = () => {
             diagnostico: '',
             kilometraje: null,
             kilometraje_proximo: null,
-            total: null,
+            subtotal: null,
             MetodoPago: METODO_PAGO.EFECTIVO
         }
     });
@@ -71,7 +71,7 @@ const ServicioFormPage = () => {
                 diagnostico: response.diagnostico ?? '',
                 kilometraje: response.kilometraje ?? null,
                 kilometraje_proximo: response.kilometraje_proximo ?? null,
-                total: response.total ?? null,
+                subtotal: response.subtotal ?? null,
                 MetodoPago: (response.MetodoPago ?? METODO_PAGO.EFECTIVO) as any
             });
             setServicioClienteId(response.cliente_id ?? null);
@@ -120,8 +120,8 @@ const ServicioFormPage = () => {
             diagnostico: data.diagnostico ?? null,
             kilometraje: data.kilometraje ?? null,
             kilometraje_proximo: data.kilometraje_proximo ?? null,
-            total: data.total ?? null,
-            MetodoPago: METODO_PAGO.EFECTIVO
+            subtotal: data.subtotal ?? null,
+            MetodoPago: data.MetodoPago
         };
 
         try {
@@ -265,10 +265,12 @@ const ServicioFormPage = () => {
                                         </Grid>
                                         <Grid size={{ xs: 12, sm: 6 }}>
                                             <TextField
-                                                label="Total"
-                                                type="number"
                                                 fullWidth
-                                                {...register('total')}
+                                                label="Mano de Obra (Subtotal)"
+                                                type="number"
+                                                {...register('subtotal')}
+                                                error={!!errors.subtotal}
+                                                helperText={errors.subtotal?.message}
                                             />
                                         </Grid>
                                         <Grid size={{ xs: 12 }}>

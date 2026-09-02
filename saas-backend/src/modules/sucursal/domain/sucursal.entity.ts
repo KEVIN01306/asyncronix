@@ -7,9 +7,22 @@ export interface Sucursal {
     nombre: string;
     es_principal: boolean | null;
     direccion: string | null;
+    codigo_establecimiento: string;
+    codigo_postal: string | null;
+    division_nivel2_id: string | null;
 }
 
-export interface SucursalObtenidoDetalle extends Omit<Sucursal, "negocio_id"> { }
+export interface SucursalObtenidoDetalle extends Omit<Sucursal, "negocio_id"> {
+    division_nivel_2?: {
+        id: string;
+        nombre: string;
+        division_nivel_1: {
+            id: string;
+            nombre: string;
+            pais_id: string;
+        };
+    } | null;
+}
 
 export interface SucursalSimple extends Omit<Sucursal, "negocio_id"> { }
 

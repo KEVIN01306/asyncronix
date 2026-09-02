@@ -25,6 +25,17 @@ const SucursalInformacionTab = ({ sucursal }: Props) => {
                             <Typography variant="h6" fontWeight={600} mt={0.5} color="text.primary">
                                 {sucursal.direccion ?? 'Dirección no especificada'}
                             </Typography>
+                            {sucursal.division_nivel_2 && (
+                                <Typography variant="body2" color="text.secondary" mt={0.5}>
+                                    {sucursal.division_nivel_2.nombre}, {sucursal.division_nivel_2.division_nivel_1.nombre} 
+                                    {sucursal.codigo_postal ? ` (${sucursal.codigo_postal})` : ''}
+                                </Typography>
+                            )}
+                            {sucursal.codigo_establecimiento && (
+                                <Typography variant="body2" color="text.secondary" mt={0.5}>
+                                    Establecimiento: {sucursal.codigo_establecimiento}
+                                </Typography>
+                            )}
                         </Box>
 
                         <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">

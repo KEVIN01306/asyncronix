@@ -31,6 +31,7 @@ router.use('/checklist-items', (await import('../modules/checklist-item/presenta
 router.use('/servicio-vehiculos', (await import('../modules/servicioVehiculo/presentation/servicio.routes.js')).default)
 router.use('/notifications', (await import('../modules/notificacion/presentation/notificacion.routes.js')).default)
 router.use('/proveedores', (await import('../modules/proveedor/presentation/proveedor.routes.js')).default)
+router.use('/geografia', (await import('../modules/geografia/presentation/geografia.routes.js')).default)
 router.use('/paises', (await import('../modules/pais/presentation/pais.routes.js')).default)
 router.use('/monedas', (await import('../modules/moneda/presentation/moneda.routes.js')).default)
 router.use('/bancos', (await import('../modules/banco/presentation/banco.routes.js')).default)

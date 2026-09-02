@@ -1,25 +1,34 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Typography, Paper, TextField, Stack, Button } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
+import { useAuthStore } from '../../../../core/store/authStore';
 
 import { SubmitButton } from '../../../../shared/components/button/SubmitButton';
 import { sucursalSchema, type SucursalFormValues } from '../../domain/schemas/sucursal.schema';
 import { sucursalRepository } from '../../infrastructure/repositories/sucursal.repository';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
+import { DepartamentoAutocomplete } from '../../../geografia/presentation/components/DepartamentoAutocomplete';
+import { MunicipioAutocomplete } from '../../../geografia/presentation/components/MunicipioAutocomplete';
 
 const SucursalFormPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEdit = Boolean(id);
     const [loading, setLoading] = useState(isEdit);
+    const user = useAuthStore((state) => state.user);
 
-    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SucursalFormValues>({
-        resolver: zodResolver(sucursalSchema)
+    const { register, handleSubmit, reset, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<SucursalFormValues>({
+        resolver: zodResolver(sucursalSchema),
+        defaultValues: {
+            codigo_establecimiento: '1'
+        }
     });
+
+    const departamentoId = watch('departamento_id');
 
     useEffect(() => {
         if (isEdit && id) {
@@ -30,6 +39,10 @@ const SucursalFormPage = () => {
                     reset({
                         nombre: data.nombre,
                         direccion: data.direccion,
+                        codigo_establecimiento: data.codigo_establecimiento || '1',
+                        codigo_postal: data.codigo_postal || '',
+                        departamento_id: data.division_nivel_2?.division_nivel_1?.id,
+                        division_nivel2_id: data.division_nivel2_id || undefined,
                     });
                 } catch (error) {
                     console.error(error);
@@ -90,6 +103,52 @@ const SucursalFormPage = () => {
                             {...register('direccion')}
                             error={!!errors.direccion}
                             helperText={errors.direccion?.message}
+                        />
+
+                        <Controller
+                            name="departamento_id"
+                            control={control}
+                            render={({ field }) => (
+                                <DepartamentoAutocomplete
+                                    value={field.value || null}
+                                    onChange={(val) => {
+                                        field.onChange(val || '');
+                                        setValue('division_nivel2_id', ''); // Limpiar municipio al cambiar departamento
+                                    }}
+                                    paisId={user?.negocio?.pais?.id}
+                                />
+                            )}
+                        />
+
+                        <Controller
+                            name="division_nivel2_id"
+                            control={control}
+                            render={({ field }) => (
+                                <MunicipioAutocomplete
+                                    value={field.value || null}
+                                    onChange={(val) => field.onChange(val || '')}
+                                    departamentoId={departamentoId}
+                                />
+                            )}
+                        />
+                        {errors.division_nivel2_id && (
+                            <Typography color="error" variant="caption">{errors.division_nivel2_id.message}</Typography>
+                        )}
+
+                        <TextField
+                            label="Código de Establecimiento"
+                            fullWidth
+                            {...register('codigo_establecimiento')}
+                            error={!!errors.codigo_establecimiento}
+                            helperText={errors.codigo_establecimiento?.message}
+                        />
+
+                        <TextField
+                            label="Código Postal"
+                            fullWidth
+                            {...register('codigo_postal')}
+                            error={!!errors.codigo_postal}
+                            helperText={errors.codigo_postal?.message}
                         />
 
                         <SubmitButton 

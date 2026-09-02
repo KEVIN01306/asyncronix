@@ -40,4 +40,16 @@ export class FileUploadMiddleware {
             limits
         }).array(fieldName, maxCount);
     }
+
+    /**
+     * Sube múltiples archivos con cualquier nombre de campo
+     * @param _folder Carpeta de destino
+     */
+    static any(_folder?: string) {
+        return multer({
+            storage: memoryStorage,
+            fileFilter,
+            limits
+        }).any();
+    }
 }

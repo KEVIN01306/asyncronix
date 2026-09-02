@@ -90,6 +90,7 @@ export interface Servicio {
     fecha_salida?: Date | null;
     firma_entrada?: string | null;
     firma_salida?: string | null;
+    subtotal?: number;
     total?: number;
     efectivo_recibido?: number | null;
     vuelto?: number | null;
@@ -100,7 +101,7 @@ export interface Servicio {
     updated_at?: Date;
 }
 
-export type ServicioSimple = Pick<Servicio, 'id' | 'sucursal_id' | 'vehiculo_id' | 'cliente_id' | 'tipo_servicio_id' | 'estado' | 'total' | 'created_at'> & {
+export type ServicioSimple = Pick<Servicio, 'id' | 'sucursal_id' | 'vehiculo_id' | 'cliente_id' | 'tipo_servicio_id' | 'estado' | 'subtotal' | 'total' | 'created_at'> & {
     vehiculo?: {
         id: string;
         placa: string;
@@ -140,6 +141,8 @@ export interface ServicioDetalle extends Servicio {
         nombre: string;
     } | null;
     repuestos_inventario?: ServicioRepuesto[];
+    servicioReparacion?: any[];
+    servicioCustodias?: ServicioCustodia[];
 }
 
 export type ServicioCrear = Omit<Servicio, 'id' | 'activo' | 'created_at' | 'updated_at' | 'fecha_entrada' | 'estado'> & {
@@ -166,7 +169,8 @@ export type ServicioRepuestoClienteCrear = {
 
 export interface ServicioRepuesto {
     id: string;
-    servicio_id: string;
+    servicio_id?: string | null;
+    servicio_reparacion_id?: string | null;
     variante_id: string;
     lote_id?: string | null;
     variante?: {
@@ -187,6 +191,48 @@ export interface ServicioRepuesto {
     cantidad: number;
     precio_venta: number;
     costo?: number | null;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export type ProcedenciaRepuesto = 'PROPIO' | 'CLIENTE';
+
+export interface ServicioReparacion {
+    id: string;
+    servicio_id: string;
+    firma_entrada?: string | null;
+    firma_salida?: string | null;
+    fecha_entrada: Date;
+    fecha_salida?: Date | null;
+    total: number;
+    created_at: Date;
+    updated_at: Date;
+    servicio?: ServicioSimple;
+    repuestos_solicitados?: ServicioReparacionRepuesto[];
+    repuestos_inventario?: ServicioRepuesto[];
+}
+
+export interface ServicioCustodia {
+    id: string;
+    servicio_id: string;
+    descripcion?: string | null;
+    firma_salida?: string | null;
+    fecha_entrada: Date;
+    fecha_salida?: Date | null;
+    total: number;
+    created_at: Date;
+    updated_at: Date;
+    servicio?: ServicioSimple;
+}
+
+export interface ServicioReparacionRepuesto {
+    id: string;
+    servicio_reparacion_id: string;
+    descripccion: string;
+    cantidad: number;
+    instrucciones: string;
+    entregado: boolean;
+    procedencia: ProcedenciaRepuesto;
     created_at: Date;
     updated_at: Date;
 }

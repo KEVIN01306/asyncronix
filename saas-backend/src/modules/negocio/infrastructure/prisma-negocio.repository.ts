@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
-import type { NegocioActualizar, NegocioCrear, NegocioObtenidoDetalle } from "../domain/negocio.entity.js";
+import type { Negocio, NegocioActualizar, NegocioCrear, NegocioObtenidoDetalle } from "../domain/negocio.entity.js";
+import type { NegocioFacturacionConfig, NegocioFacturacionConfigActualizar } from "../domain/negocio-facturacion.entity.js";
 import type { NegocioRepository } from "../domain/negocio.repository.js";
 import type { NegocioLimite } from "../domain/negocio-limite.entity.js";
 import { NegocioMapper } from "./mappers/negocio.mapper.js";
@@ -153,5 +154,48 @@ export class PrismaNegocioRepository implements NegocioRepository {
                 }
             }
         });
+    }
+
+    async obtenerFacturacion(negocio_id: string): Promise<NegocioFacturacionConfig | null> {
+        try {
+            const config = await this.prisma.negocioFacturacionConfig.findUnique({
+                where: { negocio_id }
+            });
+            if (!config) return null;
+            const { fel_password, ...rest } = config;
+            return rest as NegocioFacturacionConfig;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async upsertFacturacion(negocio_id: string, data: NegocioFacturacionConfigActualizar): Promise<NegocioFacturacionConfig> {
+        try {
+            const config = await this.prisma.negocioFacturacionConfig.upsert({
+                where: { negocio_id },
+                update: data,
+                create: {
+                    ...data,
+                    negocio_id,
+                    fel_password: ""
+                }
+            });
+            const { fel_password, ...rest } = config;
+            return rest as NegocioFacturacionConfig;
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async obtenerEstadisticasGeneral(negocio_id: string, start?: Date, end?: Date): Promise<any> {
+        // Implementación pendiente o básica
+        try {
+            return {
+                ventasTotales: 0,
+                transaccionesCount: 0,
+            };
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
     }
 }

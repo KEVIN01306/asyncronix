@@ -10,6 +10,8 @@ import type { ActualizarMiNegocioUseCase } from "../application/actualizar-mi-ne
 import type { CambiarMonedaNegocioUseCase } from "../application/cambiar-moneda-negocio.usecase.js";
 import type { ObtenerLimitesNegocioUseCase } from "../application/obtener-limites-negocio.usecase.js";
 import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
+import type { ObtenerFacturacionNegocioUseCase } from "../application/obtener-facturacion-negocio.usecase.js";
+import type { ActualizarFacturacionNegocioUseCase } from "../application/actualizar-facturacion-negocio.usecase.js";
 
 export class NegocioController extends BaseController {
 
@@ -21,6 +23,8 @@ export class NegocioController extends BaseController {
         private readonly actualizarMiNegocioUseCase: ActualizarMiNegocioUseCase,
         private readonly cambiarMonedaNegocioUseCase: CambiarMonedaNegocioUseCase,
         private readonly obtenerLimitesNegocioUseCase: ObtenerLimitesNegocioUseCase,
+        private readonly obtenerFacturacionNegocioUseCase: ObtenerFacturacionNegocioUseCase,
+        private readonly actualizarFacturacionNegocioUseCase: ActualizarFacturacionNegocioUseCase,
         private readonly storageProvider: IStorageProvider
     ) {
         super()
@@ -102,6 +106,27 @@ export class NegocioController extends BaseController {
             const { negocio_id } = this.obtenerEntorno(res)
             const limites = await this.obtenerLimitesNegocioUseCase.execute(negocio_id)
             res.status(200).json(Respuesta.exito('Límites del negocio obtenidos con éxito', limites))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    obtenerFacturacion = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res)
+            const facturacion = await this.obtenerFacturacionNegocioUseCase.execute(negocio_id)
+            res.status(200).json(Respuesta.exito('Configuración fiscal obtenida con éxito', facturacion))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    actualizarFacturacion = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { negocio_id } = this.obtenerEntorno(res)
+            const data = req.body
+            const facturacion = await this.actualizarFacturacionNegocioUseCase.execute(negocio_id, data)
+            res.status(200).json(Respuesta.exito('Configuración fiscal actualizada con éxito', facturacion))
         } catch (error) {
             next(error)
         }

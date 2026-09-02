@@ -1,5 +1,5 @@
 import type { Paginated } from "@shared/domain/paginated.js";
-import type { ServicioDetalle, ServicioCrear, ServicioActualizar, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple, ServicioTarea, CambioSiguienteServicio } from "./servicio.entity.js";
+import type { ServicioDetalle, ServicioCrear, ServicioActualizar, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple, ServicioTarea, CambioSiguienteServicio, ServicioReparacion, ServicioCustodia, ServicioReparacionRepuesto } from "./servicio.entity.js";
 
 export interface ListarServiciosParams {
     negocio_id: string;
@@ -39,8 +39,8 @@ export interface ServicioRepository {
     registrarRepuestoCliente(data: import('./servicio.entity.js').ServicioRepuestoClienteCrear, servicio_id: string, negocio_id: string): Promise<import('./servicio.entity.js').ServicioRepuestoCliente>;
     eliminarRepuestoCliente(id: string, servicio_id: string, negocio_id: string): Promise<void>;
     // Inventory-backed repuestos (lote-based)
-    crearRepuestosAtomicos(servicio_id: string, detalles: any[], negocio_id: string, sucursal_id: string): Promise<any[]>;
-    crearRepuesto(servicio_id: string, detalle: any, negocio_id: string, sucursal_id: string): Promise<any>;
+    crearRepuestosAtomicos(servicio_id: string, detalles: any[], negocio_id: string, sucursal_id: string, servicio_reparacion_id?: string): Promise<any[]>;
+    crearRepuesto(servicio_id: string, detalle: any, negocio_id: string, sucursal_id: string, servicio_reparacion_id?: string): Promise<any>;
     eliminarRepuesto(id: string, servicio_id: string, negocio_id: string, sucursal_id: string): Promise<void>;
     eliminarTareasNoExtra(servicio_id: string, negocio_id: string): Promise<void>;
     crearTareasDesdeTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string): Promise<void>;
@@ -51,4 +51,19 @@ export interface ServicioRepository {
     eliminarCambioSiguienteServicio(id: string, servicio_id: string, negocio_id: string): Promise<void>;
     actualizarChecklistRespuestasPorTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string): Promise<void>;
     actualizarObservaciones(id: string, negocio_id: string, observaciones: string | null): Promise<ServicioDetalle>;
+
+    // Reparación
+    obtenerReparacionActiva(servicio_id: string, negocio_id: string): Promise<ServicioReparacion | null>;
+    crearReparacion(servicio_id: string, firma_entrada: string, negocio_id: string, options?: { tx?: any }): Promise<ServicioReparacion>;
+    obtenerReparacion(id: string, negocio_id: string): Promise<ServicioReparacion | null>;
+    actualizarReparacion(reparacion_id: string, data: { total?: number, descripcion?: string, fecha_salida?: Date, firma_salida?: string }, negocio_id: string): Promise<ServicioReparacion>;
+
+    // Repuestos solicitados
+    crearReparacionRepuesto(reparacion_id: string, data: Omit<ServicioReparacionRepuesto, 'id' | 'servicio_reparacion_id' | 'created_at' | 'updated_at'>, negocio_id: string): Promise<ServicioReparacionRepuesto>;
+    actualizarReparacionRepuesto(id: string, reparacion_id: string, data: Partial<Omit<ServicioReparacionRepuesto, 'id' | 'servicio_reparacion_id' | 'created_at' | 'updated_at'>>, negocio_id: string): Promise<ServicioReparacionRepuesto>;
+    eliminarReparacionRepuesto(id: string, reparacion_id: string, negocio_id: string): Promise<void>;
+
+    // Custodia
+    crearCustodia(servicio_id: string, negocio_id: string, options?: { tx?: any }): Promise<ServicioCustodia>;
+    actualizarCustodia(id: string, negocio_id: string, data: { descripcion?: string | null, total?: number, fecha_salida?: Date, firma_salida?: string }): Promise<ServicioCustodia>;
 }

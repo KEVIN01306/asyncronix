@@ -3,7 +3,7 @@ import { negocioController } from "../negocio.module.js";
 import { AuthMiddleware } from "@app/middlewares/AuthMiddleware.js";
 import { ValidarMiddleware } from "@app/middlewares/ValidarMiddleware.js";
 import { FileUploadMiddleware } from "@shared/presentation/middlewares/upload.middleware.js";
-import { negocioActualizarSchema, negocioCrearSchema, negocioCambiarMonedaSchema } from "./validators/negocio.validator.js";
+import { negocioActualizarSchema, negocioCrearSchema, negocioCambiarMonedaSchema, negocioFacturacionSchema } from "./validators/negocio.validator.js";
 
 const router = Router()
 
@@ -27,6 +27,17 @@ router.put("/me",
     FileUploadMiddleware.single('logo', 'negocios'),
     validarMiddleware.validarBody(negocioActualizarSchema),
     negocioController.editMe
+);
+
+router.get("/me/facturacion",
+    authMiddleware.verificarPermiso(['VER_NEGOCIOS_DETALLE_ME']),
+    negocioController.obtenerFacturacion
+);
+
+router.put("/me/facturacion",
+    authMiddleware.verificarPermiso(['EDITAR_NEGOCIOS']),
+    validarMiddleware.validarBody(negocioFacturacionSchema),
+    negocioController.actualizarFacturacion
 );
 
 router.put("/me/moneda",

@@ -1,5 +1,5 @@
 import type { RouteObject } from 'react-router-dom';
-import { ServiciosVehiculoListPage, ServicioVehiculoFormPage, ServicioVehiculoDetailPage, ServicioVehiculoCustomPage, ServicioVehiculoProgresoPage, ServicioVehiculoSalidaPage, ServicioVehiculoRepuestosPage, ServicioVehiculoHojaPage } from './servicio-lazy';
+import { ServiciosVehiculoListPage, ServicioVehiculoFormPage, ServicioVehiculoDetailPage, ServicioVehiculoCustomPage, ServicioVehiculoProgresoPage, ServicioVehiculoSalidaPage, ServicioVehiculoRepuestosPage, ServicioVehiculoHojaPage, ServicioReparacionConfiguracionPage, ServicioVehiculoCustodiaPage } from './servicio-lazy';
 import { RouteProtector } from '../../../shared/components/RouteProtector';
 import { ServicioStateGuard } from './components/ServicioStateGuard';
 import { ESTADO_SERVICIO_VEHICULO } from '../domain/servicio.constants';
@@ -36,10 +36,10 @@ export const servicioRoutes: RouteObject[] = [
                 path: ':id/hoja',
                 element: (
                     <RouteProtector requiredPermission="VER_SERVICIOS_DETALLE">
-                            <ServicioStateGuard
-                                requiredPermission="VER_SERVICIOS_DETALLE"
-                                validStates={[ESTADO_SERVICIO_VEHICULO.FINALIZADO]}
-                            >
+                        <ServicioStateGuard
+                            requiredPermission="VER_SERVICIOS_DETALLE"
+                            validStates={[ESTADO_SERVICIO_VEHICULO.FINALIZADO]}
+                        >
                             <ServicioVehiculoHojaPage />
                         </ServicioStateGuard>
                     </RouteProtector>
@@ -51,9 +51,30 @@ export const servicioRoutes: RouteObject[] = [
                     <RouteProtector requiredPermission="CONFIGURACION_SERVICIOS">
                         <ServicioStateGuard
                             requiredPermission="CONFIGURACION_SERVICIOS"
-                            validStates={[ESTADO_SERVICIO_VEHICULO.RECEPCION, ESTADO_SERVICIO_VEHICULO.EN_SERVICIO, ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS]}
+                            validStates={[ESTADO_SERVICIO_VEHICULO.RECEPCION, ESTADO_SERVICIO_VEHICULO.EN_SERVICIO, ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS, ESTADO_SERVICIO_VEHICULO.EN_REPARACION, ESTADO_SERVICIO_VEHICULO.EN_CUSTODIA]}
                         >
                             <ServicioVehiculoCustomPage />
+                        </ServicioStateGuard>
+                    </RouteProtector>
+                )
+            },
+            {
+                path: ':id/custodia',
+                element: (
+                    <RouteProtector requiredPermission="CONFIGURACION_SERVICIOS">
+                        <ServicioVehiculoCustodiaPage />
+                    </RouteProtector>
+                )
+            },
+            {
+                path: ':id/reparacion',
+                element: (
+                    <RouteProtector requiredPermission="EDITAR_SERVICIOS">
+                        <ServicioStateGuard
+                            requiredPermission="EDITAR_SERVICIOS"
+                            validStates={[ESTADO_SERVICIO_VEHICULO.EN_REPARACION]}
+                        >
+                            <ServicioReparacionConfiguracionPage />
                         </ServicioStateGuard>
                     </RouteProtector>
                 )
@@ -83,7 +104,7 @@ export const servicioRoutes: RouteObject[] = [
                     <RouteProtector requiredPermission="SALIDA_SERVICIOS">
                         <ServicioStateGuard
                             requiredPermission="SALIDA_SERVICIOS"
-                            validStates={[ESTADO_SERVICIO_VEHICULO.LISTO_ENTREGA]}
+                            validStates={[ESTADO_SERVICIO_VEHICULO.LISTO_ENTREGA, ESTADO_SERVICIO_VEHICULO.EN_REPARACION, ESTADO_SERVICIO_VEHICULO.EN_CUSTODIA]}
                         >
                             <ServicioVehiculoSalidaPage />
                         </ServicioStateGuard>
@@ -125,7 +146,7 @@ export const servicioRoutes: RouteObject[] = [
                                 ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS
                             ]}
                         >
-                        <ServicioVehiculoFormPage />
+                            <ServicioVehiculoFormPage />
                         </ServicioStateGuard>
                     </RouteProtector>
                 )

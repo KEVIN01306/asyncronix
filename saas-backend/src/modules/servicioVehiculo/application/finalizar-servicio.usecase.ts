@@ -30,7 +30,7 @@ export class FinalizarServicioUseCase {
         negocio_id: string,
         sucursal_id: string,
         usuario_id: string,
-        file: FileDTO,
+        files: FileDTO[],
         metodoPago: string,
         efectivoRecibido?: number | null,
         vuelto?: number | null,
@@ -42,56 +42,138 @@ export class FinalizarServicioUseCase {
         }
     ): Promise<ServicioDetalle> {
         try {
+
+            const servicio = await this.repository.obtener(id, negocio_id);
+            if (!servicio) throw new AppError('Servicio no encontrado', 'NOT_FOUND', 404);
+
+            const estadosPermitidos = [ESTADO_SERVICIO.LISTO_ENTREGA, ESTADO_SERVICIO.EN_REPARACION, ESTADO_SERVICIO.EN_CUSTODIA];
+            if (!estadosPermitidos.includes(servicio.estado as any)) {
+                throw new AppError('El servicio no está en un estado válido para dar salida', 'INVALID_STATE', 400);
+            }
+
+            if (!files || files.length === 0) {
+                throw new AppError('Las firmas son requeridas', 'FIRMA_REQUERIDA', 400);
+            }
+
+            const firmaClienteFile = files.find(f => (f as any).fieldname === 'firma_cliente');
+            if (!firmaClienteFile && !servicio.firma_salida) {
+                throw new AppError('La firma del cliente es requerida', 'FIRMA_REQUERIDA', 400);
+            }
+
+            if (!metodoPago) {
+                throw new AppError('El método de pago es requerido', 'METODO_PAGO_REQUERIDO', 400);
+            }
+
+            const subtotal = Number(servicio.subtotal ?? 0);
+            const totalRepuestos = (servicio.repuestos_inventario || []).reduce((acc: number, rep: any) => {
+                return acc + (Number(rep.precio_venta) * Number(rep.cantidad));
+            }, 0);
+            const totalReparaciones = (servicio.servicioReparacion || []).reduce((acc: number, rep: any) => {
+                const totalRep = (rep.servicioRepuestos || []).reduce((acc2: number, r: any) => {
+                    return acc2 + (Number(r.precio_venta) * Number(r.cantidad));
+                }, 0);
+                return acc + (Number(rep.total) || 0) + totalRep;
+            }, 0);
+            const totalCustodias = (servicio.servicioCustodias || []).reduce((acc: number, rep: any) => {
+                return acc + (Number(rep.total) || 0);
+            }, 0);
+            const totalCobro = subtotal + totalRepuestos + totalReparaciones + totalCustodias;
+
+            if (metodoPago === 'EFECTIVO') {
+                const recibido = Number(efectivoRecibido ?? 0);
+                const cambio = Number(vuelto ?? 0);
+
+                if (efectivoRecibido == null) {
+                    throw new AppError('El efectivo recibido es requerido para pagos en efectivo', 'EFECTIVO_RECIBIDO_REQUERIDO', 400);
+                }
+
+                if (vuelto == null) {
+                    throw new AppError('El vuelto es requerido para pagos en efectivo', 'VUELTO_REQUERIDO', 400);
+                }
+
+                if (!Number.isFinite(recibido) || recibido < totalCobro) {
+                    throw new AppError('El efectivo recibido es menor al total del servicio', 'PAGO_INSUFICIENTE', 400);
+                }
+
+                if (!Number.isFinite(cambio) || cambio < 0) {
+                    throw new AppError('El vuelto debe ser un número válido mayor o igual a cero', 'VUELTO_INVALIDO', 400);
+                }
+            }
+
+            const path = `tenant_${negocio_id}/services/vehiculo/srv_${id}`;
+            let firmaSalidaUrl = servicio.firma_salida;
+            if (firmaClienteFile) {
+                firmaSalidaUrl = await this.crearMediaUseCase.execute(firmaClienteFile, negocio_id, path, 'firma_salida.png');
+            }
+
+            // Subir firmas de reparaciones fuera de la transacción
+            const uploadedRepairSignatures: Record<string, string> = {};
+            const repairSignatureFiles = files.filter(f => (f as any).fieldname && (f as any).fieldname.startsWith('firma_reparacion_'));
+            for (const file of repairSignatureFiles) {
+                const reparacion_id = (file as any).fieldname.replace('firma_reparacion_', '');
+                const repPath = `tenant_${negocio_id}/services/vehiculo/srv_${id}/reparaciones/${reparacion_id}`;
+                const repairFirmaUrl = await this.crearMediaUseCase.execute(file, negocio_id, repPath, 'firma_salida.png');
+                uploadedRepairSignatures[reparacion_id] = repairFirmaUrl;
+            }
+
+            // Subir firmas de custodia fuera de la transacción
+            const uploadedCustodySignatures: Record<string, string> = {};
+            const custodySignatureFiles = files.filter(f => (f as any).fieldname && (f as any).fieldname.startsWith('firma_custodia_'));
+            for (const file of custodySignatureFiles) {
+                const custodia_id = (file as any).fieldname.replace('firma_custodia_', '');
+                const custPath = `tenant_${negocio_id}/services/vehiculo/srv_${id}/custodias/${custodia_id}`;
+                const custFirmaUrl = await this.crearMediaUseCase.execute(file, negocio_id, custPath, 'firma_salida.png');
+                uploadedCustodySignatures[custodia_id] = custFirmaUrl;
+            }
+
             return await this.transactionManager.run(async (tx) => {
-                const servicio = await this.repository.obtener(id, negocio_id);
-                if (!servicio) throw new AppError('Servicio no encontrado', 'NOT_FOUND', 404);
-
-                if (servicio.estado !== ESTADO_SERVICIO.LISTO_ENTREGA) {
-                    throw new AppError('El servicio no está en estado LISTO_ENTREGA', 'INVALID_STATE', 400);
-                }
-
-                if (!file) {
-                    throw new AppError('La firma del cliente es requerida', 'FIRMA_REQUERIDA', 400);
-                }
-
-                if (!metodoPago) {
-                    throw new AppError('El método de pago es requerido', 'METODO_PAGO_REQUERIDO', 400);
-                }
-
-                const path = `tenant_${negocio_id}/services/vehiculo/srv_${id}`;
-                const firmaSalidaUrl = await this.crearMediaUseCase.execute(file, negocio_id, path, 'firma_salida.png');
-
-                const totalCobro = Number(servicio.total ?? 0);
-
-                if (metodoPago === 'EFECTIVO') {
-                    const recibido = Number(efectivoRecibido ?? 0);
-                    const cambio = Number(vuelto ?? 0);
-
-                    if (efectivoRecibido == null) {
-                        throw new AppError('El efectivo recibido es requerido para pagos en efectivo', 'EFECTIVO_RECIBIDO_REQUERIDO', 400);
-                    }
-
-                    if (vuelto == null) {
-                        throw new AppError('El vuelto es requerido para pagos en efectivo', 'VUELTO_REQUERIDO', 400);
-                    }
-
-                    if (!Number.isFinite(recibido) || recibido < totalCobro) {
-                        throw new AppError('El efectivo recibido es menor al total del servicio', 'PAGO_INSUFICIENTE', 400);
-                    }
-
-                    if (!Number.isFinite(cambio) || cambio < 0) {
-                        throw new AppError('El vuelto debe ser un número válido mayor o igual a cero', 'VUELTO_INVALIDO', 400);
-                    }
-                }
-
                 const updatedServicio = await this.repository.actualizar(id, negocio_id, {
                     estado: ESTADO_SERVICIO.FINALIZADO,
-                    firma_salida: firmaSalidaUrl,
+                    firma_salida: firmaSalidaUrl ?? null,
                     MetodoPago: metodoPago as any,
                     efectivo_recibido: metodoPago === 'EFECTIVO' ? Number(efectivoRecibido) : null,
                     vuelto: metodoPago === 'EFECTIVO' ? Number(vuelto) : null,
-                    fecha_salida: new Date()
+                    fecha_salida: new Date(),
+                    total: totalCobro
                 }, { tx });
+
+                // Procesar firmas de reparaciones
+                const reparaciones = await tx.servicioReparacion.findMany({ where: { servicio_id: id } });
+                for (const rep of reparaciones) {
+                    let firma_url = rep.firma_salida;
+                    if (uploadedRepairSignatures[rep.id]) {
+                        firma_url = uploadedRepairSignatures[rep.id];
+                    }
+
+                    if (!firma_url) continue;
+
+                    await tx.servicioReparacion.update({
+                        where: { id: rep.id },
+                        data: {
+                            firma_salida: firma_url,
+                            fecha_salida: new Date()
+                        }
+                    });
+                }
+
+                // Procesar firmas de custodias
+                const custodias = await tx.servicioCustodia.findMany({ where: { servicio_id: id } });
+                for (const cust of custodias) {
+                    let firma_url = cust.firma_salida;
+                    if (uploadedCustodySignatures[cust.id]) {
+                        firma_url = uploadedCustodySignatures[cust.id];
+                    }
+
+                    if (!firma_url) continue;
+
+                    await tx.servicioCustodia.update({
+                        where: { id: cust.id },
+                        data: {
+                            firma_salida: firma_url,
+                            fecha_salida: cust.fecha_salida ?? new Date()
+                        }
+                    });
+                }
 
                 const negocioInfo = await tx.negocio.findUnique({ where: { id: negocio_id } });
                 const moneda_id = negocioInfo?.moneda_id;

@@ -36,7 +36,7 @@ const ServicioCustomPage = () => {
             setLoading(true);
             const response = await servicioRepository.obtener(id);
             setServicio(response);
-            
+
             if (response.tipo_servicio_id) {
                 try {
                     const ts = await TipoServicioRepository.Obtener(response.tipo_servicio_id);
@@ -75,7 +75,7 @@ const ServicioCustomPage = () => {
                         </Link>
                         <Typography color="text.primary">Configuración</Typography>
                     </Breadcrumbs>
-                    <Typography variant="h4" fontWeight={800} color="text.primary">Servicio #{servicio.id}</Typography>
+                    <Typography variant="body2" color="text.primary">#{servicio.id}</Typography>
                 </Box>
 
                 <ServiceGeneralInfo servicio={servicio} onEdit={() => navigate(`/servicios-vehiculo/${servicio.id}/editar`)} onMechanicUpdated={(s) => setServicio(s)} />
@@ -83,15 +83,22 @@ const ServicioCustomPage = () => {
                 {(
                     servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_SERVICIO ||
                     servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_PRUEBAS ||
-                    servicio.estado === ESTADO_SERVICIO_VEHICULO.ESPERA_REPUESTOS
+                    servicio.estado === ESTADO_SERVICIO_VEHICULO.ESPERA_REPUESTOS ||
+                    servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_REPARACION ||
+                    servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_CUSTODIA
                 ) && (
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                             <Button variant="outlined" onClick={() => navigate(`/servicios-vehiculo/${servicio.id}/progreso`)}>
                                 Ver progreso
                             </Button>
-                            {canManageRepuestos && (
+                            {canManageRepuestos && servicio.estado !== ESTADO_SERVICIO_VEHICULO.EN_CUSTODIA && (
                                 <Button variant="outlined" onClick={() => navigate(`/servicios-vehiculo/${servicio.id}/repuestos`)}>
                                     Administrar repuestos
+                                </Button>
+                            )}
+                            {servicio.estado === ESTADO_SERVICIO_VEHICULO.EN_REPARACION && (
+                                <Button color="primary" variant="contained" onClick={() => navigate(`/servicios-vehiculo/${servicio.id}/reparacion`)}>
+                                    Configurar Reparación
                                 </Button>
                             )}
                         </Stack>

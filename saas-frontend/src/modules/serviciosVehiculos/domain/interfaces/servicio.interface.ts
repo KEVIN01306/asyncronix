@@ -26,12 +26,20 @@ export interface ChecklistRespuesta {
 
 export interface ServicioRepuesto {
     id: string;
-    servicio_id: string;
+    servicio_id?: string | null;
+    servicio_reparacion_id?: string | null;
     lote_id?: string | null;
-    producto?: {
+    variante_id?: string | null;
+    variante?: {
         id: string;
-        nombre: string;
-    } | null;
+        sku?: string | null;
+        producto?: {
+            id: string;
+            nombre: string;
+            sku?: string;
+        } | null;
+        valores?: any[];
+    } | any;
     cantidad: number;
     precio_venta: number;
     costo?: number | null;
@@ -44,6 +52,18 @@ export interface ServicioRepuestoCliente {
     servicio_id: string;
     repuesto: string;
     cantidad: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ServicioCustodia {
+    id: string;
+    servicio_id: string;
+    descripcion?: string | null;
+    firma_salida?: string | null;
+    fecha_entrada: string;
+    fecha_salida?: string | null;
+    total: number;
     created_at: string;
     updated_at: string;
 }
@@ -71,6 +91,7 @@ export interface ServicioVehiculo {
     fecha_salida?: string | null;
     firma_entrada?: string | null;
     firma_salida?: string | null;
+    subtotal?: number | null;
     total?: number | null;
     efectivo_recibido?: number | null;
     vuelto?: number | null;
@@ -83,6 +104,8 @@ export interface ServicioVehiculo {
     checklist?: ChecklistRespuesta[];
     repuestos?: ServicioRepuestoCliente[];
     repuestos_inventario?: ServicioRepuesto[];
+    servicioReparacion?: ServicioReparacion[];
+    servicioCustodias?: ServicioCustodia[];
     tareas?: ServicioTarea[];
     cambios_siguiente_servicio?: CambioSiguienteServicio[];
     vehiculo?: {
@@ -136,3 +159,44 @@ export type ServicioVehiculoEstado = Pick<ServicioVehiculo, 'id' | 'estado'>;
 export type ServicioVehiculoDetailResponse = ApiResponse<ServicioVehiculo>;
 export type ServicioVehiculoEstadoResponse = ApiResponse<ServicioVehiculoEstado>;
 export type ServiciosVehiculoResponse = PaginatedResponse<ServicioVehiculo>;
+
+export type ProcedenciaRepuesto = 'PROPIO' | 'CLIENTE';
+
+export interface ServicioReparacionRepuesto {
+    id: string;
+    servicio_reparacion_id: string;
+    descripccion: string;
+    cantidad: number;
+    instrucciones: string;
+    entregado: boolean;
+    procedencia: ProcedenciaRepuesto;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ServicioReparacion {
+    id: string;
+    servicio_id: string;
+    firma_entrada?: string | null;
+    firma_salida?: string | null;
+    fecha_entrada: string;
+    fecha_salida?: string | null;
+    total: number;
+    descripcion?: string | null;
+    created_at: string;
+    updated_at: string;
+    servicio?: ServicioVehiculo;
+    servicioReparacionRepuestos?: ServicioReparacionRepuesto[];
+    servicioRepuestos?: ServicioRepuesto[];
+}
+
+export interface ServicioCustodia {
+    id: string;
+    servicio_id: string;
+    firma_salida?: string | null;
+    fecha_entrada: string;
+    fecha_salida?: string | null;
+    total: number;
+    created_at: string;
+    updated_at: string;
+}

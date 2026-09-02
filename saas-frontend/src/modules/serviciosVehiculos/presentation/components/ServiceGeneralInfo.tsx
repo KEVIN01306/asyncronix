@@ -7,14 +7,13 @@ import type { ServicioVehiculo } from '../../domain/interfaces/servicio.interfac
 import type { Vehiculo } from '../../../vehiculos/domain/interfaces/vehiculo.interface';
 import type { TipoServicio } from '../../../tipos-servicio/domain/interfaces/tipo-servicio.interface';
 import { ESTADO_SERVICIO_VEHICULO } from '../../domain/servicio.constants';
-import { formatMoney } from '../../../../core/utils/formatMoney';
 
 import AssignMechanicModal from './AssignMechanicModal';
 import ExternalClientModal from './ExternalClientModal';
 
 type Props = { servicio: ServicioVehiculo; onEdit?: () => void; onMechanicUpdated?: (s: ServicioVehiculo) => void };
 
-const ServiceGeneralInfo= ({ servicio, onEdit, onMechanicUpdated }: Props) => {
+const ServiceGeneralInfo = ({ servicio, onEdit, onMechanicUpdated }: Props) => {
     const navigate = useNavigate();
     const [vehiculo, setVehiculo] = useState<Vehiculo | null>(null);
     const [tipoServicio, setTipoServicio] = useState<TipoServicio | null>(null);
@@ -49,8 +48,10 @@ const ServiceGeneralInfo= ({ servicio, onEdit, onMechanicUpdated }: Props) => {
         if (typeof (onMechanicUpdated) === 'function') onMechanicUpdated(s as any);
     };
 
+
+
     return (
-        <Paper sx={{ p: 3 }}>
+        <Paper elevation={0} sx={{ border: '1px solid #eee', p: 3, mb: 3 }}>
             <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={2}>
                 <Box>
                     <Typography variant="h5" fontWeight={700}>Servicio #{servicio.id}</Typography>
@@ -107,7 +108,7 @@ const ServiceGeneralInfo= ({ servicio, onEdit, onMechanicUpdated }: Props) => {
                     <strong>Tipo de servicio:</strong>{' '}
                     {tipoServicio === null ? <Skeleton variant="text" width={140} /> : (tipoServicio?.nombre ?? 'Sin tipo')}
                 </Typography>
-                <Typography><strong>Total estimado:</strong>{formatMoney(servicio.total ?? 0)}</Typography>
+
                 <Typography><strong>Kilometraje:</strong> {servicio.kilometraje ?? 'N/A'}</Typography>
                 <Typography><strong>Kilometraje próximo:</strong> {servicio.kilometraje_proximo ?? 'N/A'}</Typography>
 

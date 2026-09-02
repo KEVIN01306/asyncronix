@@ -8,3 +8,5 @@ export const ServicioVehiculoCustomPage = lazy(() => import('./pages/ServicioVeh
 export const ServicioVehiculoProgresoPage = lazy(() => import('./pages/ServicioVehiculoProgresoPage.tsx'));
 export const ServicioVehiculoSalidaPage = lazy(() => import('./pages/ServicioVehiculoSalidaPage.tsx'));
 export const ServicioVehiculoRepuestosPage = lazy(() => import('./pages/ServicioVehiculoRepuestosPage.tsx'));
+export const ServicioReparacionConfiguracionPage = lazy(() => import('./pages/ServicioReparacionConfiguracionPage.tsx'));
+export const ServicioVehiculoCustodiaPage = lazy(() => import('./pages/ServicioVehiculoCustodiaPage.tsx'));

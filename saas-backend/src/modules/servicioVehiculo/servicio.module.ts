@@ -30,6 +30,13 @@ import { ActualizarObservacionesServicioUseCase } from './application/actualizar
 import { CrearCambioSiguienteServicioUseCase } from './application/crear-cambio-siguiente-servicio.usecase.js';
 import { ListarCambiosSiguienteServicioUseCase } from './application/listar-cambios-siguiente-servicio.usecase.js';
 import { EliminarCambioSiguienteServicioUseCase } from './application/eliminar-cambio-siguiente-servicio.usecase.js';
+import { MandarReparacionUseCase } from './application/mandar-reparacion.usecase.js';
+import { MandarCustodiaUseCase } from './application/mandar-custodia.usecase.js';
+import { AdministrarReparacionUseCase } from './application/administrar-reparacion.usecase.js';
+import { TerminarReparacionUseCase } from './application/terminar-reparacion.usecase.js';
+import { AdministrarRepuestoSolicitadoUseCase } from './application/administrar-repuesto-solicitado.usecase.js';
+import { ActualizarCustodiaUseCase } from './application/actualizar-custodia.usecase.js';
+import { TerminarCustodiaUseCase } from './application/terminar-custodia.usecase.js';
 import { ServicioController } from './presentation/servicio.controller.js';
 import { enviarNotificacionUseCase } from '../notificacion/notificacion.module.js';
 import { PrismaLoteRepository } from '../lote/infrastructure/prisma-lote.repository.js';
@@ -104,6 +111,13 @@ const actualizarObservacionesServicioUseCase = new ActualizarObservacionesServic
 const crearCambioSiguienteServicioUseCase = new CrearCambioSiguienteServicioUseCase(repository);
 const listarCambiosSiguienteServicioUseCase = new ListarCambiosSiguienteServicioUseCase(repository);
 const eliminarCambioSiguienteServicioUseCase = new EliminarCambioSiguienteServicioUseCase(repository);
+const mandarReparacionUseCase = new MandarReparacionUseCase(repository, enviarNotificacionUseCase, crearMediaUseCase);
+const mandarCustodiaUseCase = new MandarCustodiaUseCase(repository, enviarNotificacionUseCase);
+const administrarReparacionUseCase = new AdministrarReparacionUseCase(repository);
+const terminarReparacionUseCase = new TerminarReparacionUseCase(repository, crearMediaUseCase);
+const administrarRepuestoSolicitadoUseCase = new AdministrarRepuestoSolicitadoUseCase(repository);
+const actualizarCustodiaUseCase = new ActualizarCustodiaUseCase(repository);
+const terminarCustodiaUseCase = new TerminarCustodiaUseCase(repository, crearMediaUseCase);
 
 export const servicioController = new ServicioController(
     obtenerServiciosUseCase,
@@ -136,4 +150,11 @@ export const servicioController = new ServicioController(
     crearCambioSiguienteServicioUseCase,
     listarCambiosSiguienteServicioUseCase,
     eliminarCambioSiguienteServicioUseCase,
+    mandarReparacionUseCase,
+    terminarReparacionUseCase,
+    mandarCustodiaUseCase,
+    administrarReparacionUseCase,
+    administrarRepuestoSolicitadoUseCase,
+    actualizarCustodiaUseCase,
+    terminarCustodiaUseCase
 );

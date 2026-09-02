@@ -1,14 +1,23 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import { getPdfStyles, PDF_COLORS } from '../../../../core/theme/pdfTheme'; 
+import { getPdfStyles, PDF_COLORS } from '../../../../core/theme/pdfTheme';
 import type { ServicioVehiculo } from '../../domain/interfaces/servicio.interface';
+
+const getAbsoluteUrl = (url: string | undefined | null, fallback = ''): string => {
+    if (!url) {
+        if (!fallback) return '';
+        return fallback.startsWith('http') ? fallback : `${window.location.origin}${fallback.startsWith('/') ? '' : '/'}${fallback}`;
+    }
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 // 1. Instanciamos los estilos base estáticos
 const baseStyles = getPdfStyles();
 
 const styles = StyleSheet.create({
-    ...baseStyles, 
-    
+    ...baseStyles,
+
     headerGrid: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -91,8 +100,7 @@ interface HojaServicioPdfProps {
 }
 
 export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user }) => {
-    const baseUrl = import.meta.env.VITE_API_URL;
-    const logoSrc = user?.negocio?.logo_url ? `${baseUrl}/${user.negocio.logo_url}` : '/icons/asyncronix_corto.png';
+    const logoSrc = { uri: getAbsoluteUrl(user?.negocio?.logo_url, '/icons/asyncronix_corto.png'), method: 'GET', headers: { 'Cache-Control': 'no-cache' } };
     console.log('Generando PDF para servicio:', servicio, logoSrc);
     const tareasNormales = (servicio.tareas || []).filter((tarea) => !tarea.extra);
     const tareasExtras = (servicio.tareas || []).filter((tarea) => tarea.extra);
@@ -290,8 +298,8 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                             {servicio.repuestos_inventario && servicio.repuestos_inventario.length > 0 ? (
                                 servicio.repuestos_inventario.map((row: any, index: number) => {
                                     const variante = row.variante;
-                                    
-                                    const atributos = variante 
+
+                                    const atributos = variante
                                         ? (variante.valores ?? []).map((v: any) => `${v.atributo?.nombre}: ${v.valor}`).join(', ')
                                         : '';
                                     const textoRepuesto = variante
@@ -313,7 +321,7 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                                 <Text style={styles.noDataCell}>No hay registros.</Text>
                             )}
                         </View>
-                            
+
                     </View>
                 </View>
 
@@ -322,7 +330,7 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                     <View style={styles.signatureBox}>
                         <View style={styles.signatureImgBox}>
                             {servicio.firma_entrada ? (
-                                <Image src={`${baseUrl}/${servicio.firma_entrada}`} style={styles.signatureImg} />
+                                <Image src={{ uri: getAbsoluteUrl(servicio.firma_entrada), method: 'GET', headers: { 'Cache-Control': 'no-cache' } }} style={styles.signatureImg} />
                             ) : (
                                 <Text style={styles.signaturePlaceholder}>F</Text>
                             )}
@@ -333,7 +341,7 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                     <View style={styles.signatureBox}>
                         <View style={styles.signatureImgBox}>
                             {servicio.firma_salida ? (
-                                <Image src={`${baseUrl}/${servicio.firma_salida}`} style={styles.signatureImg} />
+                                <Image src={{ uri: getAbsoluteUrl(servicio.firma_salida), method: 'GET', headers: { 'Cache-Control': 'no-cache' } }} style={styles.signatureImg} />
                             ) : (
                                 <Text style={styles.signaturePlaceholder}>F</Text>
                             )}
@@ -341,6 +349,136 @@ export const HojaServicioPdf: React.FC<HojaServicioPdfProps> = ({ servicio, user
                         <Text style={styles.signatureLabel}>Firma Cliente (Salida)</Text>
                     </View>
                 </View>
+
+                {servicio.servicioReparacion && servicio.servicioReparacion.length > 0 && (
+                    <View>
+                        <View style={styles.divider} />
+                        <Text style={[styles.mainTitle, { fontSize: 16, marginBottom: 10 }]}>Reparaciones Asociadas</Text>
+                        {servicio.servicioReparacion.map((rep: any, index: number) => (
+                            <View key={index} style={{ marginBottom: 20 }}>
+                                <Text style={styles.tableSectionTitle}>Reparación #{index + 1}</Text>
+                                {rep.descripcion && (
+                                    <View style={styles.infoRow}>
+                                        <Text style={styles.label}>Descripción:</Text>
+                                        <Text style={styles.value}>{rep.descripcion}</Text>
+                                    </View>
+                                )}
+
+                                <View style={styles.flexRowBetween}>
+                                    <View style={styles.halfTableWrapper}>
+                                        <Text style={styles.tableSectionTitle}>Repuestos Solicitados</Text>
+                                        <View style={styles.tableContainer}>
+                                            <View style={styles.tableHeader}>
+                                                <Text style={[styles.tableHeaderCell, { width: '50%' }]}>Descripción</Text>
+                                                <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Cant.</Text>
+                                                <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Proc.</Text>
+                                                <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Entregado</Text>
+                                            </View>
+                                            {rep.servicioReparacionRepuestos && rep.servicioReparacionRepuestos.length > 0 ? (
+                                                rep.servicioReparacionRepuestos.map((r: any, idx: number) => (
+                                                    <View key={idx} style={styles.tableRow}>
+                                                        <Text style={[styles.tableCell, { width: '50%' }]}>{r.descripccion || '-'}</Text>
+                                                        <Text style={[styles.tableCell, { width: '15%' }]}>{r.cantidad ?? '0'}</Text>
+                                                        <Text style={[styles.tableCell, { width: '20%' }]}>{r.procedencia || '-'}</Text>
+                                                        <Text style={[styles.tableCell, { width: '15%' }]}>{r.entregado ? 'Si' : 'No'}</Text>
+                                                    </View>
+                                                ))
+                                            ) : (
+                                                <Text style={styles.noDataCell}>No hay registros.</Text>
+                                            )}
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.halfTableWrapper}>
+                                        <Text style={styles.tableSectionTitle}>Repuestos de Inventario</Text>
+                                        <View style={styles.tableContainer}>
+                                            <View style={styles.tableHeader}>
+                                                <Text style={[styles.tableHeaderCell, { width: '70%' }]}>Repuesto</Text>
+                                                <Text style={[styles.tableHeaderCell, { width: '30%' }]}>Cant.</Text>
+                                            </View>
+                                            {rep.servicioRepuestos && rep.servicioRepuestos.length > 0 ? (
+                                                rep.servicioRepuestos.map((r: any, idx: number) => {
+                                                    const variante = r.variante;
+                                                    const atributos = variante ? (variante.valores ?? []).map((v: any) => `${v.atributo?.nombre}: ${v.valor}`).join(', ') : '';
+                                                    const textoRepuesto = variante ? `${variante.producto?.nombre || '-'} ${atributos ? `(${atributos})` : ''}` : '-';
+                                                    return (
+                                                        <View key={idx} style={styles.tableRow}>
+                                                            <Text style={[styles.tableCell, { width: '70%' }]}>{textoRepuesto}</Text>
+                                                            <Text style={[styles.tableCell, { width: '30%' }]}>{r.cantidad ?? '0'}</Text>
+                                                        </View>
+                                                    );
+                                                })
+                                            ) : (
+                                                <Text style={styles.noDataCell}>No hay registros.</Text>
+                                            )}
+                                        </View>
+                                    </View>
+                                </View>
+
+                                <View style={[styles.signaturesContainer, { marginTop: 10 }]}>
+                                    <View style={styles.signatureBox}>
+                                        <View style={styles.signatureImgBox}>
+                                            {rep.firma_entrada ? (
+                                                <Image src={{ uri: getAbsoluteUrl(rep.firma_entrada), method: 'GET', headers: { 'Cache-Control': 'no-cache' } }} style={styles.signatureImg} />
+                                            ) : (
+                                                <Text style={styles.signaturePlaceholder}>F</Text>
+                                            )}
+                                        </View>
+                                        <Text style={styles.signatureLabel}>Firma Entrada Reparación {index + 1}</Text>
+                                    </View>
+                                    <View style={styles.signatureBox}>
+                                        <View style={styles.signatureImgBox}>
+                                            {rep.firma_salida ? (
+                                                <Image src={{ uri: getAbsoluteUrl(rep.firma_salida), method: 'GET', headers: { 'Cache-Control': 'no-cache' } }} style={styles.signatureImg} />
+                                            ) : (
+                                                <Text style={styles.signaturePlaceholder}>F</Text>
+                                            )}
+                                        </View>
+                                        <Text style={styles.signatureLabel}>Firma Salida Reparación {index + 1}</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                )}
+
+                {servicio.servicioCustodias && servicio.servicioCustodias.length > 0 && (
+                    <View>
+                        <View style={styles.divider} />
+                        <Text style={[styles.mainTitle, { fontSize: 16, marginBottom: 10 }]}>Custodias Asociadas</Text>
+                        {servicio.servicioCustodias.map((cust: any, index: number) => (
+                            <View key={index} style={{ marginBottom: 20 }}>
+                                <Text style={styles.tableSectionTitle}>Custodia #{index + 1}</Text>
+                                {cust.descripcion && (
+                                    <View style={styles.infoRow}>
+                                        <Text style={styles.label}>Descripción:</Text>
+                                        <Text style={styles.value}>{cust.descripcion}</Text>
+                                    </View>
+                                )}
+                                <View style={styles.infoRowHalf}>
+                                    <Text style={styles.label}>Fecha Entrada:</Text>
+                                    <Text style={styles.value}>{new Date(cust.fecha_entrada).toLocaleString()}</Text>
+                                </View>
+                                <View style={styles.infoRowHalf}>
+                                    <Text style={styles.label}>Fecha Salida:</Text>
+                                    <Text style={styles.value}>{cust.fecha_salida ? new Date(cust.fecha_salida).toLocaleString() : 'En curso'}</Text>
+                                </View>
+                                <View style={[styles.signaturesContainer, { marginTop: 10, justifyContent: 'center' }]}>
+                                    <View style={styles.signatureBox}>
+                                        <View style={styles.signatureImgBox}>
+                                            {cust.firma_salida ? (
+                                                <Image src={{ uri: getAbsoluteUrl(cust.firma_salida), method: 'GET', headers: { 'Cache-Control': 'no-cache' } }} style={styles.signatureImg} />
+                                            ) : (
+                                                <Text style={styles.signaturePlaceholder}>F</Text>
+                                            )}
+                                        </View>
+                                        <Text style={styles.signatureLabel}>Firma Salida Custodia {index + 1}</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                )}
 
             </Page>
         </Document>

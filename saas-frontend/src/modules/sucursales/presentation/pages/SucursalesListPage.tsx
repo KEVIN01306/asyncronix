@@ -27,9 +27,11 @@ const SucursalesListPage = () => {
     const abortRef = useRef<AbortController | null>(null);
 
     const columns = [
-        { id: 'nombre', name: 'Nombre', format: (value: any) => value.toUpperCase() },
+        { id: 'nombre', name: 'Nombre', format: (value: any) => value?.toUpperCase() || '' },
         { id: 'direccion', name: 'Dirección' },
-        { id: 'es_principal', name: 'Principal', format: (value: any) => <Chip color='primary' label={value ? 'Sí' : 'No'} /> }
+        { id: 'ubicacion', name: 'Ubicación', format: (_: any, row: any) => row.division_nivel_2 ? `${row.division_nivel_2.nombre}, ${row.division_nivel_2.division_nivel_1.nombre}` : 'N/A' },
+        { id: 'codigo_establecimiento', name: 'Establecimiento', format: (value: any) => value || 'N/A' },
+        { id: 'es_principal', name: 'Principal', format: (value: any) => <Chip color={value ? 'primary' : 'default'} size="small" label={value ? 'Sí' : 'No'} /> }
     ];
 
     const actions = [
