@@ -17,7 +17,7 @@ export const NegocioFacturacionTab = () => {
     const [isEditing, setIsEditing] = useState(false);
 
     const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<NegocioFacturacionFormValues>({
-        resolver: zodResolver(negocioFacturacionSchema)
+        resolver: zodResolver(negocioFacturacionSchema) as any
     });
 
     const fetchFacturacion = async () => {
