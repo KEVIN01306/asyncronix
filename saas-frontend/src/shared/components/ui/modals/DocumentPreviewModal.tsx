@@ -6,7 +6,7 @@ import { servicioRepository } from '../../../../modules/serviciosVehiculos/infra
 import { negocioRepository } from '../../../../modules/negocio/infrastructure/repositories/negocio.repository';
 import { sucursalRepository } from '../../../../modules/sucursales/infrastructure/repositories/sucursal.repository';
 import { negocioFacturacionRepository } from '../../../../modules/negocio/infrastructure/repositories/negocio-facturacion.repository';
-import { NumerosALetras } from 'numero-a-letras';
+import { numeroALetras } from '../../../../core/utils/numeroALetras';
 import { FacturaTermicaPreview } from '../../../../shared/components/ui/FacturaTermicaPreview';
 import type { FacturaTermicaData } from '../../../../shared/interfaces/factura-termica.interface';
 import ConfirmDialog from '../../../../shared/components/ui/dialog/ConfirmDialog';
@@ -174,12 +174,7 @@ export default function DocumentPreviewModal({ open, documentoId, tipoDocumento,
             total: documento.total,
             efectivo_recibido: documento.efectivo_recibido,
             cambio: documento.vuelto,
-            total_letras: NumerosALetras(documento.total, {
-                plural: 'QUETZALES',
-                singular: 'QUETZAL',
-                centPlural: 'CENTAVOS',
-                centSingular: 'CENTAVO'
-            }).replace('Pesos', 'Quetzales').replace('M.N.', '').toUpperCase(),
+            total_letras: numeroALetras(documento.total),
 
             certificador_nombre: 'Digifact S.A.',
             certificador_nit: '77454820',
