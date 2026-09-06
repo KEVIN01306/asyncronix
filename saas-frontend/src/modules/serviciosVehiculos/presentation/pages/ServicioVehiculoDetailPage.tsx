@@ -519,7 +519,7 @@ const ServicioDetailPage = () => {
                         <Typography variant="body2" color="text.secondary" mt={2}>No hay custodias registradas</Typography>
                     ) : (
                         servicio.servicioCustodias.map((cust, index) => (
-                            <Box key={cust.id} sx={{ p: 2, mt: 2, width: '100%', backgroundColor: '#f9f9f9', borderRadius: 2 }}>
+                            <Box key={cust.id} sx={{ p: 2, mt: 2, width: '100%', borderRadius: 2 }}>
                                 <Typography variant="subtitle1" fontWeight={600} color="primary">Custodia #{index + 1} - Total: {formatMoney(cust.total)}</Typography>
                                 <Typography variant="caption" color="text.secondary" display="block" mb={2}>
                                     Entrada: {new Date(cust.fecha_entrada).toLocaleDateString()} {cust.fecha_salida ? `- Salida: ${new Date(cust.fecha_salida).toLocaleDateString()}` : ''}

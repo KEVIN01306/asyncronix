@@ -654,7 +654,7 @@ const ServicioSalidaPage = () => {
                         </Grid>
                     )}
                     {servicio.servicioReparacion?.map((rep, index) => (
-                        <Grid container size={12} key={rep.id} spacing={3} sx={{ backgroundColor: '#fdfdfd', borderRadius: 2, p: { xs: 2, md: 3 }, mb: 3 }}>
+                        <Grid container size={12} key={rep.id} spacing={3} sx={{ borderRadius: 2, p: { xs: 2, md: 3 }, mb: 3 }}>
                             <Grid size={12}>
                                 <Typography variant="h6" color="primary">Reparación #{index + 1}</Typography>
                                 {rep.descripcion && (
@@ -737,7 +737,7 @@ const ServicioSalidaPage = () => {
                         </Grid>
                     )}
                     {servicio.servicioCustodias?.map((cust, index) => (
-                        <Grid container size={12} key={cust.id} spacing={3} sx={{ backgroundColor: '#fdfdfd', borderRadius: 2, p: { xs: 2, md: 3 }, mb: 3 }}>
+                        <Grid container size={12} key={cust.id} spacing={3} sx={{ borderRadius: 2, p: { xs: 2, md: 3 }, mb: 3 }}>
                             <Grid size={12}>
                                 <Typography variant="h6" color="primary">Custodia #{index + 1}</Typography>
                                 {cust.descripcion && (
