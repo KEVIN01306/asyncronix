@@ -7,6 +7,7 @@ export interface NegocioFacturacionConfig {
     codigo_escenario: number;
     correo_emisor: string;
     fel_username: string;
+    fel_password?: string;
     fel_ambiente: string;
     activo?: boolean;
 }

@@ -75,9 +75,9 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             const record = await this.prisma.servicioVehiculo.findFirst({
                 where: { servicio_id: id, servicio: { negocio_id, activo: true } },
                 include: {
-                    servicio: { include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, CambiosSiguienteServicio: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } }, tipo_servicio: { include: { opciones: { include: { opcion_servicio: true } } } }, ServicioRepuestoCliente: true, repuestos: { include: { variante: { include: { producto: true, valores: { include: { atributo: true } } } } } }, servicioReparacion: { include: { servicioReparacionRepuestos: true, servicioRepuestos: { include: { variante: { include: { producto: true, valores: { include: { atributo: true } } } } } } } }, servicioCustodia: true } },
+                    servicio: { include: { imagenes: true, checklist: { include: { checklist_item: { select: { id: true, nombre: true } } } }, tareas: true, CambiosSiguienteServicio: true, cliente: { select: { id: true, nombre: true, telefono: true, email: true, dpi: true } }, tipo_servicio: { include: { opciones: { include: { opcion_servicio: true } } } }, ServicioRepuestoCliente: true, repuestos: { include: { variante: { include: { producto: true, valores: { include: { atributo: true } } } } } }, servicioReparacion: { include: { servicioReparacionRepuestos: true, servicioRepuestos: { include: { variante: { include: { producto: true, valores: { include: { atributo: true } } } } } } } }, servicioCustodia: true, facturas: true } },
                     vehiculo: { include: { modelo: true } },
-                    mecanico: { select: { id: true, nombre: true, apellido: true, email: true } }
+                    mecanico: { select: { id: true, nombre: true, apellido: true, email: true } },
                 }
             });
 
@@ -532,7 +532,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             const servicio = await this.prisma.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
             if (!servicio) throw new Error('Servicio no encontrado');
 
-            const created = await this.prisma.servicioRepuesto.create({ data: { servicio_id: servicio_reparacion_id ? null : servicio_id, servicio_reparacion_id, variante_id: detalle.variante_id ?? undefined, lote_id: detalle.lote_id ?? undefined, cantidad: detalle.cantidad, precio_venta: detalle.precio_venta, costo: detalle.costo_unitario ?? undefined }, include: { lote: { include: { variante: { include: { producto: true } } } } } });
+            const created = await this.prisma.servicioRepuesto.create({ data: { servicio_id: servicio_reparacion_id ? null : servicio_id, servicio_reparacion_id: servicio_reparacion_id ?? null, variante_id: detalle.variante_id ?? null, lote_id: detalle.lote_id ?? null, cantidad: detalle.cantidad, precio_venta: detalle.precio_venta, costo: detalle.costo_unitario ?? null }, include: { lote: { include: { variante: { include: { producto: true } } } } } });
 
             return created;
         } catch (error) {
@@ -846,7 +846,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
                 where: { id },
                 include: { servicio: true }
             });
-            
+
             if (!custodia || custodia.servicio.negocio_id !== negocio_id) {
                 throw new Error('Custodia no encontrada');
             }

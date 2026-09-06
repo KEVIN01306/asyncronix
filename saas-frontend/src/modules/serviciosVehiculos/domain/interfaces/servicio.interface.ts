@@ -142,6 +142,8 @@ export interface ServicioVehiculo {
         apellido?: string | null;
         email?: string | null;
     } | null;
+    factura?: any;
+    factura_error?: string;
 }
 
 export interface ServicioTarea {

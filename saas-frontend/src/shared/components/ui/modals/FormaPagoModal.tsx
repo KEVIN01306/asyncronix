@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, MenuItem, Select, FormControl, InputLabel, TextField, CircularProgress } from '@mui/material';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 
@@ -11,7 +11,7 @@ type Props = {
     loading?: boolean;
 };
 
-export default function SalePaymentModal({ open, onClose, onConfirm, total, clienteLabel, loading = false }: Props) {
+export default function FormaPagoModal({ open, onClose, onConfirm, total, clienteLabel, loading = false }: Props) {
     const [metodo, setMetodo] = useState('EFECTIVO');
     const [efectivoRecibido, setEfectivoRecibido] = useState<string>('');
 
@@ -27,6 +27,19 @@ export default function SalePaymentModal({ open, onClose, onConfirm, total, clie
     };
 
     const isCashInvalid = metodo === 'EFECTIVO' && Number(efectivoRecibido || 0) < total;
+
+    useEffect(() => {
+        if (!open) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+                if (loading || isCashInvalid) return;
+                e.preventDefault();
+                handleConfirm();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [open, loading, isCashInvalid, handleConfirm]);
 
     return (
         <Dialog key={open ? 'open' : 'closed'} open={open} onClose={loading ? undefined : onClose} fullWidth maxWidth="sm">
@@ -56,6 +69,12 @@ export default function SalePaymentModal({ open, onClose, onConfirm, total, clie
                             type="number"
                             value={efectivoRecibido}
                             onChange={(e) => setEfectivoRecibido(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !isCashInvalid && !loading) {
+                                    e.preventDefault();
+                                    handleConfirm();
+                                }
+                            }}
                             inputProps={{ min: 0, step: 0.01 }}
                         />
                         <Typography variant="body2" color={isCashInvalid ? 'error' : 'text.secondary'}>

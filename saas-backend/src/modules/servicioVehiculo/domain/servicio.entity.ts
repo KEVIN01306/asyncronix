@@ -143,6 +143,7 @@ export interface ServicioDetalle extends Servicio {
     repuestos_inventario?: ServicioRepuesto[];
     servicioReparacion?: any[];
     servicioCustodias?: ServicioCustodia[];
+    factura?: any;
 }
 
 export type ServicioCrear = Omit<Servicio, 'id' | 'activo' | 'created_at' | 'updated_at' | 'fecha_entrada' | 'estado'> & {

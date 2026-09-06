@@ -227,17 +227,17 @@ const VentasListPage = () => {
             >
                 <Stack direction={isMobile ? 'column' : 'row'} spacing={1} sx={{ flex: 1, width: isMobile ? '100%' : 'auto' }}>
                     {/* Agregamos sx={{ flex: 1 }} aquí */}
-                    <TextField 
-                        value={filtroQ ?? ''} 
+                    <TextField
+                        value={filtroQ ?? ''}
                         onChange={(e) => {
                             const v = e.target.value || null;
                             setFiltroQ(v);
                             applyFiltersToSearchParams({ q: v });
-                        }} 
-                        label="Buscar" 
-                        placeholder="Ej: Cliente, producto o id" 
-                        InputProps={{ startAdornment: (<InputAdornment position="start"><Search color="primary" /></InputAdornment>) }} 
-                        sx={{ flex: 1 }} 
+                        }}
+                        label="Buscar"
+                        placeholder="Ej: Cliente, producto o id"
+                        InputProps={{ startAdornment: (<InputAdornment position="start"><Search color="primary" /></InputAdornment>) }}
+                        sx={{ flex: 1 }}
                     />
                     <Button
                         variant="outlined"
@@ -254,7 +254,7 @@ const VentasListPage = () => {
 
             <TableContainer>
                 {loading ? (
-                    <Loading/>                
+                    <Loading />
                 ) : (
                     <ListTable
                         data={ventas}

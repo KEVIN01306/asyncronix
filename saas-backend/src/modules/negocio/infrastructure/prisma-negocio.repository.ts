@@ -162,8 +162,7 @@ export class PrismaNegocioRepository implements NegocioRepository {
                 where: { negocio_id }
             });
             if (!config) return null;
-            const { fel_password, ...rest } = config;
-            return rest as NegocioFacturacionConfig;
+            return config as NegocioFacturacionConfig;
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
@@ -171,17 +170,19 @@ export class PrismaNegocioRepository implements NegocioRepository {
 
     async upsertFacturacion(negocio_id: string, data: NegocioFacturacionConfigActualizar): Promise<NegocioFacturacionConfig> {
         try {
+            const { fel_password, ...restUpdateData } = data;
+            const updatePayload = fel_password ? { ...restUpdateData, fel_password } : restUpdateData;
+
             const config = await this.prisma.negocioFacturacionConfig.upsert({
                 where: { negocio_id },
-                update: data,
+                update: updatePayload,
                 create: {
                     ...data,
-                    negocio_id,
-                    fel_password: ""
+                    fel_password: fel_password ?? "",
+                    negocio_id
                 }
             });
-            const { fel_password, ...rest } = config;
-            return rest as NegocioFacturacionConfig;
+            return config as NegocioFacturacionConfig;
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

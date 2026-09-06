@@ -41,6 +41,7 @@ export interface VentaDetalleSimple {
 export interface VentaClienteInfo {
     id: string;
     nombre: string;
+    nit?: string | null;
     dpi?: string | null;
 }
 
@@ -64,16 +65,31 @@ export interface VentaSimple {
     total: number;
     total_costo: number;
     comentarios?: string | null;
+    motivo_anulacion?: string | null;
     estado: EstadoVenta;
     metodo_pago: MetodoPago;
     created_at: Date;
     updated_at: Date;
     vendedor_nombre: string;
     cliente_nombre: string | undefined;
+    efectivo_recibido?: number | null;
+    vuelto?: number | null;
     cliente?: VentaClienteInfo | null;
     vehiculo?: VentaVehiculoInfo | null;
 }
 
 export interface VentaObtenerDetalle extends VentaSimple {
     detalles: VentaDetalleSimple[];
+    factura?: {
+        id: string;
+        estado: string;
+        dte_uuid: string | null;
+        serie: string | null;
+        numero_factura: string | null;
+        dte_sat_xml: string | null;
+        dle_sat_pdf: string | null;
+        fecha_certificacion: Date | null;
+        receptor_nit: string | null;
+        receptor_nombre: string | null;
+    } | null;
 }

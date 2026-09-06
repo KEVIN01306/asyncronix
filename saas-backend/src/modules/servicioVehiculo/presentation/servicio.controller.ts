@@ -247,7 +247,8 @@ export class ServicioController extends BaseController {
                 caja_id,
                 token_autorizado,
                 forzar_caja_en_linea,
-                cuenta_bancaria_id
+                cuenta_bancaria_id,
+                cliente_id
             } = req.body;
             
             const opcionesFinancieras = { 
@@ -266,7 +267,8 @@ export class ServicioController extends BaseController {
                 metodo_pago, 
                 efectivo_recibido != null && efectivo_recibido !== '' ? parseFloat(efectivo_recibido) : null, 
                 vuelto != null && vuelto !== '' ? parseFloat(vuelto) : null,
-                opcionesFinancieras
+                opcionesFinancieras,
+                cliente_id
             );
             res.status(200).json(Respuesta.exito('Servicio finalizado con éxito', servicio));
         } catch (error) {

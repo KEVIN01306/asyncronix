@@ -221,6 +221,9 @@ model NegocioFacturacionConfig {
   fel_password String @db.Text
   fel_ambiente String @default("TEST") @db.VarChar(10) // "TEST" o "PRODUCCION"
 
+  token_temporal  String?   @db.Text
+  token_expira_at DateTime?
+
   activo     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -1009,6 +1012,7 @@ model Venta {
   total             Float
   total_costo       Float
   comentarios       String?     @db.Text
+  motivo_anulacion  String?     @db.Text
   efectivo_recibido Float?
   vuelto            Float?
   estado            EstadoVenta @default(PENDIENTE)
@@ -1071,6 +1075,7 @@ model Factura {
   numero_factura   String  @db.VarChar(50)
   dte_uuid         String? @unique @db.VarChar(100) // Número de autorización SAT
   dte_sat_xml      String? @db.LongText // XML firmado completo
+  dle_sat_pdf      String? @db.LongText // PDF firmado completo
   dte_certificador String? @db.VarChar(100)
   acuse_recibo_sat String? @db.VarChar(255)
 

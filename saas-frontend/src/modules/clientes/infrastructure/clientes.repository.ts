@@ -35,5 +35,9 @@ export const clienteRepository = {
     buscarPorDpi: async (dpi: string): Promise<ApiResponse<Cliente | null>> => {
         const response = await api.get<ApiResponse<Cliente | null>>(`${URL_MODULE}/dpi/${encodeURIComponent(dpi)}`);
         return response as any;
+    },
+    consultarNitDigifact: async (nit: string): Promise<ApiResponse<{ nit: string, nombre: string }>> => {
+        const response = await api.get<ApiResponse<{ nit: string, nombre: string }>>(`/facturacion/digifact/nit/${encodeURIComponent(nit)}`);
+        return response as any;
     }
 };

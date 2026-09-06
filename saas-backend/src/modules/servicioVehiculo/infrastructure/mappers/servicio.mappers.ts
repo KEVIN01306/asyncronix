@@ -237,7 +237,20 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         total: custodia.total,
         created_at: custodia.created_at,
         updated_at: custodia.updated_at
-    }))
+    })),
+    factura: (record.facturas && record.facturas.length > 0) ? {
+        id: record.facturas[0].id,
+        estado: record.facturas[0].estado,
+        dte_uuid: record.facturas[0].dte_uuid ?? null,
+        serie: record.facturas[0].serie ?? null,
+        numero_factura: record.facturas[0].numero_factura ?? null,
+        dte_sat_xml: record.facturas[0].dte_sat_xml ?? null,
+        dle_sat_pdf: record.facturas[0].dle_sat_pdf ?? null,
+        fecha_certificacion: record.facturas[0].fecha_certificacion ?? null,
+        created_at: record.facturas[0].created_at,
+        receptor_nit: record.facturas[0].receptor_nit ?? null,
+        receptor_nombre: record.facturas[0].receptor_nombre ?? null,
+    } : null
 });
 
 export const mapChecklistRespuesta = (record: any): ChecklistRespuestaSimple => ({

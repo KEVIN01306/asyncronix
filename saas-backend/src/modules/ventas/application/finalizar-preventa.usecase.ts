@@ -6,6 +6,7 @@ import type { AcreditarCajaUseCase } from '../../transaccion/application/acredit
 import type { AcreditarCuentaBancariaUseCase } from '../../transaccion/application/acreditar-cuenta-bancaria.usecase.js';
 import type { CrearTransaccionUseCase } from '../../transaccion/application/crear-transaccion.usecase.js';
 import type { ExchangeRateProvider } from '../../../shared/domain/providers/ExchangeRateProvider.js';
+import type { CrearYCertificarFacturaUseCase } from '../../facturacion/application/use-cases/crear-y-certificar-factura.usecase.js';
 
 export class FinalizarPreVentaUseCase {
     constructor(
@@ -15,7 +16,8 @@ export class FinalizarPreVentaUseCase {
         private readonly acreditarCajaUseCase: AcreditarCajaUseCase,
         private readonly acreditarCuentaBancariaUseCase: AcreditarCuentaBancariaUseCase,
         private readonly crearTransaccionUseCase: CrearTransaccionUseCase,
-        private readonly exchangeRateProvider: ExchangeRateProvider
+        private readonly exchangeRateProvider: ExchangeRateProvider,
+        private readonly crearYCertificarFacturaUseCase: CrearYCertificarFacturaUseCase
     ) {}
 
     async execute(id: string, negocio_id: string, sucursal_id: string, usuario_id: string, payload: any, permisos: string[] = [], opcionesCaja?: { caja_id?: string; token_autorizado?: string; forzar_caja_en_linea?: boolean }) {
@@ -53,7 +55,7 @@ export class FinalizarPreVentaUseCase {
                 };
             }
 
-            return await this.db.$transaction(async (tx: any) => {
+            const { venta, preventa: preVentaGuardada } = await this.db.$transaction(async (tx: any) => {
                 const venta = await tx.venta.create({
                     data: {
                         negocio_id,
@@ -252,8 +254,26 @@ export class FinalizarPreVentaUseCase {
                 return { venta, preventa };
             },{
                 maxWait: 5000,
-                timeout: 15000
+                timeout: 35000 // Aumentado para evitar errores de expiración en transacciones pesadas
             });
+
+            // Luego de que la transacción de venta fue un éxito, intentamos certificar la factura
+            // No hacemos throw aquí si la factura falla para dejar la venta creada y la factura en ERROR
+            let facturaGenerada = null;
+            let errorFacturacion = null;
+            try {
+                facturaGenerada = await this.crearYCertificarFacturaUseCase.execute(venta.id);
+            } catch (err: any) {
+                console.error(`Error al certificar factura para la venta ${venta.id}:`, err);
+                errorFacturacion = err.message || 'Error desconocido al certificar';
+            }
+
+            return { 
+                venta, 
+                preventa: preVentaGuardada,
+                factura: facturaGenerada,
+                factura_error: errorFacturacion
+            };
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

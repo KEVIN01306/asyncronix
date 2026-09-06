@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Autocomplete, Box, Button, CardMedia, Chip, Divider, Grid, Paper, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Button, CardMedia, Chip, Divider, Grid, Paper, Typography, useMediaQuery, useTheme, Backdrop, CircularProgress } from '@mui/material';
 import { toast } from 'sonner';
 import { servicioRepository } from '../../infrastructure/repositories/servicio.repository';
 import type { ServicioVehiculo } from '../../domain/interfaces/servicio.interface';
@@ -11,9 +11,6 @@ import { ListTableSimple } from '../../../../shared/components/ui/tables/ListTab
 import ServiceImages from '../components/ServiceImages';
 import { formatMoney } from '../../../../core/utils/formatMoney';
 import { ESTADO_SERVICIO_VEHICULO, METODO_PAGO } from '../../domain/servicio.constants';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import SignaturePadModal from '../components/modals/SignaturePadModal';
 import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
@@ -22,25 +19,11 @@ import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMisma
 import CajaStatusWidget from '../../../../shared/components/ui/widgets/CajaStatusWidget';
 import { formatImage } from '../../../../core/utils/formatImage';
 import { bajarCalidadImagen } from '../../../../core/utils/bajarCalidadImagen';
+import BuscarClientePorNitModal from '../../../../shared/components/BuscarClientePorNitModal';
+import FormaPagoModal from '../../../../shared/components/ui/modals/FormaPagoModal';
+import DocumentPreviewModal from '../../../../shared/components/ui/modals/DocumentPreviewModal';
+import { clienteRepository } from '../../../clientes/infrastructure/clientes.repository';
 
-
-const salidaSchema = z.object({
-    metodo_pago: z.enum(Object.values(METODO_PAGO) as [string, ...string[]], 'El método de pago es requerido'),
-    efectivo_recibido: z.number().nonnegative().optional().nullable(),
-    vuelto: z.number().nonnegative().optional().nullable()
-}).superRefine((data, ctx) => {
-    if (data.metodo_pago !== METODO_PAGO.EFECTIVO) return;
-
-    if (data.efectivo_recibido == null) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'El efectivo recibido es obligatorio para pagos en efectivo',
-            path: ['efectivo_recibido']
-        });
-    }
-});
-
-type SalidaForm = z.infer<typeof salidaSchema>;
 
 const ServicioSalidaPage = () => {
     const { id } = useParams();
@@ -56,7 +39,12 @@ const ServicioSalidaPage = () => {
     const [savingSalida, setSavingSalida] = useState(false);
 
     const [showCajaMismatchModal, setShowCajaMismatchModal] = useState(false);
-    const [cajaMismatchPayload, setCajaMismatchPayload] = useState<SalidaForm | null>(null);
+    const [cajaMismatchPayload, setCajaMismatchPayload] = useState<any>(null);
+    const [showBuscarNitModal, setShowBuscarNitModal] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+    const [clienteFacturacion, setClienteFacturacion] = useState<{ id: string | null; nombre: string } | null>(null);
+    const [finishedServicioId, setFinishedServicioId] = useState<string | null>(null);
 
     const { cajaId, token: cajaToken } = useDeviceStore();
 
@@ -65,13 +53,6 @@ const ServicioSalidaPage = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const hasSalidaPermission = useMemo(() => user?.permisos?.includes('SALIDA_SERVICIOS'), [user]);
-    const form = useForm<SalidaForm>({
-        resolver: zodResolver(salidaSchema),
-        defaultValues: { metodo_pago: '', efectivo_recibido: null, vuelto: null }
-    });
-
-    const metodoPago = form.watch('metodo_pago');
-    const efectivoRecibido = form.watch('efectivo_recibido');
 
     const fetchService = useCallback(async () => {
         if (!id) {
@@ -147,27 +128,7 @@ const ServicioSalidaPage = () => {
         return acc + (Number(cust.total) || 0);
     }, 0) || 0;
     const totalCobro = subtotalManoObra + totalRepuestos + totalReparaciones + totalRepuestosReparaciones + totalCustodias;
-    const diferenciaPago = useMemo(() => {
-        const recibido = Number(efectivoRecibido ?? 0);
-        if (!Number.isFinite(recibido)) return -totalCobro;
-        return recibido - totalCobro;
-    }, [efectivoRecibido, totalCobro]);
-    const isCashInsufficient = metodoPago === METODO_PAGO.EFECTIVO && diferenciaPago < 0;
-    const vueltoCalculado = useMemo(() => {
-        const recibido = Number(efectivoRecibido ?? 0);
-        if (!Number.isFinite(recibido)) return 0;
-        return Math.max(0, recibido - totalCobro);
-    }, [efectivoRecibido, totalCobro]);
 
-    useEffect(() => {
-        if (metodoPago !== METODO_PAGO.EFECTIVO) {
-            form.setValue('efectivo_recibido', null);
-            form.setValue('vuelto', null);
-            return;
-        }
-
-        form.setValue('vuelto', vueltoCalculado);
-    }, [metodoPago, vueltoCalculado, form]);
     const tareasNormales = (servicio?.tareas || []).filter((tarea) => !tarea.extra);
     const tareasExtras = (servicio?.tareas || []).filter((tarea) => tarea.extra);
 
@@ -189,7 +150,7 @@ const ServicioSalidaPage = () => {
         setActiveSignatureKey(null);
     };
 
-    const executeSalida = async (values: SalidaForm, forceEnLinea = false) => {
+    const handleInitSalida = () => {
         if (!servicio) return;
         if (!isSalidaState) {
             toast.error('El servicio no está en estado válido para salida');
@@ -202,7 +163,6 @@ const ServicioSalidaPage = () => {
             return;
         }
 
-        // Check repair signatures
         if (servicio.servicioReparacion) {
             for (const rep of servicio.servicioReparacion) {
                 if (!firmasSalidaBase64[`firma_reparacion_${rep.id}`] && !rep.firma_salida) {
@@ -212,7 +172,6 @@ const ServicioSalidaPage = () => {
             }
         }
 
-        // Check custody signatures
         if (servicio.servicioCustodias) {
             for (const cust of servicio.servicioCustodias) {
                 if (!firmasSalidaBase64[`firma_custodia_${cust.id}`] && !cust.firma_salida) {
@@ -222,13 +181,60 @@ const ServicioSalidaPage = () => {
             }
         }
 
-        if (values.metodo_pago === METODO_PAGO.EFECTIVO && (values.efectivo_recibido ?? 0) < totalCobro) {
-            toast.error('El efectivo recibido no puede ser menor al total a cobrar');
+        setShowBuscarNitModal(true);
+    };
+
+    const handleDigifactClient = async (clienteInfo: { nit: string; nombre: string }) => {
+        if (clienteInfo.nit.toUpperCase() === 'CF' || clienteInfo.nit.toUpperCase() === 'C/F') {
+            toast.info('Facturación configurada como Consumidor Final (C/F)');
+            setClienteFacturacion({ id: null, nombre: 'Consumidor Final' });
+            setShowBuscarNitModal(false);
+            setShowPaymentModal(true);
             return;
         }
 
+        try {
+            setSavingSalida(true);
+            const result = await clienteRepository.buscarPorDocumento({ nit: clienteInfo.nit });
+            let clienteId = null;
+            if (result.data) {
+                clienteId = result.data.id;
+                await clienteRepository.actualizar(clienteId, {
+                    ...result.data,
+                    nombre: clienteInfo.nombre,
+                    nit: clienteInfo.nit
+                });
+                toast.success(`Cliente asociado y actualizado: ${clienteInfo.nombre}`);
+            } else {
+                const createResult = await clienteRepository.registrar({
+                    nit: clienteInfo.nit,
+                    nombre: clienteInfo.nombre,
+                    telefono: clienteInfo.nit,
+                    email: null,
+                    apellido: null,
+                    dpi: null
+                });
+                if (createResult.data) {
+                    clienteId = createResult.data.id;
+                    toast.success('Cliente creado y asociado exitosamente');
+                }
+            }
+
+            setClienteFacturacion({ id: clienteId, nombre: clienteInfo.nombre });
+            setShowBuscarNitModal(false);
+            setShowPaymentModal(true);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al procesar el cliente de Digifact');
+        } finally {
+            setSavingSalida(false);
+        }
+    };
+
+    const executeSalida = async (values: any, forceEnLinea = false) => {
+        if (!servicio) return;
+
         let cajaOptions = {};
-        if (values.metodo_pago === METODO_PAGO.EFECTIVO && !forceEnLinea) {
+        if (values.formaPago === METODO_PAGO.EFECTIVO && !forceEnLinea) {
             if (!cajaId) {
                 forceEnLinea = true;
             } else {
@@ -240,8 +246,8 @@ const ServicioSalidaPage = () => {
         }
 
         try {
-            const efectivoFinal = values.metodo_pago === METODO_PAGO.EFECTIVO ? (values.efectivo_recibido ?? 0) : null;
-            const vueltoFinal = values.metodo_pago === METODO_PAGO.EFECTIVO ? Math.max(0, (values.efectivo_recibido ?? 0) - totalCobro) : null;
+            const efectivoFinal = values.formaPago === METODO_PAGO.EFECTIVO ? (values.montoRecibido ?? 0) : null;
+            const vueltoFinal = values.formaPago === METODO_PAGO.EFECTIVO ? (values.vuelto ?? 0) : null;
 
             setSavingSalida(true);
 
@@ -255,14 +261,24 @@ const ServicioSalidaPage = () => {
             const updatedService = await servicioRepository.finalizarSalida(
                 servicio.id,
                 filesToUpload,
-                values.metodo_pago,
+                values.formaPago,
                 efectivoFinal,
                 vueltoFinal,
-                { ...cajaOptions, forzar_caja_en_linea: forceEnLinea }
+                { ...cajaOptions, forzar_caja_en_linea: forceEnLinea },
+                clienteFacturacion?.id ?? undefined
             );
-            setServicio(updatedService);
-            toast.success('Servicio finalizado correctamente');
-            navigate(`/servicios-vehiculo/${updatedService.id}/hoja`);
+
+            setShowPaymentModal(false);
+            if (updatedService.factura) {
+                toast.success('Servicio y factura finalizados correctamente');
+            } else if (updatedService.factura_error) {
+                toast.error(`Servicio finalizado, pero la factura falló: ${updatedService.factura_error}`);
+            } else {
+                toast.success('Servicio finalizado correctamente');
+            }
+
+            setFinishedServicioId(updatedService.id);
+            setShowInvoicePreview(true);
             if (showCajaMismatchModal) {
                 setShowCajaMismatchModal(false);
                 setCajaMismatchPayload(null);
@@ -280,9 +296,7 @@ const ServicioSalidaPage = () => {
         }
     };
 
-    const handleSubmitSalida = (values: SalidaForm) => {
-        executeSalida(values, false);
-    };
+
 
     const handleForceCajaEnLinea = async () => {
         if (!cajaMismatchPayload) return;
@@ -713,7 +727,7 @@ const ServicioSalidaPage = () => {
                             </Grid>
                         </Grid>
                     ))}
-                    
+
                     {servicio.servicioCustodias && servicio.servicioCustodias.length > 0 && (
                         <Grid size={12} mt={4}>
                             <Divider sx={{ mb: 3 }} />
@@ -774,82 +788,51 @@ const ServicioSalidaPage = () => {
                     {!isSalidaState && (
                         <Typography color="text.secondary" mb={2}>El servicio debe estar en un estado válido (LISTO ENTREGA, EN REPARACION o EN CUSTODIA) para finalizar la salida.</Typography>
                     )}
-                    <form onSubmit={form.handleSubmit(handleSubmitSalida)}>
-                        <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, md: 6 }}>
-                                <Controller
-                                    name="metodo_pago"
-                                    control={form.control}
-                                    render={({ field }) => (
-                                        <Autocomplete
-                                            options={Object.values(METODO_PAGO)}
-                                            value={field.value || ''}
-                                            onChange={(_, newValue) => field.onChange(newValue)}
-                                            renderInput={(params) => (
-                                                <TextField
-                                                    {...params}
-                                                    label="Método de pago"
-                                                    error={Boolean(form.formState.errors.metodo_pago)}
-                                                    helperText={form.formState.errors.metodo_pago?.message}
-                                                />
-                                            )}
-                                        />
-                                    )}
-                                />
-                            </Grid>
-                            {metodoPago === METODO_PAGO.EFECTIVO && (
-                                <>
-                                    <Grid size={{ xs: 12, md: 6 }}>
-                                        <Controller
-                                            name="efectivo_recibido"
-                                            control={form.control}
-                                            render={({ field }) => (
-                                                <TextField
-                                                    label="Efectivo recibido"
-                                                    type="number"
-                                                    value={field.value ?? ''}
-                                                    onChange={(event) => {
-                                                        const value = event.target.value;
-                                                        field.onChange(value === '' ? null : Number(value));
-                                                    }}
-                                                    inputProps={{ min: 0, step: 0.01 }}
-                                                    fullWidth
-                                                    error={Boolean(form.formState.errors.efectivo_recibido) || isCashInsufficient}
-                                                    helperText={
-                                                        form.formState.errors.efectivo_recibido?.message
-                                                        ?? (metodoPago === METODO_PAGO.EFECTIVO
-                                                            ? `Diferencia: ${formatMoney(diferenciaPago)}`
-                                                            : undefined)
-                                                    }
-                                                />
-                                            )}
-                                        />
-                                    </Grid>
-                                    <Grid size={{ xs: 12, md: 6 }}>
-                                        <Box sx={{ p: 1 }}>
-                                            <Typography variant="body2" color={isCashInsufficient ? 'error.main' : 'text.secondary'}>
-                                                {isCashInsufficient
-                                                    ? `Faltante: ${formatMoney(diferenciaPago)}`
-                                                    : `Vuelto: ${formatMoney(vueltoCalculado)}`}
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                </>
-                            )}
-                            <Grid size={12}>
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="success"
-                                    disabled={!isSalidaState || !hasSalidaPermission || savingSalida || isCashInsufficient}
-                                >
-                                    {savingSalida ? 'Procesando...' : 'Dar salida'}
-                                </Button>
-                            </Grid>
+                    <Grid container spacing={3} mt={2}>
+                        <Grid size={12}>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                fullWidth
+                                onClick={handleInitSalida}
+                                disabled={!isSalidaState || !hasSalidaPermission || savingSalida}
+                            >
+                                {savingSalida ? 'Procesando...' : 'Finalizar Servicio'}
+                            </Button>
                         </Grid>
-                    </form>
+                    </Grid>
                 </Box>
             </Box>
+
+            <BuscarClientePorNitModal
+                open={showBuscarNitModal}
+                onClose={() => setShowBuscarNitModal(false)}
+                onSuccess={handleDigifactClient}
+            />
+
+            <FormaPagoModal
+                open={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                onConfirm={(payload) => executeSalida({
+                    formaPago: payload.metodo,
+                    montoRecibido: payload.efectivo_recibido,
+                    vuelto: payload.vuelto
+                })}
+                total={totalCobro}
+                clienteLabel={clienteFacturacion?.nombre || 'Consumidor Final'}
+                loading={savingSalida}
+            />
+
+            <DocumentPreviewModal
+                open={showInvoicePreview}
+                documentoId={finishedServicioId}
+                tipoDocumento="SERVICIO"
+                onClose={() => {
+                    setShowInvoicePreview(false);
+                    navigate(`/servicios-vehiculo/${finishedServicioId}/hoja`);
+                }}
+            />
+
             <SignaturePadModal
                 open={openSignaturePad}
                 onSave={handleSaveSignature}
@@ -865,6 +848,18 @@ const ServicioSalidaPage = () => {
                 onForce={handleForceCajaEnLinea}
                 loading={savingSalida}
             />
+
+            <Backdrop
+                sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.modal + 9999 })}
+                open={savingSalida}
+            >
+                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                    <CircularProgress color="inherit" />
+                    <Typography variant="h6" fontWeight="bold" color="white">
+                        Finalizando servicio y procesando factura...
+                    </Typography>
+                </Box>
+            </Backdrop>
         </Box>
     );
 };

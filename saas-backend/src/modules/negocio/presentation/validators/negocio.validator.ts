@@ -35,5 +35,6 @@ export const negocioFacturacionSchema = z.object({
     codigo_escenario: z.number().int().min(1),
     correo_emisor: z.string().email().max(150),
     fel_username: z.string().min(1).max(100),
+    fel_password: z.string().max(255).optional(),
     fel_ambiente: z.string().min(1).max(10)
 })

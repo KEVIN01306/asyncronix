@@ -70,7 +70,8 @@ export const servicioRepository = {
             token_autorizado?: string;
             forzar_caja_en_linea?: boolean;
             cuenta_bancaria_id?: string;
-        }
+        },
+        cliente_id?: string
     ) => {
         const formData = new FormData();
         Object.entries(firmas).forEach(([key, file]) => {
@@ -84,6 +85,7 @@ export const servicioRepository = {
         if (opcionesFinancieras?.token_autorizado) formData.append('token_autorizado', opcionesFinancieras.token_autorizado);
         if (opcionesFinancieras?.forzar_caja_en_linea) formData.append('forzar_caja_en_linea', String(opcionesFinancieras.forzar_caja_en_linea));
         if (opcionesFinancieras?.cuenta_bancaria_id) formData.append('cuenta_bancaria_id', opcionesFinancieras.cuenta_bancaria_id);
+        if (cliente_id) formData.append('cliente_id', cliente_id);
 
         const response = await api.post<ServicioVehiculoDetailResponse>(`${URL_MODULE}/${id}/salida`, formData) as unknown as ServicioVehiculoDetailResponse;
 

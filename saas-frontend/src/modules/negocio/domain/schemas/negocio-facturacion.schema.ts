@@ -9,6 +9,7 @@ export const negocioFacturacionSchema = z.object({
     codigo_escenario: z.preprocess((val) => Number(val), z.number().int().min(1)),
     correo_emisor: z.string().email('Email inválido').max(150),
     fel_username: z.string().min(1, 'Requerido').max(100),
+    fel_password: z.string().max(255).optional(),
     fel_ambiente: z.string().min(1, 'Requerido').max(10)
 });
 

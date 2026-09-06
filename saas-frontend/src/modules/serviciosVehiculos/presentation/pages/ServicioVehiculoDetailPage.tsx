@@ -15,7 +15,7 @@ import { LinkStyle } from '../../../../shared/components/ui/Links/LinkStyle';
 import type { VarianteValor } from '../../../productos/domain/interfaces/producto.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import { formatImage } from '../../../../core/utils/formatImage';
-
+import { FacturaVentaDocument } from '../../../ventas/presentation/components/FacturaVentaDocument';
 
 const ServicioDetailPage = () => {
     const { id } = useParams();
@@ -118,6 +118,13 @@ const ServicioDetailPage = () => {
                 </Breadcrumbs>
                 <Typography variant="body2" color="text.primary">#{servicio.id}</Typography>
             </Box>
+
+            {servicio.factura && (
+                <Box mt={2} mb={3}>
+                    <FacturaVentaDocument factura={servicio.factura} />
+                </Box>
+            )}
+
             <Box component={Paper} p={3} >
                 <Grid container size={12} spacing={4}>
                     <Grid size={3} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>

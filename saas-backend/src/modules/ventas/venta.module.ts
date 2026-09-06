@@ -63,8 +63,20 @@ export const finalizarVentaUseCase = new FinalizarVentaUseCase(
     crearTransaccionUseCase,
     new FrankfurterExchangeRateProvider()
 );
+import { DigifactProvider } from "../../shared/infrastructure/providers/digifact/digifact.provider.js";
+import { PrismaFacturaRepository } from "../facturacion/infrastructure/repositories/prisma-factura.repository.js";
+import { ObtenerTokenDigifactUseCase } from "../facturacion/application/use-cases/obtener-token-digifact.usecase.js";
+
+const digifactProvider = new DigifactProvider();
+const facturaRepository = new PrismaFacturaRepository(prisma);
+const obtenerTokenDigifactUseCase = new ObtenerTokenDigifactUseCase(facturaRepository, digifactProvider);
+
 const actualizarVentaUseCase = new ActualizarVentaUseCase(ventaRepository);
-const anularVentaUseCase = new AnularVentaUseCase(ventaRepository);
+const anularVentaUseCase = new AnularVentaUseCase(
+    ventaRepository,
+    facturaRepository,
+    anularFacturaUseCase
+);
 const obtenerVentaUseCase = new ObtenerVentaUseCase(ventaRepository);
 const obtenerVentasUseCase = new ObtenerVentasUseCase(ventaRepository);
 const buscarClientePorNitVentaUseCase = new BuscarClientePorNitVentaUseCase(clienteRepository);
@@ -74,6 +86,7 @@ const obtenerPreVentasUseCase = new ObtenerPreVentasUseCase(prisma);
 const obtenerPreVentaUseCase = new ObtenerPreVentaUseCase(prisma);
 const actualizarCantidadPreVentaUseCase = new ActualizarCantidadPreVentaUseCase(prisma);
 const hashProvider = new Argon2HashProvider();
+import { crearYCertificarFacturaUseCase, anularFacturaUseCase } from "../facturacion/module.js";
 const finalizarPreVentaUseCase = new FinalizarPreVentaUseCase(
     prisma,
     hashProvider,
@@ -81,7 +94,8 @@ const finalizarPreVentaUseCase = new FinalizarPreVentaUseCase(
     acreditarCajaUseCase,
     acreditarCuentaBancariaUseCase,
     crearTransaccionUseCase,
-    new FrankfurterExchangeRateProvider()
+    new FrankfurterExchangeRateProvider(),
+    crearYCertificarFacturaUseCase
 );
 const validarPinCajaUseCase = new ValidarPinCajaUseCase(prisma, hashProvider);
 const agregarDetallePreVentaUseCase = new AgregarDetallePreVentaUseCase(prisma);

@@ -44,6 +44,7 @@ router.use('/reportes', (await import('../modules/reportes/presentation/reportes
 router.use('/media', (await import('../modules/media/presentation/media.routes.js')).default)
 router.use('/verification-code', (await import('../modules/verificationCode/presentation/verification-code.routes.js')).default)
 router.use('/cotizaciones', (await import('../modules/cotizacion/presentation/cotizacion.routes.js')).default)
+router.use('/facturacion', (await import('../modules/facturacion/presentation/facturacion.routes.js')).default)
 
 router.use(errorMiddleware)
 

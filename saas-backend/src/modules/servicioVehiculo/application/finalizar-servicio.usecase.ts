@@ -12,6 +12,7 @@ import type { ExchangeRateProvider } from "../../../shared/domain/providers/Exch
 import { PrismaErrorMapper } from "../../../shared/database/prisma/PrismaErrorMapper.js";
 import type { CrearMediaUseCase } from "../../media/application/crear-media.usecase.js";
 import type { FileDTO } from "../../../shared/domain/providers/storage.provider.js";
+import { crearYCertificarFacturaUseCase } from "../../facturacion/module.js";
 
 export class FinalizarServicioUseCase {
     constructor(
@@ -39,8 +40,9 @@ export class FinalizarServicioUseCase {
             token_autorizado?: string;
             forzar_caja_en_linea?: boolean;
             cuenta_bancaria_id?: string;
-        }
-    ): Promise<ServicioDetalle> {
+        },
+        cliente_id?: string
+    ): Promise<ServicioDetalle & { factura?: any, factura_error?: string }> {
         try {
 
             const servicio = await this.repository.obtener(id, negocio_id);
@@ -126,7 +128,7 @@ export class FinalizarServicioUseCase {
                 uploadedCustodySignatures[custodia_id] = custFirmaUrl;
             }
 
-            return await this.transactionManager.run(async (tx) => {
+            const result = await this.transactionManager.run(async (tx) => {
                 const updatedServicio = await this.repository.actualizar(id, negocio_id, {
                     estado: ESTADO_SERVICIO.FINALIZADO,
                     firma_salida: firmaSalidaUrl ?? null,
@@ -134,7 +136,8 @@ export class FinalizarServicioUseCase {
                     efectivo_recibido: metodoPago === 'EFECTIVO' ? Number(efectivoRecibido) : null,
                     vuelto: metodoPago === 'EFECTIVO' ? Number(vuelto) : null,
                     fecha_salida: new Date(),
-                    total: totalCobro
+                    total: totalCobro,
+                    cliente_id: cliente_id ?? servicio.cliente_id ?? null // Actualizar cliente si se provee
                 }, { tx });
 
                 // Procesar firmas de reparaciones
@@ -281,8 +284,24 @@ export class FinalizarServicioUseCase {
                     } as any, { tx: tx as any });
                 }
 
-                return updatedServicio;
+                return updatedServicio as any;
             });
+
+            // Fuera de la transacción, intentar certificar la factura
+            let facturaResult = null;
+            let facturaError = undefined;
+            try {
+                facturaResult = await crearYCertificarFacturaUseCase.execute(id, 'SERVICIO', usuario_id);
+            } catch (err: any) {
+                console.error("Error al certificar factura del servicio:", err);
+                facturaError = err.message || "Error desconocido al certificar";
+            }
+
+            return {
+                ...result,
+                factura: facturaResult,
+                factura_error: facturaError
+            };
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

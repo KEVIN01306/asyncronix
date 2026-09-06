@@ -65,6 +65,7 @@ export interface Venta {
     total: number;
     total_costo: number;
     comentarios?: string | null;
+    motivo_anulacion?: string | null;
     estado: EstadoVenta;
     metodo_pago: MetodoPago;
     created_at: string;
@@ -73,6 +74,16 @@ export interface Venta {
     cliente_nombre?: string;
     cliente?: VentaClienteInfo | null;
     vehiculo?: VentaVehiculoInfo | null;
+    factura?: {
+        id: string;
+        estado: string;
+        dte_uuid: string | null;
+        serie: string | null;
+        numero_factura: string | null;
+        dte_sat_xml: string | null;
+        dle_sat_pdf: string | null;
+        fecha_certificacion: string | null;
+    } | null;
     detalles: VentaDetalleSimple[];
 }
 

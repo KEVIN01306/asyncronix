@@ -177,7 +177,7 @@ export class PrismaVentaRepository implements VentaRepository {
                 const ventaUpdated = await tx.venta.update({
                     where: { id: ventaId },
                     data: { estado: 'COMPLETADA', metodo_pago: metodo_pago ?? ventaActual.metodo_pago },
-                    include: { usuario: true, cliente: true , detalles: { include: { lote: { include: { variante: { include: { producto: true } } } } }} }
+                    include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { variante: { include: { producto: true } } } } } } }
                 });
 
                 return VentaMapper.mapSimple(ventaUpdated);
@@ -235,7 +235,7 @@ export class PrismaVentaRepository implements VentaRepository {
 
                 const ventaUpdated = await tx.venta.update({
                     where: { id, negocio_id, sucursal_id },
-                    data: { estado: 'ANULADA', comentarios: comentario },
+                    data: { estado: 'ANULADA', motivo_anulacion: comentario },
                     include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { variante: { include: { producto: true } } } } } } }
                 });
 
@@ -250,7 +250,7 @@ export class PrismaVentaRepository implements VentaRepository {
     async obtener(id: string, negocio_id: string, sucursal_id: string): Promise<VentaObtenerDetalle | null> {
         const venta = await this.db.venta.findFirst({
             where: { id, negocio_id, sucursal_id, activo: true },
-            include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { variante: { include: { producto: true } } } } } } }
+            include: { usuario: true, cliente: true, detalles: { include: { lote: { include: { variante: { include: { producto: true } } } } } }, facturas: true }
         });
         if (!venta) return null;
         return VentaMapper.mapDetalle(venta);

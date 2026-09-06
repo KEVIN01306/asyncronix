@@ -6,7 +6,8 @@ import {
     TableContainer, Paper, List, ListItem, ListItemText, Divider, Stack, Chip, Dialog,
     DialogTitle, DialogContent, DialogActions, Autocomplete, CircularProgress, Alert,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    Backdrop
 } from '@mui/material';
 import {
     ArrowBack as ArrowBackIcon,
@@ -21,7 +22,8 @@ import { useAuthStore } from '../../../../core/store/authStore';
 import { useDeviceStore } from '../../../../core/store/deviceStore';
 import { ventaRepository } from '../../infrastructure/venta.repository';
 import SaleClientModal from '../components/SaleClientModal';
-import SalePaymentModal from '../components/SalePaymentModal';
+import FormaPagoModal from '../../../../shared/components/ui/modals/FormaPagoModal';
+import BuscarClientePorNitModal from '../../../../shared/components/BuscarClientePorNitModal';
 import { VarianteRepository } from '../../../productos/infrastructure/repositories/variante.repository';
 import type { EstadoVenta, MetodoPago, VentaProductoInput, VentaDetalleSimple } from '../../domain/interfaces/venta.interface';
 import type { Variante } from '../../../productos/domain/interfaces/producto.interface';
@@ -33,6 +35,8 @@ import QrProductScanner from '../components/lectorSkuQr';
 import CajaMismatchModal from '../../../../shared/components/ui/modals/CajaMismatchModal';
 import CajaStatusWidget from '../../../../shared/components/ui/widgets/CajaStatusWidget';
 import { useBarcodeScanner } from '../../../../core/hooks/useBarcodeScanner';
+import DocumentPreviewModal from '../../../../shared/components/ui/modals/DocumentPreviewModal';
+import { clienteRepository } from '../../../clientes/infrastructure/clientes.repository';
 
 type FormValues = {
     cliente_id: string;
@@ -57,6 +61,7 @@ export default function VentaFormPage() {
     const [ventaId, setVentaId] = useState<string | null>(null);
     const [preventaIdState, setPreventaIdState] = useState<string | null>(preventaId);
     const [showClientModal, setShowClientModal] = useState(false);
+    const [showBuscarNitModal, setShowBuscarNitModal] = useState(false);
     const [pendingProduct, setPendingProduct] = useState<VentaProductoInput | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [isFromCotizacion, setIsFromCotizacion] = useState(false);
@@ -73,6 +78,8 @@ export default function VentaFormPage() {
     const [clientSelected, setClientSelected] = useState(false);
     const [showCajaMismatchModal, setShowCajaMismatchModal] = useState(false);
     const [cajaMismatchPayload, setCajaMismatchPayload] = useState<{ metodo: string; efectivo_recibido: number | null; vuelto: number | null } | null>(null);
+    const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+    const [finishedVentaId, setFinishedVentaId] = useState<string | null>(null);
 
     const { cajaId, token: cajaToken } = useDeviceStore();
 
@@ -92,6 +99,23 @@ export default function VentaFormPage() {
 
     const estado = watch('estado') as EstadoVenta;
     const isEditable = (!id || estado === 'PENDIENTE') && !isFromCotizacion;
+
+    // Keyboard shortcut for Finalizar Venta (Alt+V)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Use e.code to avoid issues with Option/Alt generating special characters like '√'
+            if (e.altKey && e.code === 'KeyV' && !showPaymentModal && !showClientModal && !showInvoicePreview) {
+                e.preventDefault();
+                if (productosSeleccionados.length > 0) {
+                    setShowPaymentModal(true);
+                } else {
+                    toast.warning("Agrega al menos un producto para vender.");
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [productosSeleccionados, showPaymentModal, showClientModal, showInvoicePreview]);
 
     const cargarProductosDisponibles = useCallback(async () => {
         try {
@@ -300,6 +324,58 @@ export default function VentaFormPage() {
         }
     };
 
+    const handleDigifactClient = async (clienteInfo: { nit: string; nombre: string }) => {
+        if (clienteInfo.nit.toUpperCase() === 'CF' || clienteInfo.nit.toUpperCase() === 'C/F') {
+            toast.info('Venta configurada como Consumidor Final (C/F)');
+            handleClientConfirm({
+                cliente_id: null,
+                cf: true,
+                nombre: 'Consumidor Final'
+            });
+            return;
+        }
+
+        try {
+            setSaving(true);
+            const result = await clienteRepository.buscarPorDocumento({ nit: clienteInfo.nit });
+            let clienteId = null;
+            if (result.data) {
+                clienteId = result.data.id;
+                // Actualizar el cliente en la base de datos para que la factura use el nombre de Digifact
+                await clienteRepository.actualizar(clienteId, {
+                    ...result.data,
+                    nombre: clienteInfo.nombre,
+                    nit: clienteInfo.nit
+                });
+                toast.success(`Cliente asociado y actualizado: ${clienteInfo.nombre}`);
+            } else {
+                const createResult = await clienteRepository.registrar({
+                    nit: clienteInfo.nit,
+                    nombre: clienteInfo.nombre,
+                    telefono: clienteInfo.nit,
+                    email: null,
+                    apellido: null,
+                    dpi: null
+                });
+                if (createResult.data) {
+                    clienteId = createResult.data.id;
+                    toast.success('Cliente creado y asociado exitosamente');
+                }
+            }
+
+            if (clienteId) {
+                handleClientConfirm({
+                    cliente_id: clienteId,
+                    cf: false,
+                    nombre: clienteInfo.nombre
+                });
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Error al procesar el cliente de Digifact');
+            setSaving(false);
+        }
+    };
+
     const handleCodigoLeido = async (codigo: string) => {
         setShowScannerModal(false);
         if (!user?.sucursal_id) return;
@@ -351,7 +427,7 @@ export default function VentaFormPage() {
                 await registrarNuevaVenta(prodInput);
             } else {
                 setPendingProduct(prodInput);
-                setShowClientModal(true);
+                setShowBuscarNitModal(true);
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Error al procesar el código');
@@ -368,6 +444,8 @@ export default function VentaFormPage() {
 
     const resetForm = () => {
         setVentaId(null);
+        setPreventaIdState(null);
+        setIsFromCotizacion(false);
         setProductosSeleccionados([]);
         setClienteNombre('Consumidor Final');
         setClientSelected(false);
@@ -430,8 +508,8 @@ export default function VentaFormPage() {
                     return;
                 }
                 toast.success('Venta finalizada desde preventa');
-                resetForm();
-                navigate('/ventas/nuevo');
+                setFinishedVentaId(resultData?.venta?.id || preventaIdState);
+                setShowInvoicePreview(true);
                 return;
             }
 
@@ -453,8 +531,8 @@ export default function VentaFormPage() {
                     return;
                 }
                 toast.success('Venta finalizada desde preventa');
-                resetForm();
-                navigate('/ventas/nuevo');
+                setFinishedVentaId(resultData?.venta?.id || preventaCreated.id);
+                setShowInvoicePreview(true);
                 return;
             }
 
@@ -477,8 +555,8 @@ export default function VentaFormPage() {
 
             await ventaRepository.finalizarVenta(ventaId, user.sucursal_id, payload.metodo, { ...cajaOptions, forzar_caja_en_linea: forceEnLinea });
             toast.success('Venta finalizada');
-            resetForm();
-            navigate('/ventas/nuevo');
+            setFinishedVentaId(ventaId);
+            setShowInvoicePreview(true);
         } catch (error: any) {
             if (error.response?.data?.code === 'CAJA_TOKEN_MISMATCH') {
                 setCajaMismatchPayload(payload);
@@ -528,8 +606,8 @@ export default function VentaFormPage() {
             }
 
             toast.success('Venta finalizada con stock forzado');
-            resetForm();
-            navigate('/ventas/nuevo');
+            setFinishedVentaId(resultData?.venta?.id || preventaIdParaForzar);
+            setShowInvoicePreview(true);
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Error al forzar stock');
         } finally {
@@ -591,7 +669,7 @@ export default function VentaFormPage() {
                     await registrarNuevaVenta(prodInput);
                 } else {
                     setPendingProduct(prodInput);
-                    setShowClientModal(true);
+                    setShowBuscarNitModal(true);
                 }
                 return;
             }
@@ -856,12 +934,23 @@ export default function VentaFormPage() {
 
                                     <Button
                                         size="small"
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={() => setShowBuscarNitModal(true)}
+                                        disabled={!isEditable}
+                                        fullWidth
+                                    >
+                                        {watch('cliente_id') ? 'Modificar NIT (Digifact)' : 'Vincular Cliente (Digifact)'}
+                                    </Button>
+                                    <Button
+                                        size="small"
                                         variant="outlined"
                                         onClick={() => setShowClientModal(true)}
                                         disabled={!isEditable}
                                         fullWidth
+                                        sx={{ mt: 1 }}
                                     >
-                                        {watch('cliente_id') ? 'Modificar Cliente' : 'Vincular Cliente'}
+                                        Asignación Manual / C/F
                                     </Button>
                                 </Box>
                             </CardContent>
@@ -939,8 +1028,39 @@ export default function VentaFormPage() {
             />
 
             <SaleClientModal open={showClientModal} onClose={() => setShowClientModal(false)} onConfirm={handleClientConfirm} />
-            <SalePaymentModal open={showPaymentModal} onClose={() => setShowPaymentModal(false)} onConfirm={handlePaymentConfirm} total={totalVenta} clienteLabel={clienteNombre} loading={isSaving} />
+            <BuscarClientePorNitModal open={showBuscarNitModal} onClose={() => setShowBuscarNitModal(false)} onSuccess={handleDigifactClient} />
+            <FormaPagoModal
+                open={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                onConfirm={(payload) => handlePaymentConfirm(payload)}
+                total={totalVenta}
+                clienteLabel={clienteNombre}
+                loading={isSaving}
+            />
             <QrProductScanner open={showScannerModal} onClose={() => setShowScannerModal(false)} onCodigoLeido={handleCodigoLeido} />
+
+            <DocumentPreviewModal
+                open={showInvoicePreview}
+                documentoId={finishedVentaId}
+                tipoDocumento="VENTA"
+                onClose={() => {
+                    setShowInvoicePreview(false);
+                    resetForm();
+                    navigate('/ventas/nuevo');
+                }}
+            />
+
+            <Backdrop
+                sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.modal + 9999 })}
+                open={isSaving}
+            >
+                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                    <CircularProgress color="inherit" />
+                    <Typography variant="h6" fontWeight="bold">
+                        Finalizando venta...
+                    </Typography>
+                </Box>
+            </Backdrop>
         </Box>
     );
 }
