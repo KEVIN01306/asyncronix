@@ -199,6 +199,7 @@ model Negocio {
   cotizacions              Cotizacion[]
   facturas                 Factura[]
   negocioFacturacionConfig NegocioFacturacionConfig?
+  devoluciones             Devolucion[]
 
   @@map("negocios")
 }
@@ -277,6 +278,7 @@ model Sucursal {
   cotizacions       Cotizacion[]
   facturas          Factura[]
   division_nivel_2  DivisionNivel2?          @relation(fields: [division_nivel2_id], references: [id], onDelete: SetNull)
+  devoluciones      Devolucion[]
 
   @@index([negocio_id])
   @@map("sucursales")
@@ -337,6 +339,7 @@ model Usuario {
   cotizacions             Cotizacion[]
   corteCajas              CorteCaja[]
   facturas                Factura[]
+  devoluciones            Devolucion[]       @relation("DevolucionesAtendidas")
 
   @@unique([negocio_id, email])
   @@unique([negocio_id, dpi])
@@ -748,8 +751,9 @@ model Proveedor {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  negocio Negocio @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  lotes   Lote[]
+  negocio            Negocio             @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
+  lotes              Lote[]
+  devolucionDetalles DevolucionDetalle[]
 
   @@unique([negocio_id, nombre])
   @@index([negocio_id])
@@ -869,6 +873,7 @@ model VarianteProducto {
   pre_venta_detalles PreVentaDetalle[]
   cotizacionDetalles CotizacionDetalle[]
   facturaDetalles    FacturaDetalle[]
+  devolucionDetalles DevolucionDetalle[]
 
   @@unique([producto_id, sku])
   @@index([producto_id])
@@ -911,9 +916,10 @@ model Lote {
   sucursal  Sucursal         @relation(fields: [sucursal_id], references: [id])
   proveedor Proveedor        @relation(fields: [proveedor_id], references: [id])
 
-  repuestos        ServicioRepuesto[]
-  detalles         VentaDetalle[]
-  detallesTraslado DetalleTraslado[]
+  repuestos          ServicioRepuesto[]
+  detalles           VentaDetalle[]
+  detallesTraslado   DetalleTraslado[]
+  devolucionDetalles DevolucionDetalle[]
 
   @@index([variante_id])
   @@index([proveedor_id])
@@ -1021,14 +1027,15 @@ model Venta {
   created_at        DateTime    @default(now())
   updated_at        DateTime    @updatedAt
 
-  negocio     Negocio        @relation(fields: [negocio_id], references: [id])
-  sucursal    Sucursal       @relation(fields: [sucursal_id], references: [id])
-  usuario     Usuario        @relation("VentaVendedor", fields: [usuario_id], references: [id])
-  cliente     Cliente?       @relation("VentaCliente", fields: [cliente_id], references: [id])
-  autorizador Usuario?       @relation("VentaAutorizador", fields: [autorizador_id], references: [id])
-  detalles    VentaDetalle[]
-  cotizacion  Cotizacion?
-  facturas    Factura[]
+  negocio      Negocio        @relation(fields: [negocio_id], references: [id])
+  sucursal     Sucursal       @relation(fields: [sucursal_id], references: [id])
+  usuario      Usuario        @relation("VentaVendedor", fields: [usuario_id], references: [id])
+  cliente      Cliente?       @relation("VentaCliente", fields: [cliente_id], references: [id])
+  autorizador  Usuario?       @relation("VentaAutorizador", fields: [autorizador_id], references: [id])
+  detalles     VentaDetalle[]
+  cotizacion   Cotizacion?
+  facturas     Factura[]
+  devoluciones Devolucion[]
 
   @@map("ventas")
 }
@@ -1046,9 +1053,10 @@ model VentaDetalle {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  venta    Venta             @relation(fields: [venta_id], references: [id], onDelete: Cascade)
-  lote     Lote?             @relation(fields: [lote_id], references: [id])
-  variante VarianteProducto? @relation(fields: [variante_id], references: [id])
+  venta              Venta               @relation(fields: [venta_id], references: [id], onDelete: Cascade)
+  lote               Lote?               @relation(fields: [lote_id], references: [id])
+  variante           VarianteProducto?   @relation(fields: [variante_id], references: [id])
+  devolucionDetalles DevolucionDetalle[]
 
   @@index([variante_id])
   @@map("venta_detalles")
@@ -1099,6 +1107,16 @@ model Factura {
   fecha_anulacion     DateTime?
   created_at          DateTime      @default(now())
   updated_at          DateTime      @updatedAt
+
+  // -------------------------------------------------------------------
+  // ENLACE A FACTURA DE ORIGEN (Para cuando esta fila sea una Nota de Crédito)
+  // -------------------------------------------------------------------
+  factura_origen_id String?   @db.Char(36)
+  factura_origen    Factura?  @relation("NotasCreditoDeFactura", fields: [factura_origen_id], references: [id])
+  notas_credito     Factura[] @relation("NotasCreditoDeFactura")
+
+  devoluciones_origen Devolucion[] @relation("FacturaDevolucionOrigen")
+  devolucion_ncre     Devolucion?  @relation("FacturaNotaCreditoGenerada")
 
   negocio  Negocio   @relation(fields: [negocio_id], references: [id])
   sucursal Sucursal  @relation(fields: [sucursal_id], references: [id])
@@ -1178,6 +1196,65 @@ model PreVentaDetalle {
   variante  VarianteProducto @relation(fields: [variante_id], references: [id])
 
   @@map("pre_venta_detalles")
+}
+
+model Devolucion {
+  id          String  @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  negocio_id  String  @db.Char(36)
+  sucursal_id String  @db.Char(36)
+  usuario_id  String  @db.Char(36) // Cajero o encargado que la recibe
+  venta_id    String  @db.Char(36) // Venta de donde vino
+  factura_id  String? @db.Char(36) // Factura FACT de origen (si estaba facturada)
+
+  // Aquí se enlaza la nueva Factura DTE generada como Nota de Crédito:
+  factura_ncre_id String? @unique @db.Char(36)
+
+  // Control comercial y tipo
+  tipo           TipoDevolucion @default(PARCIAL) // "TOTAL" o "PARCIAL"
+  total_devuelto Float // Total de dinero regresado
+  motivo         String?        @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  negocio              Negocio  @relation(fields: [negocio_id], references: [id])
+  sucursal             Sucursal @relation(fields: [sucursal_id], references: [id])
+  usuario              Usuario  @relation("DevolucionesAtendidas", fields: [usuario_id], references: [id])
+  venta                Venta    @relation(fields: [venta_id], references: [id])
+  factura              Factura? @relation("FacturaDevolucionOrigen", fields: [factura_id], references: [id])
+  factura_nota_credito Factura? @relation("FacturaNotaCreditoGenerada", fields: [factura_ncre_id], references: [id])
+
+  detalles DevolucionDetalle[]
+
+  @@index([negocio_id])
+  @@index([venta_id])
+  @@map("devoluciones")
+}
+
+model DevolucionDetalle {
+  id               String  @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  devolucion_id    String  @db.Char(36)
+  venta_detalle_id String  @db.Char(36)
+  variante_id      String  @db.Char(36)
+  lote_id          String? @db.Char(36)
+  proveedor_id     String? @db.Char(36) // Obtenido del lote para garantías
+
+  cantidad        Int
+  precio_unitario Float
+  subtotal        Float
+
+  // Inspección del producto devuelto
+  estado_producto     EstadoItemDevuelto @default(BUEN_ESTADO) // BUEN_ESTADO o DEFECTUOSO_GARANTIA
+  reingresado_a_stock Boolean            @default(false)
+  motivo_falla        String?            @db.Text
+
+  devolucion    Devolucion       @relation(fields: [devolucion_id], references: [id], onDelete: Cascade)
+  venta_detalle VentaDetalle     @relation(fields: [venta_detalle_id], references: [id])
+  variante      VarianteProducto @relation(fields: [variante_id], references: [id])
+  lote          Lote?            @relation(fields: [lote_id], references: [id])
+  proveedor     Proveedor?       @relation(fields: [proveedor_id], references: [id])
+
+  @@map("devolucion_detalles")
 }
 
 model Cotizacion {
@@ -1456,6 +1533,16 @@ model VerificationCode {
 // ==============================================================
 // 8. ENUMERACIONES
 // ==============================================================
+
+enum TipoDevolucion {
+  TOTAL
+  PARCIAL
+}
+
+enum EstadoItemDevuelto {
+  BUEN_ESTADO
+  DEFECTUOSO_GARANTIA
+}
 
 enum TipoDTE {
   FACT // Factura

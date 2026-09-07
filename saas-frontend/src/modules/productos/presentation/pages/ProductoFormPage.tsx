@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDebounce } from '../../../../core/hooks/useDebounce';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, Typography, Paper, TextField, Stack, Button, MenuItem, Autocomplete } from '@mui/material';
+import { Box, Typography, Paper, TextField, Stack, Button, Autocomplete } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
 
@@ -27,6 +28,8 @@ const ProductoFormPage = () => {
     const [loading, setLoading] = useState(isEdit);
     const [categorias, setCategorias] = useState<CategoriaConRuta[]>([]);
     const [marcas, setMarcas] = useState<Marca[]>([]);
+    const [marcaSearch, setMarcaSearch] = useState('');
+    const debouncedMarca = useDebounce(marcaSearch, 500);
 
     const { register, control, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<ProductoFormValues>({
         resolver: zodResolver(productoSchema),
@@ -39,12 +42,25 @@ const ProductoFormPage = () => {
     });
 
     useEffect(() => {
+        const controller = new AbortController();
+        const fetchMarcas = async () => {
+            try {
+                const response = await marcasRepository.listar(10, 0, debouncedMarca, controller.signal);
+                setMarcas(response.data);
+            } catch (error: any) {
+                if (error.name !== 'AbortError' && error.name !== 'CanceledError') {
+                    console.error("Error al buscar marcas:", error);
+                }
+            }
+        };
+        fetchMarcas();
+        return () => controller.abort();
+    }, [debouncedMarca]);
+
+    useEffect(() => {
         const cargarDatos = async () => {
             try {
-                const [categoriaResponse, marcaResponse] = await Promise.all([
-                    CategoriaRepository.listar(100, 0),
-                    marcasRepository.listar(100, 0)
-                ]);
+                const categoriaResponse = await CategoriaRepository.listar(100, 0);
                 const categoriasConRuta = await Promise.all(
                     categoriaResponse.data.map(async (categoria) => {
                         try {
@@ -58,9 +74,8 @@ const ProductoFormPage = () => {
                 );
 
                 setCategorias(categoriasConRuta);
-                setMarcas(marcaResponse.data);
             } catch (error) {
-                console.error("Error al listar categorías o marcas:", error);
+                console.error("Error al listar categorías:", error);
             }
 
             if (isEdit && id) {
@@ -70,6 +85,20 @@ const ProductoFormPage = () => {
                     setValue('marca_id', product.marca_id);
                     setValue('nombre', product.nombre);
                     setValue('precio_sugerido', product.precio_sugerido);
+
+                    if (product.marca_id) {
+                        try {
+                            const marca = await marcasRepository.obtener(product.marca_id);
+                            setMarcas(prev => {
+                                if (!prev.some(m => m.id === marca.data.id)) {
+                                    return [...prev, marca.data];
+                                }
+                                return prev;
+                            });
+                        } catch (error) {
+                            console.error("Error al obtener la marca del producto:", error);
+                        }
+                    }
                 } catch (error) {
                     console.error("Error al obtener el producto:", error);
                 } finally {
@@ -142,21 +171,28 @@ const ProductoFormPage = () => {
                             )}
                         />
 
-                        <TextField
-                            select
-                            label="Marca"
-                            fullWidth
-                            {...register('marca_id')}
-                            error={!!errors.marca_id}
-                            helperText={errors.marca_id?.message}
-                        >
-                            <MenuItem value="">Selecciona una marca</MenuItem>
-                            {marcas.map((marca) => (
-                                <MenuItem key={marca.id} value={marca.id}>
-                                    {marca.marca}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                        <Controller
+                            name="marca_id"
+                            control={control}
+                            render={({ field }) => (
+                                <Autocomplete
+                                    options={marcas}
+                                    value={marcas.find((marca) => marca.id === field.value) ?? null}
+                                    onChange={(_event, value) => field.onChange(value?.id ?? '')}
+                                    onInputChange={(_event, newInputValue) => setMarcaSearch(newInputValue)}
+                                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                                    getOptionLabel={(option) => option.marca}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Marca"
+                                            error={!!errors.marca_id}
+                                            helperText={errors.marca_id?.message}
+                                        />
+                                    )}
+                                />
+                            )}
+                        />
 
                         <TextField
                             label="Nombre"
