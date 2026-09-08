@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import { PrismaAuthRespository } from "./infrastructure/prisma-auth.repository.js";
 import { Argon2HashProvider } from "../../shared/infrastructure/argon2-hash.provider.js";
 import JwtProvider from "./domain/jwt.provider.js";
@@ -9,8 +8,7 @@ import { ObtenerPerfilUseCase } from "./application/obtener-perfil.usecase.js";
 
 
 
-
-const prisma = new PrismaClient();
+import prisma from "@infrastructure/config/prisma.js";
 
 const authRepository = new PrismaAuthRespository(prisma);
 const hashProvider = new Argon2HashProvider();
