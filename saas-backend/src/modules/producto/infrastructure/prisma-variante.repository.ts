@@ -360,17 +360,14 @@ export class PrismaVarianteRepository implements VarianteRepository {
     }
 
     private async obtenerSiguienteCorrelativoVariante(negocio_id: string): Promise<number> {
-        const variantes = await this.prisma.varianteProducto.findMany({
-            where: { producto: { negocio_id }, correlativo: { not: null } },
-            select: { correlativo: true }
-        });
+        const result = await this.prisma.$queryRaw<[{ max_correlativo: string | number | bigint | null }]>`
+            SELECT MAX(CAST(correlativo AS UNSIGNED)) as max_correlativo 
+            FROM variantes_producto 
+            WHERE correlativo IS NOT NULL
+        `;
 
-        const ultimo = variantes.reduce((max, variante) => {
-            const valor = Number(variante.correlativo ?? 0);
-            return Number.isFinite(valor) ? Math.max(max, valor) : max;
-        }, 0);
-
-        return ultimo + 1;
+        const max = result[0]?.max_correlativo;
+        return max ? Number(max) + 1 : 1;
     }
 
     async contar(negocio_id: string): Promise<number> {

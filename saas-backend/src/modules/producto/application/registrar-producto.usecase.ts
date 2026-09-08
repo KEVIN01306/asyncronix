@@ -21,12 +21,29 @@ export class RegistrarProductoUseCase {
 
             const createdProduct = await this.repository.registrar(data, negocio_id);
 
-            await this.varianteRepository.crear({
-                producto_id: createdProduct.id,
-                precio_sugerido: 0,
-                codigo_barras: null,
-                valor_atributo_ids: []
-            }, negocio_id);
+            let varianteCreada = false;
+            let intentos = 0;
+            const MAX_INTENTOS = 3;
+
+            while (!varianteCreada && intentos < MAX_INTENTOS) {
+                try {
+                    await this.varianteRepository.crear({
+                        producto_id: createdProduct.id,
+                        precio_sugerido: 0,
+                        codigo_barras: null,
+                        valor_atributo_ids: []
+                    }, negocio_id);
+                    varianteCreada = true;
+                } catch (error) {
+                    if (error instanceof UniqueConstraintError && intentos < MAX_INTENTOS - 1) {
+                        intentos++;
+                        // Esperar un tiempo aleatorio entre 50ms y 150ms para evitar colisión simultánea
+                        await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
+                    } else {
+                        throw error;
+                    }
+                }
+            }
 
             const productoFinal = await this.repository.obtener(createdProduct.id, negocio_id);
             if (!productoFinal) throw new AppError('Producto no encontrado', 'PRODUCTO_NOT_FOUND', 404);
