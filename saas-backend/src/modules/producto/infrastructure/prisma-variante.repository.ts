@@ -47,6 +47,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
 
             const createData: any = {
                 producto_id: variante.producto_id,
+                negocio_id,
                 imagen_id,
                 sku,
                 correlativo: String(correlativo),
@@ -363,7 +364,7 @@ export class PrismaVarianteRepository implements VarianteRepository {
         const result = await this.prisma.$queryRaw<[{ max_correlativo: string | number | bigint | null }]>`
             SELECT MAX(CAST(correlativo AS UNSIGNED)) as max_correlativo 
             FROM variantes_producto 
-            WHERE correlativo IS NOT NULL
+            WHERE correlativo IS NOT NULL AND negocio_id = ${negocio_id}
         `;
 
         const max = result[0]?.max_correlativo;

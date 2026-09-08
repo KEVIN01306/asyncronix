@@ -200,6 +200,7 @@ model Negocio {
   facturas                 Factura[]
   negocioFacturacionConfig NegocioFacturacionConfig?
   devoluciones             Devolucion[]
+  varianteProductos        VarianteProducto[]
 
   @@map("negocios")
 }
@@ -853,11 +854,12 @@ model ProductoAtributo {
 model VarianteProducto {
   id              String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   producto_id     String   @db.Char(36)
+  negocio_id      String?  @db.Char(36)
   imagen_id       String?  @db.Char(36)
   sku             String   @db.VarChar(100)
-  correlativo     String?  @unique @db.VarChar(20)
-  codigo_barras   String?  @unique
-  qr_codigo       String?  @unique
+  correlativo     String?  @db.VarChar(20)
+  codigo_barras   String?
+  qr_codigo       String?
   precio_sugerido Float
   stock_total     Int      @default(0)
   activo          Boolean  @default(true)
@@ -874,8 +876,12 @@ model VarianteProducto {
   cotizacionDetalles CotizacionDetalle[]
   facturaDetalles    FacturaDetalle[]
   devolucionDetalles DevolucionDetalle[]
+  negocio            Negocio?            @relation(fields: [negocio_id], references: [id])
 
   @@unique([producto_id, sku])
+  @@unique([negocio_id, correlativo])
+  @@unique([negocio_id, codigo_barras])
+  @@unique([negocio_id, qr_codigo])
   @@index([producto_id])
   @@map("variantes_producto")
 }
