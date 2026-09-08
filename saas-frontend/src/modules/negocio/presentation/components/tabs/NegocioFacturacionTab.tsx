@@ -160,7 +160,7 @@ export const NegocioFacturacionTab = () => {
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
                     <Typography variant="h6" fontWeight="bold">Editar Configuración Fiscal</Typography>
                     <Stack direction="row" spacing={2}>
-                        <Button startIcon={<Close />} variant="outlined" color="inherit" onClick={handleCancel}>
+                        <Button startIcon={<Close />} variant="outlined" color="inherit" sx={{ px: 4 }} onClick={handleCancel}>
                             Cancelar
                         </Button>
                         <SubmitButton text="Guardar" icon={<Save />} isSubmitting={isSubmitting} />
