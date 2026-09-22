@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Typography, Paper, TextField, Stack, Button, FormControl, InputLabel, Select, MenuItem, FormHelperText, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { toast } from 'sonner';
@@ -16,18 +17,7 @@ import type { Sucursal } from '../../../sucursales/domain/interfaces/sucursal.in
 import type { Proveedor } from '../../../proveedores/domain/interfaces/proveedor.interface';
 import Loading from '../../../../shared/components/ui/Loaders/Loading';
 import type { LoteRegistroResponse } from '../../domain/interfaces/lote.interface';
-
-interface LoteFormValues {
-    producto_id: string;
-    variante_id: string;
-    proveedor_id: string;
-    cantidad_inicial: number;
-    sucursal_id: string;
-    cantidad_actual: number;
-    costo_compra: number;
-    precio_venta: number;
-    fecha_vencimiento?: string;
-}
+import { loteSchema, type LoteFormValues } from '../../domain/schemas/lote.schema';
 
 const LoteCreatePage = () => {
     const navigate = useNavigate();
@@ -53,6 +43,7 @@ const LoteCreatePage = () => {
         watch,
         formState: { errors, isSubmitting },
     } = useForm<LoteFormValues>({
+        resolver: zodResolver(loteSchema),
         defaultValues: {
             producto_id: productoIdFromQuery,
             sucursal_id: '',
@@ -62,7 +53,7 @@ const LoteCreatePage = () => {
             cantidad_actual: 0,
             costo_compra: 0,
             precio_venta: 0,
-            fecha_vencimiento: undefined,
+            fecha_vencimiento: '',
         },
     });
 
@@ -254,6 +245,7 @@ const LoteCreatePage = () => {
                                 label="Cantidad actual"
                                 type="number"
                                 fullWidth
+                                inputProps={{ min: 0 }}
                                 {...register('cantidad_actual', { valueAsNumber: true })}
                                 error={!!errors.cantidad_actual}
                                 helperText={errors.cantidad_actual?.message}
@@ -264,6 +256,7 @@ const LoteCreatePage = () => {
                                 label="Cantidad inicial"
                                 type="number"
                                 fullWidth
+                                inputProps={{ min: 0 }}
                                 {...register('cantidad_inicial', { valueAsNumber: true })}
                                 error={!!errors.cantidad_inicial}
                                 helperText={errors.cantidad_inicial?.message}
@@ -312,6 +305,7 @@ const LoteCreatePage = () => {
                                 label="Costo compra"
                                 type="number"
                                 fullWidth
+                                inputProps={{ min: 0, step: 'any' }}
                                 {...register('costo_compra', { valueAsNumber: true })}
                                 error={!!errors.costo_compra}
                                 helperText={errors.costo_compra?.message}
@@ -322,6 +316,7 @@ const LoteCreatePage = () => {
                                 label="Precio venta"
                                 type="number"
                                 fullWidth
+                                inputProps={{ min: 0, step: 'any' }}
                                 {...register('precio_venta', { valueAsNumber: true })}
                                 error={!!errors.precio_venta}
                                 helperText={errors.precio_venta?.message}
