@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, Paper, TableContainer, useTheme, useMediaQuery, TextField, InputAdornment, Alert, AlertTitle, Chip } from '@mui/material';
-import { Add, Edit, Visibility,Search } from '@mui/icons-material';
+import { Add, Edit, Visibility, Search } from '@mui/icons-material';
 import ListTable from '../../../../shared/components/ui/tables/ListTable';
 import type { Sucursal } from '../../domain/interfaces/sucursal.interface';
 import { sucursalRepository } from '../../infrastructure/repositories/sucursal.repository';
@@ -85,10 +85,10 @@ const SucursalesListPage = () => {
         <Box p={isMobile ? 2 : 4}>
             <Alert severity="info" sx={{ mb: 3, boxShadow: 'none', border: (theme) => `1px solid ${theme.palette.divider}` }}>
                 <AlertTitle>Informacion</AlertTitle>
-                            En este modulo puedes administrar tus sucursales, agregar nuevas, editar su información o eliminarlas. Mantén tu lista de sucursales actualizada para una mejor gestión de tu negocio.
+                En este modulo puedes administrar tus sucursales, agregar nuevas, editar su información o eliminarlas. Mantén tu lista de sucursales actualizada para una mejor gestión de tu negocio.
             </Alert>
 
-            <Box display="flex" flexDirection={ isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={'center'} gap={2} mb={1}
+            <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={'center'} gap={2} mb={1}
                 sx={{
                     bgcolor: 'background.paper',
                     p: 2,
@@ -116,7 +116,7 @@ const SucursalesListPage = () => {
 
             <TableContainer >
                 {loading ? (
-                        <Loading/>                
+                    <Loading />
                 ) : (
                     <>
                         <ListTable

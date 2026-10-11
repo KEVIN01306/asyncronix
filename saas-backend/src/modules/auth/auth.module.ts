@@ -16,7 +16,7 @@ const jwtProvider = new JwtProvider();
 
 
 const loginUseCase = new LoginUseCase(authRepository, jwtProvider, hashProvider)
-const refreshTokenUseCase = new RefreshTokenUseCase(authRepository,jwtProvider )
+const refreshTokenUseCase = new RefreshTokenUseCase(authRepository, jwtProvider)
 const obtenerPerfilUseCase = new ObtenerPerfilUseCase(authRepository)
 
 export const authController = new AuthController(

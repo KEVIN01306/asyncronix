@@ -1,0 +1,135 @@
+import { PrismaClient } from "@prisma/client";
+
+export const paisesData = [
+  {
+    id: "3c94ad15-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "GT",
+    nombre: "Guatemala",
+    codigo_tel: "+502",
+    moneda_id: "1d3df6bf-781a-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-04T20:42:51.543Z"),
+    updated_at: new Date("2026-07-05T02:43:00.101Z"),
+    locale: "es-GT",
+  },
+  {
+    id: "3cce9ea0-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "US",
+    nombre: "Estados Unidos",
+    codigo_tel: "+1",
+    moneda_id: "1d7508e9-781a-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-04T20:42:51.000Z"),
+    updated_at: new Date("2026-07-05T02:43:00.481Z"),
+    locale: "en-US",
+  },
+  {
+    id: "3d077f3d-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "HN",
+    nombre: "Honduras",
+    codigo_tel: "+504",
+    moneda_id: "1dab5c3e-781a-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-04T20:42:51.000Z"),
+    updated_at: new Date("2026-07-05T02:43:00.854Z"),
+    locale: "es-HN",
+  },
+  {
+    id: "3d3f50d8-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "SV",
+    nombre: "El Salvador",
+    codigo_tel: "+503",
+    moneda_id: "1d7508e9-781a-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-04T20:42:51.000Z"),
+    updated_at: new Date("2026-07-05T02:43:01.220Z"),
+    locale: "es-SV",
+  },
+  {
+    id: "3d787466-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "BZ",
+    nombre: "Belice",
+    codigo_tel: "+501",
+    moneda_id: "1d7508e9-781a-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-04T20:42:51.000Z"),
+    updated_at: new Date("2026-07-05T02:43:01.594Z"),
+    locale: "en-BZ",
+  },
+  {
+    id: "3db13188-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "NI",
+    nombre: "Nicaragua",
+    codigo_tel: "+505",
+    moneda_id: "1de34acf-781a-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-04T20:42:51.000Z"),
+    updated_at: new Date("2026-07-05T02:43:01.966Z"),
+    locale: "es-NI",
+  },
+  {
+    id: "3de9b773-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "CR",
+    nombre: "Costa Rica",
+    codigo_tel: "+506",
+    moneda_id: "1e1bcb6e-781a-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-04T20:42:51.000Z"),
+    updated_at: new Date("2026-07-05T02:43:02.337Z"),
+    locale: "es-CR",
+  },
+  {
+    id: "3e2229f1-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "PA",
+    nombre: "Panamá",
+    codigo_tel: "+507",
+    moneda_id: "1e536501-781a-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-04T20:42:51.000Z"),
+    updated_at: new Date("2026-07-05T02:43:02.707Z"),
+    locale: "es-PA",
+  },
+  {
+    id: "e7549612-781b-11f1-821e-1ce8d4b626a6",
+    codigo_iso: "MX",
+    nombre: "México",
+    codigo_tel: "+52",
+    moneda_id: "e5fb52ab-781b-11f1-821e-1ce8d4b626a6",
+    activo: true,
+    created_at: new Date("2026-07-05T02:47:46.028Z"),
+    updated_at: new Date("2026-07-05T02:47:46.028Z"),
+    locale: "es-MX",
+  },
+];
+
+export async function seedPaises(prisma: PrismaClient) {
+  console.log("🌎 Iniciando seed de países...");
+
+  for (const pais of paisesData) {
+    await prisma.pais.upsert({
+      where: { id: pais.id },
+      update: {
+        codigo_iso: pais.codigo_iso,
+        nombre: pais.nombre,
+        codigo_tel: pais.codigo_tel,
+        moneda_id: pais.moneda_id,
+        activo: pais.activo,
+        locale: pais.locale,
+        updated_at: pais.updated_at,
+      },
+      create: {
+        id: pais.id,
+        codigo_iso: pais.codigo_iso,
+        nombre: pais.nombre,
+        codigo_tel: pais.codigo_tel,
+        moneda_id: pais.moneda_id,
+        activo: pais.activo,
+        locale: pais.locale,
+        created_at: pais.created_at,
+        updated_at: pais.updated_at,
+      },
+    });
+  }
+
+  console.log(`✅ Seed de países completado (${paisesData.length} procesados).`);
+}

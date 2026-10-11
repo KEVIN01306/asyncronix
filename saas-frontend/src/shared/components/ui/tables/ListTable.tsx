@@ -66,82 +66,82 @@ const ListTable: React.FC<ListTableProps> = ({
 
     return (
         <Box sx={{ width: '100%', mb: 4 }}>
-            <Paper 
-            sx={{ 
-                width: '100%', 
-                overflowX: 'auto', 
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-                boxShadow: 'none' 
-            }}
-        >
-            <TableContainer
+            <Paper
                 sx={{
-                    backgroundColor: 'background.paper',
-                    overflowX: 'auto',
                     width: '100%',
+                    overflowX: 'auto',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    boxShadow: 'none'
                 }}
             >
-                <Table sx={{ width: '100%', minWidth: 650, tableLayout: 'auto' }} aria-label="list table">
-                    <TableHead sx={{ backgroundColor: (theme) => theme.palette.action.hover }}>
-                        <TableRow sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-                            {columns.map((column) => (
-                                <TableCell
-                                    key={column.id}
-                                    sx={{
-                                        color: 'text.secondary',
-                                        fontWeight: 600,
-                                        fontSize: '0.75rem',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.05rem',
-                                        py: 2,
-                                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                    }}
-                                >
-                                    {column.name}
-                                </TableCell>
-                            ))}
-                            {actions && actions.length > 0 && (
-                                <TableCell align="right" sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
-                                    <Typography sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>
-                                        ACCIÓN
-                                    </Typography>
-                                </TableCell>
-                            )}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {data.map((row, index) => (
-                            <TableRow
-                                key={row.id || index}
-                                sx={{
-                                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                                    '&:hover': { backgroundColor: (theme) => theme.palette.action.hover },
-                                    transition: 'background-color 0.2s',
-
-                                }}
-                            >
+                <TableContainer
+                    sx={{
+                        backgroundColor: 'background.paper',
+                        overflowX: 'auto',
+                        width: '100%',
+                    }}
+                >
+                    <Table sx={{ width: '100%', minWidth: 650, tableLayout: 'auto' }} aria-label="list table">
+                        <TableHead sx={{ backgroundColor: (theme) => theme.palette.action.hover }}>
+                            <TableRow sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
                                 {columns.map((column) => (
-                                    <TableCell key={column.id} sx={{ py: 2, maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        <Box sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.85rem' }}>
-                                            {column.format ? column.format(row[column.id], row) : row[column.id]}
-                                        </Box>
+                                    <TableCell
+                                        key={column.id}
+                                        sx={{
+                                            color: 'text.secondary',
+                                            fontWeight: 600,
+                                            fontSize: '0.75rem',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.05rem',
+                                            py: 2,
+                                            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                        }}
+                                    >
+                                        {column.name}
                                     </TableCell>
                                 ))}
                                 {actions && actions.length > 0 && (
-                                    <TableCell align="right">
-                                        <IconButton onClick={(event) => handleMenuOpen(event, row)} size="small">
-                                            <MoreVert sx={{ color: 'text.secondary', fontSize: 20 }} />
-                                        </IconButton>
+                                    <TableCell align="right" sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
+                                        <Typography sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>
+                                            ACCIÓN
+                                        </Typography>
                                     </TableCell>
                                 )}
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                            {data.map((row, index) => (
+                                <TableRow
+                                    key={row.id || index}
+                                    sx={{
+                                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                                        '&:hover': { backgroundColor: (theme) => theme.palette.action.hover },
+                                        transition: 'background-color 0.2s',
+
+                                    }}
+                                >
+                                    {columns.map((column) => (
+                                        <TableCell key={column.id} sx={{ py: 2, maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <Box sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.85rem' }}>
+                                                {column.format ? column.format(row[column.id], row) : row[column.id]}
+                                            </Box>
+                                        </TableCell>
+                                    ))}
+                                    {actions && actions.length > 0 && (
+                                        <TableCell align="right">
+                                            <IconButton onClick={(event) => handleMenuOpen(event, row)} size="small">
+                                                <MoreVert sx={{ color: 'text.secondary', fontSize: 20 }} />
+                                            </IconButton>
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
                 {pagination && (
                     <TablePagination
                         rowsPerPageOptions={[5, 10, 25]}
@@ -191,7 +191,7 @@ const ListTable: React.FC<ListTableProps> = ({
                                 {action.icon}
                                 {action.name}
                             </MenuItem>
-                            
+
                         </>
                     );
                 })}

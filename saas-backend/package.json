@@ -9,7 +9,8 @@
     "dev": "cross-env NODE_ENV=development nodemon --exec node --import tsx src/server.ts",
     "db:migrate": "npx prisma migrate dev",
     "db:studio": "npx prisma studio",
-    "start": "node --import tsx src/server.ts"
+    "start": "node --import tsx src/server.ts",
+    "build": "tsc && tsc-alias"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
