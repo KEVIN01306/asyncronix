@@ -42,8 +42,8 @@ export class CrearYCertificarFacturaUseCase {
         const nucJson = this.construirNucJson(documento, config, tipoDocumento);
 
         // 4. Crear registro de factura en estado EMITIDA
-        const total = documento.total ?? 0;
-        const subtotalSinIva = total / 1.12; 
+        const total = Number(documento.total ?? 0);
+        const subtotalSinIva = total / 1.12;
         const iva = total - subtotalSinIva;
 
         let factura = facturaExistente;
@@ -60,10 +60,10 @@ export class CrearYCertificarFacturaUseCase {
                 receptor_nit: (documento.cliente?.nit || "CF").replace(/[^0-9KkCFcf]/g, ''),
                 receptor_nombre: documento.cliente?.nombre || "Consumidor Final",
                 receptor_direccion: "Ciudad",
-                subtotal_sin_iva: parseFloat(subtotalSinIva.toFixed(2)),
+                subtotal_sin_iva: parseFloat(subtotalSinIva.toFixed(6)),
                 descuento: 0,
-                iva: parseFloat(iva.toFixed(2)),
-                total: total,
+                iva: parseFloat(iva.toFixed(6)),
+                total: parseFloat(total.toFixed(6)),
                 metodo_pago: tipoDocumento === 'VENTA' ? documento.metodo_pago : (documento.MetodoPago || 'EFECTIVO'),
                 estado: 'EMITIDA'
             });
@@ -192,15 +192,15 @@ export class CrearYCertificarFacturaUseCase {
                 documento.servicioReparacion.forEach((rep: any, i: number) => {
                     const descRep = rep.descripcion ? `Reparación: ${rep.descripcion}` : `Reparación #${i + 1}`;
                     const repuestosRep = rep.servicioRepuestos || [];
-                    
+
                     // Calcular subtotal de repuestos de esta reparación
                     const totalRepuestos = repuestosRep.reduce((acc: number, r: any) => acc + (r.precio_venta * r.cantidad), 0);
                     const manoObraReparacion = rep.total ? rep.total : 0;
-                    
+
                     if (manoObraReparacion > 0) {
                         items.push(formatItem(descRep, 1, manoObraReparacion, 'Servicio'));
                     }
-                    
+
                     repuestosRep.forEach((r: any) => {
                         const rDesc = r.variante?.producto?.nombre || 'Repuesto de reparación';
                         items.push(formatItem(rDesc, r.cantidad, r.precio_venta, 'Bien'));
