@@ -37,7 +37,7 @@ const LoteListPage = () => {
         { id: 'cantidad_inicial', name: 'Cantidad inicial' },
         { id: 'cantidad_actual', name: 'Cantidad actual' },
         { id: 'fecha_vencimiento', name: 'Fecha vigencia', format: (value: string) => value ? new Date(value).toLocaleDateString() : 'Sin fecha' },
-        { id: 'precio_venta', name: 'Precio venta', format: (value: number) => `S/ ${value.toFixed(2)}` },
+        { id: 'precio_venta', name: 'Precio venta', format: (value: any) => `S/ ${Number(value ?? 0).toFixed(2)}` },
         { id: 'activo', name: 'Estado', format: (value: boolean) => <Chip variant='outlined' color={value ? 'success' : 'error'} label={value ? 'Activo' : 'Inactivo'} size="small" /> }
     ];
 

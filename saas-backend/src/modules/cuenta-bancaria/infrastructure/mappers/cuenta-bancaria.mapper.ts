@@ -9,8 +9,8 @@ export class CuentaBancariaMapper {
             numero_cuenta: db.numero_cuenta,
             nombre_titular: db.nombre_titular,
             tipo: db.tipo,
-            saldo: db.saldo,
-            saldo_moneda_base: db.saldo_moneda_base,
+            saldo: Number(db.saldo),
+            saldo_moneda_base: db.saldo_moneda_base != null ? Number(db.saldo_moneda_base) : null,
             activo: db.activo,
             created_at: db.created_at,
             updated_at: db.updated_at,
@@ -26,7 +26,6 @@ export class CuentaBancariaMapper {
                         codigo: db.moneda.codigo,
                         nombre: db.moneda.nombre,
                         simbolo: db.moneda.simbolo,
-                        activo: db.moneda.activo,
                         created_at: db.moneda.created_at,
                         updated_at: db.moneda.updated_at,
                     }

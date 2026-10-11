@@ -7,8 +7,8 @@ export const mapServicioSimple = (record: any): ServicioSimple => ({
     cliente_id: record.cliente_id,
     tipo_servicio_id: record.tipo_servicio_id,
     estado: record.estado,
-    subtotal: record.subtotal,
-    total: record.total,
+    subtotal: Number(record.subtotal),
+    total: Number(record.total),
     created_at: record.created_at,
     vehiculo: record.vehiculo ? {
         id: record.vehiculo.id,
@@ -26,7 +26,7 @@ export const mapServicioSimple = (record: any): ServicioSimple => ({
     tipo_servicio: record.tipo_servicio ? {
         id: record.tipo_servicio.id,
         nombre: record.tipo_servicio.nombre,
-        precio_base: record.tipo_servicio.precio_base
+        precio_base: record.tipo_servicio.precio_base != null ? Number(record.tipo_servicio.precio_base) : 0
     } : null,
     cliente: record.cliente ? ({
         id: record.cliente.id,
@@ -59,10 +59,10 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
     fecha_salida: record.fecha_salida,
     firma_entrada: record.firma_entrada,
     firma_salida: record.firma_salida,
-    subtotal: record.subtotal ?? 0,
-    total: record.total ?? 0,
-    efectivo_recibido: record.efectivo_recibido ?? null,
-    vuelto: record.vuelto ?? null,
+    subtotal: record.subtotal != null ? Number(record.subtotal) : 0,
+    total: record.total != null ? Number(record.total) : 0,
+    efectivo_recibido: record.efectivo_recibido != null ? Number(record.efectivo_recibido) : null,
+    vuelto: record.vuelto != null ? Number(record.vuelto) : null,
     estado: record.estado,
     MetodoPago: record.MetodoPago,
     activo: record.activo,
@@ -152,7 +152,7 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
             codigo_barras: r.variante.codigo_barras,
             correlativo: r.variante.correlativo,
             qr_codigo: r.variante.qr_codigo,
-            precio_sugerido: r.variante.precio_sugerido,
+            precio_sugerido: r.variante.precio_sugerido != null ? Number(r.variante.precio_sugerido) : undefined,
             stock_total: r.variante.stock_total,
             producto: r.variante.producto ? {
                 id: r.variante.producto.id,
@@ -165,8 +165,8 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
             }))
         } : null,
         cantidad: r.cantidad,
-        precio_venta: r.precio_venta,
-        costo: r.costo,
+        precio_venta: Number(r.precio_venta),
+        costo: r.costo != null ? Number(r.costo) : null,
         created_at: r.created_at,
         updated_at: r.updated_at
     })),
@@ -186,8 +186,8 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         firma_salida: rep.firma_salida ?? null,
         fecha_entrada: rep.fecha_entrada,
         fecha_salida: rep.fecha_salida ?? null,
-        subtotal: rep.subtotal,
-        total: rep.total,
+        subtotal: rep.subtotal != null ? Number(rep.subtotal) : 0,
+        total: Number(rep.total),
         created_at: rep.created_at,
         updated_at: rep.updated_at,
         servicioReparacionRepuestos: (rep.servicioReparacionRepuestos ?? []).map((r: any) => ({
@@ -221,8 +221,8 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
                 }))
             } : null,
             cantidad: r.cantidad,
-            precio_venta: r.precio_venta,
-            costo: r.costo,
+            precio_venta: Number(r.precio_venta),
+            costo: r.costo != null ? Number(r.costo) : null,
             created_at: r.created_at,
             updated_at: r.updated_at
         }))
@@ -234,7 +234,7 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         firma_salida: custodia.firma_salida ?? null,
         fecha_entrada: custodia.fecha_entrada,
         fecha_salida: custodia.fecha_salida ?? null,
-        total: custodia.total,
+        total: Number(custodia.total),
         created_at: custodia.created_at,
         updated_at: custodia.updated_at
     })),

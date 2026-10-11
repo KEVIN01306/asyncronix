@@ -63,9 +63,9 @@ export const FacturaItems = ({ data }: Props) => {
                         }}
                     >
                         <Typography component="span" /> {/* Celda vacía que empuja los números al grid */}
-                        <Typography component="span">{item.cantidad.toFixed(2)}</Typography>
-                        <Typography component="span">{item.precio_unitario.toFixed(2)}</Typography>
-                        <Typography component="span">{item.total.toFixed(2)}</Typography>
+                        <Typography component="span">{Number(item.cantidad).toFixed(2)}</Typography>
+                        <Typography component="span">{Number(item.precio_unitario).toFixed(2)}</Typography>
+                        <Typography component="span">{Number(item.total).toFixed(2)}</Typography>
                     </Box>
                 </Box>
             ))}

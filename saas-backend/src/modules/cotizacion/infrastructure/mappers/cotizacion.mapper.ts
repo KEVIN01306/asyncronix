@@ -11,22 +11,22 @@ export class CotizacionMapper {
             vehiculo_id: prismaData.vehiculo_id,
             correlativo: prismaData.correlativo,
             codigo: prismaData.codigo,
-            total: prismaData.total,
+            total: Number(prismaData.total),
             fecha_emision: prismaData.fecha_emision,
             fecha_validez: prismaData.fecha_validez,
             estado: prismaData.estado,
             tipo_destino: prismaData.tipo_destino,
             terminos: prismaData.terminos,
-            venta_id: prismaData.venta_id,
-            preventa_id: prismaData.preventa_id,
-            servicio_id: prismaData.servicio_id,
+            venta_id: prismaData.venta_id ?? null,
+            preventa_id: prismaData.preventa_id ?? null,
+            servicio_id: prismaData.servicio_id ?? null,
             created_at: prismaData.created_at,
             updated_at: prismaData.updated_at,
             cliente: prismaData.cliente ? {
                 id: prismaData.cliente.id,
                 nombre: prismaData.cliente.nombre,
                 telefono: prismaData.cliente.telefono,
-                email: prismaData.cliente.email
+                email: prismaData.cliente.email ?? null
             } : null,
             vehiculo: prismaData.vehiculo ? {
                 id: prismaData.vehiculo.id,
@@ -35,7 +35,7 @@ export class CotizacionMapper {
             usuario: prismaData.usuario ? {
                 id: prismaData.usuario.id,
                 nombre: prismaData.usuario.nombre,
-                apellido: prismaData.usuario.apellido
+                apellido: prismaData.usuario.apellido ?? null
             } : undefined
         };
     }
@@ -51,9 +51,9 @@ export class CotizacionMapper {
                 tipo_servicio_id: d.tipo_servicio_id,
                 descripcion: d.descripcion,
                 cantidad: d.cantidad,
-                precio_unitario: d.precio_unitario,
-                descuento: d.descuento,
-                subtotal: d.subtotal
+                precio_unitario: Number(d.precio_unitario),
+                descuento: Number(d.descuento),
+                subtotal: Number(d.subtotal)
             })) || []
         };
     }

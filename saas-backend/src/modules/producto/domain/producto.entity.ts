@@ -26,7 +26,7 @@ export interface ImagenProducto {
 export interface ProductoCategoria {
     id: string;
     categoria: string;
-    categoria_padre_id?: string;
+    categoria_padre_id?: string | null;
 }
 
 export interface ProductoMarca {

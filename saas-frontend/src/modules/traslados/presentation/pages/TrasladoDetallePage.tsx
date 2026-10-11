@@ -159,10 +159,10 @@ export const TrasladoDetallePage: React.FC = () => {
                                             <TableCell>{detalle.lote?.codigo_lote || '-'}</TableCell>
                                             <TableCell align="right">{detalle.cantidad}</TableCell>
                                             <TableCell align="right">
-                                                {detalle.lote?.costo_compra != null ? `Q${detalle.lote.costo_compra.toFixed(2)}` : '-'}
+                                                {detalle.lote?.costo_compra != null ? `Q${Number(detalle.lote.costo_compra).toFixed(2)}` : '-'}
                                             </TableCell>
                                             <TableCell align="right">
-                                                {detalle.lote?.precio_venta != null ? `Q${detalle.lote.precio_venta.toFixed(2)}` : '-'}
+                                                {detalle.lote?.precio_venta != null ? `Q${Number(detalle.lote.precio_venta).toFixed(2)}` : '-'}
                                             </TableCell>
                                         </TableRow>
                                     ))}

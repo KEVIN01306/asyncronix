@@ -6,7 +6,7 @@ export class CajaMapper {
             id: db.id,
             nombre: db.nombre,
             tipo: db.tipo,
-            saldo: db.saldo,
+            saldo: Number(db.saldo),
             activo: db.activo,
             ip_autorizada: db.ip_autorizada ?? null,
             asociacion_id: db.asociacion_id ?? null,

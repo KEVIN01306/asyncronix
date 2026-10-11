@@ -16,6 +16,7 @@ export interface CotizacionSimple {
     tipo_destino: TipoDestinoCotizacion;
     terminos: string | null;
     venta_id: string | null;
+    preventa_id: string | null;
     servicio_id: string | null;
     created_at: Date;
     updated_at: Date;
@@ -25,17 +26,17 @@ export interface CotizacionSimple {
         id: string;
         nombre: string;
         telefono: string;
-        email?: string | null;
-    } | null;
+        email?: string | null | undefined;
+    } | null | undefined;
     vehiculo?: {
         id: string;
         placa: string;
-    } | null;
+    } | null | undefined;
     usuario?: {
         id: string;
         nombre: string;
         apellido: string | null;
-    };
+    } | null | undefined;
 }
 
 export interface CotizacionDetalle {

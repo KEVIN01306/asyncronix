@@ -8,8 +8,8 @@ export class VentaMapper {
             sucursal_id: venta.sucursal_id,
             usuario_id: venta.usuario_id,
             cliente_id: venta.cliente_id,
-            total: venta.total,
-            total_costo: venta.total_costo,
+            total: Number(venta.total),
+            total_costo: Number(venta.total_costo),
             comentarios: venta.comentarios ?? null,
             motivo_anulacion: venta.motivo_anulacion ?? null,
             estado: venta.estado,
@@ -18,8 +18,8 @@ export class VentaMapper {
             updated_at: venta.updated_at,
             vendedor_nombre: `${venta.usuario.nombre} ${venta.usuario.apellido || ''}`.trim(),
             cliente_nombre: venta.cliente ? `${venta.cliente.nombre} ${venta.cliente.apellido || ''}`.trim() : undefined,
-            efectivo_recibido: venta.efectivo_recibido ?? null,
-            vuelto: venta.vuelto ?? null,
+            efectivo_recibido: venta.efectivo_recibido != null ? Number(venta.efectivo_recibido) : null,
+            vuelto: venta.vuelto != null ? Number(venta.vuelto) : null,
             cliente: venta.cliente ? {
                 id: venta.cliente.id,
                 nombre: `${venta.cliente.nombre} ${venta.cliente.apellido || ''}`.trim(),
@@ -46,9 +46,9 @@ export class VentaMapper {
                 lote_id: d.lote_id,
                 descripcion: d.descripcion,
                 cantidad: d.cantidad,
-                precio_unitario: d.precio_unitario,
-                costo_unitario: d.costo_unitario,
-                subtotal: d.cantidad * d.precio_unitario
+                precio_unitario: Number(d.precio_unitario),
+                costo_unitario: Number(d.costo_unitario),
+                subtotal: d.cantidad * Number(d.precio_unitario)
             })),
             factura: (venta.facturas && venta.facturas.length > 0) ? {
                 id: venta.facturas[0].id,

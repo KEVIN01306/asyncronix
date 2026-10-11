@@ -59,9 +59,9 @@ export class TransaccionMapper {
                 avatar: data.usuario?.avatar_url ?? null,
             },
             monto: {
-                original: data.monto_original,
-                moneda_base: data.monto_moneda_base,
-                tipo_cambio: data.tipo_cambio,
+                original: Number(data.monto_original),
+                moneda_base: Number(data.monto_moneda_base),
+                tipo_cambio: Number(data.tipo_cambio),
             },
             moneda: data.moneda
                 ? {
@@ -140,9 +140,9 @@ export class TransaccionMapper {
                 avatar: data.usuario?.avatar_url ?? null,
             },
             monto: {
-                original: data.monto_original,
-                moneda_base: data.monto_moneda_base,
-                tipo_cambio: data.tipo_cambio,
+                original: Number(data.monto_original),
+                moneda_base: Number(data.monto_moneda_base),
+                tipo_cambio: Number(data.tipo_cambio),
             },
             moneda: data.moneda
                 ? {
@@ -181,9 +181,10 @@ export class TransaccionMapper {
             tipo_movimiento: data.tipo_movimiento,
             origen_tipo: data.origen_tipo,
             moneda_id: data.moneda_id,
-            monto_original: data.monto_original,
-            tipo_cambio: data.tipo_cambio,
-            monto_moneda_base: data.monto_moneda_base,
+            monto_original: Number(data.monto_original),
+            tipo_cambio: Number(data.tipo_cambio),
+            monto_moneda_base: Number(data.monto_moneda_base),
+            metodo_pago: data.metodo_pago ?? null,
             descripcion: data.descripcion,
             origen_entidad: data.origen_entidad,
             origen_caja_id: data.origen_caja_id,
@@ -217,9 +218,10 @@ export class TransaccionMapper {
             tipo_movimiento: data.tipo_movimiento,
             origen_tipo: data.origen_tipo,
             moneda_id: data.moneda_id,
-            monto_original: data.monto_original,
-            tipo_cambio: data.tipo_cambio,
-            monto_moneda_base: data.monto_moneda_base,
+            monto_original: Number(data.monto_original),
+            tipo_cambio: Number(data.tipo_cambio),
+            monto_moneda_base: Number(data.monto_moneda_base),
+            metodo_pago: data.metodo_pago ?? null,
             descripcion: data.descripcion,
             origen_entidad: data.origen_entidad,
             origen_caja_id: data.origen_caja_id,

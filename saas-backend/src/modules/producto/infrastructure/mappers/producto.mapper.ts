@@ -18,7 +18,7 @@ const mapVariantFields = (producto: ProductoConVariantes) => {
 
     return {
         sku: producto.sku ?? '',
-        precio_sugerido: variant?.precio_sugerido ?? producto.precio_sugerido ?? 0,
+        precio_sugerido: variant?.precio_sugerido != null ? Number(variant.precio_sugerido) : (producto.precio_sugerido != null ? Number(producto.precio_sugerido) : 0),
         stock_total: variant?.stock_total ?? producto.stock_total ?? 0,
         url_imagen: imagenPrincipal?.url ?? null
     };
@@ -42,7 +42,7 @@ export class ProductoMapper {
                 categoria: producto.categoria ? {
                     id: producto.categoria.id,
                     categoria: producto.categoria.categoria,
-                    categoria_padre_id: producto.categoria.categoria_padre_id ?? undefined
+                    categoria_padre_id: producto.categoria.categoria_padre_id ?? null
                 } : null,
             marca: producto.marca ? { id: producto.marca.id, marca: producto.marca.marca } : null
         };
@@ -65,7 +65,7 @@ export class ProductoMapper {
                 categoria: producto.categoria ? {
                     id: producto.categoria.id,
                     categoria: producto.categoria.categoria,
-                    categoria_padre_id: producto.categoria.categoria_padre_id ?? undefined
+                    categoria_padre_id: producto.categoria.categoria_padre_id ?? null
                 } : null,
             marca: producto.marca ? { id: producto.marca.id, marca: producto.marca.marca } : null,
             negocio: (producto as any).negocio ? { id: (producto as any).negocio.id, slug: (producto as any).negocio.slug } : undefined,
@@ -89,7 +89,7 @@ export class ProductoMapper {
                 id: v?.id ?? '',
                 sku: v?.sku ?? undefined,
                 correlativo: v?.correlativo ?? null,
-                precio_sugerido: v?.precio_sugerido ?? undefined,
+                precio_sugerido: v?.precio_sugerido != null ? Number(v.precio_sugerido) : undefined,
                 stock_total: v?.stock_total ?? undefined,
                 codigo_barras: (v as any)?.codigo_barras ?? null,
                 qr_codigo: (v as any)?.qr_codigo ?? null,

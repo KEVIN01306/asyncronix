@@ -244,7 +244,7 @@ export default function ServicioRepuestosPage() {
                         <Typography><strong>Producto:</strong> {(varianteSeleccionada || productoSeleccionado).producto?.nombre || 'Sin nombre'}</Typography>
                         <Typography><strong>SKU:</strong> {(varianteSeleccionada || productoSeleccionado).sku}</Typography>
                         <Typography><strong>Stock:</strong> {(varianteSeleccionada || productoSeleccionado).stock_total}</Typography>
-                        <Typography><strong>Precio:</strong> {(varianteSeleccionada || productoSeleccionado).precio_sugerido?.toFixed(2)}</Typography>
+                        <Typography><strong>Precio:</strong> {Number((varianteSeleccionada || productoSeleccionado).precio_sugerido ?? 0).toFixed(2)}</Typography>
                         <Button
                             variant="outlined"
                             onClick={() => {

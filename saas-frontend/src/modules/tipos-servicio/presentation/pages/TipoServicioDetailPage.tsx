@@ -34,7 +34,7 @@ const TipoServicioDetailPage = () => {
             <Paper sx={{ p: 4, border: (theme) => `1px solid ${theme.palette.divider}` }}>
                 <Stack spacing={2}>
                     <Typography variant="h5" fontWeight={700}>{tipoServicio.nombre}</Typography>
-                    <Typography variant="body2" color="text.secondary">Precio base: Q {tipoServicio.precio_base.toFixed(2)}</Typography>
+                    <Typography variant="body2" color="text.secondary">Precio base: Q {Number(tipoServicio.precio_base ?? 0).toFixed(2)}</Typography>
                     <Typography variant="body2" color="text.secondary">Checklist automático: {tipoServicio.checklist ? 'Sí' : 'No'}</Typography>
                     <Typography variant="body2" color="text.secondary">Estado: {tipoServicio.activo ? 'Activo' : 'Inactivo'}</Typography>
                     <Typography variant="subtitle1" fontWeight={600}>Opciones del servicio</Typography>

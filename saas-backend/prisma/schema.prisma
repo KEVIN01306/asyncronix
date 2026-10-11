@@ -535,14 +535,14 @@ model Servicio {
   firma_salida      String?      @db.Text
   fecha_entrada     DateTime     @default(now())
   fecha_salida      DateTime?
-  subtotal          Float        @default(0)
-  total             Float        @default(0)
+  subtotal          Decimal      @default(0.00) @db.Decimal(14, 2)
+  total             Decimal      @default(0.00) @db.Decimal(14, 2)
   documento_extra   String?      @db.VarChar(20)
   nombre_extra      String?      @db.VarChar(255)
   numero_extra      String?      @db.VarChar(20)
   activo            Boolean      @default(true)
-  efectivo_recibido Float?
-  vuelto            Float?
+  efectivo_recibido Decimal?     @db.Decimal(14, 2)
+  vuelto            Decimal?     @db.Decimal(14, 2)
   MetodoPago        MetodoPago?  @default(EFECTIVO)
   servicio_tipo     ServicioTipo @default(VEHICULO)
   created_at        DateTime     @default(now())
@@ -577,7 +577,7 @@ model ServicioReparacion {
   firma_salida  String?   @db.Text
   fecha_entrada DateTime  @default(now())
   fecha_salida  DateTime?
-  total         Float     @default(0)
+  total         Decimal   @default(0.00) @db.Decimal(14, 2)
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 
@@ -596,7 +596,7 @@ model ServicioCustodia {
   firma_salida  String?   @db.Text
   fecha_entrada DateTime  @default(now())
   fecha_salida  DateTime?
-  total         Float     @default(0)
+  total         Decimal   @default(0.00) @db.Decimal(14, 2)
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 
@@ -628,7 +628,7 @@ model TipoServicio {
   id          String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   negocio_id  String   @db.Char(36)
   nombre      String
-  precio_base Float    @default(0)
+  precio_base Decimal  @default(0.00) @db.Decimal(12, 2)
   checklist   Boolean  @default(true)
   activo      Boolean  @default(true)
   created_at  DateTime @default(now())
@@ -860,7 +860,7 @@ model VarianteProducto {
   correlativo     String?  @db.VarChar(20)
   codigo_barras   String?
   qr_codigo       String?
-  precio_sugerido Float
+  precio_sugerido Decimal  @db.Decimal(12, 2)
   stock_total     Int      @default(0)
   activo          Boolean  @default(true)
   created_at      DateTime @default(now())
@@ -909,8 +909,8 @@ model Lote {
   codigo_lote       String? // El código asignado a esta tanda de ingreso
   cantidad_inicial  Int // Para auditorías
   cantidad_actual   Int
-  costo_compra      Float
-  precio_venta      Float // Permite cambiar el precio real por lote si suben los costos
+  costo_compra      Decimal   @db.Decimal(14, 4)
+  precio_venta      Decimal   @db.Decimal(12, 2) // Permite cambiar el precio real por lote si suben los costos
   fecha_ingreso     DateTime  @default(now())
   fecha_vencimiento DateTime? // Opcional (útil para químicos o aditivos)
   activo            Boolean   @default(true)
@@ -939,8 +939,8 @@ model ServicioRepuesto {
   lote_id                String?  @db.Char(36)
   variante_id            String   @db.Char(36)
   cantidad               Int
-  precio_venta           Float
-  costo                  Float?
+  precio_venta           Decimal  @db.Decimal(14, 2)
+  costo                  Decimal? @db.Decimal(14, 4)
   activo                 Boolean  @default(true)
   created_at             DateTime @default(now())
   updated_at             DateTime @updatedAt
@@ -1021,12 +1021,12 @@ model Venta {
   usuario_id        String      @db.Char(36)
   cliente_id        String?     @db.Char(36)
   autorizador_id    String?     @db.Char(36)
-  total             Float
-  total_costo       Float
+  total             Decimal     @db.Decimal(14, 2)
+  total_costo       Decimal     @db.Decimal(14, 2)
   comentarios       String?     @db.Text
   motivo_anulacion  String?     @db.Text
-  efectivo_recibido Float?
-  vuelto            Float?
+  efectivo_recibido Decimal?    @db.Decimal(14, 2)
+  vuelto            Decimal?    @db.Decimal(14, 2)
   estado            EstadoVenta @default(PENDIENTE)
   activo            Boolean     @default(true)
   metodo_pago       MetodoPago  @default(EFECTIVO)
@@ -1053,8 +1053,8 @@ model VentaDetalle {
   variante_id     String?  @db.Char(36)
   descripcion     String
   cantidad        Int
-  precio_unitario Float
-  costo_unitario  Float    @default(0)
+  precio_unitario Decimal  @db.Decimal(14, 2)
+  costo_unitario  Decimal  @default(0.0000) @db.Decimal(14, 4)
   activo          Boolean  @default(true)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
@@ -1099,10 +1099,10 @@ model Factura {
   receptor_direccion String? @db.VarChar(255)
 
   // Desglose de importes
-  subtotal_sin_iva Float // Base Imponible / Monto Gravable
-  descuento        Float @default(0)
-  iva              Float @default(0) // Monto Impuesto (12%)
-  total            Float // Total general a cobrar
+  subtotal_sin_iva Decimal @db.Decimal(16, 6) // Base Imponible / Monto Gravable
+  descuento        Decimal @default(0.000000) @db.Decimal(16, 6)
+  iva              Decimal @default(0.000000) @db.Decimal(16, 6) // Monto Impuesto (12%)
+  total            Decimal @db.Decimal(16, 6) // Total general a cobrar
 
   metodo_pago         MetodoPago    @default(EFECTIVO)
   estado              EstadoFactura @default(EMITIDA)
@@ -1152,13 +1152,13 @@ model FacturaDetalle {
 
   tipo_item       TipoItemFactura @default(BIEN) // BIEN o SERVICIO para DTE
   descripcion     String          @db.VarChar(255)
-  cantidad        Float           @default(1.0)
+  cantidad        Decimal         @default(1.000000) @db.Decimal(12, 6)
   unidad_medida   String          @default("UNI") @db.VarChar(10) // "UNI", "SER", etc.
-  precio_unitario Float // Precio con IVA incluido
-  descuento       Float           @default(0)
-  monto_gravable  Float // Base sin IVA
-  monto_impuesto  Float // IVA individual
-  total           Float // Importe total de línea
+  precio_unitario Decimal         @db.Decimal(16, 6) // Precio con IVA incluido
+  descuento       Decimal         @default(0.000000) @db.Decimal(16, 6)
+  monto_gravable  Decimal         @db.Decimal(16, 6) // Base sin IVA
+  monto_impuesto  Decimal         @db.Decimal(16, 6) // IVA individual
+  total           Decimal         @db.Decimal(16, 6) // Importe total de línea
 
   factura             Factura             @relation(fields: [factura_id], references: [id], onDelete: Cascade)
   variante            VarianteProducto?   @relation(fields: [variante_id], references: [id])
@@ -1196,7 +1196,7 @@ model PreVentaDetalle {
   variante_id  String @db.Char(36)
   descripcion  String
   cantidad     Int
-  precio       Float
+  precio       Decimal @db.Decimal(14, 2)
 
   pre_venta PreVenta         @relation(fields: [pre_venta_id], references: [id], onDelete: Cascade)
   variante  VarianteProducto @relation(fields: [variante_id], references: [id])
@@ -1217,7 +1217,7 @@ model Devolucion {
 
   // Control comercial y tipo
   tipo           TipoDevolucion @default(PARCIAL) // "TOTAL" o "PARCIAL"
-  total_devuelto Float // Total de dinero regresado
+  total_devuelto Decimal        @db.Decimal(14, 2) // Total de dinero regresado
   motivo         String?        @db.Text
 
   created_at DateTime @default(now())
@@ -1246,8 +1246,8 @@ model DevolucionDetalle {
   proveedor_id     String? @db.Char(36) // Obtenido del lote para garantías
 
   cantidad        Int
-  precio_unitario Float
-  subtotal        Float
+  precio_unitario Decimal @db.Decimal(14, 2)
+  subtotal        Decimal @db.Decimal(14, 2)
 
   // Inspección del producto devuelto
   estado_producto     EstadoItemDevuelto @default(BUEN_ESTADO) // BUEN_ESTADO o DEFECTUOSO_GARANTIA
@@ -1273,7 +1273,7 @@ model Cotizacion {
 
   correlativo   Int                   @default(1)
   codigo        String
-  total         Float
+  total         Decimal               @db.Decimal(14, 2)
   fecha_emision DateTime              @default(now())
   fecha_validez DateTime // Fecha de expiración de precios
   estado        EstadoCotizacion      @default(PENDIENTE)
@@ -1315,9 +1315,9 @@ model CotizacionDetalle {
 
   descripcion     String @db.VarChar(255)
   cantidad        Int
-  precio_unitario Float
-  descuento       Float  @default(0)
-  subtotal        Float // Guardar el subtotal mejora el rendimiento al consultar
+  precio_unitario Decimal @db.Decimal(14, 2)
+  descuento       Decimal @default(0.00) @db.Decimal(14, 2)
+  subtotal        Decimal @db.Decimal(14, 2) // Guardar el subtotal mejora el rendimiento al consultar
 
   cotizacion    Cotizacion        @relation(fields: [cotizacion_id], references: [id], onDelete: Cascade)
   variante      VarianteProducto? @relation(fields: [variante_id], references: [id])
@@ -1360,7 +1360,7 @@ model Caja {
   sucursal_id String   @db.Char(36)
   nombre      String // Ej: "Caja Principal", "Caja Virtual Efectivo"
   tipo        TipoCaja @default(FISICA)
-  saldo       Float    @default(0)
+  saldo       Decimal  @default(0.00) @db.Decimal(14, 2)
 
   ip_autorizada    String?  @db.VarChar(45)
   asociacion_id    String?  @db.Char(36) // Para cajas virtuales asociadas a un usuario o a un negocio externo
@@ -1388,8 +1388,8 @@ model CuentaBancaria {
   numero_cuenta     String
   nombre_titular    String
   tipo              TipoCuentaBancaria @default(MONETARIA)
-  saldo             Float              @default(0)
-  saldo_moneda_base Float?             @default(0)
+  saldo             Decimal            @default(0.00) @db.Decimal(14, 2)
+  saldo_moneda_base Decimal?           @default(0.00) @db.Decimal(14, 2)
   activo            Boolean            @default(true)
   created_at        DateTime           @default(now())
   updated_at        DateTime           @updatedAt
@@ -1453,9 +1453,9 @@ model Transaccion {
 
   moneda_actual_id  String? @db.Char(36)
   moneda_id         String  @db.Char(36)
-  monto_original    Float
-  tipo_cambio       Float   @default(1.0)
-  monto_moneda_base Float
+  monto_original    Decimal @db.Decimal(14, 2)
+  tipo_cambio       Decimal @default(1.000000) @db.Decimal(12, 6)
+  monto_moneda_base Decimal @db.Decimal(14, 2)
 
   metodo_pago MetodoPago?
 
@@ -1497,14 +1497,14 @@ model CorteCaja {
   fecha_apertura DateTime  @default(now())
   fecha_cierre   DateTime?
 
-  saldo_inicial   Float // Con cuánto empezó el turno
-  ventas_efectivo Float @default(0) // Suma de ingresos en efectivo
-  otros_ingresos  Float @default(0)
-  egresos         Float @default(0)
+  saldo_inicial   Decimal  @db.Decimal(14, 2) // Con cuánto empezó el turno
+  ventas_efectivo Decimal  @default(0.00) @db.Decimal(14, 2) // Suma de ingresos en efectivo
+  otros_ingresos  Decimal  @default(0.00) @db.Decimal(14, 2)
+  egresos         Decimal  @default(0.00) @db.Decimal(14, 2)
 
-  saldo_esperado Float? // Calculado por el sistema: (inicial + ingresos - egresos)
-  saldo_real     Float? // Lo que el cajero cuenta físicamente
-  diferencia     Float? // Positivo (sobrante), Negativo (faltante)
+  saldo_esperado Decimal? @db.Decimal(14, 2) // Calculado por el sistema: (inicial + ingresos - egresos)
+  saldo_real     Decimal? @db.Decimal(14, 2) // Lo que el cajero cuenta físicamente
+  diferencia     Decimal? @db.Decimal(14, 2) // Positivo (sobrante), Negativo (faltante)
 
   estado        EstadoCorte @default(ABIERTO)
   observaciones String?     @db.Text

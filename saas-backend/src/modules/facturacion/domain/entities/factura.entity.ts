@@ -22,10 +22,10 @@ export interface FacturaEntity {
     receptor_nombre: string;
     receptor_direccion?: string | null;
 
-    subtotal_sin_iva: number;
-    descuento: number;
-    iva: number;
-    total: number;
+    subtotal_sin_iva: number | any;
+    descuento: number | any;
+    iva: number | any;
+    total: number | any;
 
     metodo_pago: MetodoPago;
     estado: EstadoFactura;
@@ -49,10 +49,10 @@ export interface CrearFacturaData {
     receptor_nombre: string;
     receptor_direccion?: string | null;
 
-    subtotal_sin_iva: number;
-    descuento: number;
-    iva: number;
-    total: number;
+    subtotal_sin_iva: number | any;
+    descuento: number | any;
+    iva: number | any;
+    total: number | any;
 
     metodo_pago: MetodoPago;
     estado: EstadoFactura;

@@ -1,4 +1,4 @@
-import type { LoteDetalle } from "@modules/lote/domain/lote.entity.js";
+import type { LoteDetalle } from "modules/lote/domain/lote.entity.js"
 
 export class LoteMapper {
     static mapDetalle(lote: any): LoteDetalle {
@@ -11,8 +11,8 @@ export class LoteMapper {
             proveedor_id: lote.proveedor_id,
             cantidad_inicial: lote.cantidad_inicial,
             cantidad_actual: lote.cantidad_actual,
-            costo_compra: lote.costo_compra,
-            precio_venta: lote.precio_venta,
+            costo_compra: Number(lote.costo_compra),
+            precio_venta: Number(lote.precio_venta),
             fecha_ingreso: lote.fecha_ingreso?.toISOString ? lote.fecha_ingreso.toISOString() : lote.fecha_ingreso,
             fecha_vencimiento: lote.fecha_vencimiento?.toISOString ? lote.fecha_vencimiento.toISOString() : lote.fecha_vencimiento,
             activo: lote.activo,

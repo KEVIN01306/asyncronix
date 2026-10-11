@@ -1,9 +1,15 @@
 import express from 'express';
-import cors from 'cors'
+import cors from 'cors';
 import routes from './routes/index.routes.js';
 import cookieParser from 'cookie-parser';
+import { Prisma } from '@prisma/client';
 
-const app = express()
+// Ensure Prisma.Decimal instances serialize to number in JSON responses for front-end compatibility
+(Prisma.Decimal.prototype as any).toJSON = function () {
+    return Number(this.toString());
+};
+
+const app = express();
 
 app.use(cors({
     origin: ['http://localhost:5001', 'https://app.asyncronix.com'],
