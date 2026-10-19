@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Card, CardContent, CardActions, Grid, Typography, Stack, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Divider, FormControl, InputLabel, Select, MenuItem, IconButton } from '@mui/material';
-import { Add, Delete, Edit, Inventory2, QrCode, Download } from '@mui/icons-material';
+import { Box, Button, Card, CardContent, CardActions, Grid, Typography, Stack, Chip, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Divider, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Paper } from '@mui/material';
+import { Add, Delete, Edit, Inventory2, QrCode, Download, Print, ViewWeek } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useForm, type Resolver } from 'react-hook-form';
 import CodigoModal from '../../components/CodigoModal';
@@ -12,9 +12,11 @@ import ConfirmDialog from '../../../../../shared/components/ui/dialog/ConfirmDia
 import Loading from '../../../../../shared/components/ui/Loaders/Loading';
 import { VarianteRepository } from '../../../infrastructure/repositories/variante.repository';
 import { ProductoRepository } from '../../../infrastructure/repositories/producto.repository';
-import type { ImagenProducto, Variante } from '../../../domain/interfaces/producto.interface';
+import type { ImagenProducto, Producto, Variante } from '../../../domain/interfaces/producto.interface';
 import { formatImage } from '../../../../../core/utils/formatImage';
+import { formatMoney } from '../../../../../core/utils/formatMoney';
 import { useBarcodeScanner } from '../../../../../core/hooks/useBarcodeScanner';
+import StickerPrintModal, { type StickerCodeType } from './StickerPrintModal';
 
 
 const variantFormSchema = z.object({
@@ -33,10 +35,11 @@ const defaultForm: VarianteForm = {
 
 interface Props {
     productoId: string;
+    producto?: Producto | null;
     onRefresh: () => Promise<void>;
 }
 
-const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
+const ProductoVariantesTab = ({ productoId, producto, onRefresh }: Props) => {
     const [openDialog, setOpenDialog] = useState(false);
     const [editingVariant, setEditingVariant] = useState<Variante | null>(null);
     const [saving, setSaving] = useState(false);
@@ -48,6 +51,25 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
     const [atributos, setAtributos] = useState<any[]>([]);
     const [attributeSelections, setAttributeSelections] = useState<Array<{ id: string; atributo_id: string; valor_id: string }>>([]);
     const [openCodigoModal, setOpenCodigoModal] = useState(false);
+
+    // Sticker print modal state
+    const [openStickerModal, setOpenStickerModal] = useState(false);
+    const [variantToPrint, setVariantToPrint] = useState<Variante | null>(null);
+    const [initialPrintCodeType, setInitialPrintCodeType] = useState<StickerCodeType>('BARCODE');
+
+    const handleOpenPrintModal = (variant: Variante, codeType?: StickerCodeType) => {
+        setVariantToPrint(variant);
+        if (codeType) {
+            setInitialPrintCodeType(codeType);
+        } else if (variant.codigo_barras && variant.qr_codigo) {
+            setInitialPrintCodeType('BOTH');
+        } else if (variant.codigo_barras) {
+            setInitialPrintCodeType('BARCODE');
+        } else {
+            setInitialPrintCodeType('QR');
+        }
+        setOpenStickerModal(true);
+    };
 
     const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<VarianteForm>({
         resolver: zodResolver(variantFormSchema) as Resolver<VarianteForm>,
@@ -307,95 +329,284 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                     </CardContent>
                 </Card>
             ) : (
-                <Grid container spacing={2}>
+                <Grid container spacing={2.5}>
                     {variants.map((variant) => (
-                        <Grid key={variant.id} size={{ xs: 12, sm: 4 }}>
-                            <Card variant="outlined" sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Stack spacing={2}>
-                                        <Stack spacing={1}>
-                                            <Typography variant="subtitle2" color="text.secondary">SKU</Typography>
-                                            <Typography variant="h6" fontWeight={700}>{variant.sku || variant.id}</Typography>
-
-                                            <Stack direction="row" spacing={1} flexWrap="wrap" mt={1}>
-                                                <Chip label={`Precio: S/ ${variant.precio_sugerido ?? 0}`} size="small" />
-                                                <Chip label={`Stock: ${variant.stock_total ?? 0}`} size="small" variant='outlined' color={variant.stock_total && variant.stock_total > 0 ? 'success' : 'default'} />
+                        <Grid key={variant.id} size={{ xs: 12, md: 6, lg: 4 }}>
+                            <Card
+                                variant="outlined"
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    height: '100%',
+                                    borderRadius: 2.5,
+                                    borderColor: 'divider',
+                                    transition: 'all 0.2s ease-in-out',
+                                    '&:hover': {
+                                        borderColor: 'primary.main',
+                                        boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+                                    }
+                                }}
+                            >
+                                <CardContent sx={{ flexGrow: 1, p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {/* Header: SKU, Stock, and Price */}
+                                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1}>
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
+                                                SKU
+                                            </Typography>
+                                            <Typography variant="subtitle1" fontWeight={800} sx={{ fontFamily: 'monospace' }}>
+                                                {variant.sku || variant.id}
+                                            </Typography>
+                                            <Stack direction="row" spacing={0.8} mt={0.5}>
+                                                <Chip
+                                                    label={`Stock: ${variant.stock_total ?? 0}`}
+                                                    size="small"
+                                                    variant={variant.stock_total && variant.stock_total > 0 ? 'filled' : 'outlined'}
+                                                    color={variant.stock_total && variant.stock_total > 0 ? 'success' : 'default'}
+                                                    sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+                                                />
                                             </Stack>
-                                        </Stack>
+                                        </Box>
+                                        <Box textAlign="right">
+                                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
+                                                Precio sugerido
+                                            </Typography>
+                                            <Typography variant="h6" fontWeight={800} color="primary.main">
+                                                {formatMoney(variant.precio_sugerido ?? 0)}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
 
+                                    {/* Thumbnail Image + Attributes */}
+                                    <Stack direction="row" spacing={1.5} alignItems="center">
                                         {variant.imagen?.url ? (
                                             <Box
                                                 component="img"
                                                 src={formatImage(variant.imagen.url)}
                                                 alt={variant.sku ?? 'Variante'}
-                                                sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}
+                                                sx={{ width: 68, height: 68, objectFit: 'cover', borderRadius: 2, border: '1px solid', borderColor: 'divider', flexShrink: 0 }}
                                             />
                                         ) : (
-                                            <Box sx={{ width: '100%', height: 180, borderRadius: 2, border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
-                                                <Typography variant="body2" color="text.secondary">No hay imagen asociada</Typography>
+                                            <Box sx={{ width: 68, height: 68, borderRadius: 2, border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default', flexShrink: 0 }}>
+                                                <Inventory2 sx={{ fontSize: 28, color: 'text.disabled' }} />
                                             </Box>
                                         )}
 
-                                        <Divider />
-
-                                        <Stack spacing={1}>
-                                            <Typography variant="subtitle2" color="text.secondary">Código de barras</Typography>
-                                            {variant.codigo_barras ? (
-                                                <Box>
-                                                    <BarcodeRenderer value={variant.codigo_barras} onDownload={(svg) => downloadBarcode(svg, variant.sku || variant.id)} />
-                                                </Box>
-                                            ) : (
-                                                <Typography variant="body2" color="text.secondary">Aún no tiene código de barras.</Typography>
-                                            )}
-                                        </Stack>
-
-                                        {variant.valores && variant.valores.length > 0 ? (
-                                            <Stack spacing={1}>
-                                                <Typography variant="subtitle2" color="text.secondary">Atributos</Typography>
-                                                <Stack direction="row" spacing={1} flexWrap="wrap">
+                                        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" gutterBottom>
+                                                Atributos
+                                            </Typography>
+                                            {variant.valores && variant.valores.length > 0 ? (
+                                                <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
                                                     {variant.valores.map((valor) => (
-                                                        <Chip key={valor.id} label={`${valor.atributo?.nombre ?? 'Atributo'}: ${valor.valor}`} size="small" />
+                                                        <Chip
+                                                            key={valor.id}
+                                                            label={`${valor.atributo?.nombre ?? 'Atributo'}: ${valor.valor}`}
+                                                            size="small"
+                                                            sx={{ bgcolor: 'action.hover', fontWeight: 500, fontSize: '0.75rem' }}
+                                                        />
                                                     ))}
                                                 </Stack>
-                                            </Stack>
-                                        ) : null}
-
-                                        <Stack spacing={1}>
-                                            <Typography variant="subtitle2" color="text.secondary">QR</Typography>
-                                            {variant.qr_codigo ? (
-                                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} justifyContent="center">
-                                                    <Box data-qr-ref={variant.sku || variant.id}>
-                                                        <QRCodeSVG value={variant.qr_codigo} size={200} bgColor="#ffffff" fgColor="#000000" includeMargin />
-                                                    </Box>
-                                                    <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all', justifyContent: 'center', display: 'flex' }}>
-                                                        {variant.qr_codigo}
-                                                    </Typography>
-                                                    <IconButton size="small" onClick={() => downloadQR(variant.sku || variant.id)} title="Descargar QR" sx={{ mt: 1 }}>
-                                                        <Download fontSize="small" />
-                                                    </IconButton>
-                                                </Box>
                                             ) : (
-                                                <Typography variant="body2" color="text.secondary">Aún no tiene QR generado.</Typography>
+                                                <Typography variant="caption" color="text.secondary" fontStyle="italic">
+                                                    Sin atributos específicos
+                                                </Typography>
                                             )}
-                                        </Stack>
+                                        </Box>
                                     </Stack>
+
+                                    <Divider />
+
+                                    {/* Identification Codes Section (QR and Barcode side-by-side) */}
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
+                                            Códigos de Identificación
+                                        </Typography>
+
+                                        <Grid container spacing={1.5}>
+                                            {/* Código de Barras */}
+                                            <Grid size={{ xs: 12, sm: 6 }}>
+                                                <Paper
+                                                    variant="outlined"
+                                                    sx={{
+                                                        p: 1.5,
+                                                        height: '100%',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        justifyContent: 'space-between',
+                                                        bgcolor: 'background.default',
+                                                        borderRadius: 2
+                                                    }}
+                                                >
+                                                    <Box>
+                                                        <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
+                                                            <ViewWeek sx={{ fontSize: 16, color: 'text.secondary' }} />
+                                                            <Typography variant="caption" fontWeight={700} color="text.secondary">
+                                                                Código de Barras
+                                                            </Typography>
+                                                        </Stack>
+
+                                                        {variant.codigo_barras ? (
+                                                            <Box sx={{ bgcolor: '#ffffff', p: 0.5, borderRadius: 1, border: '1px solid #eee' }}>
+                                                                <BarcodeRenderer
+                                                                    value={variant.codigo_barras}
+                                                                    onDownload={(svg) => downloadBarcode(svg, variant.sku || variant.id)}
+                                                                    onPrint={() => handleOpenPrintModal(variant, 'BARCODE')}
+                                                                />
+                                                            </Box>
+                                                        ) : (
+                                                            <Box py={2} textAlign="center">
+                                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                                    Sin código asignado
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.disabled" fontSize="10px">
+                                                                    Edita la variante para asignarlo
+                                                                </Typography>
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                    {variant.codigo_barras && (
+                                                        <Button
+                                                            size="small"
+                                                            variant="outlined"
+                                                            startIcon={<Print />}
+                                                            fullWidth
+                                                            onClick={() => handleOpenPrintModal(variant, 'BARCODE')}
+                                                            sx={{ mt: 1, fontSize: '0.75rem' }}
+                                                        >
+                                                            Imprimir Barras
+                                                        </Button>
+                                                    )}
+                                                </Paper>
+                                            </Grid>
+
+                                            {/* Código QR */}
+                                            <Grid size={{ xs: 12, sm: 6 }}>
+                                                <Paper
+                                                    variant="outlined"
+                                                    sx={{
+                                                        p: 1.5,
+                                                        height: '100%',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        justifyContent: 'space-between',
+                                                        bgcolor: 'background.default',
+                                                        borderRadius: 2
+                                                    }}
+                                                >
+                                                    <Box>
+                                                        <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
+                                                            <QrCode sx={{ fontSize: 16, color: 'text.secondary' }} />
+                                                            <Typography variant="caption" fontWeight={700} color="text.secondary">
+                                                                Código QR
+                                                            </Typography>
+                                                        </Stack>
+
+                                                        {variant.qr_codigo ? (
+                                                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                                <Box
+                                                                    data-qr-ref={variant.sku || variant.id}
+                                                                    sx={{ bgcolor: '#ffffff', p: 0.5, borderRadius: 1, border: '1px solid #eee' }}
+                                                                >
+                                                                    <QRCodeSVG
+                                                                        value={variant.qr_codigo}
+                                                                        size={82}
+                                                                        bgColor="#ffffff"
+                                                                        fgColor="#000000"
+                                                                        includeMargin={false}
+                                                                    />
+                                                                </Box>
+                                                                <Typography
+                                                                    variant="caption"
+                                                                    color="text.secondary"
+                                                                    sx={{ wordBreak: 'break-all', fontSize: '9px', fontFamily: 'monospace', mt: 0.5, textAlign: 'center' }}
+                                                                >
+                                                                    {variant.qr_codigo}
+                                                                </Typography>
+                                                                <Stack direction="row" spacing={0.5} mt={0.5}>
+                                                                    <Tooltip title="Descargar QR SVG">
+                                                                        <IconButton size="small" onClick={() => downloadQR(variant.sku || variant.id)}>
+                                                                            <Download fontSize="small" />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                </Stack>
+                                                            </Box>
+                                                        ) : (
+                                                            <Box py={2} textAlign="center">
+                                                                <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                                                                    Sin QR generado
+                                                                </Typography>
+                                                                <Button
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    startIcon={<QrCode />}
+                                                                    onClick={() => handleGenerateQr(variant)}
+                                                                    sx={{ fontSize: '0.72rem' }}
+                                                                >
+                                                                    Generar QR
+                                                                </Button>
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                    {variant.qr_codigo && (
+                                                        <Button
+                                                            size="small"
+                                                            variant="outlined"
+                                                            startIcon={<Print />}
+                                                            fullWidth
+                                                            onClick={() => handleOpenPrintModal(variant, 'QR')}
+                                                            sx={{ mt: 1, fontSize: '0.75rem' }}
+                                                        >
+                                                            Imprimir QR
+                                                        </Button>
+                                                    )}
+                                                </Paper>
+                                            </Grid>
+                                        </Grid>
+                                    </Box>
                                 </CardContent>
 
-                                <CardActions sx={{ justifyContent: 'flex-end', flexWrap: 'wrap', gap: 1, p: 2 }}>
-                                    {!variant.qr_codigo && (
-                                        <Button size="small" startIcon={<QrCode />} onClick={() => handleGenerateQr(variant)}>
-                                            Generar QR
+                                <Divider />
+
+                                {/* Card Actions */}
+                                <CardActions sx={{ justifyContent: 'space-between', p: 1.5, bgcolor: 'background.default' }}>
+                                    <Tooltip
+                                        title={
+                                            !variant.codigo_barras && !variant.qr_codigo
+                                                ? 'Asigna un código de barras o genera un QR para imprimir stickers'
+                                                : 'Configurar e imprimir stickers'
+                                        }
+                                    >
+                                        <span>
+                                            <Button
+                                                size="small"
+                                                variant="contained"
+                                                startIcon={<Print />}
+                                                disabled={!variant.codigo_barras && !variant.qr_codigo}
+                                                onClick={() => handleOpenPrintModal(variant)}
+                                                sx={{ fontWeight: 600 }}
+                                            >
+                                                Imprimir Sticker
+                                            </Button>
+                                        </span>
+                                    </Tooltip>
+
+                                    <Stack direction="row" spacing={0.5}>
+                                        <Button size="small" startIcon={<Edit />} onClick={() => handleOpenEdit(variant)}>
+                                            Editar
                                         </Button>
-                                    )}
-                                    <Button size="small" startIcon={<Edit />} onClick={() => handleOpenEdit(variant)}>
-                                        Editar
-                                    </Button>
-                                    <Button size="small" color="error" startIcon={<Delete />} onClick={() => {
-                                        setVariantToDelete(variant);
-                                        setOpenDelete(true);
-                                    }}>
-                                        Eliminar
-                                    </Button>
+                                        <IconButton
+                                            size="small"
+                                            color="error"
+                                            onClick={() => {
+                                                setVariantToDelete(variant);
+                                                setOpenDelete(true);
+                                            }}
+                                            title="Eliminar variante"
+                                        >
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </Stack>
                                 </CardActions>
                             </Card>
                         </Grid>
@@ -538,6 +749,14 @@ const ProductoVariantesTab = ({ productoId, onRefresh }: Props) => {
                 onClose={() => !saving && setOpenDelete(false)}
                 onConfirm={handleDelete}
                 isLoading={saving}
+            />
+
+            <StickerPrintModal
+                open={openStickerModal}
+                onClose={() => setOpenStickerModal(false)}
+                productoNombre={producto?.nombre || variantToPrint?.producto?.nombre || 'Producto'}
+                variante={variantToPrint}
+                initialCodeType={initialPrintCodeType}
             />
         </Box>
     );
