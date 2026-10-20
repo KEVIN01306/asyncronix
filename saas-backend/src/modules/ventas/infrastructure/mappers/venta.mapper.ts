@@ -61,6 +61,10 @@ export class VentaMapper {
                 fecha_certificacion: venta.facturas[0].fecha_certificacion ?? null,
                 receptor_nit: venta.facturas[0].receptor_nit ?? null,
                 receptor_nombre: venta.facturas[0].receptor_nombre ?? null,
+                tipo_dte: venta.facturas[0].tipo_dte ?? null,
+                emisor_afiliacion_iva: venta.facturas[0].emisor_afiliacion_iva ?? null,
+                subtotal_sin_iva: venta.facturas[0].subtotal_sin_iva != null ? Number(venta.facturas[0].subtotal_sin_iva) : null,
+                total_impuestos: venta.facturas[0].total_impuestos != null ? Number(venta.facturas[0].total_impuestos) : null,
             } : null
         };
     }

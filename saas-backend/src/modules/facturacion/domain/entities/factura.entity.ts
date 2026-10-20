@@ -14,7 +14,7 @@ export interface FacturaEntity {
     numero_factura: string;
     dte_uuid?: string | null;
     dte_sat_xml?: string | null;
-    dle_sat_pdf?: string | null; // Based on schema (dle_sat_pdf or dte_sat_pdf?) Note: schema says dle_sat_pdf
+    dle_sat_pdf?: string | null;
     dte_certificador?: string | null;
     acuse_recibo_sat?: string | null;
 
@@ -22,16 +22,21 @@ export interface FacturaEntity {
     receptor_nombre: string;
     receptor_direccion?: string | null;
 
+    emisor_afiliacion_iva: string;
     subtotal_sin_iva: number | any;
     descuento: number | any;
-    iva: number | any;
+    porcentaje_impuesto: number | any;
+    total_impuestos: number | any;
     total: number | any;
 
     metodo_pago: MetodoPago;
     estado: EstadoFactura;
+    motivo_anulacion?: string | null;
+    acuse_anulacion?: string | null;
     
     fecha_emision: Date;
     fecha_certificacion?: Date | null;
+    fecha_anulacion?: Date | null;
 }
 
 export interface CrearFacturaData {
@@ -49,9 +54,11 @@ export interface CrearFacturaData {
     receptor_nombre: string;
     receptor_direccion?: string | null;
 
+    emisor_afiliacion_iva: string;
     subtotal_sin_iva: number | any;
     descuento: number | any;
-    iva: number | any;
+    porcentaje_impuesto: number | any;
+    total_impuestos: number | any;
     total: number | any;
 
     metodo_pago: MetodoPago;

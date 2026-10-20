@@ -1099,10 +1099,12 @@ model Factura {
   receptor_direccion String? @db.VarChar(255)
 
   // Desglose de importes
-  subtotal_sin_iva Decimal @db.Decimal(16, 6) // Base Imponible / Monto Gravable
-  descuento        Decimal @default(0.000000) @db.Decimal(16, 6)
-  iva              Decimal @default(0.000000) @db.Decimal(16, 6) // Monto Impuesto (12%)
-  total            Decimal @db.Decimal(16, 6) // Total general a cobrar
+  emisor_afiliacion_iva String  @default("GEN") @db.VarChar(10) // "PEQ" o "GEN"
+  subtotal_sin_iva      Decimal @db.Decimal(16, 6) // Base Imponible / Monto Gravable
+  descuento             Decimal @default(0.000000) @db.Decimal(16, 6)
+  porcentaje_impuesto   Decimal @default(0.120000) @db.Decimal(5, 4) // 0.0500 o 0.1200
+  total_impuestos       Decimal @default(0.000000) @db.Decimal(16, 6) // Monto Impuesto (12%)
+  total                 Decimal @db.Decimal(16, 6) // Total general a cobrar
 
   metodo_pago         MetodoPago    @default(EFECTIVO)
   estado              EstadoFactura @default(EMITIDA)
@@ -1191,9 +1193,9 @@ model PreVenta {
 }
 
 model PreVentaDetalle {
-  id           String @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  pre_venta_id String @db.Char(36)
-  variante_id  String @db.Char(36)
+  id           String  @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  pre_venta_id String  @db.Char(36)
+  variante_id  String  @db.Char(36)
   descripcion  String
   cantidad     Int
   precio       Decimal @db.Decimal(14, 2)
@@ -1313,7 +1315,7 @@ model CotizacionDetalle {
   tipo_servicio_id String? @db.Char(36) // Si cotiza paquete de servicio
   // Nota: Ambos pueden ir nulos si es "mano de obra a medida" o un ítem fuera de inventario
 
-  descripcion     String @db.VarChar(255)
+  descripcion     String  @db.VarChar(255)
   cantidad        Int
   precio_unitario Decimal @db.Decimal(14, 2)
   descuento       Decimal @default(0.00) @db.Decimal(14, 2)
@@ -1497,10 +1499,10 @@ model CorteCaja {
   fecha_apertura DateTime  @default(now())
   fecha_cierre   DateTime?
 
-  saldo_inicial   Decimal  @db.Decimal(14, 2) // Con cuánto empezó el turno
-  ventas_efectivo Decimal  @default(0.00) @db.Decimal(14, 2) // Suma de ingresos en efectivo
-  otros_ingresos  Decimal  @default(0.00) @db.Decimal(14, 2)
-  egresos         Decimal  @default(0.00) @db.Decimal(14, 2)
+  saldo_inicial   Decimal @db.Decimal(14, 2) // Con cuánto empezó el turno
+  ventas_efectivo Decimal @default(0.00) @db.Decimal(14, 2) // Suma de ingresos en efectivo
+  otros_ingresos  Decimal @default(0.00) @db.Decimal(14, 2)
+  egresos         Decimal @default(0.00) @db.Decimal(14, 2)
 
   saldo_esperado Decimal? @db.Decimal(14, 2) // Calculado por el sistema: (inicial + ingresos - egresos)
   saldo_real     Decimal? @db.Decimal(14, 2) // Lo que el cajero cuenta físicamente

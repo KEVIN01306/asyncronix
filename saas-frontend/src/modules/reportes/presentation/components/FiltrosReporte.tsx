@@ -46,7 +46,7 @@ const FiltrosReporte = ({ filtros, onFiltrosChange, onAplicarFiltros, cargando, 
     };
 
     return (
-        <Paper sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
             <Box mb={2.5}>
                 <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.75rem' }}>
                     Parámetros de Consulta

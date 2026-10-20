@@ -164,6 +164,12 @@ export const permisosData = [
 
   { codigo: "REPORTES_FINANCIERO" },
   { codigo: "ADMIN_REPORTES" },
+
+  { codigo: "VER_FACTURAS" },
+  { codigo: "DESCARGAR_FACTURAS" },
+  { codigo: "VER_RESUMEN_FISCAL" },
+  { codigo: "VER_CONFIGURACION_FISCAL" },
+  { codigo: "EDITAR_CONFIGURACION_FISCAL" },
 ];
 
 export const modulosConPermisos = [
@@ -419,6 +425,16 @@ export const modulosConPermisos = [
   {
     nombre: "REPORTES",
     permisos: ["REPORTES_FINANCIERO", "ADMIN_REPORTES"],
+  },
+  {
+    nombre: "FACTURACION",
+    permisos: [
+      "VER_FACTURAS",
+      "DESCARGAR_FACTURAS",
+      "VER_RESUMEN_FISCAL",
+      "VER_CONFIGURACION_FISCAL",
+      "EDITAR_CONFIGURACION_FISCAL",
+    ],
   },
 ];
 

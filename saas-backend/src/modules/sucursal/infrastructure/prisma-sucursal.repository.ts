@@ -5,6 +5,7 @@ import type { SucursalActualizar, SucursalCrear, SucursalCrearPersistencia, Sucu
 import type { SucursalRepository } from "../domain/sucursal.repository.js";
 import { SucursalMapper } from "./mappers/sucursal.mapper.js";
 import { CuentaBancariaMapper } from "../../cuenta-bancaria/infrastructure/mappers/cuenta-bancaria.mapper.js";
+import { CajaMapper } from "../../caja/infrastructure/mappers/caja.mapper.js";
 import type { Pagination } from "@shared/domain/pagination.js";
 
 export class PrismaSucursalRepository implements SucursalRepository {
@@ -108,18 +109,7 @@ export class PrismaSucursalRepository implements SucursalRepository {
 
             return {
                 ...SucursalMapper.mapDetalle(sucursal as any),
-                cajas: sucursal.cajas.map((caja) => ({
-                    id: caja.id,
-                    nombre: caja.nombre,
-                    tipo: caja.tipo,
-                    saldo: caja.saldo,
-                    activo: caja.activo,
-                    ip_autorizada: caja.ip_autorizada ?? null,
-                    asociacion_id: caja.asociacion_id ?? null,
-                    token_autorizado: caja.token_autorizado ?? null,
-                    created_at: caja.created_at,
-                    updated_at: caja.updated_at,
-                })),
+                cajas: sucursal.cajas.map((caja) => CajaMapper.mapSimple(caja as any)),
                 cuentas_bancarias: sucursal.cuentas_bancarias.map((item) => ({
                     metodo_pago: item.metodo_pago,
                     cuenta_bancaria: CuentaBancariaMapper.mapSimple(item.cuenta_bancaria as any),

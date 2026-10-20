@@ -15,7 +15,7 @@ const ConciliacionPanel = ({ conciliacion, cajas, cuentas }: Props) => {
     const monedaCodigo = user?.negocio?.moneda?.codigo;
 
     return (
-        <Paper sx={{ p: { xs: 2, sm: 4 }, mb: 3 }}>
+        <Paper elevation={0} sx={{ p: { xs: 2, sm: 4 }, mb: 3, border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
             {/* Cabecera Principal */}
             <Box mb={4}>
                 <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.75rem' }}>

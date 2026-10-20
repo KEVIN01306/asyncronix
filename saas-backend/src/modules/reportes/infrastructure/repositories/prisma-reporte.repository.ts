@@ -129,24 +129,25 @@ export class PrismaReporteRepository implements ReporteRepository {
             const cajas: CajaKPI[] = cajasDB.map(c => ({
                 id: c.id,
                 nombre: c.nombre,
-                saldo: c.saldo
+                saldo: Number(c.saldo)
             }));
 
             const cuentas: CuentaBancariaKPI[] = cuentasDB.map(c => {
-                const saldoEnBase = c.saldo_moneda_base ?? c.saldo;
+                const saldoEnBase = Number(c.saldo_moneda_base ?? c.saldo);
+                const saldoOriginal = Number(c.saldo);
                 return {
                     id: c.id,
                     banco: c.banco.nombre_comercial,
                     numero_cuenta: c.numero_cuenta,
                     moneda_codigo: c.moneda?.codigo || 'BASE',
                     saldo: saldoEnBase, // Usamos el saldo guardado ya en moneda base
-                    saldo_original: c.saldo, // El saldo en la moneda original de la cuenta
-                    tasa_cambio: c.saldo > 0 ? (saldoEnBase / c.saldo) : 1.0 // Tasa histórica deducida
+                    saldo_original: saldoOriginal, // El saldo en la moneda original de la cuenta
+                    tasa_cambio: saldoOriginal > 0 ? (saldoEnBase / saldoOriginal) : 1.0 // Tasa histórica deducida
                 };
             });
 
-            const saldo_actual = cajas.reduce((acc, c) => acc + c.saldo, 0) +
-                cuentas.reduce((acc, c) => acc + c.saldo, 0);
+            const saldo_actual = cajas.reduce((acc, c) => acc + Number(c.saldo), 0) +
+                cuentas.reduce((acc, c) => acc + Number(c.saldo), 0);
 
             // En un futuro, el saldo esperado debería partir de un saldo inicial + flujo_neto
             // Por simplicidad del requerimiento, comparamos contra el flujo de caja del periodo

@@ -45,7 +45,7 @@ const DetalleOrigenPanel = ({ origen, filtros, onBack }: Props) => {
 
     if (!detalle) {
         return (
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
+            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
                 <Typography color="text.secondary">No se pudo cargar la información.</Typography>
                 <Button onClick={onBack} sx={{ mt: 2 }} variant="outlined">Volver al Reporte</Button>
             </Paper>
@@ -62,21 +62,30 @@ const DetalleOrigenPanel = ({ origen, filtros, onBack }: Props) => {
                     Volver al Reporte General
                 </Button>
                 <ExcelDownloader
-                    generateWorkbook={() => generarDetalleOrigenExcel(
-                        detalle,
-                        monedaCodigo,
-                        origen,
-                        'Sucursal',
-                        filtros.fecha_inicio && filtros.fecha_fin ? `${filtros.fecha_inicio} a ${filtros.fecha_fin}` : 'Histórico'
-                    )}
+                    generateWorkbook={() => {
+                        const fechaLabel = filtros.fecha_inicio && filtros.fecha_fin 
+                            ? `${new Date(filtros.fecha_inicio).toLocaleDateString('es-GT')} al ${new Date(filtros.fecha_fin).toLocaleDateString('es-GT')}` 
+                            : 'Histórico';
+                        return generarDetalleOrigenExcel({
+                            reporte: detalle,
+                            monedaCodigo,
+                            monedaSimbolo: user?.negocio?.moneda?.simbolo || (monedaCodigo === 'USD' ? '$' : 'Q'),
+                            origen,
+                            sucursalBase: 'Sucursales Seleccionadas',
+                            fecha: fechaLabel,
+                            negocioNombre: user?.negocio?.nombre_comercial || 'Asyncronix',
+                            negocioNit: (user?.negocio as any)?.nit_rut || 'C/F'
+                        });
+                    }}
                     fileName={`Detalle_${origen}.xlsx`}
-                    buttonText="Excel"
-                    variant="outlined"
+                    buttonText="Exportar a Excel"
+                    variant="contained"
                     color="success"
+                    size="small"
                 />
             </Box>
 
-            <Paper sx={{ p: { xs: 2, md: 4 }, mb: 4 }}>
+            <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, mb: 4, border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
                 <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
                     Desglose de Ingresos
                 </Typography>
@@ -97,7 +106,7 @@ const DetalleOrigenPanel = ({ origen, filtros, onBack }: Props) => {
 
             <Typography variant="h6" fontWeight={700} mb={2}>Distribución por Cajas y Cuentas</Typography>
 
-            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, boxShadow: 'none' }}>
                 <Table>
                     <TableHead>
                         <TableRow sx={{ bgcolor: 'background.default' }}>

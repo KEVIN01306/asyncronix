@@ -75,7 +75,8 @@ export class FinalizarVentaUseCase {
                         }
                     }
                     
-                    await this.acreditarCajaUseCase.execute(cajaSeleccionada.id, negocio_id, sucursal_id, venta.total, { tx });
+                    const totalVentaNum = Number(venta.total);
+                    await this.acreditarCajaUseCase.execute(cajaSeleccionada.id, negocio_id, sucursal_id, totalVentaNum, { tx });
 
                     await this.crearTransaccionUseCase.execute({
                         negocio_id,
@@ -84,10 +85,10 @@ export class FinalizarVentaUseCase {
                         tipo_movimiento: 'INGRESO',
                         origen_tipo: 'VENTA',
                         moneda_id,
-                        monto_original: venta.total,
+                        monto_original: totalVentaNum,
                         tipo_cambio: 1.0,
-                        monto_moneda_base: venta.total,
-                        descripcion: `Venta de ${venta.total} - ${venta.id.slice(-4)}`,
+                        monto_moneda_base: totalVentaNum,
+                        descripcion: `Venta de ${totalVentaNum} - ${venta.id.slice(-4)}`,
                         destino_entidad: 'CAJA',
                         destino_caja_id: cajaSeleccionada.id,
                         metodo_pago: 'EFECTIVO',
@@ -106,8 +107,9 @@ export class FinalizarVentaUseCase {
                     }
                     
                     const cuentaMonedaId = relacionCuenta.cuenta_bancaria.moneda_id;
+                    const totalVentaNum = Number(venta.total);
                     let finalTipoCambio = 1.0;
-                    let finalMontoOriginal = venta.total;
+                    let finalMontoOriginal = totalVentaNum;
                     let finalMonedaId = moneda_id;
 
                     if (cuentaMonedaId && cuentaMonedaId !== moneda_id) {
@@ -119,11 +121,11 @@ export class FinalizarVentaUseCase {
                         
                         const exchangeRate = await this.exchangeRateProvider.getRate(monedaNegocio.codigo, monedaCuenta.codigo);
                         finalTipoCambio = exchangeRate.rate;
-                        finalMontoOriginal = venta.total * finalTipoCambio;
+                        finalMontoOriginal = Number((totalVentaNum * finalTipoCambio).toFixed(2));
                         finalMonedaId = cuentaMonedaId;
                     }
 
-                    await this.acreditarCuentaBancariaUseCase.execute(relacionCuenta.cuenta_bancaria.id, negocio_id, finalMontoOriginal, venta.total, { tx });
+                    await this.acreditarCuentaBancariaUseCase.execute(relacionCuenta.cuenta_bancaria.id, negocio_id, finalMontoOriginal, totalVentaNum, { tx });
 
                     await this.crearTransaccionUseCase.execute({
                         negocio_id,
@@ -134,8 +136,8 @@ export class FinalizarVentaUseCase {
                         moneda_id: finalMonedaId,
                         monto_original: finalMontoOriginal,
                         tipo_cambio: finalTipoCambio,
-                        monto_moneda_base: venta.total,
-                        descripcion: `Venta de ${venta.total} - ${venta.id.slice(-4)}`,
+                        monto_moneda_base: totalVentaNum,
+                        descripcion: `Venta de ${totalVentaNum} - ${venta.id.slice(-4)}`,
                         destino_entidad: 'CUENTA',
                         destino_cuenta_id: relacionCuenta.cuenta_bancaria.id,
                         metodo_pago: metodoPagoReal,

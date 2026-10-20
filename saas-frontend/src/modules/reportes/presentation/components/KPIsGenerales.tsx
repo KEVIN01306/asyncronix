@@ -56,7 +56,7 @@ const KPIsGenerales = ({ kpis }: Props) => {
         <Grid container spacing={3} mb={3}>
             {cards.map((card, index) => (
                 <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
-                    <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', gap: 2 }}>
+                    <Paper elevation={0} sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', gap: 2, border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
 
                         {/* Cabecera de la tarjeta: Título e Icono */}
                         <Box display="flex" justifyContent="space-between" alignItems="flex-start">

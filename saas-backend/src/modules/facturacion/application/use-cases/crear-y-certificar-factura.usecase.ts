@@ -1,8 +1,10 @@
 import type { FacturaRepository } from "../../domain/interfaces/factura.repository.js";
 import type { ObtenerTokenDigifactUseCase } from "./obtener-token-digifact.usecase.js";
-import type { IDigifactProvider } from "@shared/domain/providers/digifact.provider.interface.js";
-import type { IStorageProvider } from "@shared/domain/providers/storage.provider.js";
-import AppError from "@shared/errors/AppError.js";
+import type { IDigifactProvider } from "../../../../shared/domain/providers/digifact.provider.interface.js";
+import type { IStorageProvider } from "../../../../shared/domain/providers/storage.provider.js";
+import { obtenerConfiguracionRegimen, type ConfiguracionRegimenFiscal } from "../../domain/constants/regimen-fiscal.constants.js";
+import { numeroALetras } from "../../../../shared/utils/numeroALetras.js";
+import AppError from "../../../../shared/errors/AppError.js";
 
 export class CrearYCertificarFacturaUseCase {
     constructor(
@@ -38,31 +40,47 @@ export class CrearYCertificarFacturaUseCase {
         const config = documento.negocio.negocioFacturacionConfig;
         if (!config) throw new AppError("Configuración de facturación no encontrada", "FACTURACION_NO_CONFIGURADA", 400);
 
-        // 3. Crear el JSON NUC
-        const nucJson = this.construirNucJson(documento, config, tipoDocumento);
+        // Validar y obtener configuración fiscal del régimen
+        const regimenConfig = obtenerConfiguracionRegimen(config.afiliacion_iva);
 
-        // 4. Crear registro de factura en estado EMITIDA
+        // 3. Crear el JSON NUC para Digifact
+        const nucJson = this.construirNucJson(documento, config, tipoDocumento, regimenConfig);
+
+        // 4. Cálculos internos para persistencia contable/fiscal
         const total = Number(documento.total ?? 0);
-        const subtotalSinIva = total / 1.12;
-        const iva = total - subtotalSinIva;
+        let subtotalSinIva: number;
+        let totalImpuestos: number;
+
+        if (regimenConfig.codigo === 'PEQ') {
+            // Para Pequeño Contribuyente: los conceptos no descuentan impuesto del precio.
+            // La base imponible interna corresponde al total facturado y el impuesto estimado es del 5%.
+            subtotalSinIva = total;
+            totalImpuestos = total * regimenConfig.porcentajeImpuestoDecimal;
+        } else {
+            // Para Régimen General: IVA 12% desglosado
+            subtotalSinIva = total / (1 + regimenConfig.porcentajeImpuestoDecimal);
+            totalImpuestos = total - subtotalSinIva;
+        }
 
         let factura = facturaExistente;
         if (!factura) {
             factura = await this.facturaRepository.crear({
                 negocio_id: documento.negocio_id,
                 sucursal_id: documento.sucursal_id,
-                usuario_id: emisor_id || documento.usuario_id || documento.recepcionista_id || documento.negocio_id, // fallback to negocio_id in worst case, though it will fail if UUID not match user, but usually emisor_id or recepcionista is there
+                usuario_id: emisor_id || documento.usuario_id || documento.recepcionista_id || documento.negocio_id,
                 cliente_id: documento.cliente_id,
                 venta_id: tipoDocumento === 'VENTA' ? documento.id : undefined,
                 servicio_id: tipoDocumento === 'SERVICIO' ? documento.id : undefined,
-                tipo_dte: 'FACT',
+                tipo_dte: regimenConfig.docType,
                 numero_factura: `${tipoDocumento === 'VENTA' ? 'V' : 'S'}-${documento.id.slice(-6)}`,
                 receptor_nit: (documento.cliente?.nit || "CF").replace(/[^0-9KkCFcf]/g, ''),
                 receptor_nombre: documento.cliente?.nombre || "Consumidor Final",
                 receptor_direccion: "Ciudad",
+                emisor_afiliacion_iva: regimenConfig.codigo,
                 subtotal_sin_iva: parseFloat(subtotalSinIva.toFixed(6)),
                 descuento: 0,
-                iva: parseFloat(iva.toFixed(6)),
+                porcentaje_impuesto: regimenConfig.porcentajeImpuestoDecimal,
+                total_impuestos: parseFloat(totalImpuestos.toFixed(6)),
                 total: parseFloat(total.toFixed(6)),
                 metodo_pago: tipoDocumento === 'VENTA' ? documento.metodo_pago : (documento.MetodoPago || 'EFECTIVO'),
                 estado: 'EMITIDA'
@@ -73,16 +91,39 @@ export class CrearYCertificarFacturaUseCase {
 
         try {
             // 5. Obtener token
-            const token = await this.obtenerTokenDigifactUseCase.execute(documento.negocio_id);
+            let token = await this.obtenerTokenDigifactUseCase.execute(documento.negocio_id);
 
-            // 6. Enviar a certificar
-            const certificacion = await this.digifactProvider.certificarFactura(
-                token,
-                config.nit_emisor,
-                config.fel_username,
-                nucJson,
-                config.fel_ambiente
-            );
+            // 6. Enviar a certificar con reintento si el token expiró o es inválido
+            let certificacion: any;
+            try {
+                certificacion = await this.digifactProvider.certificarFactura(
+                    token,
+                    config.nit_emisor,
+                    config.fel_username,
+                    nucJson,
+                    config.fel_ambiente
+                );
+            } catch (certError: any) {
+                const esNoAutorizado = certError?.codigo === "DIGIFACT_UNAUTHORIZED" || 
+                                       certError?.statusCode === 401 || 
+                                       certError?.message?.includes("401") || 
+                                       certError?.message?.includes("Unauthorized") ||
+                                       certError?.message?.toLowerCase().includes("token");
+
+                if (esNoAutorizado) {
+                    console.warn(`[Digifact] Token no autorizado o expirado para negocio ${documento.negocio_id}. Renovando token con credenciales...`);
+                    token = await this.obtenerTokenDigifactUseCase.execute(documento.negocio_id, true);
+                    certificacion = await this.digifactProvider.certificarFactura(
+                        token,
+                        config.nit_emisor,
+                        config.fel_username,
+                        nucJson,
+                        config.fel_ambiente
+                    );
+                } else {
+                    throw certError;
+                }
+            }
 
             // 7. Subir a R2
             let xmlUrl = undefined;
@@ -128,22 +169,49 @@ export class CrearYCertificarFacturaUseCase {
             throw error;
         }
     }
-    private construirNucJson(documento: any, config: any, tipoDocumento: 'VENTA' | 'SERVICIO') {
+
+    public construirNucJson(
+        documento: any, 
+        config: any, 
+        tipoDocumento: 'VENTA' | 'SERVICIO',
+        regimenConfig: ConfiguracionRegimenFiscal
+    ) {
         const ahora = new Date();
         const offset = -6 * 60; // Guatemala UTC-6
         const localTime = new Date(ahora.getTime() + (offset - ahora.getTimezoneOffset()) * 60000);
         const dateIso = localTime.toISOString().replace(/\.\d{3}Z$/, '-06:00');
 
-        const total = documento.total ?? 0;
-        const subtotal = total / 1.12;
-        const ivaAmount = total - subtotal;
+        const total = Number(documento.total ?? 0);
+        const esPeq = regimenConfig.codigo === 'PEQ';
+
+        // Para GEN: el total incluye IVA 12%
+        // Para PEQ: no se desglosa IVA (Amount = 0, TotalTax.Amount = 0)
+        const subtotalGen = total / 1.12;
+        const ivaAmountGen = total - subtotalGen;
 
         let numeroLinea = 1;
         let items: any[] = [];
 
         const formatItem = (descripcion: string, cantidad: number, precioUnitario: number, tipoFiscal: 'Bien' | 'Servicio') => {
-            const itemTaxableAmount = (cantidad * precioUnitario) / 1.12;
-            const itemIva = (cantidad * precioUnitario) - itemTaxableAmount;
+            const lineTotal = Number(cantidad) * Number(precioUnitario);
+
+            let itemTaxableAmountStr: string;
+            let itemIvaStr: string;
+
+            if (esPeq) {
+                // Para PEQ:
+                // - TaxableAmount contiene el importe completo sin descontar impuesto
+                // - Amount se envía en 0.000000 (sin desglose de IVA del 5%)
+                itemTaxableAmountStr = lineTotal.toFixed(6);
+                itemIvaStr = Number(0).toFixed(6);
+            } else {
+                // Para GEN: desglose oficial de IVA 12%
+                const itemTaxableAmount = lineTotal / 1.12;
+                const itemIva = lineTotal - itemTaxableAmount;
+                itemTaxableAmountStr = itemTaxableAmount.toFixed(6);
+                itemIvaStr = itemIva.toFixed(6);
+            }
+
             return {
                 "Number": String(numeroLinea++),
                 "Codes": null,
@@ -158,19 +226,19 @@ export class CrearYCertificarFacturaUseCase {
                         {
                             "Code": "1",
                             "Description": "IVA",
-                            "TaxableAmount": itemTaxableAmount.toFixed(6),
-                            "Amount": itemIva.toFixed(6)
+                            "TaxableAmount": itemTaxableAmountStr,
+                            "Amount": itemIvaStr
                         }
                     ]
                 },
                 "Totals": {
-                    "TotalItem": (cantidad * precioUnitario).toFixed(6)
+                    "TotalItem": lineTotal.toFixed(6)
                 }
             };
         };
 
         if (tipoDocumento === 'VENTA') {
-            items = documento.detalles.map((d: any) => formatItem(d.descripcion, d.cantidad, d.precio_unitario, 'Bien'));
+            items = (documento.detalles || []).map((d: any) => formatItem(d.descripcion, d.cantidad, d.precio_unitario, 'Bien'));
         } else {
             // Es SERVICIO
             // 1. Mano de Obra (subtotal)
@@ -193,8 +261,6 @@ export class CrearYCertificarFacturaUseCase {
                     const descRep = rep.descripcion ? `Reparación: ${rep.descripcion}` : `Reparación #${i + 1}`;
                     const repuestosRep = rep.servicioRepuestos || [];
 
-                    // Calcular subtotal de repuestos de esta reparación
-                    const totalRepuestos = repuestosRep.reduce((acc: number, r: any) => acc + (r.precio_venta * r.cantidad), 0);
                     const manoObraReparacion = rep.total ? rep.total : 0;
 
                     if (manoObraReparacion > 0) {
@@ -219,13 +285,23 @@ export class CrearYCertificarFacturaUseCase {
             }
         }
 
+        // CANTIDAD_LETRAS generado de forma autónoma en el backend
+        const cantidadEnLetras = numeroALetras(Number(total.toFixed(2)));
+
+        // AddressInfo de la sucursal de origen de la factura
+        const sucursalDireccion = documento.sucursal?.direccion || "Ciudad";
+        const sucursalCodigoPostal = documento.sucursal?.codigo_postal || documento.sucursal?.division_nivel_2?.codigo_postal || "01001";
+        const sucursalMunicipio = documento.sucursal?.division_nivel_2?.nombre || "Guatemala";
+        const sucursalDepartamento = documento.sucursal?.division_nivel_2?.division_nivel_1?.nombre || "Guatemala";
+        const sucursalPais = documento.sucursal?.division_nivel_2?.division_nivel_1?.pais?.codigo_iso || "GT";
+
         return {
             "Version": "1.00",
             "CountryCode": "GT",
             "Header": {
-                "DocType": "FACT",
+                "DocType": regimenConfig.docType,
                 "IssuedDateTime": dateIso,
-                "Currency": documento.negocio.moneda?.codigo || "GTQ"
+                "Currency": documento.negocio?.moneda?.codigo || "GTQ"
             },
             "Seller": {
                 "TaxID": config.nit_emisor.replace(/[^0-9Kk]/g, ''),
@@ -234,13 +310,13 @@ export class CrearYCertificarFacturaUseCase {
                     {
                         "Name": "AfiliacionIVA",
                         "Data": null,
-                        "Value": config.afiliacion_iva || "GEN"
+                        "Value": regimenConfig.codigo
                     }
                 ],
                 "Contact": {
                     "EmailList": {
                         "Email": [
-                            documento.negocio.usuario?.email || "correo@empresa.com"
+                            config.correo_emisor || documento.negocio?.usuario?.email || "correo@empresa.com"
                         ]
                     }
                 },
@@ -248,23 +324,23 @@ export class CrearYCertificarFacturaUseCase {
                     {
                         "Name": "TipoFrase",
                         "Data": "1",
-                        "Value": "1"
+                        "Value": String(config.tipo_frase ?? "1")
                     },
                     {
                         "Name": "Escenario",
                         "Data": "1",
-                        "Value": "2"
+                        "Value": String(config.codigo_escenario ?? "1")
                     }
                 ],
                 "BranchInfo": {
                     "Code": documento.sucursal?.codigo_establecimiento || "1",
                     "Name": documento.sucursal?.nombre || "Establecimiento",
                     "AddressInfo": {
-                        "Address": documento.sucursal?.direccion || "Ciudad",
-                        "City": "01001",
-                        "District": "Guatemala",
-                        "State": "Guatemala",
-                        "Country": "GT"
+                        "Address": sucursalDireccion,
+                        "City": sucursalCodigoPostal,
+                        "District": sucursalMunicipio,
+                        "State": sucursalDepartamento,
+                        "Country": sucursalPais
                     }
                 }
             },
@@ -272,7 +348,7 @@ export class CrearYCertificarFacturaUseCase {
                 "TaxID": (documento.cliente?.nit || "CF").replace(/[^0-9KkCFcf]/g, ''),
                 "Name": documento.cliente?.nombre || "Consumidor Final",
                 "AddressInfo": {
-                    "Address": "Ciudad",
+                    "Address": documento.cliente?.direccion || "Ciudad",
                     "City": "01010",
                     "District": "Guatemala",
                     "State": "Guatemala",
@@ -286,7 +362,7 @@ export class CrearYCertificarFacturaUseCase {
                     "TotalTax": [
                         {
                             "Description": "IVA",
-                            "Amount": ivaAmount.toFixed(6)
+                            "Amount": esPeq ? Number(0).toFixed(6) : ivaAmountGen.toFixed(6)
                         }
                     ]
                 },
@@ -312,7 +388,7 @@ export class CrearYCertificarFacturaUseCase {
                                         {
                                             "Name": "CANTIDAD_LETRAS",
                                             "Data": null,
-                                            "Value": "CANTIDAD EN LETRAS"
+                                            "Value": cantidadEnLetras
                                         }
                                     ]
                                 },

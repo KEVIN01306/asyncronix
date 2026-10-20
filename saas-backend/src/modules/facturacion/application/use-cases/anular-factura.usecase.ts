@@ -38,7 +38,7 @@ export class AnularFacturaUseCase {
         }
 
         // 3. Obtener el token de Digifact
-        const token = await this.obtenerTokenDigifactUseCase.execute(negocio_id);
+        let token = await this.obtenerTokenDigifactUseCase.execute(negocio_id);
 
         // 4. Formatear la fecha estrictamente como requiere Digifact (extrayendo local time de la fecha original)
         // La fecha original está en UTC en BD (ej. 2026-09-05T16:10:57Z)
@@ -49,8 +49,7 @@ export class AnularFacturaUseCase {
 
         const receptor = factura.receptor_nit || 'CF';
 
-        // 5. Enviar a Digifact la solicitud
-        const response = await this.digifactProvider.anularFactura(token, {
+        const anulacionPayload = {
             Taxid: config.nit_emisor,
             Autorizacion: factura.dte_uuid,
             IdReceptor: receptor,
@@ -58,7 +57,27 @@ export class AnularFacturaUseCase {
             MotivoAnulacion: comentario,
             Username: config.fel_username,
             ambiente: config.fel_ambiente || 'TEST'
-        });
+        };
+
+        // 5. Enviar a Digifact la solicitud con reintento si el token expiró o es inválido
+        let response: any;
+        try {
+            response = await this.digifactProvider.anularFactura(token, anulacionPayload);
+        } catch (anularError: any) {
+            const esNoAutorizado = anularError?.codigo === "DIGIFACT_UNAUTHORIZED" || 
+                                   anularError?.statusCode === 401 || 
+                                   anularError?.message?.includes("401") || 
+                                   anularError?.message?.includes("Unauthorized") ||
+                                   anularError?.message?.toLowerCase().includes("token");
+
+            if (esNoAutorizado) {
+                console.warn(`[Digifact] Token no autorizado o expirado al anular factura para negocio ${negocio_id}. Renovando token con credenciales...`);
+                token = await this.obtenerTokenDigifactUseCase.execute(negocio_id, true);
+                response = await this.digifactProvider.anularFactura(token, anulacionPayload);
+            } else {
+                throw anularError;
+            }
+        }
 
         // 6. Validar respuesta
         if (!response || response.code !== 1) {

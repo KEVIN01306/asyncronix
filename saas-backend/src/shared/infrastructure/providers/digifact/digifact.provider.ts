@@ -33,7 +33,8 @@ export class DigifactProvider implements IDigifactProvider {
             // Format Username if needed (Digifact requires GT.[12_DIGIT_NIT].[USERNAME])
             let formattedUsername = request.Username;
             if (!formattedUsername.startsWith('GT.') && request.nitEmisor) {
-                const taxId = request.nitEmisor.padStart(12, '0');
+                const cleanNit = request.nitEmisor.replace(/[^0-9]/g, '');
+                const taxId = cleanNit.padStart(12, '0');
                 formattedUsername = `GT.${taxId}.${request.Username}`;
             }
 
@@ -47,13 +48,26 @@ export class DigifactProvider implements IDigifactProvider {
                 body: JSON.stringify(payload)
             });
 
+            const responseText = await response.text();
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                console.error("Digifact login failed with status:", response.status, responseText);
+                throw new AppError(`Error de autenticación con Digifact (${response.status}): ${responseText}`, "DIGIFACT_AUTH_ERROR", 401);
             }
 
-            return await response.json() as DigifactLoginResponseDTO;
+            let data: any;
+            try {
+                data = JSON.parse(responseText);
+            } catch {
+                throw new AppError("Respuesta de autenticación no válida de Digifact", "DIGIFACT_AUTH_ERROR", 502);
+            }
+
+            return data as DigifactLoginResponseDTO;
         } catch (error: any) {
-            console.error("Error obtaining Digifact token", error.message);
+            console.error("Error obtaining Digifact token:", error.message);
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError("Error de autenticación con Digifact", "DIGIFACT_AUTH_ERROR", 502);
         }
     }
@@ -68,7 +82,8 @@ export class DigifactProvider implements IDigifactProvider {
         try {
             const baseUrl = this.getBaseUrl(ambiente);
             // Format NIT to exactly 12 characters as required
-            const taxId = nitEmisor.padStart(12, '0');
+            const cleanNit = nitEmisor.replace(/[^0-9]/g, '');
+            const taxId = cleanNit.padStart(12, '0');
 
             let formattedUsername = username;
             if (!formattedUsername.startsWith('GT.')) {
@@ -86,17 +101,31 @@ export class DigifactProvider implements IDigifactProvider {
                 body: JSON.stringify(nucJson)
             });
 
-            const data: any = await response.json();
+            const responseText = await response.text();
+
+            // Detect 401 Unauthorized or expired token
+            if (response.status === 401 || response.status === 403 || responseText.includes("401 Unauthorized") || responseText.toLowerCase().includes("unauthorized")) {
+                throw new AppError("Token de Digifact no válido o expirado", "DIGIFACT_UNAUTHORIZED", 401);
+            }
+
+            let data: any;
+            try {
+                data = JSON.parse(responseText);
+            } catch {
+                throw new AppError(`Respuesta no válida de Digifact (HTTP ${response.status}): ${responseText}`, "DIGIFACT_CERT_ERROR", 502);
+            }
 
             if (!response.ok || data.code !== 1) {
-                // If Digifact returns a business error, we should pass it up, but without exposing tokens.
-                const digifactMsg = data?.message || "Error al certificar factura en Digifact";
+                const digifactMsg = data?.message || data?.Mensaje || "Error al certificar factura en Digifact";
+                if (data?.code === 401 || data?.Codigo === 401 || digifactMsg.toLowerCase().includes("token") || digifactMsg.toLowerCase().includes("unauthorized") || digifactMsg.toLowerCase().includes("no autorizado")) {
+                    throw new AppError(digifactMsg, "DIGIFACT_UNAUTHORIZED", 401);
+                }
                 throw new AppError(digifactMsg, "DIGIFACT_CERT_ERROR", 502);
             }
 
             return data as DigifactCertificacionResponseDTO;
         } catch (error: any) {
-            console.error("Error certifying Digifact invoice", error.message);
+            console.error("Error certifying Digifact invoice:", error.message);
             if (error instanceof AppError) {
                 throw error;
             }
@@ -110,14 +139,13 @@ export class DigifactProvider implements IDigifactProvider {
     ): Promise<DigifactAnulacionResponseDTO> {
         try {
             let baseUrl = this.getBaseUrl(request.ambiente);
-            // Si la base URL tiene /api al final, para anular suele ser base/api/Anular/CancelFelGT
-            // En caso de que no tenga api, se agrega. (La que tenemos en getBaseUrl ya tiene /api)
             const url = baseUrl.endsWith('/api')
                 ? `${baseUrl}/CancelFelGT`
                 : `${baseUrl}/api/CancelFelGT`;
 
             // Format NIT to exactly 12 characters as required
-            const taxId = request.Taxid.padStart(12, '0');
+            const cleanNit = request.Taxid.replace(/[^0-9]/g, '');
+            const taxId = cleanNit.padStart(12, '0');
 
             let formattedUsername = request.Username;
             if (!formattedUsername.startsWith('GT.')) {
@@ -142,22 +170,28 @@ export class DigifactProvider implements IDigifactProvider {
                 body: JSON.stringify(payload)
             });
 
+            const responseText = await response.text();
+
+            // Detect 401 Unauthorized or expired token
+            if (response.status === 401 || response.status === 403 || responseText.includes("401 Unauthorized") || responseText.toLowerCase().includes("unauthorized")) {
+                throw new AppError("Token de Digifact no válido o expirado", "DIGIFACT_UNAUTHORIZED", 401);
+            }
+
             let data: any;
-            let responseText: string = "";
             try {
-                responseText = await response.text();
                 data = JSON.parse(responseText);
-            } catch (e) {
-                console.error("Digifact returned non-JSON response:", responseText);
-                throw new Error(`Invalid JSON response: ${response.status} ${response.statusText}`);
+            } catch {
+                throw new AppError(`Respuesta no válida de Digifact al anular (HTTP ${response.status}): ${responseText}`, "DIGIFACT_ANULACION_ERROR", 502);
             }
 
             if (!response.ok || (data.code !== 1 && data.Codigo !== 1)) {
-                const digifactMsg = data?.message || data?.Mensaje || data?.error || `Error al anular factura en Digifact (HTTP ${response.status}). Respuesta: ${responseText}`;
+                const digifactMsg = data?.message || data?.Mensaje || data?.error || `Error al anular factura en Digifact (HTTP ${response.status})`;
+                if (data?.code === 401 || data?.Codigo === 401 || digifactMsg.toLowerCase().includes("token") || digifactMsg.toLowerCase().includes("unauthorized") || digifactMsg.toLowerCase().includes("no autorizado")) {
+                    throw new AppError(digifactMsg, "DIGIFACT_UNAUTHORIZED", 401);
+                }
                 throw new AppError(digifactMsg, "DIGIFACT_ANULACION_ERROR", 502);
             }
 
-            // Mapear los nombres en mayúsculas que devuelve Digifact al DTO interno
             return {
                 ...data,
                 code: data.code ?? data.Codigo,
@@ -167,7 +201,7 @@ export class DigifactProvider implements IDigifactProvider {
                 authNumber: data.authNumber ?? data.Autorizacion
             } as DigifactAnulacionResponseDTO;
         } catch (error: any) {
-            console.error("Error annulling Digifact invoice", error);
+            console.error("Error annulling Digifact invoice:", error);
             if (error instanceof AppError) {
                 throw error;
             }
@@ -183,7 +217,8 @@ export class DigifactProvider implements IDigifactProvider {
             const baseUrl = this.getBaseUrl(request.ambiente);
             const urlBaseApi = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
             
-            const taxId = request.nitEmisor.padStart(12, '0');
+            const cleanNit = request.nitEmisor.replace(/[^0-9]/g, '');
+            const taxId = cleanNit.padStart(12, '0');
 
             let formattedUsername = request.username;
             if (!formattedUsername.startsWith('GT.')) {
@@ -205,27 +240,32 @@ export class DigifactProvider implements IDigifactProvider {
                 }
             });
 
-            let data: any;
-            let responseText: string = "";
-            try {
-                responseText = await response.text();
-                data = JSON.parse(responseText);
-            } catch (e) {
-                console.error("Digifact returned non-JSON response for NIT info:", responseText);
-                throw new Error(`Invalid JSON response: ${response.status} ${response.statusText}`);
+            const responseText = await response.text();
+
+            // Detect 401 Unauthorized or expired token
+            if (response.status === 401 || response.status === 403 || responseText.includes("401 Unauthorized") || responseText.toLowerCase().includes("unauthorized")) {
+                throw new AppError("Token de Digifact no válido o expirado", "DIGIFACT_UNAUTHORIZED", 401);
             }
 
-            // Check if successful
-            // Typical response has "REQUEST_DATA" array where "Codigo": 1 is success
+            let data: any;
+            try {
+                data = JSON.parse(responseText);
+            } catch {
+                throw new AppError(`Respuesta no válida de Digifact al consultar NIT (HTTP ${response.status}): ${responseText}`, "DIGIFACT_NIT_LOOKUP_ERROR", 502);
+            }
+
             const requestData = data.REQUEST_DATA?.[0];
             if (!response.ok || !requestData || requestData.Codigo !== 1) {
                 const digifactMsg = requestData?.Mensaje || `Error al consultar NIT en Digifact (HTTP ${response.status})`;
+                if (requestData?.Codigo === 401 || digifactMsg.toLowerCase().includes("token") || digifactMsg.toLowerCase().includes("unauthorized") || digifactMsg.toLowerCase().includes("no autorizado")) {
+                    throw new AppError(digifactMsg, "DIGIFACT_UNAUTHORIZED", 401);
+                }
                 throw new AppError(digifactMsg, "DIGIFACT_NIT_LOOKUP_ERROR", 502);
             }
 
             return data as DigifactInfoNitResponseDTO;
         } catch (error: any) {
-            console.error("Error obtaining Digifact NIT info", error);
+            console.error("Error obtaining Digifact NIT info:", error);
             if (error instanceof AppError) {
                 throw error;
             }

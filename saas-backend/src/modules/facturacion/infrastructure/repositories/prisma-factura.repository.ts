@@ -1,7 +1,12 @@
 import type { PrismaClient } from "@prisma/client";
-import type { FacturaRepository } from "../../domain/interfaces/factura.repository.js";
+import type { 
+    FacturaRepository, 
+    ListarFacturasFiltros, 
+    ListarFacturasResultado, 
+    ResumenFiscalResultado 
+} from "../../domain/interfaces/factura.repository.js";
 import type { CrearFacturaData, FacturaEntity } from "../../domain/entities/factura.entity.js";
-import { DatabaseError } from "@shared/database/errors/DatabaseError.js";
+import { DatabaseError } from "../../../../shared/database/errors/DatabaseError.js";
 
 export class PrismaFacturaRepository implements FacturaRepository {
     constructor(private readonly prisma: PrismaClient) { }
@@ -21,14 +26,16 @@ export class PrismaFacturaRepository implements FacturaRepository {
                     receptor_nit: data.receptor_nit,
                     receptor_nombre: data.receptor_nombre,
                     receptor_direccion: data.receptor_direccion ?? null,
+                    emisor_afiliacion_iva: data.emisor_afiliacion_iva,
                     subtotal_sin_iva: data.subtotal_sin_iva,
                     descuento: data.descuento,
-                    iva: data.iva,
+                    porcentaje_impuesto: data.porcentaje_impuesto,
+                    total_impuestos: data.total_impuestos,
                     total: data.total,
                     metodo_pago: data.metodo_pago,
                     estado: data.estado,
                 }
-            });
+            }) as unknown as FacturaEntity;
         } catch (error: any) {
             console.error("PrismaFacturaRepository.crear error:", error);
             throw new DatabaseError("Error al crear la factura");
@@ -39,9 +46,19 @@ export class PrismaFacturaRepository implements FacturaRepository {
         try {
             return await this.prisma.factura.findUnique({
                 where: { id }
-            });
+            }) as unknown as FacturaEntity | null;
         } catch (error: any) {
             throw new DatabaseError("Error al obtener la factura por ID");
+        }
+    }
+
+    async obtenerPorIdYNegocio(id: string, negocio_id: string): Promise<FacturaEntity | null> {
+        try {
+            return await this.prisma.factura.findFirst({
+                where: { id, negocio_id }
+            }) as unknown as FacturaEntity | null;
+        } catch (error: any) {
+            throw new DatabaseError("Error al obtener la factura por ID y negocio");
         }
     }
 
@@ -49,7 +66,7 @@ export class PrismaFacturaRepository implements FacturaRepository {
         try {
             return await this.prisma.factura.findFirst({
                 where: { venta_id }
-            });
+            }) as unknown as FacturaEntity | null;
         } catch (error: any) {
             throw new DatabaseError("Error al obtener la factura por Venta ID");
         }
@@ -59,7 +76,7 @@ export class PrismaFacturaRepository implements FacturaRepository {
         try {
             return await this.prisma.factura.findFirst({
                 where: { servicio_id }
-            });
+            }) as unknown as FacturaEntity | null;
         } catch (error: any) {
             throw new DatabaseError("Error al obtener la factura por Servicio ID");
         }
@@ -84,9 +101,9 @@ export class PrismaFacturaRepository implements FacturaRepository {
                     dte_sat_xml: dte_sat_xml ?? null,
                     dle_sat_pdf: dle_sat_pdf ?? null
                 }
-            });
+            }) as unknown as FacturaEntity;
         } catch (error: any) {
-            throw new DatabaseError(`Error al marcar la factura como error: ${error.message}`);
+            throw new DatabaseError(`Error al marcar la factura como certificada: ${error.message}`);
         }
     }
 
@@ -107,10 +124,117 @@ export class PrismaFacturaRepository implements FacturaRepository {
                     acuse_anulacion: acuse_anulacion,
                     fecha_anulacion: new Date()
                 }
-            });
+            }) as unknown as FacturaEntity;
             return factura;
         } catch (error: any) {
             throw new DatabaseError(`Error al marcar la factura como anulada: ${error.message}`);
+        }
+    }
+
+    async listarEmitidas(negocio_id: string, filtros: ListarFacturasFiltros): Promise<ListarFacturasResultado> {
+        try {
+            const where: any = {
+                negocio_id,
+                fecha_emision: {
+                    gte: filtros.fecha_inicio,
+                    lte: filtros.fecha_fin
+                }
+            };
+
+            if (filtros.q && filtros.q.trim() !== '') {
+                const search = filtros.q.trim();
+                where.OR = [
+                    { dte_uuid: { contains: search } },
+                    { numero_factura: { contains: search } },
+                    { serie: { contains: search } },
+                    { receptor_nit: { contains: search } },
+                    { receptor_nombre: { contains: search } },
+                ];
+            }
+
+            const page = Math.max(1, filtros.page || 1);
+            const limit = Math.max(1, filtros.limit || 10);
+            const skip = (page - 1) * limit;
+
+            const [facturas, total] = await Promise.all([
+                this.prisma.factura.findMany({
+                    where,
+                    orderBy: { fecha_emision: 'desc' },
+                    skip,
+                    take: limit
+                }),
+                this.prisma.factura.count({ where })
+            ]);
+
+            return {
+                data: facturas as unknown as FacturaEntity[],
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit) || 1
+            };
+        } catch (error: any) {
+            console.error("PrismaFacturaRepository.listarEmitidas error:", error);
+            throw new DatabaseError("Error al listar las facturas emitidas");
+        }
+    }
+
+    async obtenerResumenFiscal(negocio_id: string, fecha_inicio: Date, fecha_fin: Date): Promise<ResumenFiscalResultado> {
+        try {
+            // Facturas válidas/activas emitidas en el período
+            const whereActivas = {
+                negocio_id,
+                estado: { in: ['EMITIDA' as const, 'CERTIFICADA' as const] },
+                fecha_emision: {
+                    gte: fecha_inicio,
+                    lte: fecha_fin
+                }
+            };
+
+            const [aggActivas, aggAnuladas, configFiscal] = await Promise.all([
+                this.prisma.factura.aggregate({
+                    where: whereActivas,
+                    _sum: {
+                        total: true,
+                        total_impuestos: true
+                    },
+                    _count: {
+                        id: true
+                    }
+                }),
+                this.prisma.factura.aggregate({
+                    where: {
+                        negocio_id,
+                        estado: 'ANULADA',
+                        fecha_emision: {
+                            gte: fecha_inicio,
+                            lte: fecha_fin
+                        }
+                    },
+                    _sum: {
+                        total: true
+                    },
+                    _count: {
+                        id: true
+                    }
+                }),
+                this.prisma.negocioFacturacionConfig.findUnique({
+                    where: { negocio_id },
+                    select: { afiliacion_iva: true }
+                })
+            ]);
+
+            return {
+                total_facturado: Number(aggActivas._sum.total ?? 0),
+                total_impuestos_estimados: Number(aggActivas._sum.total_impuestos ?? 0),
+                cantidad_facturas: aggActivas._count.id ?? 0,
+                cantidad_anuladas: aggAnuladas._count.id ?? 0,
+                total_anulado: Number(aggAnuladas._sum.total ?? 0),
+                regimen_fiscal_actual: configFiscal?.afiliacion_iva || 'GEN'
+            };
+        } catch (error: any) {
+            console.error("PrismaFacturaRepository.obtenerResumenFiscal error:", error);
+            throw new DatabaseError("Error al calcular el resumen fiscal");
         }
     }
 
@@ -192,7 +316,7 @@ export class PrismaFacturaRepository implements FacturaRepository {
                 data: {
                     estado: 'ERROR'
                 }
-            });
+            }) as unknown as FacturaEntity;
         } catch (error: any) {
             throw new DatabaseError("Error al marcar factura como ERROR");
         }
@@ -222,6 +346,26 @@ export class PrismaFacturaRepository implements FacturaRepository {
             });
         } catch (error: any) {
             throw new DatabaseError("Error al obtener configuración de facturación con país");
+        }
+    }
+
+    async actualizarConfiguracion(negocio_id: string, data: any): Promise<any> {
+        try {
+            return await this.prisma.negocioFacturacionConfig.upsert({
+                where: { negocio_id },
+                create: {
+                    ...data,
+                    negocio_id
+                },
+                update: {
+                    ...data,
+                    token_temporal: null,
+                    token_expira_at: null
+                }
+            });
+        } catch (error: any) {
+            console.error("PrismaFacturaRepository.actualizarConfiguracion error:", error);
+            throw new DatabaseError("Error al guardar la configuración fiscal");
         }
     }
 

@@ -30,16 +30,35 @@ export class ConsultarNitUseCase {
         }
 
         // 2. Obtener el token de Digifact
-        const token = await this.obtenerTokenDigifactUseCase.execute(negocio_id);
+        let token = await this.obtenerTokenDigifactUseCase.execute(negocio_id);
 
-        // 3. Consultar Digifact
-        const response = await this.digifactProvider.obtenerInformacionNit(token, {
+        const paramsConsulta = {
             nitEmisor: config.nit_emisor,
             nitConsultar: nitLimpio,
             username: config.fel_username,
             ambiente: config.fel_ambiente || 'TEST',
             codigoIsoPais: codigoIsoPais
-        });
+        };
+
+        // 3. Consultar Digifact con reintento si el token expiró o es inválido
+        let response: any;
+        try {
+            response = await this.digifactProvider.obtenerInformacionNit(token, paramsConsulta);
+        } catch (nitError: any) {
+            const esNoAutorizado = nitError?.codigo === "DIGIFACT_UNAUTHORIZED" || 
+                                   nitError?.statusCode === 401 || 
+                                   nitError?.message?.includes("401") || 
+                                   nitError?.message?.includes("Unauthorized") ||
+                                   nitError?.message?.toLowerCase().includes("token");
+
+            if (esNoAutorizado) {
+                console.warn(`[Digifact] Token no autorizado o expirado al consultar NIT para negocio ${negocio_id}. Renovando token con credenciales...`);
+                token = await this.obtenerTokenDigifactUseCase.execute(negocio_id, true);
+                response = await this.digifactProvider.obtenerInformacionNit(token, paramsConsulta);
+            } else {
+                throw nitError;
+            }
+        }
 
         // 4. Procesar la respuesta
         if (!response.RESPONSE || response.RESPONSE.length === 0) {

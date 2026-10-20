@@ -1,38 +1,40 @@
 import { StyleSheet } from '@react-pdf/renderer';
 
 export const PDF_COLORS = {
-    primary: '#1E3A8A',
-    textPrimary: '#0f172a',
-    textSecondary: '#64748b',
-    background: '#f8faff',
-    card: '#ffffff',
-    success: '#10b981',
-    error: '#d84e47',
-    warning: '#f2ba5a',
-    border: 'rgba(227, 232, 238, 1)',
+    primary: '#1e293b',       // Neutral slate oscuro sobrio (menos colorido)
+    primaryLight: '#334155',  // Slate neutro
+    textPrimary: '#0f172a',   // Casi negro de alta legibilidad
+    textSecondary: '#475569', // Gris oscuro formal
+    background: '#ffffff',    // FONDO ESTRICTAMENTE BLANCO
+    card: '#ffffff',          // FONDO BLANCO
+    success: '#15803d',       // Verde sobrio
+    error: '#b91c1c',         // Rojo sobrio
+    warning: '#b45309',       // Ámbar sobrio
+    border: '#e2e8f0',        // Borde fino claro
+    divider: '#cbd5e1',       // Separador sutil
 };
 
 export const getPdfStyles = () => {
     return StyleSheet.create({
         page: {
-            padding: 40,
+            padding: 36,
             fontFamily: 'Helvetica',
-            backgroundColor: PDF_COLORS.background,
+            backgroundColor: '#ffffff', // Fondo 100% blanco puro
             color: PDF_COLORS.textPrimary,
         },
         h1: {
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: 'bold',
-            color: PDF_COLORS.primary,
-            marginBottom: 15,
+            color: PDF_COLORS.textPrimary,
+            marginBottom: 12,
         },
         textSecondary: {
-            fontSize: 12,
+            fontSize: 10,
             color: PDF_COLORS.textSecondary,
         },
         card: {
-            padding: 16,
-            backgroundColor: PDF_COLORS.card,
+            padding: 12,
+            backgroundColor: '#ffffff',
             borderWidth: 1,
             borderColor: PDF_COLORS.border,
             borderRadius: 2,

@@ -110,7 +110,7 @@ const ServicioHojaPage = () => {
                 </Box>
             )}
 
-            <Box component={Paper} p={3} >
+            <Box component={Paper} elevation={0} p={3} sx={{ border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
                 <Grid container size={12} spacing={4}>
                     <Grid size={3} sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>
                         <Box
@@ -121,8 +121,7 @@ const ServicioHojaPage = () => {
                                 height: 150,
                                 width: 'auto',
                                 maxWidth: '100%',
-                                objectFit: 'contain',
-                                filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.1))'
+                                objectFit: 'contain'
                             }}
                         />
                     </Grid>
@@ -138,8 +137,7 @@ const ServicioHojaPage = () => {
                                 height: 150,
                                 width: 'auto',
                                 maxWidth: '100%',
-                                objectFit: 'contain',
-                                filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.1))'
+                                objectFit: 'contain'
                             }}
                         />
                     </Grid>

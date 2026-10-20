@@ -1,8 +1,34 @@
 import type { CrearFacturaData, FacturaEntity } from "../entities/factura.entity.js";
 
+export interface ListarFacturasFiltros {
+    fecha_inicio: Date;
+    fecha_fin: Date;
+    page: number;
+    limit: number;
+    q?: string | undefined;
+}
+
+export interface ListarFacturasResultado {
+    data: FacturaEntity[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
+
+export interface ResumenFiscalResultado {
+    total_facturado: number;
+    total_impuestos_estimados: number;
+    cantidad_facturas: number;
+    cantidad_anuladas: number;
+    total_anulado: number;
+    regimen_fiscal_actual: string;
+}
+
 export interface FacturaRepository {
     crear(data: CrearFacturaData): Promise<FacturaEntity>;
     obtenerPorId(id: string): Promise<FacturaEntity | null>;
+    obtenerPorIdYNegocio(id: string, negocio_id: string): Promise<FacturaEntity | null>;
     obtenerPorVentaId(venta_id: string): Promise<FacturaEntity | null>;
     obtenerPorServicioId(servicio_id: string): Promise<FacturaEntity | null>;
     marcarComoCertificada(
@@ -21,12 +47,17 @@ export interface FacturaRepository {
         acuse_anulacion: string | null
     ): Promise<FacturaEntity>;
     
-    // Datos agregados
+    // Consultas para listado y resumen
+    listarEmitidas(negocio_id: string, filtros: ListarFacturasFiltros): Promise<ListarFacturasResultado>;
+    obtenerResumenFiscal(negocio_id: string, fecha_inicio: Date, fecha_fin: Date): Promise<ResumenFiscalResultado>;
+
+    // Datos agregados para emitir
     obtenerDatosParaFacturar(venta_id: string): Promise<any>;
     obtenerDatosParaFacturarServicio(servicio_id: string): Promise<any>;
 
     // Configuración
     obtenerConfiguracion(negocio_id: string): Promise<any | null>;
     obtenerConfiguracionConPais(negocio_id: string): Promise<any | null>;
+    actualizarConfiguracion(negocio_id: string, data: any): Promise<any>;
     guardarTokenTemporal(negocio_id: string, token: string, expiraEn: Date): Promise<void>;
 }

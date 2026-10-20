@@ -108,18 +108,30 @@ const ReporteFinancieroPage = () => {
                     <Box
                         display="flex"
                         flexDirection="row"
-                        gap={1}
+                        alignItems="center"
+                        gap={1.5}
                     >
                         <ExcelDownloader
-                            generateWorkbook={() => generarReporteFinancieroExcel(
-                                reporte,
-                                user?.negocio?.moneda?.codigo || 'USD',
-                                filtros.sucursal_ids?.length ? sucursales.find(s => s.id === filtros.sucursal_ids![0])?.nombre || 'Sucursal' : 'Todas las Sucursales',
-                                filtros.fecha_inicio && filtros.fecha_fin ? `${filtros.fecha_inicio} a ${filtros.fecha_fin}` : 'Histórico'
-                            )}
+                            generateWorkbook={() => {
+                                const sucLabel = filtros.sucursal_ids?.length
+                                    ? filtros.sucursal_ids.map(id => sucursales.find(s => s.id === id)?.nombre).filter(Boolean).join(', ') || 'Sucursal'
+                                    : 'Todas las Sucursales';
+                                const fechaLabel = filtros.fecha_inicio && filtros.fecha_fin
+                                    ? `${new Date(filtros.fecha_inicio).toLocaleDateString('es-GT')} al ${new Date(filtros.fecha_fin).toLocaleDateString('es-GT')}`
+                                    : 'Histórico';
+                                return generarReporteFinancieroExcel({
+                                    reporte,
+                                    monedaCodigo: user?.negocio?.moneda?.codigo || 'GTQ',
+                                    monedaSimbolo: user?.negocio?.moneda?.simbolo || (user?.negocio?.moneda?.codigo === 'USD' ? '$' : 'Q'),
+                                    sucursalBase: sucLabel,
+                                    fecha: fechaLabel,
+                                    negocioNombre: user?.negocio?.nombre_comercial || 'Asyncronix',
+                                    negocioNit: (user?.negocio as any)?.nit_rut || 'C/F'
+                                });
+                            }}
                             fileName={getPdfFileName().replace('.pdf', '.xlsx')}
-                            buttonText="Excel"
-                            variant="outlined"
+                            buttonText="Exportar a Excel"
+                            variant="contained"
                             color="success"
                             size="small"
                         />
@@ -133,7 +145,7 @@ const ReporteFinancieroPage = () => {
                                 />
                             }
                             fileName={getPdfFileName()}
-                            buttonText="PDF"
+                            buttonText="Exportar a PDF"
                             variant="outlined"
                             size="small"
                         />

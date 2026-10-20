@@ -76,10 +76,15 @@ export const ListTableSimple = ({
             <TableContainer
                 ref={containerRef}
                 component={Paper}
+                elevation={0}
                 sx={{
                     overflowX: 'auto',
                     overflowY: disableVerticalScroll ? 'visible' : 'auto',
                     maxHeight: disableVerticalScroll ? 'none' : maxTableHeight,
+                    boxShadow: 'none',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2
                 }}
             >
                 <Table stickyHeader={!disableVerticalScroll} sx={{ minWidth: 650 }}>
@@ -153,7 +158,7 @@ export const ListTableSimple = ({
                         icon={<ArrowDownwardIcon style={{ color: '#fff' }} />}
                         label="Desliza para ver más"
                         sx={{
-                            boxShadow: 4,
+                            boxShadow: 'none',
                             fontWeight: 'bold',
                             backgroundColor: headerBgColor,
                             color: '#ffffff',

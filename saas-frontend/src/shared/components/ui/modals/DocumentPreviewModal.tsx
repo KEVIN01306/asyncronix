@@ -6,6 +6,7 @@ import { servicioRepository } from '../../../../modules/serviciosVehiculos/infra
 import { negocioRepository } from '../../../../modules/negocio/infrastructure/repositories/negocio.repository';
 import { sucursalRepository } from '../../../../modules/sucursales/infrastructure/repositories/sucursal.repository';
 import { negocioFacturacionRepository } from '../../../../modules/negocio/infrastructure/repositories/negocio-facturacion.repository';
+import { facturacionRepository } from '../../../../modules/facturacion/infrastructure/repositories/facturacion.repository';
 import { numeroALetras } from '../../../../core/utils/numeroALetras';
 import { FacturaTermicaPreview } from '../../../../shared/components/ui/FacturaTermicaPreview';
 import type { FacturaTermicaData } from '../../../../shared/interfaces/factura-termica.interface';
@@ -96,13 +97,19 @@ export default function DocumentPreviewModal({ open, documentoId, tipoDocumento,
     const fetchDocumento = async () => {
         try {
             setLoading(true);
+            const fetchFacturacion = async () => {
+                const config = await negocioFacturacionRepository.obtener().catch(() => null);
+                if (config) return config;
+                return await facturacionRepository.obtenerConfiguracion().catch(() => null);
+            };
+
             const [resDoc, resNegocio, resSucursal, resFacturacion] = await Promise.all([
                 tipoDocumento === 'VENTA'
                     ? ventaRepository.obtener(documentoId!)
                     : servicioRepository.obtener(documentoId!),
                 negocioRepository.obtenerMiNegocio().catch(() => null),
                 sucursalRepository.obtenerMiSucursal().catch(() => null),
-                negocioFacturacionRepository.obtener().catch(() => null)
+                fetchFacturacion()
             ]);
             setDocumento(tipoDocumento === 'VENTA' ? (resDoc as any).data : resDoc);
             setNegocio(resNegocio);
@@ -154,6 +161,29 @@ export default function DocumentPreviewModal({ open, documentoId, tipoDocumento,
             }))
             : buildServiceItems(documento);
 
+        const totalDoc = Number(documento.total ?? 0);
+        const esPeq = 
+            documento.factura?.emisor_afiliacion_iva === 'PEQ' ||
+            documento.factura?.tipo_dte === 'FPEQ' ||
+            facturacion?.afiliacion_iva === 'PEQ';
+
+        // Si la factura es de PEQ (Pequeño Contribuyente), el IVA debe estar en 0 y el subtotal es el total íntegro
+        const iva = esPeq 
+            ? 0 
+            : (documento.factura?.total_impuestos != null 
+                ? Number(documento.factura.total_impuestos) 
+                : Number((totalDoc - (totalDoc / 1.12)).toFixed(2)));
+
+        const subtotal = esPeq 
+            ? totalDoc 
+            : (documento.factura?.subtotal_sin_iva != null 
+                ? Number(documento.factura.subtotal_sin_iva) 
+                : Number((totalDoc / 1.12).toFixed(2)));
+
+        const frases = esPeq 
+            ? ['PEQUEÑO CONTRIBUYENTE', 'NO GENERA DERECHO A CRÉDITO FISCAL']
+            : ['SUJETO A PAGOS TRIMESTRALES'];
+
         invoiceData = {
             negocio_nombre: facturacion?.nombre_comercial || negocio?.nombre_comercial || 'NEGOCIO',
             negocio_nit: facturacion?.nit_emisor || negocio?.nit_rut || 'C/F',
@@ -168,17 +198,17 @@ export default function DocumentPreviewModal({ open, documentoId, tipoDocumento,
             cliente_nombre: documento.factura?.receptor_nombre || 'CONSUMIDOR FINAL',
             cliente_nit: documento.factura?.receptor_nit || 'CF',
             items: items,
-            subtotal: documento.total / 1.12,
-            iva: documento.total - (documento.total / 1.12),
+            subtotal,
+            iva,
             descuento: 0,
-            total: documento.total,
-            efectivo_recibido: documento.efectivo_recibido,
-            cambio: documento.vuelto,
-            total_letras: numeroALetras(documento.total),
+            total: totalDoc,
+            efectivo_recibido: documento.efectivo_recibido != null ? Number(documento.efectivo_recibido) : null,
+            cambio: documento.vuelto != null ? Number(documento.vuelto) : null,
+            total_letras: numeroALetras(totalDoc),
 
             certificador_nombre: 'Digifact S.A.',
             certificador_nit: '77454820',
-            frases: ['SUJETO A PAGOS TRIMESTRALES'],
+            frases,
         };
     }
 

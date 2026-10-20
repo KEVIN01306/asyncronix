@@ -250,6 +250,10 @@ export const mapServicioDetalle = (record: any): ServicioDetalle => ({
         created_at: record.facturas[0].created_at,
         receptor_nit: record.facturas[0].receptor_nit ?? null,
         receptor_nombre: record.facturas[0].receptor_nombre ?? null,
+        tipo_dte: record.facturas[0].tipo_dte ?? null,
+        emisor_afiliacion_iva: record.facturas[0].emisor_afiliacion_iva ?? null,
+        subtotal_sin_iva: record.facturas[0].subtotal_sin_iva != null ? Number(record.facturas[0].subtotal_sin_iva) : null,
+        total_impuestos: record.facturas[0].total_impuestos != null ? Number(record.facturas[0].total_impuestos) : null,
     } : null
 });
 

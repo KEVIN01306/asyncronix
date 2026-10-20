@@ -19,9 +19,9 @@ const styles = StyleSheet.create({
     logo: { height: 70, width: 70, objectFit: 'contain' },
     titleBox: { width: '50%', alignItems: 'center' },
     mainTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
-        color: PDF_COLORS.primary,
+        color: PDF_COLORS.textPrimary,
         textAlign: 'center',
     },
     subTitle: {

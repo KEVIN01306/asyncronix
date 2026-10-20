@@ -43,6 +43,7 @@ import {
   StorefrontOutlined,
   BusinessOutlined,
   Receipt,
+  ReceiptLongOutlined,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -84,6 +85,16 @@ const MenuItems: MenuItem[] = [
     icon: AssessmentOutlined,
     children: [
       { name: "Reporte Financiero", link: "/reportes/financiero", icon: BarChartOutlined, permiso: "REPORTES_FINANCIERO" },
+    ]
+  },
+  {
+    module: "Facturación",
+    name: "Facturación",
+    icon: ReceiptLongOutlined,
+    children: [
+      { name: "Facturas Emitidas", link: "/facturacion/facturas", icon: ReceiptLongOutlined, permiso: "VER_FACTURAS" },
+      { name: "Resumen Fiscal", link: "/facturacion/resumen", icon: AssessmentOutlined, permiso: "VER_RESUMEN_FISCAL" },
+      { name: "Configuración Fiscal", link: "/facturacion/configuracion", icon: SettingsOutlined, permiso: "VER_CONFIGURACION_FISCAL" },
     ]
   },
   {

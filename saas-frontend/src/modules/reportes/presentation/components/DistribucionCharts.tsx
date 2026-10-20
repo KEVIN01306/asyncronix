@@ -18,7 +18,7 @@ const DistribucionCharts = ({ metodos, origenes, onSelectOrigen }: Props) => {
         <Grid container spacing={3} mb={3}>
             {/* Métodos de Pago */}
             <Grid size={{ xs: 12, md: 6 }}>
-                <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Paper elevation={0} sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%', border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
                     <Box mb={3}>
                         <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.75rem' }}>
                             Distribución de Cobros
@@ -66,7 +66,7 @@ const DistribucionCharts = ({ metodos, origenes, onSelectOrigen }: Props) => {
 
             {/* Orígenes de Dinero */}
             <Grid size={{ xs: 12, md: 6 }}>
-                <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Paper elevation={0} sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%', border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
                     <Box mb={3}>
                         <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.75rem' }}>
                             Fuentes de Capital

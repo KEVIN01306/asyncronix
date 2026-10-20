@@ -6,7 +6,8 @@ export class AcreditarCajaUseCase {
     constructor(private readonly cajaRepository: CajaRepository) {}
 
     async execute(id: string, negocio_id: string, sucursal_id: string, monto: number, options?: { tx?: any }): Promise<CajaObtenidoDetalle> {
-        if (monto <= 0) {
+        const montoNum = Number(monto);
+        if (isNaN(montoNum) || montoNum <= 0) {
             throw new AppError('El monto a acreditar debe ser mayor a cero', 'MONTO_INVALIDO', 400);
         }
 
@@ -18,8 +19,10 @@ export class AcreditarCajaUseCase {
             throw new AppError('La caja se encuentra inactiva', 'CAJA_INACTIVA', 400);
         }
 
-        const nuevoSaldo = caja.saldo + monto;
+        const saldoActual = Number(caja.saldo) || 0;
+        const nuevoSaldo = Number((saldoActual + montoNum).toFixed(2));
         
         return await this.cajaRepository.actualizarSaldo(id, negocio_id, sucursal_id, nuevoSaldo, options);
     }
 }
+

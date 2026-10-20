@@ -171,7 +171,11 @@ export class PrismaNegocioRepository implements NegocioRepository {
     async upsertFacturacion(negocio_id: string, data: NegocioFacturacionConfigActualizar): Promise<NegocioFacturacionConfig> {
         try {
             const { fel_password, ...restUpdateData } = data;
-            const updatePayload = fel_password ? { ...restUpdateData, fel_password } : restUpdateData;
+            const updatePayload = {
+                ...(fel_password ? { ...restUpdateData, fel_password } : restUpdateData),
+                token_temporal: null,
+                token_expira_at: null
+            };
 
             const config = await this.prisma.negocioFacturacionConfig.upsert({
                 where: { negocio_id },
