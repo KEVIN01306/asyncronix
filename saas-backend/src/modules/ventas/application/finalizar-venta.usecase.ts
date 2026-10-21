@@ -20,13 +20,13 @@ export class FinalizarVentaUseCase {
         private readonly acreditarCuentaBancariaUseCase: AcreditarCuentaBancariaUseCase,
         private readonly crearTransaccionUseCase: CrearTransaccionUseCase,
         private readonly exchangeRateProvider: ExchangeRateProvider
-    ) {}
+    ) { }
 
     async execute(
-        ventaId: string, 
-        negocio_id: string, 
-        sucursal_id: string, 
-        usuario_id: string, 
+        ventaId: string,
+        negocio_id: string,
+        sucursal_id: string,
+        usuario_id: string,
         metodo_pago?: MetodoPago,
         opcionesCaja?: { caja_id?: string; token_autorizado?: string; forzar_caja_en_linea?: boolean },
         options?: { tx?: any }
@@ -74,7 +74,7 @@ export class FinalizarVentaUseCase {
                             throw new AppError('No hay caja en línea configurada para esta sucursal', 'CAJA_EN_LINEA_NO_CONFIGURADA', 400);
                         }
                     }
-                    
+
                     const totalVentaNum = Number(venta.total);
                     await this.acreditarCajaUseCase.execute(cajaSeleccionada.id, negocio_id, sucursal_id, totalVentaNum, { tx });
 
@@ -100,12 +100,12 @@ export class FinalizarVentaUseCase {
                     if (!sucursal) {
                         throw new AppError('Sucursal no encontrada.', 'SUCURSAL_NO_ENCONTRADA', 404);
                     }
-                    
+
                     const relacionCuenta = sucursal.cuentas_bancarias.find(c => c.metodo_pago === metodoPagoReal);
                     if (!relacionCuenta) {
                         throw new AppError(`La sucursal no tiene una cuenta bancaria configurada para el método de pago ${metodoPagoReal}.`, 'CUENTA_NO_CONFIGURADA', 400);
                     }
-                    
+
                     const cuentaMonedaId = relacionCuenta.cuenta_bancaria.moneda_id;
                     const totalVentaNum = Number(venta.total);
                     let finalTipoCambio = 1.0;
@@ -118,7 +118,7 @@ export class FinalizarVentaUseCase {
                         if (!monedaNegocio || !monedaCuenta) {
                             throw new AppError('No se encontraron las monedas para el tipo de cambio.', 'MONEDA_NO_ENCONTRADA', 400);
                         }
-                        
+
                         const exchangeRate = await this.exchangeRateProvider.getRate(monedaNegocio.codigo, monedaCuenta.codigo);
                         finalTipoCambio = exchangeRate.rate;
                         finalMontoOriginal = Number((totalVentaNum * finalTipoCambio).toFixed(2));

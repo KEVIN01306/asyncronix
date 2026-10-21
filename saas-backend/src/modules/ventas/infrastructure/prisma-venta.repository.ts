@@ -10,6 +10,7 @@ import { InsufficientStockPersistenceError } from '../../../shared/database/erro
 import { VentaNotFoundPersistenceError } from '../../../shared/database/errors/VentaNotFoundPersistenceError.js';
 import { NotFoundPersistenceError } from '../../../shared/database/errors/NotFoundPersistenceError.js';
 import { PersistenceError } from '../../../shared/database/errors/PersistenceError.js';
+import { descontarStock, incrementarStock } from "../../lote/application/services/stock-movement.service.js";
 
 export class PrismaVentaRepository implements VentaRepository {
     constructor(private readonly db: PrismaClient) { }
@@ -78,35 +79,35 @@ export class PrismaVentaRepository implements VentaRepository {
 
     async crearDetalle(ventaId: string, detalle: any, negocio_id: string, sucursal_id: string): Promise<any> {
         try {
-            const venta = await this.db.venta.findFirst({ where: { id: ventaId, negocio_id, sucursal_id, activo: true } });
-            if (!venta) throw new VentaNotFoundPersistenceError();
+            return await this.db.$transaction(async (tx) => {
+                const venta = await tx.venta.findFirst({ where: { id: ventaId, negocio_id, sucursal_id, activo: true } });
+                if (!venta) throw new VentaNotFoundPersistenceError();
 
-            const created = await this.db.ventaDetalle.create({
-                data: {
-                    venta_id: ventaId,
-                    variante_id: detalle.variante_id ?? undefined,
-                    lote_id: detalle.lote_id ?? null,
-                    descripcion: detalle.descripcion,
-                    cantidad: detalle.cantidad,
-                    precio_unitario: detalle.precio_unitario,
-                    costo_unitario: detalle.costo_unitario
-                },
-                include: { lote: { include: { variante: { include: { producto: true } } } } }
+                if (detalle.lote_id) {
+                    await descontarStock(tx, { lote_id: detalle.lote_id, cantidad: detalle.cantidad, negocio_id });
+                }
+
+                const created = await tx.ventaDetalle.create({
+                    data: {
+                        venta_id: ventaId,
+                        variante_id: detalle.variante_id ?? undefined,
+                        lote_id: detalle.lote_id ?? null,
+                        descripcion: detalle.descripcion,
+                        cantidad: detalle.cantidad,
+                        precio_unitario: detalle.precio_unitario,
+                        costo_unitario: detalle.costo_unitario
+                    },
+                    include: { lote: { include: { variante: { include: { producto: true } } } } }
+                });
+
+                // Compute total using details
+                const detalles = await tx.ventaDetalle.findMany({ where: { venta_id: ventaId } });
+                const total = detalles.reduce((s: number, d: any) => s + (d.precio_unitario * d.cantidad), 0);
+
+                await tx.venta.update({ where: { id: ventaId }, data: { total } });
+
+                return created;
             });
-
-            // Recalcular totales de venta
-            const agregados = await this.db.ventaDetalle.aggregate({
-                where: { venta_id: ventaId },
-                _sum: { precio_unitario: true, cantidad: true }
-            });
-
-            // Compute total using details
-            const detalles = await this.db.ventaDetalle.findMany({ where: { venta_id: ventaId } });
-            const total = detalles.reduce((s: number, d: any) => s + (d.precio_unitario * d.cantidad), 0);
-
-            await this.db.venta.update({ where: { id: ventaId }, data: { total } });
-
-            return created;
         } catch (error: any) {
             if (error instanceof PersistenceError) throw error;
             throw PrismaErrorMapper.map(error);
@@ -122,19 +123,9 @@ export class PrismaVentaRepository implements VentaRepository {
                 const created: any[] = [];
 
                 for (const d of detalles) {
-                    if (!d.lote_id) {
-                        // create detalle without lote
-                        const c = await tx.ventaDetalle.create({ data: { venta_id: ventaId, variante_id: d.variante_id ?? undefined, descripcion: d.descripcion, cantidad: d.cantidad, precio_unitario: d.precio_unitario, costo_unitario: d.costo_unitario }, include: { lote: { include: { variante: { include: { producto: true } } } } } });
-                        created.push(c);
-                        continue;
+                    if (d.lote_id) {
+                        await descontarStock(tx, { lote_id: d.lote_id, cantidad: d.cantidad, negocio_id });
                     }
-
-                    const loteRecord = await tx.lote.findFirst({ where: { id: d.lote_id, negocio_id } });
-                    if (!loteRecord) throw new LoteNotFoundPersistenceError();
-                    const actual = loteRecord.cantidad_actual ?? 0;
-                    if (actual < d.cantidad) throw new InsufficientStockPersistenceError();
-
-                    // Do not update lote here; DB trigger will decrement stock on insert.
                     const c = await tx.ventaDetalle.create({ data: { venta_id: ventaId, variante_id: d.variante_id ?? undefined, lote_id: d.lote_id, descripcion: d.descripcion, cantidad: d.cantidad, precio_unitario: d.precio_unitario, costo_unitario: d.costo_unitario }, include: { lote: { include: { variante: { include: { producto: true } } } } } });
                     created.push(c);
                 }
@@ -153,15 +144,21 @@ export class PrismaVentaRepository implements VentaRepository {
 
     async eliminarDetalle(ventaId: string, detalleId: string, negocio_id: string, sucursal_id: string): Promise<void> {
         try {
-            const detalle = await this.db.ventaDetalle.findFirst({ where: { id: detalleId, venta_id: ventaId } });
-            if (!detalle) throw new NotFoundPersistenceError();
+            await this.db.$transaction(async (tx) => {
+                const detalle = await tx.ventaDetalle.findFirst({ where: { id: detalleId, venta_id: ventaId } });
+                if (!detalle) throw new NotFoundPersistenceError();
 
-            await this.db.ventaDetalle.delete({ where: { id: detalleId } });
+                if (detalle.lote_id) {
+                    await incrementarStock(tx, { lote_id: detalle.lote_id, cantidad: detalle.cantidad, negocio_id });
+                }
 
-            // Recalcular totales de venta
-            const detalles = await this.db.ventaDetalle.findMany({ where: { venta_id: ventaId } });
-            const total = detalles.reduce((s: number, d: any) => s + (d.precio_unitario * d.cantidad), 0);
-            await this.db.venta.update({ where: { id: ventaId }, data: { total } });
+                await tx.ventaDetalle.delete({ where: { id: detalleId } });
+
+                // Recalcular totales de venta
+                const detalles = await tx.ventaDetalle.findMany({ where: { venta_id: ventaId } });
+                const total = detalles.reduce((s: number, d: any) => s + (d.precio_unitario * d.cantidad), 0);
+                await tx.venta.update({ where: { id: ventaId }, data: { total } });
+            });
         } catch (error: any) {
             throw PrismaErrorMapper.map(error);
         }
@@ -223,15 +220,28 @@ export class PrismaVentaRepository implements VentaRepository {
         }
     }
 
-    async anular(id: string, negocio_id: string, sucursal_id: string, comentario: string): Promise<VentaSimple> {
+    async anular(id: string, negocio_id: string, sucursal_id: string, comentario: string, options?: { tx?: any }): Promise<VentaSimple> {
         try {
-            return await this.db.$transaction(async (tx) => {
+            const execute = async (tx: any) => {
                 const ventaActual = await tx.venta.findFirst({
-                    where: { id, negocio_id, sucursal_id, activo: true }
+                    where: { id, negocio_id, sucursal_id, activo: true },
+                    include: { detalles: true }
                 });
 
                 if (!ventaActual) throw new VentaNotFoundPersistenceError();
                 if (ventaActual.estado === 'ANULADA') throw new Error("VENTA_YA_ANULADA");
+
+                // Restituir existencias a los lotes originales
+                for (const detalle of ventaActual.detalles) {
+                    if (detalle.lote_id && detalle.cantidad > 0) {
+                        await incrementarStock(tx, {
+                            lote_id: detalle.lote_id,
+                            cantidad: detalle.cantidad,
+                            negocio_id,
+                            motivo: `Anulación de venta ${id}`
+                        });
+                    }
+                }
 
                 const ventaUpdated = await tx.venta.update({
                     where: { id, negocio_id, sucursal_id },
@@ -240,7 +250,13 @@ export class PrismaVentaRepository implements VentaRepository {
                 });
 
                 return VentaMapper.mapSimple(ventaUpdated);
-            }, { maxWait: 5000, timeout: 20000 });
+            };
+
+            if (options?.tx) {
+                return await execute(options.tx);
+            } else {
+                return await this.db.$transaction(execute, { maxWait: 5000, timeout: 20000 });
+            }
         } catch (error: any) {
             if (error instanceof PersistenceError) throw error;
             throw PrismaErrorMapper.map(error);

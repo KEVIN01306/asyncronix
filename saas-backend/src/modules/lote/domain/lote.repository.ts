@@ -9,5 +9,6 @@ export interface LoteRepository {
     listar(negocio_id: string, sucursal_id: string, pagination: Pagination, filters?: Record<string, any>): Promise<Paginated<LoteDetalle>>;
     listarPorVariante(variante_id: string, negocio_id: string, pagination: Pagination, sucursal_id?: string): Promise<Paginated<LoteDetalle>>;
     listarPorProducto(producto_id: string, negocio_id: string, pagination: Pagination, sucursal_id?: string): Promise<Paginated<LoteDetalle>>;
-    disminuirCantidad(id: string, negocio_id: string, cantidad: number): Promise<void>;
+    disminuirCantidad(id: string, negocio_id: string, cantidad: number, tx?: Prisma.TransactionClient): Promise<void>;
+    incrementarCantidad(id: string, negocio_id: string, cantidad: number, tx?: Prisma.TransactionClient): Promise<void>;
 }

@@ -6,6 +6,7 @@ import { LoteMapper } from './mappers/lote.mapper.js';
 import { LoteNotFoundPersistenceError } from '../../../shared/database/errors/LoteNotFoundPersistenceError.js';
 import { InsufficientStockPersistenceError } from '../../../shared/database/errors/InsufficientStockPersistenceError.js';
 import { PersistenceError } from '../../../shared/database/errors/PersistenceError.js';
+import { descontarStock, incrementarStock } from '../application/services/stock-movement.service.js';
 
 export class PrismaLoteRepository implements LoteRepository {
     constructor(private readonly prisma: PrismaClient) { }
@@ -203,14 +204,19 @@ export class PrismaLoteRepository implements LoteRepository {
         }
     }
 
-    async disminuirCantidad(id: string, negocio_id: string, cantidad: number): Promise<void> {
+    async disminuirCantidad(id: string, negocio_id: string, cantidad: number, tx?: Prisma.TransactionClient): Promise<void> {
         try {
-            const lote = await this.prisma.lote.findFirst({ where: { id, negocio_id } });
-            if (!lote) throw new LoteNotFoundPersistenceError();
-            const actual = lote.cantidad_actual ?? 0;
-            if (actual < cantidad) throw new InsufficientStockPersistenceError();
-            const nueva = actual - cantidad;
-            await this.prisma.lote.update({ where: { id }, data: { cantidad_actual: nueva, activo: nueva > 0 } });
+            const db = tx || this.prisma;
+            await descontarStock(db, { lote_id: id, cantidad, negocio_id });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async incrementarCantidad(id: string, negocio_id: string, cantidad: number, tx?: Prisma.TransactionClient): Promise<void> {
+        try {
+            const db = tx || this.prisma;
+            await incrementarStock(db, { lote_id: id, cantidad, negocio_id });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }

@@ -3,6 +3,7 @@ import type { ServicioRepository, ListarServiciosParams } from "../domain/servic
 import type { ServicioCrear, ServicioActualizar, ServicioDetalle, ServicioSimple, ImagenServicio, ChecklistRespuestaSimple } from "../domain/servicio.entity.js";
 import { PrismaErrorMapper } from "@shared/database/prisma/PrismaErrorMapper.js";
 import { mapServicioVehiculoToServicioSimple, mapServicioVehiculoToServicioDetalle, toServicioRecordFromServicioVehiculo } from "./mappers/servicio-vehiculo.mappers.js";
+import { descontarStock, incrementarStock } from "../../lote/application/services/stock-movement.service.js";
 
 // This repository is a compatibility facade that currently delegates to the
 // existing `PrismaServicioRepository`. It provides a single place to implement
@@ -532,6 +533,10 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             const servicio = await this.prisma.servicio.findFirst({ where: { id: servicio_id, negocio_id, activo: true } });
             if (!servicio) throw new Error('Servicio no encontrado');
 
+            if (detalle.lote_id) {
+                await descontarStock(this.prisma, { lote_id: detalle.lote_id, cantidad: detalle.cantidad, negocio_id });
+            }
+
             const created = await this.prisma.servicioRepuesto.create({ data: { servicio_id: servicio_reparacion_id ? null : servicio_id, servicio_reparacion_id: servicio_reparacion_id ?? null, variante_id: detalle.variante_id ?? null, lote_id: detalle.lote_id ?? null, cantidad: detalle.cantidad, precio_venta: detalle.precio_venta, costo: detalle.costo_unitario ?? null }, include: { lote: { include: { variante: { include: { producto: true } } } } } });
 
             return created;
@@ -550,15 +555,13 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
 
                 for (const d of detalles) {
                     if (!d.lote_id) throw new Error('LOTE_REQUERIDO');
-                    const loteRecord = await tx.lote.findFirst({ where: { id: d.lote_id, negocio_id } });
-                    if (!loteRecord) throw new Error('LOTE_NO_ENCONTRADO');
-                    const actual = loteRecord.cantidad_actual ?? 0;
-                    if (actual < d.cantidad) throw new Error('INSUFICIENTE_STOCK');
+
+                    // Descontar stock centralizado atómicamente dentro de la transacción
+                    await descontarStock(tx, { lote_id: d.lote_id, cantidad: d.cantidad, negocio_id });
 
                     const c = await tx.servicioRepuesto.create({ data: { servicio_id: servicio_reparacion_id ? null : servicio_id, servicio_reparacion_id: servicio_reparacion_id ?? null, variante_id: d.variante_id ?? null, lote_id: d.lote_id, cantidad: d.cantidad, precio_venta: d.precio_venta, costo: d.costo_unitario }, include: { variante: { include: { producto: true, valores: { include: { atributo: true } } } } } });
                     created.push(c);
                 }
-
 
                 return created;
             }, { timeout: 20000 });
@@ -592,8 +595,47 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             const rep = await this.prisma.servicioRepuesto.findFirst({ where: { id, servicio_id } });
             if (!rep) throw new Error('Repuesto no encontrado');
 
-            await this.prisma.servicioRepuesto.delete({ where: { id } });
+            // Devolver stock al lote de origen centralizadamente
+            if (rep.lote_id && rep.cantidad > 0) {
+                await incrementarStock(this.prisma, { lote_id: rep.lote_id, cantidad: rep.cantidad, negocio_id });
+            }
 
+            await this.prisma.servicioRepuesto.delete({ where: { id } });
+        } catch (error) {
+            throw PrismaErrorMapper.map(error);
+        }
+    }
+
+    async actualizarCantidadRepuesto(id: string, nuevaCantidad: number, servicio_id: string, negocio_id: string, sucursal_id: string) {
+        try {
+            return await this.prisma.$transaction(async (tx) => {
+                const servicio = await tx.servicio.findFirst({ where: { id: servicio_id, negocio_id, sucursal_id, activo: true } });
+                if (!servicio) throw new Error('Servicio no encontrado');
+
+                const rep = await tx.servicioRepuesto.findFirst({ where: { id, servicio_id } });
+                if (!rep) throw new Error('Repuesto no encontrado');
+
+                const diff = nuevaCantidad - rep.cantidad;
+                if (diff > 0 && rep.lote_id) {
+                    // Descontar la cantidad adicional requerida
+                    await descontarStock(tx, { lote_id: rep.lote_id, cantidad: diff, negocio_id });
+                } else if (diff < 0 && rep.lote_id) {
+                    // Restituir únicamente la diferencia al lote original
+                    await incrementarStock(tx, { lote_id: rep.lote_id, cantidad: Math.abs(diff), negocio_id });
+                }
+
+                if (nuevaCantidad === 0) {
+                    await tx.servicioRepuesto.delete({ where: { id } });
+                    return null;
+                }
+
+                const updated = await tx.servicioRepuesto.update({
+                    where: { id },
+                    data: { cantidad: nuevaCantidad },
+                    include: { variante: { include: { producto: true } } }
+                });
+                return updated;
+            });
         } catch (error) {
             throw PrismaErrorMapper.map(error);
         }
@@ -735,7 +777,7 @@ export class PrismaServicioVehiculoRepository implements ServicioRepository {
             const reparacion = await this.prisma.servicioReparacion.findUnique({
                 where: { id },
                 include: {
-                    servicio: { include: { cliente: true, vehiculo: { include: { modelo: true } } } },
+                    servicio: { include: { cliente: true, servicioVehiculo: { include: { vehiculo: { include: { modelo: true } } } } } },
                     servicioReparacionRepuestos: true,
                     servicioRepuestos: { include: { variante: { include: { producto: true, valores: { include: { atributo: true } } } } } }
                 }

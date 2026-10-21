@@ -161,6 +161,8 @@ export class DigifactProvider implements IDigifactProvider {
                 Username: formattedUsername
             };
 
+            console.log(payload)
+
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -216,7 +218,7 @@ export class DigifactProvider implements IDigifactProvider {
         try {
             const baseUrl = this.getBaseUrl(request.ambiente);
             const urlBaseApi = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-            
+
             const cleanNit = request.nitEmisor.replace(/[^0-9]/g, '');
             const taxId = cleanNit.padStart(12, '0');
 

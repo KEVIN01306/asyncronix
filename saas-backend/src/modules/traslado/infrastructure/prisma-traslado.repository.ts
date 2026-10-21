@@ -10,6 +10,7 @@ import { InsufficientStockPersistenceError } from '@shared/database/errors/Insuf
 import { PersistenceError } from '@shared/database/errors/PersistenceError.js';
 import { NotFoundPersistenceError } from '@shared/database/errors/NotFoundPersistenceError.js';
 import { InvalidTrasladoStatePersistenceError } from '@shared/database/errors/InvalidTrasladoStatePersistenceError.js';
+import { descontarStock, incrementarStock } from '../../lote/application/services/stock-movement.service.js';
 
 export class PrismaTrasladoRepository implements TrasladoRepository {
     constructor(private readonly prisma: PrismaClient) { }
@@ -81,11 +82,10 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                 });
 
                 for (const detalle of data.detalles) {
-                    const actual = cantidadPorLote.get(detalle.lote_id) ?? 0;
-                    const nuevaCantidad = actual - detalle.cantidad;
-                    await tx.lote.update({
-                        where: { id: detalle.lote_id },
-                        data: { cantidad_actual: nuevaCantidad, activo: nuevaCantidad > 0 },
+                    await descontarStock(tx, {
+                        lote_id: detalle.lote_id,
+                        cantidad: detalle.cantidad,
+                        negocio_id,
                     });
                 }
 
@@ -339,14 +339,10 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                 }
 
                 for (const detalle of traslado.detalles) {
-                    const lote = await tx.lote.findUnique({ where: { id: detalle.lote_id } });
-                    if (!lote) {
-                        throw new LoteNotFoundPersistenceError();
-                    }
-                    const nuevaCantidad = (lote.cantidad_actual ?? 0) + detalle.cantidad;
-                    await tx.lote.update({
-                        where: { id: lote.id },
-                        data: { cantidad_actual: nuevaCantidad, activo: true },
+                    await incrementarStock(tx, {
+                        lote_id: detalle.lote_id,
+                        cantidad: detalle.cantidad,
+                        negocio_id,
                     });
                 }
 
@@ -411,15 +407,13 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                     });
 
                     if (existingDestinoLote) {
-                        await tx.lote.update({
-                            where: { id: existingDestinoLote.id },
-                            data: {
-                                cantidad_actual: (existingDestinoLote.cantidad_actual ?? 0) + detalle.cantidad,
-                                activo: true,
-                            },
+                        await incrementarStock(tx, {
+                            lote_id: existingDestinoLote.id,
+                            cantidad: detalle.cantidad,
+                            negocio_id,
                         });
                     } else {
-                        await tx.lote.create({
+                        const nuevoLote = await tx.lote.create({
                             data: {
                                 negocio_id,
                                 sucursal_id: destino_id,
@@ -427,13 +421,18 @@ export class PrismaTrasladoRepository implements TrasladoRepository {
                                 proveedor_id: origenLote.proveedor_id,
                                 codigo_lote: origenLote.codigo_lote,
                                 cantidad_inicial: detalle.cantidad,
-                                cantidad_actual: detalle.cantidad,
+                                cantidad_actual: 0,
                                 costo_compra: origenLote.costo_compra,
                                 precio_venta: origenLote.precio_venta,
                                 fecha_ingreso: new Date(),
                                 fecha_vencimiento: origenLote.fecha_vencimiento,
-                                activo: true,
+                                activo: false,
                             },
+                        });
+                        await incrementarStock(tx, {
+                            lote_id: nuevoLote.id,
+                            cantidad: detalle.cantidad,
+                            negocio_id,
                         });
                     }
                 }

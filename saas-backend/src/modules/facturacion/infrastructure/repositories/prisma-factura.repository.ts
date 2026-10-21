@@ -7,6 +7,7 @@ import type {
 } from "../../domain/interfaces/factura.repository.js";
 import type { CrearFacturaData, FacturaEntity } from "../../domain/entities/factura.entity.js";
 import { DatabaseError } from "../../../../shared/database/errors/DatabaseError.js";
+import { incrementarStock } from "../../../lote/application/services/stock-movement.service.js";
 
 export class PrismaFacturaRepository implements FacturaRepository {
     constructor(private readonly prisma: PrismaClient) { }
@@ -114,22 +115,132 @@ export class PrismaFacturaRepository implements FacturaRepository {
         acuse_anulacion: string | null
     ): Promise<FacturaEntity> {
         try {
-            const factura = await this.prisma.factura.update({
-                where: { id: factura_id },
-                data: {
-                    estado: 'ANULADA',
-                    dte_sat_xml: nuevo_xml_url,
-                    dle_sat_pdf: null,
-                    motivo_anulacion: motivo,
-                    acuse_anulacion: acuse_anulacion,
-                    fecha_anulacion: new Date()
+            return await this.prisma.$transaction(async (tx) => {
+                const facturaActual = await tx.factura.findUnique({
+                    where: { id: factura_id },
+                    include: {
+                        venta: {
+                            include: { detalles: true }
+                        },
+                        servicio: {
+                            include: {
+                                repuestos: true,
+                                servicioReparacion: {
+                                    include: {
+                                        servicioRepuestos: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                if (!facturaActual) {
+                    throw new DatabaseError("La factura no existe");
                 }
-            }) as unknown as FacturaEntity;
-            return factura;
+
+                if (facturaActual.estado === 'ANULADA') {
+                    throw new DatabaseError("La factura ya se encuentra anulada");
+                }
+
+                // 1. Si la factura proviene de una venta, devolver las unidades de cada detalle a sus lotes originales
+                if (facturaActual.venta) {
+                    if (facturaActual.venta.estado !== 'ANULADA') {
+                        for (const detalle of facturaActual.venta.detalles) {
+                            if (detalle.lote_id && detalle.cantidad > 0) {
+                                await incrementarStock(tx, {
+                                    lote_id: detalle.lote_id,
+                                    cantidad: detalle.cantidad,
+                                    negocio_id: facturaActual.negocio_id,
+                                    motivo: `Anulación de factura ${facturaActual.numero_factura || facturaActual.id}`
+                                });
+                            }
+                        }
+
+                        await tx.venta.update({
+                            where: { id: facturaActual.venta.id },
+                            data: {
+                                estado: 'ANULADA',
+                                motivo_anulacion: motivo
+                            }
+                        });
+                    }
+                }
+
+                // 2. Si la factura proviene de un servicio de taller, devolver los repuestos consumidos a sus lotes originales
+                if (facturaActual.servicio) {
+                    // Repuestos directos del servicio
+                    if (facturaActual.servicio.repuestos && facturaActual.servicio.repuestos.length > 0) {
+                        for (const rep of facturaActual.servicio.repuestos) {
+                            if (rep.activo && rep.lote_id && rep.cantidad > 0) {
+                                await incrementarStock(tx, {
+                                    lote_id: rep.lote_id,
+                                    cantidad: rep.cantidad,
+                                    negocio_id: facturaActual.negocio_id,
+                                    motivo: `Anulación de factura servicio ${facturaActual.numero_factura || facturaActual.id}`
+                                });
+                                await tx.servicioRepuesto.update({
+                                    where: { id: rep.id },
+                                    data: { activo: false }
+                                });
+                            }
+                        }
+                    }
+
+                    // Repuestos asociados a reparaciones del servicio
+                    if (facturaActual.servicio.servicioReparacion && facturaActual.servicio.servicioReparacion.length > 0) {
+                        for (const repArea of facturaActual.servicio.servicioReparacion) {
+                            if (repArea.servicioRepuestos && repArea.servicioRepuestos.length > 0) {
+                                for (const rep of repArea.servicioRepuestos) {
+                                    if (rep.activo && rep.lote_id && rep.cantidad > 0) {
+                                        await incrementarStock(tx, {
+                                            lote_id: rep.lote_id,
+                                            cantidad: rep.cantidad,
+                                            negocio_id: facturaActual.negocio_id,
+                                            motivo: `Anulación de factura servicio ${facturaActual.numero_factura || facturaActual.id}`
+                                        });
+                                        await tx.servicioRepuesto.update({
+                                            where: { id: rep.id },
+                                            data: { activo: false }
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Desactivar el servicio
+                    await tx.servicio.update({
+                        where: { id: facturaActual.servicio.id },
+                        data: { activo: false }
+                    });
+
+                    await tx.servicioVehiculo.updateMany({
+                        where: { servicio_id: facturaActual.servicio.id },
+                        data: { estado: 'CANCELADO' }
+                    });
+                }
+
+                // 3. Actualizar la factura a estado ANULADA
+                const facturaUpdated = await tx.factura.update({
+                    where: { id: factura_id },
+                    data: {
+                        estado: 'ANULADA',
+                        dte_sat_xml: nuevo_xml_url,
+                        dle_sat_pdf: null,
+                        motivo_anulacion: motivo,
+                        acuse_anulacion: acuse_anulacion,
+                        fecha_anulacion: new Date()
+                    }
+                }) as unknown as FacturaEntity;
+
+                return facturaUpdated;
+            }, { maxWait: 5000, timeout: 25000 });
         } catch (error: any) {
             throw new DatabaseError(`Error al marcar la factura como anulada: ${error.message}`);
         }
     }
+
 
     async listarEmitidas(negocio_id: string, filtros: ListarFacturasFiltros): Promise<ListarFacturasResultado> {
         try {

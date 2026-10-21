@@ -7,6 +7,7 @@ import type { AcreditarCuentaBancariaUseCase } from '../../transaccion/applicati
 import type { CrearTransaccionUseCase } from '../../transaccion/application/crear-transaccion.usecase.js';
 import type { ExchangeRateProvider } from '../../../shared/domain/providers/ExchangeRateProvider.js';
 import type { CrearYCertificarFacturaUseCase } from '../../facturacion/application/use-cases/crear-y-certificar-factura.usecase.js';
+import { descontarStock } from '../../lote/application/services/stock-movement.service.js';
 
 export class FinalizarPreVentaUseCase {
     constructor(
@@ -229,6 +230,15 @@ export class FinalizarPreVentaUseCase {
                     }
 
                     for (const detalleVenta of detallesVenta) {
+                        if (detalleVenta.lote_id) {
+                            await descontarStock(tx, {
+                                lote_id: detalleVenta.lote_id,
+                                cantidad: detalleVenta.cantidad,
+                                negocio_id,
+                                permitirStockNegativo: true
+                            });
+                        }
+
                         await tx.ventaDetalle.create({
                             data: {
                                 venta_id: venta.id,
@@ -242,6 +252,7 @@ export class FinalizarPreVentaUseCase {
                         });
                     }
                 }
+
 
                 await tx.preVentaDetalle.deleteMany({ where: { pre_venta_id: id } });
                 await tx.preVenta.update({ where: { id }, data: { activo: false } });

@@ -289,13 +289,17 @@ model Session {
   id               String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   token            String   @unique(map: "token") @db.VarChar(255)
   fcm_token        String?  @db.VarChar(255)
-  usuario_id       String   @db.Char(36)
+  usuario_id       String?  @db.Char(36)
+  cliente_id       String?  @db.Char(36)
   fecha_expiracion DateTime
   fecha_creacion   DateTime @default(now())
-  usuario          Usuario  @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  usuario          Usuario? @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  cliente          Cliente? @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
 
   @@unique([usuario_id])
+  @@unique([cliente_id])
   @@index([usuario_id])
+  @@index([cliente_id])
   @@map("sessions")
 }
 
@@ -349,29 +353,30 @@ model Usuario {
 }
 
 model Cliente {
-  id         String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
-  negocio_id String   @db.Char(36)
-  nombre     String
-  apellido   String?
-  telefono   String
-  email      String?
-  nit        String?
-  dpi        String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id            String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
+  nombre        String
+  apellido      String?
+  telefono      String
+  email         String?
+  password_hash String?
+  nit           String?
+  dpi           String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
-  negocio     Negocio      @relation(fields: [negocio_id], references: [id], onDelete: Cascade)
-  motos       Vehiculo[]
+  negocios    Negocio[]
+  vehiculos   Vehiculo[]
   citas       Cita[]       @relation("CitaCliente")
   servicios   Servicio[]   @relation("ServicioCliente")
   ventas      Venta[]      @relation("VentaCliente")
   pre_ventas  PreVenta[]   @relation("PreVentaCliente")
   cotizacions Cotizacion[]
   facturas    Factura[]
+  sessions    Session?
 
-  @@unique([negocio_id, telefono])
-  @@unique([negocio_id, dpi])
-  @@index([negocio_id])
+  @@unique([telefono])
+  @@unique([dpi])
+  @@unique([nit])
   @@map("clientes")
 }
 

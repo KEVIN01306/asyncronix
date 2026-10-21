@@ -59,16 +59,18 @@ export class AnularFacturaUseCase {
             ambiente: config.fel_ambiente || 'TEST'
         };
 
+        console.log(anulacionPayload)
+
         // 5. Enviar a Digifact la solicitud con reintento si el token expiró o es inválido
         let response: any;
         try {
             response = await this.digifactProvider.anularFactura(token, anulacionPayload);
         } catch (anularError: any) {
-            const esNoAutorizado = anularError?.codigo === "DIGIFACT_UNAUTHORIZED" || 
-                                   anularError?.statusCode === 401 || 
-                                   anularError?.message?.includes("401") || 
-                                   anularError?.message?.includes("Unauthorized") ||
-                                   anularError?.message?.toLowerCase().includes("token");
+            const esNoAutorizado = anularError?.codigo === "DIGIFACT_UNAUTHORIZED" ||
+                anularError?.statusCode === 401 ||
+                anularError?.message?.includes("401") ||
+                anularError?.message?.includes("Unauthorized") ||
+                anularError?.message?.toLowerCase().includes("token");
 
             if (esNoAutorizado) {
                 console.warn(`[Digifact] Token no autorizado o expirado al anular factura para negocio ${negocio_id}. Renovando token con credenciales...`);

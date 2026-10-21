@@ -24,11 +24,17 @@ export class AnularVentaUseCase {
             const factura = await this.facturaRepository.obtenerPorVentaId(id);
             
             if (factura && factura.estado === 'CERTIFICADA' && factura.dte_uuid) {
-                // Delegamos la anulación de la factura electrónica al caso de uso correspondiente
+                // Delegamos la anulación de la factura electrónica al caso de uso correspondiente,
+                // el cual anula el DTE en SAT y restituye atómicamente el inventario a los lotes originales.
                 await this.anularFacturaUseCase.execute(factura.id, negocio_id, comentario);
+                const ventaAnulada = await this.ventaRepository.obtener(id, negocio_id, sucursal_id);
+                if (ventaAnulada) {
+                    return ventaAnulada;
+                }
             }
 
             return await this.ventaRepository.anular(id, negocio_id, sucursal_id, comentario);
+
         } catch (error: any) {
             if (error instanceof PersistenceError) {
                 if (error instanceof VentaNotFoundPersistenceError) throw new AppError('La venta no existe', 'NOT_FOUND', 404);

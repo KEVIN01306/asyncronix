@@ -42,6 +42,7 @@ export interface ServicioRepository {
     crearRepuestosAtomicos(servicio_id: string, detalles: any[], negocio_id: string, sucursal_id: string, servicio_reparacion_id?: string): Promise<any[]>;
     crearRepuesto(servicio_id: string, detalle: any, negocio_id: string, sucursal_id: string, servicio_reparacion_id?: string): Promise<any>;
     eliminarRepuesto(id: string, servicio_id: string, negocio_id: string, sucursal_id: string): Promise<void>;
+    actualizarCantidadRepuesto(id: string, nuevaCantidad: number, servicio_id: string, negocio_id: string, sucursal_id: string): Promise<any>;
     eliminarTareasNoExtra(servicio_id: string, negocio_id: string): Promise<void>;
     crearTareasDesdeTipoServicio(servicio_id: string, tipo_servicio_id: string | null, negocio_id: string): Promise<void>;
     crearTarea(servicio_id: string, data: { nombre: string; extra?: boolean }, negocio_id: string): Promise<ServicioTarea>;
