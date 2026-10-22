@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Grid, useTheme, useMediaQuery, Alert, AlertTitle } from '@mui/material';
+import { Grid, useTheme, useMediaQuery, Alert, AlertTitle, Stack, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
 import { Box, Card, CardContent, Typography, Button, Table, TableHead, TableBody, TableRow, TableCell, Chip, Divider, Paper, TableContainer, Pagination } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Edit, Key, Send } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { clienteRepository } from '../../infrastructure/clientes.repository';
 import { ventaRepository } from '../../../ventas/infrastructure/venta.repository';
@@ -21,6 +21,8 @@ export default function ClienteDetallePage() {
     const [loadingVentas, setLoadingVentas] = useState(true);
     const [page, setPage] = useState(1);
     const [totalVentas, setTotalVentas] = useState(0);
+    const [modalCredencialesOpen, setModalCredencialesOpen] = useState(false);
+    const [enviandoCredenciales, setEnviandoCredenciales] = useState(false);
     const itemsPerPage = 5;
 
     const theme = useTheme();
@@ -67,6 +69,21 @@ export default function ClienteDetallePage() {
         }
     };
 
+    const handleConfirmarReenvioCredenciales = async () => {
+        if (!cliente) return;
+        setEnviandoCredenciales(true);
+        try {
+            const res = await clienteRepository.reenviarCredenciales(cliente.id);
+            toast.success(res.message || 'Nuevas credenciales generadas y enviadas exitosamente al correo');
+            setModalCredencialesOpen(false);
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'Error al reenviar las credenciales';
+            toast.error(msg);
+        } finally {
+            setEnviandoCredenciales(false);
+        }
+    };
+
     if (loadingCliente) return <Loading />;
     if (!cliente) return <ErrorPageLoading text="Cliente no encontrado" textReturn='Volver al listado' navigate={() => navigate('/clientes')} />;
 
@@ -96,8 +113,25 @@ export default function ClienteDetallePage() {
                 Volver
             </Button>
 
-            <Paper sx={{ p: 2, border: (theme) => `1px solid ${theme.palette.divider}`, mb: 2 }}>
+            <Paper sx={{ p: 2, border: (theme) => `1px solid ${theme.palette.divider}`, mb: 2, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: 2 }}>
                 <Typography variant="h5" fontWeight={700}>Detalle de Cliente</Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Button
+                        variant="outlined"
+                        color="warning"
+                        startIcon={<Key />}
+                        onClick={() => setModalCredencialesOpen(true)}
+                    >
+                        Reenviar Credenciales
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<Edit />}
+                        onClick={() => navigate(`/clientes/${cliente.id}/editar`)}
+                    >
+                        Editar
+                    </Button>
+                </Stack>
             </Paper>
 
             <Grid container spacing={3}>
@@ -253,6 +287,72 @@ export default function ClienteDetallePage() {
                     </Card>
                 </Grid>
             </Grid>
+
+            {/* Modal de confirmación para reenviar credenciales */}
+            <Dialog
+                open={modalCredencialesOpen}
+                onClose={() => !enviandoCredenciales && setModalCredencialesOpen(false)}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Key color="warning" />
+                    Reenviar Credenciales
+                </DialogTitle>
+                <DialogContent dividers>
+                    {!cliente.email ? (
+                        <Alert severity="error">
+                            <AlertTitle>Correo no registrado</AlertTitle>
+                            Este cliente no tiene un correo electrónico configurado. Debes editar su información y añadir un correo válido para enviarle credenciales.
+                        </Alert>
+                    ) : (
+                        <Box>
+                            <Typography variant="body2" mb={2}>
+                                Se generará una <strong>nueva contraseña aleatoria y segura</strong> para <strong>{cliente.nombre} {cliente.apellido || ''}</strong> y se enviará por correo electrónico a:
+                            </Typography>
+                            <Box sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'background.paper' : 'grey.100', borderRadius: 1, mb: 2 }}>
+                                <Typography variant="body2" fontWeight={700} color="primary">
+                                    {cliente.email}
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary" display="block">
+                                    Usuario de acceso: <strong>{cliente.dpi || cliente.nit || 'Documento'}</strong>
+                                </Typography>
+                            </Box>
+                            <Alert severity="warning" sx={{ fontSize: '0.82rem' }}>
+                                Cualquier sesión activa anterior del cliente será cerrada por motivos de seguridad.
+                            </Alert>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ px: 3, py: 2 }}>
+                    <Button
+                        onClick={() => setModalCredencialesOpen(false)}
+                        disabled={enviandoCredenciales}
+                        color="inherit"
+                    >
+                        Cancelar
+                    </Button>
+                    {cliente.email ? (
+                        <Button
+                            variant="contained"
+                            color="warning"
+                            onClick={handleConfirmarReenvioCredenciales}
+                            disabled={enviandoCredenciales}
+                            startIcon={enviandoCredenciales ? <CircularProgress size={18} color="inherit" /> : <Send />}
+                        >
+                            {enviandoCredenciales ? 'Enviando...' : 'Generar y Reenviar'}
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => navigate(`/clientes/${cliente.id}/editar`)}
+                        >
+                            Editar Cliente
+                        </Button>
+                    )}
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

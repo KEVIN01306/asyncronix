@@ -106,8 +106,8 @@ export class VehiculoController extends BaseController {
         try {
             const { id } = req.params;
             const { negocio_id } = this.obtenerEntorno(res);
-            const { nit } = req.body;
-            const updated = await this.asociarClienteUseCase.execute(id, nit, negocio_id);
+            const doc = req.body.documento || req.body.dpi || req.body.nit;
+            const updated = await this.asociarClienteUseCase.execute(id, doc, negocio_id);
             res.status(200).json(Respuesta.exito('Cliente asociado al vehículo', updated));
         } catch (error) { next(error); }
     }

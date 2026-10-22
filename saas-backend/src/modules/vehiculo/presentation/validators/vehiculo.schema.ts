@@ -21,11 +21,19 @@ export const vehiculoListQuerySchema = paginacionQuerySchema.extend({
 });
 
 export const vehiculoAsociarClienteSchema = z.object({
-    nit: z.string()
+    documento: z.string().trim().optional(),
+    dpi: z.string().trim().optional(),
+    nit: z.string().trim().optional()
+}).refine((d) => Boolean(d.documento || d.dpi || d.nit), {
+    message: 'Se requiere DPI o NIT para asociar',
+    path: ['documento']
 });
 
 export const vehiculoCrearClienteSchema = z.object({
-    nombre: z.string().min(1).max(100),
-    nit: z.string().max(50).optional().nullable(),
-    dpi: z.string().max(50).optional().nullable()
-}).refine((d) => d.nit || d.dpi, { message: 'Se requiere NIT o DPI', path: ['nit'] });
+    nombre: z.string().trim().min(1, 'El nombre es obligatorio').max(100),
+    apellido: z.string().trim().max(100).optional().nullable(),
+    dpi: z.string().trim().max(50).optional().nullable(),
+    nit: z.string().trim().max(50).optional().nullable(),
+    telefono: z.string().trim().max(25).optional().nullable(),
+    email: z.union([z.string().trim().email('Formato de correo inválido'), z.literal('')]).optional().nullable()
+});

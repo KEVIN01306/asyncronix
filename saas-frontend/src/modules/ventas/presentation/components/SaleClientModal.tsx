@@ -38,13 +38,19 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
 
     const [mostrarCrear, setMostrarCrear] = useState(false);
     const [nombre, setNombre] = useState('');
+    const [dpi, setDpi] = useState('');
     const [nit, setNit] = useState('');
+    const [telefono, setTelefono] = useState('');
+    const [email, setEmail] = useState('');
     const [creando, setCreando] = useState(false);
 
     const handleReset = useCallback(() => {
         setDocumento('');
         setNombre('');
+        setDpi('');
         setNit('');
+        setTelefono('');
+        setEmail('');
         setMostrarCrear(false);
         setSearchError('');
     }, []);
@@ -70,6 +76,7 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
             try {
                 const result = await clienteRepository.buscarPorDocumento({
                     nit: cleanDoc,
+                    dpi: cleanDoc,
                 });
 
                 if (result.data) {
@@ -89,7 +96,7 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
                 } else {
                     setSearchError('No se encontró un cliente con este documento.');
                 }
-            } catch  {
+            } catch {
                 setSearchError('Error al buscar el cliente.');
             } finally {
                 setSearching(false);
@@ -100,15 +107,19 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
     }, [documento, open, mostrarCrear, onConfirm]);
 
     const handleCrearCliente = async () => {
-        if (!nombre.trim()) {
+        const cleanNombre = nombre.trim();
+        const cleanDpi = dpi.trim();
+        const cleanNit = nit.trim();
+        const cleanTel = telefono.trim();
+        const cleanEmail = email.trim();
+
+        if (!cleanNombre) {
             toast.error('El nombre es obligatorio');
             return;
         }
 
-        const cleanNit = nit.trim();
-
-        if (!cleanNit) {
-            toast.error('El NIT es obligatorio');
+        if (!cleanDpi && !cleanNit) {
+            toast.error('Debe ingresar al menos el DPI o el NIT');
             return;
         }
 
@@ -116,17 +127,21 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
 
         try {
             const result = await clienteRepository.registrar({
-                nombre: nombre.trim(),
-                nit: cleanNit,
-                telefono: cleanNit,
-                email: null,
+                nombre: cleanNombre,
+                dpi: cleanDpi || null,
+                nit: cleanNit || null,
+                telefono: cleanTel || null,
+                email: cleanEmail || null,
                 apellido: null,
-                dpi: null,
             });
 
             if (result.data) {
                 const clienteCreado = result.data;
-                toast.success('Cliente creado y seleccionado exitosamente');
+                if (clienteCreado.reutilizado) {
+                    toast.info('Cliente existente asociado: se completaron los datos faltantes ingresados');
+                } else {
+                    toast.success('Cliente creado y seleccionado exitosamente');
+                }
                 onConfirm({
                     cliente_id: clienteCreado.id,
                     cf: false,
@@ -141,11 +156,7 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
             }
         } catch (err: any) {
             const serverMsg = err.response?.data?.message;
-            if (serverMsg && serverMsg.includes('telefono')) {
-                toast.error('Este documento ya está registrado como teléfono de otro cliente.');
-            } else {
-                toast.error(serverMsg || 'Error al crear el cliente');
-            }
+            toast.error(serverMsg || 'Error al crear el cliente');
         } finally {
             setCreando(false);
         }
@@ -155,7 +166,13 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
         setMostrarCrear(true);
         setSearchError('');
         const doc = documento.trim();
-        setNit(doc);
+        if (doc.replace(/\D/g, '').length === 13) {
+            setDpi(doc);
+            setNit('');
+        } else {
+            setNit(doc);
+            setDpi('');
+        }
     };
 
     const handleSelectCF = () => {
@@ -182,12 +199,12 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
                 {!mostrarCrear ? (
                     <Box display="flex" flexDirection="column" gap={2.5} py={1}>
                         <Typography variant="body2" color="textSecondary">
-                            Escribe el NIT del cliente para buscarlo automáticamente.
+                            Escribe el DPI o NIT del cliente para buscarlo automáticamente.
                         </Typography>
                         <TextField
                             fullWidth
-                            label="NIT"
-                            placeholder="Buscar por NIT"
+                            label="DPI o NIT"
+                            placeholder="Buscar por DPI o NIT"
                             value={documento}
                             onChange={(e) => setDocumento(e.target.value)}
                             autoFocus
@@ -239,6 +256,23 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
                     <Box display="flex" flexDirection="column" gap={2} py={1}>
                         <TextField
                             fullWidth
+                            label="DPI (CUI - 13 dígitos)"
+                            placeholder="DPI del cliente"
+                            value={dpi}
+                            onChange={(e) => setDpi(e.target.value)}
+                            disabled={creando}
+                            helperText="Identificador principal de acceso"
+                        />
+                        <TextField
+                            fullWidth
+                            label="NIT"
+                            placeholder="NIT para facturación (opcional)"
+                            value={nit}
+                            onChange={(e) => setNit(e.target.value)}
+                            disabled={creando}
+                        />
+                        <TextField
+                            fullWidth
                             label="Nombre Completo"
                             placeholder="Nombre del cliente"
                             value={nombre}
@@ -249,15 +283,23 @@ export default function SaleClientModal({ open, onClose, onConfirm }: Props) {
                         />
                         <TextField
                             fullWidth
-                            label="NIT"
-                            placeholder="NIT del cliente"
-                            value={nit}
-                            onChange={(e) => setNit(e.target.value)}
+                            label="Teléfono"
+                            placeholder="Teléfono (opcional)"
+                            value={telefono}
+                            onChange={(e) => setTelefono(e.target.value)}
                             disabled={creando}
-                            required
+                        />
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            type="email"
+                            placeholder="Correo electrónico (opcional)"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={creando}
                         />
                         <Typography variant="caption" color="textSecondary">
-                            * Nombre y NIT son obligatorios.
+                            * Nombre es obligatorio. Ingrese DPI o NIT.
                         </Typography>
                     </Box>
                 )}

@@ -36,8 +36,26 @@ export const clienteRepository = {
         const response = await api.get<ApiResponse<Cliente | null>>(`${URL_MODULE}/dpi/${encodeURIComponent(dpi)}`);
         return response as any;
     },
+    buscarGlobal: async (params: { q?: string; documento?: string; limit?: number }): Promise<ApiResponse<Cliente[]>> => {
+        const response = await api.get<ApiResponse<Cliente[]>>(`${URL_MODULE}/buscar-global`, { params });
+        return response as any;
+    },
+    obtenerResumenUnificacion: async (origen_id: string, destino_id: string): Promise<ApiResponse<import("../domain/interfaces/cliente.interface").ResumenUnificacion>> => {
+        const response = await api.get<ApiResponse<import("../domain/interfaces/cliente.interface").ResumenUnificacion>>(`${URL_MODULE}/unificar/resumen`, {
+            params: { origen_id, destino_id },
+        });
+        return response as any;
+    },
+    unificar: async (data: import("../domain/interfaces/cliente.interface").UnificarClientesPayload): Promise<ApiResponse<{ message: string; cliente: Cliente }>> => {
+        const response = await api.post<ApiResponse<{ message: string; cliente: Cliente }>>(`${URL_MODULE}/unificar`, data);
+        return response as any;
+    },
     consultarNitDigifact: async (nit: string): Promise<ApiResponse<{ nit: string, nombre: string }>> => {
         const response = await api.get<ApiResponse<{ nit: string, nombre: string }>>(`/facturacion/digifact/nit/${encodeURIComponent(nit)}`);
+        return response as any;
+    },
+    reenviarCredenciales: async (id: string): Promise<ApiResponse<{ clienteId: string; email: string; notificacionEnviada: boolean }>> => {
+        const response = await api.post<ApiResponse<{ clienteId: string; email: string; notificacionEnviada: boolean }>>(`${URL_MODULE}/${id}/reenviar-credenciales`);
         return response as any;
     }
 };

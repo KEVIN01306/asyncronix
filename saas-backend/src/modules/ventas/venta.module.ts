@@ -15,6 +15,7 @@ import prisma from "@infrastructure/config/prisma.js";
 import { PrismaLoteRepository } from "../lote/infrastructure/prisma-lote.repository.js";
 import { PrismaVarianteRepository } from "../producto/infrastructure/prisma-variante.repository.js";
 import { PrismaClienteRepository } from "../cliente/infrastructure/prisma-cliente.repository.js";
+import { registrarClienteUseCase } from "../cliente/cliente.module.js";
 import { Argon2HashProvider } from "../../shared/infrastructure/argon2-hash.provider.js";
 import { CrearPreVentaUseCase } from "./application/crear-preventa.usecase.js";
 import { ObtenerPreVentasUseCase } from "./application/obtener-preventas.usecase.js";
@@ -80,7 +81,7 @@ const anularVentaUseCase = new AnularVentaUseCase(
 const obtenerVentaUseCase = new ObtenerVentaUseCase(ventaRepository);
 const obtenerVentasUseCase = new ObtenerVentasUseCase(ventaRepository);
 const buscarClientePorNitVentaUseCase = new BuscarClientePorNitVentaUseCase(clienteRepository);
-const registrarClienteParaVentaUseCase = new RegistrarClienteParaVentaUseCase(clienteRepository);
+const registrarClienteParaVentaUseCase = new RegistrarClienteParaVentaUseCase(clienteRepository, registrarClienteUseCase);
 export const crearPreVentaUseCase = new CrearPreVentaUseCase(prisma);
 const obtenerPreVentasUseCase = new ObtenerPreVentasUseCase(prisma);
 const obtenerPreVentaUseCase = new ObtenerPreVentaUseCase(prisma);

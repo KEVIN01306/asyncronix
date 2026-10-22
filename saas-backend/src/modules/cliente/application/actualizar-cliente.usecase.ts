@@ -4,6 +4,7 @@ import { NotFoundPersistenceError } from "@shared/database/errors/NotFoundPersis
 import { UniqueConstraintError } from "@shared/database/errors/UniqueConstraintError.js";
 import type { ClienteActualizar, ClienteObtenidoDetalle } from "../domain/cliente.entity.js";
 import type { ClienteRepository } from "../domain/cliente.repository.js";
+import { normalizarDpi } from "../domain/utils/normalizar-dpi.js";
 
 export class ActualizarClienteUseCase {
     constructor(
@@ -12,21 +13,44 @@ export class ActualizarClienteUseCase {
 
     async execute(id: string, negocio_id: string, data: ClienteActualizar): Promise<ClienteObtenidoDetalle> {
         try {
-            return await this.clienteRepository.actualizar(id, negocio_id, data);
+            const existing = await this.clienteRepository.obtenerPorId(id);
+            if (!existing) {
+                throw new AppError("No se encontró el cliente para actualizar", "DATA_NOT_FOUND", 404);
+            }
+
+            const dataPreparada: ClienteActualizar = {
+                ...data,
+                ...(data.dpi !== undefined && { dpi: normalizarDpi(data.dpi) }),
+                ...(data.nit !== undefined && { nit: data.nit?.trim() ? data.nit.trim().toUpperCase() : null }),
+                ...(data.telefono !== undefined && { telefono: data.telefono?.trim() || null }),
+                ...(data.email !== undefined && { email: data.email?.trim() || null }),
+                ...(data.nombre !== undefined && { nombre: data.nombre.trim() }),
+                ...(data.apellido !== undefined && { apellido: data.apellido?.trim() || null }),
+            };
+
+            const updated = await this.clienteRepository.actualizar(id, dataPreparada);
+
+            // Asegurar que quede asociado al negocio actual
+            const estaAsociado = await this.clienteRepository.estaAsociadoANegocio(id, negocio_id);
+            if (!estaAsociado) {
+                await this.clienteRepository.asociarNegocio(id, negocio_id);
+            }
+
+            return updated;
         } catch (error) {
             if (error instanceof NotFoundPersistenceError) {
-                throw new AppError('No se encontró el cliente para actualizar', 'DATA_NOT_FOUND', 404)
+                throw new AppError("No se encontró el cliente para actualizar", "DATA_NOT_FOUND", 404);
             }
 
             if (error instanceof UniqueConstraintError) {
-                throw new AppError('El teléfono ya está en uso por otro cliente', 'DATA_ALREADY_EXISTS', 409)
+                throw new AppError("El DPI ya está en uso por otro cliente", "DATA_ALREADY_EXISTS", 409);
             }
 
             if (error instanceof DatabaseError) {
-                throw new AppError('Error en base de datos', 'DATABASE_ERROR', 500)
+                throw new AppError("Error en base de datos", "DATABASE_ERROR", 500);
             }
 
-            throw error
+            throw error;
         }
     }
 }

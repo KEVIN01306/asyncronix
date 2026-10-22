@@ -175,7 +175,7 @@ model Negocio {
   usuarios                 Usuario[]
   clientes                 Cliente[]
   roles                    Rol[]
-  motos                    Vehiculo[]
+  vehiculos                Vehiculo[]
   categorias               CategoriaProducto[]
   productos                Producto[]
   lotes                    Lote[]
@@ -356,7 +356,7 @@ model Cliente {
   id            String   @id @default(dbgenerated("(UUID())")) @db.Char(36)
   nombre        String
   apellido      String?
-  telefono      String
+  telefono      String?
   email         String?
   password_hash String?
   nit           String?
@@ -374,9 +374,9 @@ model Cliente {
   facturas    Factura[]
   sessions    Session?
 
-  @@unique([telefono])
   @@unique([dpi])
-  @@unique([nit])
+  @@index([nit])
+  @@index([telefono])
   @@map("clientes")
 }
 

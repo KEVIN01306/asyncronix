@@ -62,6 +62,7 @@ export const permisosData = [
   { codigo: "CREAR_CLIENTES" },
   { codigo: "EDITAR_CLIENTES" },
   { codigo: "ELIMINAR_CLIENTES" },
+  { codigo: "UNIFICAR_CLIENTES" },
 
   { codigo: "VER_CILINDRADAS" },
   { codigo: "VER_CILINDRADAS_DETALLE" },
@@ -280,6 +281,7 @@ export const modulosConPermisos = [
       "CREAR_CLIENTES",
       "EDITAR_CLIENTES",
       "ELIMINAR_CLIENTES",
+      "UNIFICAR_CLIENTES",
     ],
   },
   {

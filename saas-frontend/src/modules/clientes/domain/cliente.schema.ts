@@ -13,11 +13,23 @@ const optionalEmailSchema = z.union([
     z.null()
 ]).optional().transform(transformNullish);
 
+const dpiSchema = z.union([
+    z.string().refine((val) => {
+        const clean = val.replace(/\D/g, '');
+        return clean.length === 0 || clean.length === 13;
+    }, { message: 'El DPI debe contener 13 dígitos numéricos' }),
+    z.null(),
+]).optional().transform((val) => {
+    if (!val) return null;
+    const clean = val.replace(/\D/g, '');
+    return clean === '' ? null : clean;
+});
+
 export const clienteSchema = z.object({
     id: z.string(),
     nombre: z.string().min(1, 'El nombre es requerido'),
     apellido: nullableString,
-    telefono: z.string().min(1, 'El teléfono es requerido'),
+    telefono: nullableString,
     email: optionalEmailSchema,
     nit: nullableString,
     dpi: nullableString,
@@ -28,17 +40,17 @@ export const clienteSchema = z.object({
 export const clienteFormSchema = z.object({
     nombre: z.string().min(1, 'El nombre es requerido'),
     apellido: nullableString,
-    telefono: z.string().min(1, 'El teléfono es requerido'),
+    telefono: nullableString,
     email: optionalEmailSchema,
     nit: nullableString,
-    dpi: nullableString,
+    dpi: dpiSchema,
 }).refine(
     (data) => {
-        return data.nit !== null || data.dpi !== null;
+        return data.dpi !== null || data.nit !== null;
     },
     {
-        message: 'Debe ingresar al menos el NIT o el DPI',
-        path: ['nit'],
+        message: 'Debe ingresar al menos el DPI o el NIT',
+        path: ['dpi'],
     }
 );
 
